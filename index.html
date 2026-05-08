@@ -17,6 +17,30 @@
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
+/* ================================================================ */
+/* ★★★ Apple純正カレンダー風フォントシステム ★★★                    */
+/* SF Pro Display系 / iOS-likeなミニマルタイポグラフィ                */
+/* ================================================================ */
+html,body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+  font-feature-settings:"kern" 1,"liga" 1,"calt" 1,"tnum" 1;
+  -webkit-text-size-adjust:100%;
+  letter-spacing:-0.01em;
+}
+*,*::before,*::after{
+  font-family:inherit;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+button,input,select,textarea{
+  font-family:inherit;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  letter-spacing:-0.01em;
+}
 :root{
   --green-light:#25C08A;--green-main:#1AAF7A;--green-dark:#0F8A5C;--green-deep:#0A6B47;
   --green-chip:#E0F8EE;--bg:#F7FAFA;--card-bg:#FFFFFF;
@@ -4149,6 +4173,180 @@ html, body {
   flex: 1 1 0 !important;
   min-width: 0 !important;
   display: block !important;
+}
+
+/* ================================================================ */
+/* ★★★ iOS / Apple純正カレンダー風 タイポグラフィ最適化 ★★★         */
+/* レイアウトは維持し、フォントとUIトーンのみAppleスタイルに刷新     */
+/* ================================================================ */
+
+/* ───── 月タイトル（2025年1月など） ───── */
+/* 中央配置・大きめ・ライト寄りウェイトでiOSライクに */
+.month-nav{
+  justify-content:center !important;
+  position:relative;
+  padding:6px 0 4px !important;
+  gap:14px !important;
+}
+.month-text{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif !important;
+  font-size:22px !important;
+  font-weight:700 !important;
+  letter-spacing:-0.02em !important;
+  color:#fff !important;
+  text-align:center;
+  line-height:1.15;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+.m-arrow{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif !important;
+  font-weight:500 !important;
+  font-size:16px !important;
+  background:rgba(255,255,255,.14) !important;
+  border:none !important;
+  width:30px !important;
+  height:30px !important;
+}
+
+/* ───── 曜日ヘッダー：細め・トラッキング広め ───── */
+.cal-week-labels{
+  padding:6px 0 5px !important;
+}
+.cal-week-labels span{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif !important;
+  font-size:11px !important;
+  font-weight:500 !important;
+  letter-spacing:0.06em !important;
+  color:rgba(255,255,255,.85) !important;
+  text-transform:uppercase;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ───── 日付セル：余白を広めに ───── */
+.cal-cell{
+  padding:6px 4px 4px !important;
+  border-color:#F1F4F3 !important;
+}
+
+/* 日付の囲み（today）— iOSの赤ドット風よりミニマルな緑丸を維持しつつシャープに */
+.cal-date-wrap{
+  width:26px !important;
+  height:26px !important;
+  margin:1px auto 3px !important;
+}
+.cal-date-wrap.today-circle{
+  box-shadow:none !important;
+}
+
+/* ───── 日付数字：太め・シャープ・大きめ ───── */
+.cal-num{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif !important;
+  font-size:16px !important;
+  font-weight:500 !important;
+  letter-spacing:-0.02em !important;
+  font-variant-numeric:tabular-nums !important;
+  font-feature-settings:"tnum" 1 !important;
+  color:#1c1c1e !important;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:geometricPrecision;
+  line-height:1;
+}
+.cal-num.today-txt{
+  font-weight:600 !important;
+  color:#fff !important;
+}
+.cal-num.other-txt{
+  color:#C7C7CC !important;
+  font-weight:400 !important;
+}
+.cal-num.sun{ color:#FF3B30 !important; }
+.cal-num.sat{ color:#007AFF !important; }
+.cal-num.today-txt.sun,
+.cal-num.today-txt.sat{ color:#fff !important; }
+
+/* ダーク時の日付色をiOSダーク風に */
+:root[data-theme="dark"] .cal-num{ color:#F2F2F7 !important; }
+:root[data-theme="dark"] .cal-num.other-txt{ color:#48484A !important; }
+
+/* ───── イベントチップ：細めシャープに ───── */
+.ev-chip,
+.chip-more,
+.cal-multiday-bar{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif !important;
+  font-size:10.5px !important;
+  font-weight:500 !important;
+  letter-spacing:-0.005em !important;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  border-radius:4px !important;
+}
+.cal-multiday-bar{
+  font-weight:600 !important;
+}
+
+/* ───── 下部ナビゲーション：iOSライクなSF Text ───── */
+.bnav-label{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif !important;
+  font-size:10.5px !important;
+  font-weight:500 !important;
+  letter-spacing:0.01em !important;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+.bnav-btn.active .bnav-label{
+  font-weight:600 !important;
+}
+
+/* ───── アプリヘッダーのロゴ／タイトル ───── */
+.app-logo,.page-title{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif !important;
+  letter-spacing:-0.01em !important;
+  font-weight:700 !important;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ───── Day View（1日表示）の日付タイトルもApple風 ───── */
+.dv-header-date-main{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif !important;
+  font-size:17px !important;
+  font-weight:600 !important;
+  letter-spacing:-0.02em !important;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+.dv-header-date-sub{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif !important;
+  font-weight:500 !important;
+  letter-spacing:0.01em !important;
+}
+
+/* ───── レスポンシブ：小さめ画面でも崩れないよう微調整 ───── */
+@media (max-width:380px){
+  .month-text{ font-size:20px !important; }
+  .cal-num{ font-size:15px !important; }
+  .cal-week-labels span{ font-size:10.5px !important; }
+}
+@media (min-width:430px){
+  .month-text{ font-size:24px !important; }
+  .cal-num{ font-size:17px !important; }
+}
+
+/* ───── Retina/高解像度ディスプレイでのシャープネス強化 ───── */
+@media (-webkit-min-device-pixel-ratio:2),(min-resolution:192dpi){
+  .month-text,.cal-num,.cal-week-labels span,.bnav-label,
+  .ev-chip,.chip-more,.cal-multiday-bar,
+  .dv-header-date-main,.dv-header-date-sub,
+  .app-logo,.page-title{
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    text-rendering:optimizeLegibility;
+    transform:translateZ(0);
+  }
 }
 </style>
 
