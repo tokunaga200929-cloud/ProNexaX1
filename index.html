@@ -49,10 +49,10 @@ button,input,select,textarea{
 }
 :root{
   --green-light:#25C08A;--green-main:#1AAF7A;--green-dark:#0F8A5C;--green-deep:#0A6B47;
-  --green-chip:#E0F8EE;--bg:#F7FAFA;--card-bg:#FFFFFF;
-  --border:#E4EDEB;--text-primary:#1A2E27;--text-secondary:#5A7A70;--text-tertiary:#9BB8AE;
-  --shadow-sm:0 1px 4px rgba(10,107,71,.08),0 2px 8px rgba(10,107,71,.05);
-  --shadow-md:0 4px 12px rgba(10,107,71,.12),0 1px 4px rgba(10,107,71,.06);
+  --green-chip:#E0F8EE;--bg:#F2F7F5;--card-bg:#FFFFFF;
+  --border:#D4E5E1;--text-primary:#0F1E18;--text-secondary:#3A5C52;--text-tertiary:#7A9E94;
+  --shadow-sm:0 1px 4px rgba(10,107,71,.14),0 2px 8px rgba(10,107,71,.09);
+  --shadow-md:0 4px 16px rgba(10,107,71,.18),0 1px 4px rgba(10,107,71,.10);
   --shadow-drag:0 12px 32px rgba(10,107,71,.4),0 4px 12px rgba(0,0,0,.18);
   /* ★★★ カテゴリカラー（JSから上書き可） ★★★ */
   --cat-jgto:#1AAF7A;--cat-jlpga:#E0567E;--cat-pga:#2D7DD2;
@@ -144,9 +144,9 @@ button,input,select,textarea{
 :root[data-color-theme="mint"] .search-header,
 :root[data-color-theme="peach"] .search-header{
   background:linear-gradient(160deg,
-    color-mix(in srgb,var(--green-main) 92%,#fff) 0%,
-    color-mix(in srgb,var(--green-dark) 95%,#fff) 50%,
-    color-mix(in srgb,var(--green-deep) 96%,#fff) 100%
+    color-mix(in srgb,var(--green-main) 98%,#fff) 0%,
+    color-mix(in srgb,var(--green-dark) 99%,#fff) 50%,
+    var(--green-deep) 100%
   );
 }
 
@@ -247,17 +247,17 @@ button,input,select,textarea{
 .page.active{display:flex;}
 .app-header{
   background:linear-gradient(160deg,
-    color-mix(in srgb,var(--green-light) 90%,#fff) 0%,
-    color-mix(in srgb,var(--green-main) 92%,#fff) 45%,
-    color-mix(in srgb,var(--green-dark) 95%,#fff) 100%
+    var(--green-light) 0%,
+    var(--green-main) 45%,
+    var(--green-dark) 100%
   );
   padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 0;flex-shrink:0;
-  box-shadow:0 2px 8px rgba(10,107,71,.12);
-  color:rgba(255,255,255,.92);
+  box-shadow:0 2px 10px rgba(10,107,71,.22);
+  color:#fff;
 }
 .app-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;}
 .app-logo{color:#fff;font-size:15px;font-weight:800;letter-spacing:.8px;}
-.app-logo span{color:#ADFFD8;}
+.app-logo span{color:#C8FFEC;}
 .app-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;}
 /* ★ ヘッダー右側のアクション群（ハンバーガー＋アバター） */
 .app-header-actions{display:flex;align-items:center;gap:10px;}
@@ -278,7 +278,7 @@ button,input,select,textarea{
   top:50%;left:50%;transform:translate(-50%,-50%);
   width:44px;height:44px;
 }
-.hamburger-btn:active{background:rgba(255,255,255,.18);}
+.hamburger-btn:active{background:rgba(255,255,255,.28);}
 .hamburger-btn svg{width:18px;height:18px;}
 .hamburger-btn svg line{stroke:#fff;stroke-width:2;stroke-linecap:round;}
 
@@ -493,17 +493,17 @@ button,input,select,textarea{
 }
 .month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:0;}
 .month-text{color:#fff;font-size:15.5px;font-weight:600;}
-.m-arrow{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:50%;color:#fff;width:24px;height:24px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.m-arrow{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.45);border-radius:50%;color:#fff;width:24px;height:24px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .cal-header{
   background:linear-gradient(160deg,
-    color-mix(in srgb,var(--green-main) 92%,#fff),
-    color-mix(in srgb,var(--green-dark) 95%,#fff)
+    var(--green-main) 0%,
+    var(--green-dark) 100%
   );
   padding:0 0 2px;flex-shrink:0;
-  color:rgba(255,255,255,.92);
+  color:#fff;
 }
 .cal-week-labels{display:flex;width:100%;}
-.cal-week-labels span{flex:1 1 0;min-width:0;display:block;text-align:center;font-size:11px;color:rgba(255,255,255,.8);padding:0;font-weight:500;}
+.cal-week-labels span{flex:1 1 0;min-width:0;display:block;text-align:center;font-size:11px;color:rgba(255,255,255,.95);padding:0;font-weight:500;}
 .hint-bar{background:var(--green-deep);padding:0 12px;flex-shrink:0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 .hint-item{font-size:11px;color:rgba(255,255,255,.65);display:flex;align-items:center;gap:3px;}
 .hint-dot{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.4);flex-shrink:0;}
@@ -514,7 +514,7 @@ button,input,select,textarea{
 /* ★ table → flex 化：6週月でも均等可変 */
 .cal-grid{display:flex;flex-direction:column;width:100%;height:100%;flex:1;min-height:0;}
 .cal-row{display:flex;flex:1 1 0;min-height:0;width:100%;position:relative;}
-.cal-cell{flex:1 1 0;width:0;max-width:calc(100% / 7);min-width:0;min-height:0;padding:3px 2px 2px;border:0.5px solid #EEF5F2;cursor:pointer;overflow:hidden;user-select:none;-webkit-user-select:none;background:#fff;transition:background .15s,box-shadow .15s;display:flex;flex-direction:column;}
+.cal-cell{flex:1 1 0;width:0;max-width:calc(100% / 7);min-width:0;min-height:0;padding:3px 2px 2px;border:0.5px solid #DFF0EB;cursor:pointer;overflow:hidden;user-select:none;-webkit-user-select:none;background:#fff;transition:background .15s,box-shadow .15s;display:flex;flex-direction:column;}
 .cal-cell:active{background:var(--green-chip);}
 .cal-cell.other{background:#FAFCFB;}
 .cal-cell.selected{background:var(--green-chip);box-shadow:inset 0 0 0 1.5px var(--green-main);}
@@ -846,7 +846,7 @@ button,input,select,textarea{
   );
   padding:7px 16px 10px;flex-shrink:0;
   box-shadow:0 2px 8px rgba(10,107,71,.12);
-  color:rgba(255,255,255,.92);
+  color:#fff;
 }
 .search-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .page-title{color:#fff;font-size:15px;font-weight:800;letter-spacing:.8px;}
@@ -2503,7 +2503,7 @@ button,input,select,textarea{
   );
   padding:7px 16px 0;flex-shrink:0;
   box-shadow:0 2px 8px rgba(10,107,71,.12);
-  color:rgba(255,255,255,.92);
+  color:#fff;
 }
 .fin-header-top{
   display:flex;align-items:center;justify-content:space-between;
@@ -4182,75 +4182,6 @@ html, body {
 }
 
 /* ================================================================ */
-/* ★★★ iPhone Safari サブピクセル・横スクロール完全対応 ★★★          */
-/* 100vwではなく100%基準・border-box・overflow-x:hidden多重設定      */
-/* ================================================================ */
-html {
-  overflow-x: hidden !important;
-  width: 100% !important;
-}
-body {
-  overflow-x: hidden !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  overscroll-behavior-x: none !important;
-}
-.phone-inner {
-  overflow-x: hidden !important;
-  width: 100% !important;
-  max-width: 100% !important;
-}
-.cal-swipe-wrap {
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-  overflow-x: hidden !important;
-}
-.cal-slide-container {
-  width: 300% !important;
-  max-width: 300% !important;
-  display: flex !important;
-}
-.cal-panel {
-  width: 33.3333% !important;
-  min-width: 0 !important;
-  flex-shrink: 0 !important;
-  overflow: hidden !important;
-  overflow-x: hidden !important;
-}
-.cal-grid {
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-}
-.cal-row {
-  display: flex !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-}
-.cal-cell {
-  flex: 1 1 0 !important;
-  width: 0 !important;
-  max-width: calc(100% / 7) !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
-  box-sizing: border-box !important;
-}
-.cal-week-labels {
-  display: flex !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-}
-.cal-week-labels span {
-  flex: 1 1 0 !important;
-  min-width: 0 !important;
-  max-width: calc(100% / 7) !important;
-  box-sizing: border-box !important;
-}
-
-/* ================================================================ */
 /* ★★★ iOS / Apple純正カレンダー風 タイポグラフィ最適化 ★★★         */
 /* レイアウトは維持し、フォントとUIトーンのみAppleスタイルに刷新     */
 /* ================================================================ */
@@ -4268,7 +4199,7 @@ body {
   font-size:22px !important;
   font-weight:700 !important;
   letter-spacing:-0.02em !important;
-  color:#fff !important;
+  color:#ffffff !important;
   text-align:center;
   line-height:1.15;
   -webkit-font-smoothing:antialiased;
@@ -4279,8 +4210,8 @@ body {
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif !important;
   font-weight:500 !important;
   font-size:16px !important;
-  background:rgba(255,255,255,.14) !important;
-  border:none !important;
+  background:rgba(255,255,255,.20) !important;
+  border:1px solid rgba(255,255,255,.38) !important;
   width:30px !important;
   height:30px !important;
 }
@@ -4294,7 +4225,7 @@ body {
   font-size:11px !important;
   font-weight:500 !important;
   letter-spacing:0.06em !important;
-  color:rgba(255,255,255,.85) !important;
+  color:#fff !important;
   text-transform:uppercase;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
@@ -4324,7 +4255,7 @@ body {
   letter-spacing:-0.02em !important;
   font-variant-numeric:tabular-nums !important;
   font-feature-settings:"tnum" 1 !important;
-  color:#1c1c1e !important;
+  color:#0D1210 !important;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
   text-rendering:geometricPrecision;
@@ -4423,6 +4354,21 @@ body {
     transform:translateZ(0);
   }
 }
+
+/* ================================================================ */
+/* ★★★ iPhone Safari サブピクセル・横スクロール完全対応 ★★★          */
+/* ================================================================ */
+html { overflow-x:hidden !important; width:100% !important; }
+body { overflow-x:hidden !important; width:100% !important; max-width:100% !important; overscroll-behavior-x:none !important; }
+.phone-inner { overflow-x:hidden !important; width:100% !important; max-width:100% !important; }
+.cal-swipe-wrap { width:100% !important; max-width:100% !important; overflow:hidden !important; overflow-x:hidden !important; }
+.cal-slide-container { width:300% !important; max-width:300% !important; display:flex !important; }
+.cal-panel { width:33.3333% !important; min-width:0 !important; flex-shrink:0 !important; overflow:hidden !important; overflow-x:hidden !important; }
+.cal-grid { width:100% !important; max-width:100% !important; overflow:hidden !important; }
+.cal-row { display:flex !important; width:100% !important; max-width:100% !important; overflow:hidden !important; }
+.cal-cell { flex:1 1 0 !important; width:0 !important; max-width:calc(100% / 7) !important; min-width:0 !important; overflow:hidden !important; box-sizing:border-box !important; }
+.cal-week-labels { display:flex !important; width:100% !important; max-width:100% !important; overflow:hidden !important; }
+.cal-week-labels span { flex:1 1 0 !important; min-width:0 !important; max-width:calc(100% / 7) !important; box-sizing:border-box !important; }
 </style>
 
 
