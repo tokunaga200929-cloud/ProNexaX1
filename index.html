@@ -536,7 +536,7 @@ button,input,select,textarea{
 .cal-num{font-size:12px;font-weight:500;color:var(--text-primary);display:block;text-align:center;}
 .cal-num.today-txt{color:#fff;font-weight:700;}.cal-num.other-txt{color:#C5D9D3;}.cal-num.sun{color:#E05555;}.cal-num.sat{color:#3B82C4;}
 .cal-num.today-txt.sun,.cal-num.today-txt.sat{color:#fff;}
-.chips{display:flex;flex-direction:column;gap:1.5px;width:100%;overflow:hidden;flex:1 1 0;min-height:0;}
+.chips{display:flex;flex-direction:column;gap:2px;width:100%;overflow:hidden;flex:1 1 0;min-height:0;padding:0 0 2px;}
 
 /* ★★★ 複数日イベントの横バー ★★★ */
 /* 週行（cal-row）の上にオーバーレイし、複数セルにまたがる連続バーを描画する */
@@ -548,18 +548,18 @@ button,input,select,textarea{
   display:grid;
   grid-template-columns:repeat(7,1fr);
   /* セル左上の日付ぶんを避けるため、上に余白（padding-top:4 + 日付18 + margin-bottom:2 = 24px） */
-  padding-top:24px;
-  /* 行内のバーは上から順に積む */
+  padding-top:31px;
+  /* セルpadding(4)+date-wrap margin-top(1)+height(24)+margin-bottom(2)=31px */
   align-content:start;
-  grid-auto-rows:11px; /* バー1本の高さ＋gap分 */
-  row-gap:1.5px;
+  grid-auto-rows:16px; /* バー1本の高さ(14px)＋gap(2px) */
+  row-gap:2px;
   z-index:3;
 }
 .cal-multiday-bar{
   pointer-events:auto;
-  height:9.5px;
-  line-height:9.5px;
-  font-size:11px;
+  height:14px;
+  line-height:14px;
+  font-size:10.5px;
   font-weight:600;
   color:#fff;
   padding:0 4px;
@@ -600,11 +600,10 @@ button,input,select,textarea{
 .md-spacer{
   display:block;
   width:100%;
-  height:9.5px;
+  height:14px;
   visibility:hidden;
   pointer-events:none;
-  /* ev-chip と同じ gap を再現するため、margin-bottom で 1.5px 確保 */
-  margin-bottom:0; /* 親 .chips の gap:1.5px に依存 */
+  margin-bottom:0; /* 親 .chips の gap:2px に依存 */
   flex-shrink:0;
 }
 /* バーカラー（チップと同じ色味） */
@@ -618,9 +617,10 @@ button,input,select,textarea{
 
 /* ★ チップ：ドラッグ可能・カードとして浮き上がる */
 .ev-chip{
-  font-size:11px;border-radius:3px;padding:1.5px 3px;
+  font-size:10.5px;border-radius:4px;padding:0 4px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  width:100%;line-height:1.3;display:block;font-weight:500;
+  width:100%;height:14px;line-height:14px;display:block;font-weight:500;
+  flex-shrink:0;
   cursor:grab;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
@@ -697,7 +697,7 @@ button,input,select,textarea{
 }
 .chip-jgto{background:var(--green-main);color:#fff;}.chip-jlpga{background:#E0567E;color:#fff;}.chip-pga{background:#2D7DD2;color:#fff;}
 .chip-qualifier{background:#A0631A;color:#fff;}.chip-mini{background:#D4771A;color:#fff;}.chip-open{background:#7B4DB5;color:#fff;}.chip-personal{background:#6B6ED4;color:#fff;}
-.chip-more{font-size:11px;border-radius:3px;padding:1.5px 3px;width:100%;line-height:1.3;display:block;font-weight:600;background:#E8F0EE;color:var(--green-dark);cursor:pointer;text-align:center;}
+.chip-more{font-size:10px;border-radius:4px;padding:0 4px;width:100%;height:14px;line-height:14px;display:block;font-weight:600;flex-shrink:0;background:#E8F0EE;color:var(--green-dark);cursor:pointer;text-align:center;}
 
 /* ★★★ ドラッグ中のフロートカード（クローン） ★★★ */
 .drag-card{
@@ -4099,14 +4099,19 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
 
 /* ev-chip（カレンダー内イベントチップ） */
 .ev-chip {
-  font-size:10px !important;
-  padding:1.5px 4px !important;
+  font-size:10.5px !important;
+  padding:0 4px !important;
+  height:14px !important;
+  line-height:14px !important;
   border-radius:4px !important;
-  line-height:1.4 !important;
+  flex-shrink:0 !important;
 }
 .chip-more {
   font-size:10px !important;
-  padding:2px 4px !important;
+  padding:0 4px !important;
+  height:14px !important;
+  line-height:14px !important;
+  flex-shrink:0 !important;
 }
 
 /* アバター */
@@ -4233,18 +4238,21 @@ html, body {
 
 /* ───── 日付セル：余白を広めに ───── */
 .cal-cell{
-  padding:6px 4px 4px !important;
-  border-color:#F1F4F3 !important;
+  padding:4px 2px 2px !important;
+  border-color:#E8F2EE !important;
+  min-height:60px !important;
 }
 
 /* 日付の囲み（today）— iOSの赤ドット風よりミニマルな緑丸を維持しつつシャープに */
 .cal-date-wrap{
-  width:26px !important;
-  height:26px !important;
-  margin:1px auto 3px !important;
+  width:24px !important;
+  height:24px !important;
+  margin:1px auto 2px !important;
+  flex-shrink:0 !important;
 }
 .cal-date-wrap.today-circle{
-  box-shadow:none !important;
+  background:var(--green-main) !important;
+  box-shadow:0 1px 4px rgba(26,175,122,.35) !important;
 }
 
 /* ───── 日付数字：太め・シャープ・大きめ ───── */
@@ -4292,6 +4300,8 @@ html, body {
 }
 .cal-multiday-bar{
   font-weight:600 !important;
+  height:14px !important;
+  line-height:14px !important;
 }
 
 /* ───── 下部ナビゲーション：iOSライクなSF Text ───── */
@@ -4356,7 +4366,7 @@ html, body {
 }
 
 /* ================================================================ */
-/* ★★★ iPhone Safari サブピクセル・横スクロール完全対応 ★★★          */
+/* ★★★ iPhone Safari 横スクロール完全対応 ★★★                        */
 /* ================================================================ */
 html { overflow-x:hidden !important; width:100% !important; }
 body { overflow-x:hidden !important; width:100% !important; max-width:100% !important; overscroll-behavior-x:none !important; }
@@ -4369,6 +4379,88 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
 .cal-cell { flex:1 1 0 !important; width:0 !important; max-width:calc(100% / 7) !important; min-width:0 !important; overflow:hidden !important; box-sizing:border-box !important; }
 .cal-week-labels { display:flex !important; width:100% !important; max-width:100% !important; overflow:hidden !important; }
 .cal-week-labels span { flex:1 1 0 !important; min-width:0 !important; max-width:calc(100% / 7) !important; box-sizing:border-box !important; }
+
+/* ================================================================ */
+/* ★★★ カレンダーセル：日付エリア / イベントエリア 完全分離          */
+/* ================================================================ */
+/* セル: flex column で date-wrap → chips を縦積み */
+.cal-cell {
+  display:flex !important;
+  flex-direction:column !important;
+  min-height:60px !important;
+  padding:4px 2px 2px !important;
+  overflow:hidden !important;
+}
+/* 日付エリア：常に上部固定・縮まない */
+.cal-date-wrap {
+  flex-shrink:0 !important;
+  width:24px !important;
+  height:24px !important;
+  margin:0 auto 2px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border-radius:50% !important;
+}
+/* イベントエリア：残り全域を使用・overflow hidden */
+.chips {
+  flex:1 1 0 !important;
+  min-height:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:2px !important;
+  overflow:hidden !important;
+  width:100% !important;
+  padding:0 0 2px !important;
+}
+/* イベントチップ：固定高さ・縮まない */
+.ev-chip {
+  display:block !important;
+  height:14px !important;
+  line-height:14px !important;
+  font-size:10.5px !important;
+  padding:0 4px !important;
+  border-radius:4px !important;
+  flex-shrink:0 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+/* +N件 */
+.chip-more {
+  display:block !important;
+  height:14px !important;
+  line-height:14px !important;
+  font-size:10px !important;
+  padding:0 4px !important;
+  border-radius:4px !important;
+  flex-shrink:0 !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+/* 複数日バーのスペーサー：バーと同じ高さ */
+.md-spacer {
+  display:block !important;
+  height:14px !important;
+  flex-shrink:0 !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+  width:100% !important;
+}
+/* 複数日バーレイヤー：padding-top = cell padding(4) + date-wrap margin-top(0) + height(24) + margin-bottom(2) + gap(2) = 32px */
+.cal-multiday-layer {
+  padding-top:32px !important;
+  grid-auto-rows:16px !important;
+  row-gap:2px !important;
+}
+/* 複数日バー本体 */
+.cal-multiday-bar {
+  height:14px !important;
+  line-height:14px !important;
+  font-size:10.5px !important;
+}
 </style>
 
 
