@@ -481,11 +481,25 @@ button,input,select,textarea{
 
 /* ★ 表示モード：週・3日のレイアウト */
 .cal-multi-day{
-  height:100%;
+  width:100%;
+  min-height:100%;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
   background:#fff;
   padding:0;
+  display:block !important;   /* hidden 対策 */
+  visibility:visible !important;
+}
+/* 週・3日モード：cal-swipe-wrap をスクロール可能にする */
+#cal-swipe-wrap.multiday-mode{
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+}
+/* 1日モード：内部 dv-timeline がスクロール担当 */
+#cal-swipe-wrap.dayview-mode{
+  overflow:hidden !important;
+  display:flex !important;
+  flex-direction:column !important;
 }
 .cal-multi-day::-webkit-scrollbar{display:none;}
 .day-block{
@@ -7442,12 +7456,51 @@ function setViewMode(mode){
   }
   savePrefs();
   syncDrawerState();
-  renderAllPanels();
+
+  // ── コンテナ表示制御 ──────────────────────────────
+  const calScroll=document.getElementById('cal-scroll');
+  const calWrap=document.getElementById('cal-swipe-wrap');
+  const calSlide=document.getElementById('cal-slide-container');
+  const handle=document.getElementById('split-handle');
+  const calHeader=document.querySelector('.cal-header');   // 曜日ラベル行
+
+  if(mode==='month'){
+    // 月モード：すべて標準表示
+    if(calScroll)calScroll.style.display='';
+    if(calWrap){
+      calWrap.style.display='';
+      calWrap.style.overflow='';    // インラインを消してCSS側の overflow:hidden に戻す
+      calWrap.classList.remove('multiday-mode','dayview-mode');
+    }
+    if(calSlide)calSlide.style.display='';
+    if(handle)handle.style.display='';
+    if(calHeader)calHeader.style.display='';
+    // 残留 multi-day / day-view を除去
+    calWrap&&calWrap.querySelector('.cal-multi-day')?.remove();
+    calWrap&&calWrap.querySelector('.cal-day-view')?.remove();
+  }else{
+    // 週 / 3日 / 1日モード：cal-scroll・cal-slide-container・ハンドルを隠す
+    if(calScroll)calScroll.style.display='none';
+    if(calSlide)calSlide.style.display='none';
+    if(handle)handle.style.display='none';
+    // cal-swipe-wrap は必ず表示（overflow-y:auto にしてスクロール可能に）
+    if(calWrap){
+      calWrap.style.display='block';
+      if(mode==='day'){
+        calWrap.classList.remove('multiday-mode');
+        calWrap.classList.add('dayview-mode');
+      }else{
+        calWrap.classList.remove('dayview-mode');
+        calWrap.classList.add('multiday-mode');
+      }
+    }
+    if(calHeader)calHeader.style.display=(mode==='day')?'none':'';
+  }
+  // ─────────────────────────────────────────────────
+
+  renderAllPanels();   // ← multi-day / day-view を挿入
   renderCalList();
   updateMonthLabel();
-  // cal-scroll（月モード下部イベントリスト）の表示制御
-  const calScroll=document.getElementById('cal-scroll');
-  if(calScroll)calScroll.style.display=(mode==='month')?'':'none';
 }
 
 function toggleCatVisibility(key){
@@ -8031,8 +8084,13 @@ renderAllPanels=function(){
     const ds=viewBaseDate||selectedDate||todayStr();
     const html=dvBuildHTML(ds);
     let dv=wrap.querySelector('.cal-day-view');
-    if(dv){dv.outerHTML=html;}
-    else{wrap.insertAdjacentHTML('beforeend',html);}
+    if(dv){
+      // outerHTML代入は参照が切れてDOMに反映されないため replaceWith を使用
+      const tmp=document.createElement('div');
+      tmp.innerHTML=html;
+      const newDv=tmp.firstElementChild;
+      dv.replaceWith(newDv);
+    }else{wrap.insertAdjacentHTML('beforeend',html);}
     // 描画後の処理
     setTimeout(()=>{dvRestoreScroll();dvBindSwipe();dvStartNowLineTicker();},20);
     return;
@@ -8831,6 +8889,24 @@ updateMonthLabel();
 if(viewMode!=='month'&&!viewBaseDate){viewBaseDate=todayStr();}
 applyDesign(); // ★★★ デザイン設定を最初に CSS 反映
 migrateEventsForDeadline(); // ★★★ 既存イベントに締切・通知設定を補完
+// 初期 viewMode が month 以外の場合、表示制御を適用してから描画
+if(viewMode!=='month'){
+  const _calScroll=document.getElementById('cal-scroll');
+  const _calWrap=document.getElementById('cal-swipe-wrap');
+  const _calSlide=document.getElementById('cal-slide-container');
+  const _handle=document.getElementById('split-handle');
+  if(_calScroll)_calScroll.style.display='none';
+  if(_calSlide)_calSlide.style.display='none';
+  if(_handle)_handle.style.display='none';
+  if(_calWrap){
+    _calWrap.style.display='block';
+    if(viewMode==='day'){
+      _calWrap.classList.add('dayview-mode');
+    }else{
+      _calWrap.classList.add('multiday-mode');
+    }
+  }
+}
 renderAllPanels();renderCalList();initSwipe();renderSearchFilters();initSplitHandle();initCatLegend();
 initDrawer();syncDrawerState();
 initDesignSettings(); // ★★★ デザイン設定 UI を初期化
