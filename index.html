@@ -2070,15 +2070,37 @@ button,input,select,textarea{
 .day-event-del{font-size:11px;border:1px solid #FFD5D5;border-radius:6px;padding:2px 6px;background:#FFF5F5;color:#C84444;cursor:pointer;align-self:center;margin-right:8px;flex-shrink:0;}
 .longpress-ring{position:absolute;border-radius:50%;border:2px solid var(--green-main);pointer-events:none;z-index:50;opacity:0;transform:scale(0);transition:none;}
 .longpress-ring.animating{opacity:1;transform:scale(1);transition:transform .5s ease-out,opacity .5s ease-out;}
-.bottom-nav{background:#fff;border-top:none;box-shadow:none;display:flex;padding:6px 0 max(env(safe-area-inset-bottom,0px),6px);flex-shrink:0;}
 .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:12px;transition:background .08s ease-out,transform .1s;-webkit-tap-highlight-color:transparent;}
 .bnav-btn:active{background:rgba(26,175,122,0.12);transform:scale(.92);}
 .bnav-label{font-size:11px;color:var(--text-tertiary);line-height:1;font-weight:400;transition:color .15s;}
 .bnav-btn.active{background:none;}
 .bnav-btn.active .bnav-label{color:var(--green-main);font-weight:600;}
-.home-bar{height:3px;width:68px;background:#DDE8E4;border-radius:2px;margin:2px auto 1px;}
+/* home-bar は bottom-nav の padding-bottom で吸収するため非表示 */
+.home-bar{display:none;}
+/* bottom-nav ベース定義：column flex でボタン行 ＋ 安全余白を分離管理 */
+.bottom-nav{
+  background:#fff;
+  border-top:1px solid var(--border);
+  box-shadow:none;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  padding:0;
+}
+/* ボタン行ラッパー */
+.bottom-nav-inner{
+  display:flex;
+  width:100%;
+  padding:6px 0 4px;
+}
+/* ホームインジケーター余白：safe-area のみ、最小4px */
+.bottom-nav-safe{
+  height:max(env(safe-area-inset-bottom,0px),0px);
+  min-height:0;
+  width:100%;
+  flex-shrink:0;
+}
 .toast{position:fixed;bottom:calc(max(env(safe-area-inset-bottom,0px),0px) + 68px);left:14px;right:14px;background:linear-gradient(135deg,var(--green-main),var(--green-dark));color:#fff;font-size:11px;font-weight:600;padding:8px 14px;border-radius:11px;text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;z-index:30;box-shadow:0 4px 16px rgba(10,107,71,.3);}
-.toast.show{opacity:1;}
 
 /* ================================================================ */
 /* ★★★ Day View（1日表示） ★★★                                     */
@@ -4030,13 +4052,21 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
 
 /* ボトムナビゲーション */
 .bottom-nav {
-  flex-shrink:0;
-  background:var(--card-bg,#fff);
-  border-top:1px solid var(--border,#E4EDEB);
-  padding-top:6px !important;
-  padding-bottom:max(env(safe-area-inset-bottom,0px),6px) !important;
-  padding-left:0 !important;
-  padding-right:0 !important;
+  flex-shrink:0 !important;
+  background:var(--card-bg,#fff) !important;
+  border-top:1px solid var(--border,#E4EDEB) !important;
+  padding:0 !important;
+}
+.bottom-nav-inner {
+  display:flex !important;
+  width:100% !important;
+  padding:6px 0 4px !important;
+}
+.bottom-nav-safe {
+  width:100% !important;
+  height:env(safe-area-inset-bottom,0px) !important;
+  min-height:0 !important;
+  flex-shrink:0 !important;
 }
 .bnav-btn {
   min-height:44px !important;
@@ -4155,10 +4185,10 @@ html, body {
   }
 }
 
-/* bottom-nav：safe-area確実対応（上書き禁止：padding-bottomのみ） */
+/* bottom-nav：構造はbottom-nav-safe要素で管理済み */
 .bottom-nav {
   width: 100% !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   flex-shrink: 0 !important;
 }
 
@@ -4921,6 +4951,7 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
   </div>
 
   <div class="bottom-nav">
+    <div class="bottom-nav-inner">
     <button class="bnav-btn active" id="nav-calendar" onclick="switchPage('calendar')">
       <svg id="icon-calendar" width="20" height="20" viewBox="0 0 22 22" fill="none">
         <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#1AAF7A" stroke-width="1.7"/>
@@ -4952,8 +4983,9 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
       </svg>
       <span class="bnav-label">マイページ</span>
     </button>
+    </div>
+    <div class="bottom-nav-safe"></div>
   </div>
-  <div class="home-bar"></div>
 
   <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
     <div class="modal-sheet">
