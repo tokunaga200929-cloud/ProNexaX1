@@ -2079,11 +2079,10 @@ button,input,select,textarea{
 .cat-desc{font-size:9px;color:var(--text-tertiary);margin-top:1px;}
 .cat-check{position:absolute;top:7px;right:9px;font-size:12px;opacity:0;transition:opacity .15s;}
 .cat-item.sel .cat-check{opacity:1;}
-/* ★ 追加済みカテゴリバッジは廃止：万一マークアップが残っても何も表示しない */
-.cat-enabled-badge{display:none !important;}
-/* ★ 追加済みカテゴリ：Apple純正カレンダー風に枠線を少しだけ濃く（カラーは inline で指定） */
+/* ★ 追加済みカテゴリ：カテゴリカラーの枠線でミニマルに強調（文字・バッジ一切なし） */
 .cat-item.is-enabled:not(.sel){
-  border-width:1.5px;
+  border-width:2px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.04), inset 0 0 0 0.5px rgba(255,255,255,.6);
 }
 .tour-hint{font-size:10px;color:var(--text-tertiary);text-align:center;padding:4px 0 8px;}
 .tour-list{display:flex;flex-direction:column;gap:5px;margin-bottom:4px;}
@@ -7293,11 +7292,16 @@ function renderCatGrid(){
   grid.innerHTML=CATEGORIES.map(c=>{
     const isSel=selectedCat===c.key;
     const isEnabled=c.key==='personal'||userEnabledCategories.includes(c.key);
-    const selStyle=isSel?`border-color:${c.color};background:${c.color}12`:'';
-    // ★ 「追加済み」バッジは廃止：追加済み状態は .is-enabled クラスのみで管理し、
-    //    Apple純正カレンダー風に枠線をカテゴリカラーで軽く強調するだけにする
-    const enabledStyle=isEnabled&&!isSel?`border-color:${c.color}66;`:'';
-    return`<div class="cat-item${isSel?' sel':''}${isEnabled?' is-enabled':''}" style="${selStyle}${enabledStyle}" id="cat-${c.key}" data-cat-key="${c.key}"><div class="cat-color-dot" style="background:${c.color}"></div><div style="flex:1;"><div class="cat-name">${c.label}</div><div class="cat-desc">${c.desc}</div></div><div class="cat-check" style="color:${c.color}">✓</div></div>`;
+    // 選択中：カテゴリカラーの薄背景＋枠線
+    // 追加済み（未選択）：カテゴリカラーの枠線のみ（バッジ・文字表示なし）
+    // 未追加：デフォルト枠線
+    let inlineStyle='';
+    if(isSel){
+      inlineStyle=`border-color:${c.color};background:${c.color}14;`;
+    } else if(isEnabled){
+      inlineStyle=`border-color:${c.color}80;`;
+    }
+    return`<div class="cat-item${isSel?' sel':''}${isEnabled?' is-enabled':''}" style="${inlineStyle}" id="cat-${c.key}" data-cat-key="${c.key}"><div class="cat-color-dot" style="background:${c.color}"></div><div style="flex:1;min-width:0;"><div class="cat-name">${c.label}</div><div class="cat-desc">${c.desc}</div></div><div class="cat-check" style="color:${c.color}">✓</div></div>`;
   }).join('');
   grid.classList.toggle('reorder-mode',catReorderMode);
   // ★ クリック / ドラッグハンドラを取り付け
