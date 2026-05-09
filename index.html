@@ -37,11 +37,13 @@
 </head>
 <body>
 
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-
+/* ================================================================ */
+/* ★★★ Apple純正カレンダー風フォントシステム ★★★                    */
 /* SF Pro Display系 / iOS-likeなミニマルタイポグラフィ                */
-
+/* ================================================================ */
 html,body{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
   -webkit-font-smoothing:antialiased;
@@ -79,7 +81,7 @@ button,input,select,textarea{
   --shadow-sm:0 1px 4px rgba(10,107,71,.14),0 2px 8px rgba(10,107,71,.09);
   --shadow-md:0 4px 16px rgba(10,107,71,.18),0 1px 4px rgba(10,107,71,.10);
   --shadow-drag:0 12px 32px rgba(10,107,71,.4),0 4px 12px rgba(0,0,0,.18);
-  
+  /* ★★★ カテゴリカラー（JSから上書き可） ★★★ */
   --cat-jgto:#1AAF7A;--cat-jlpga:#E0567E;--cat-pga:#2D7DD2;
   --cat-qualifier:#A0631A;--cat-mini:#D4771A;--cat-open:#7B4DB5;--cat-personal:#6B6ED4;
 }
@@ -117,10 +119,14 @@ button,input,select,textarea{
   --shadow-drag:0 12px 32px rgba(46,50,59,.35),0 4px 12px rgba(0,0,0,.18);
 }
 
+/* ================================================================ */
+/* ★★★ パステルテーマ（女性ユーザー向け） ★★★                        */
 /* ・全体的に彩度を抑えたパステル / 背景は白に近い                    */
 /* ・白文字の可読性を確保するため、ヘッダーのグラデは main→deep を使用 */
 /* ・--green-deep はコントラスト用の濃色（白文字用）                   */
+/* ================================================================ */
 
+/* ───── Sakura（ピンク系） ───── */
 :root[data-color-theme="sakura"]{
   --green-light:#FDECEF;--green-main:#F7B7C3;--green-dark:#E08CA0;--green-deep:#A45266;
   --green-chip:#FFF7F9;
@@ -128,7 +134,7 @@ button,input,select,textarea{
   --shadow-md:0 4px 12px rgba(164,82,102,.12),0 1px 4px rgba(164,82,102,.06);
   --shadow-drag:0 12px 32px rgba(164,82,102,.35),0 4px 12px rgba(0,0,0,.16);
 }
-
+/* ───── Lavender（紫系） ───── */
 :root[data-color-theme="lavender"]{
   --green-light:#F3ECFA;--green-main:#BFA2DB;--green-dark:#9C7FC4;--green-deep:#6E5499;
   --green-chip:#FBF9FF;
@@ -136,7 +142,7 @@ button,input,select,textarea{
   --shadow-md:0 4px 12px rgba(110,84,153,.12),0 1px 4px rgba(110,84,153,.06);
   --shadow-drag:0 12px 32px rgba(110,84,153,.35),0 4px 12px rgba(0,0,0,.16);
 }
-
+/* ───── Mint（グリーン系） ───── */
 :root[data-color-theme="mint"]{
   --green-light:#F0FBF7;--green-main:#A8E6CF;--green-dark:#6FD6AE;--green-deep:#2E8B66;
   --green-chip:#F7FFFC;
@@ -144,7 +150,7 @@ button,input,select,textarea{
   --shadow-md:0 4px 12px rgba(46,139,102,.12),0 1px 4px rgba(46,139,102,.06);
   --shadow-drag:0 12px 32px rgba(46,139,102,.35),0 4px 12px rgba(0,0,0,.16);
 }
-
+/* ───── Peach（オレンジ系） ───── */
 :root[data-color-theme="peach"]{
   --green-light:#FFF3EC;--green-main:#FFC9A9;--green-dark:#F5A77F;--green-deep:#A85F3D;
   --green-chip:#FFFAF7;
@@ -153,6 +159,7 @@ button,input,select,textarea{
   --shadow-drag:0 12px 32px rgba(168,95,61,.35),0 4px 12px rgba(0,0,0,.16);
 }
 
+/* ───── パステル：白文字コントラスト確保 ───── */
 /* 既存ヘッダーは light→main→dark のグラデで白文字を載せるが、 */
 /* パステルでは右端を deep にして白文字 4.5:1 以上を確保する     */
 :root[data-color-theme="sakura"] .app-header,
@@ -191,13 +198,70 @@ button,input,select,textarea{
 }
 
 /* パステル + ダーク：チップ色を deep ベースで暗めに */
+:root[data-theme="dark"][data-color-theme="sakura"]{--green-chip:#3A1F26;}
+:root[data-theme="dark"][data-color-theme="lavender"]{--green-chip:#231D33;}
+:root[data-theme="dark"][data-color-theme="mint"]{--green-chip:#16332A;}
+:root[data-theme="dark"][data-color-theme="peach"]{--green-chip:#3A2418;}
 
 /* ===== ダークモード ===== */
+:root[data-theme="dark"]{
+  --bg:#0F1612;--card-bg:#1A2620;
+  --border:#2A3833;--text-primary:#E8F0EC;--text-secondary:#A8BEB4;--text-tertiary:#7A8E86;
+  --green-chip:#1F3329;
+}
+:root[data-theme="dark"][data-color-theme="blue"]{--green-chip:#162538;}
+:root[data-theme="dark"][data-color-theme="black"]{--green-chip:#22252A;}
+:root[data-theme="dark"][data-color-theme="gold"]{--green-chip:#2E2410;}
+:root[data-theme="dark"][data-color-theme="mono"]{--green-chip:#22252A;}
 
 /* ダーク時に明るすぎるトーンを抑制 */
+:root[data-theme="dark"] .app-header,
+:root[data-theme="dark"] .search-header{
+  background:#1c1c1e;
+  border-bottom-color:var(--green-main);
+  box-shadow:none;
+}
+:root[data-theme="dark"] .app-logo{color:#f5f5f7;}
+:root[data-theme="dark"] .month-text{color:#f5f5f7 !important;}
+:root[data-theme="dark"] .m-arrow{background:#2c2c2e !important;border-color:#3a3a3c !important;color:#f5f5f7 !important;box-shadow:none !important;}
+:root[data-theme="dark"] .hamburger-btn svg line{stroke:#f5f5f7;}
+:root[data-theme="dark"] .header-icon-btn svg{stroke:#f5f5f7;}
+:root[data-theme="dark"] .app-avatar{background:#2c2c2e;border-color:#3a3a3c;color:#f5f5f7;}
+:root[data-theme="dark"] .cal-header{background:#1c1c1e;border-bottom-color:#2c2c2e;}
+:root[data-theme="dark"] .cal-week-labels{border-top-color:#2c2c2e;}
+:root[data-theme="dark"] .cal-week-labels span{color:#636366 !important;}
 
 /* ダークモード：白背景を card-bg に置換 */
+:root[data-theme="dark"] .phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--green-main);width:100%;max-width:100%;height:100%;display:flex;flex-direction:column;position:absolute;top:0;left:0;right:0;bottom:0;}
+:root[data-theme="dark"] .cal-swipe-wrap,
+:root[data-theme="dark"] .cal-cell,
+:root[data-theme="dark"] .filter-grid,
+:root[data-theme="dark"] .filter-chip,
+:root[data-theme="dark"] .modal-sheet,
+:root[data-theme="dark"] .event-card,
+:root[data-theme="dark"] .day-event-item,
+:root[data-theme="dark"] .bottom-nav,
+:root[data-theme="dark"] .dv-header,
+:root[data-theme="dark"] .dv-timeline,
+:root[data-theme="dark"] .dv-event,
+:root[data-theme="dark"] .dv-allday-chip,
+:root[data-theme="dark"] .day-block,
+:root[data-theme="dark"] .day-event-row,
+:root[data-theme="dark"] .drawer{background:var(--card-bg);color:var(--text-primary);}
+:root[data-theme="dark"] .cal-cell.other,
+:root[data-theme="dark"] .dv-allday{background:#131D18;}
 /* ダークモード：範囲選択ハイライト */
+:root[data-theme="dark"] .cal-cell.range-mid{background:#1A3D2C;}
+:root[data-theme="dark"] .cal-cell.range-edge{background:var(--green-dark);box-shadow:inset 0 0 0 2px var(--green-light);}
+:root[data-theme="dark"] .form-input,
+:root[data-theme="dark"] textarea.form-input{background:#13201B;color:var(--text-primary);border-color:var(--border);}
+:root[data-theme="dark"] .event-del-btn,
+:root[data-theme="dark"] .day-event-del{background:#3A1A1A;border-color:#5A2828;color:#FF8888;}
+:root[data-theme="dark"] .hint-bar,
+:root[data-theme="dark"] .cal-header,
+:root[data-theme="dark"] .cat-legend{background:var(--card-bg);}
+:root[data-theme="dark"] .search-scroll,
+:root[data-theme="dark"] .cal-scroll{background:var(--bg);}
 
 /* ===== 表示スタイル：フラット（影なし） ===== */
 :root[data-style="flat"]{
@@ -231,9 +295,10 @@ button,input,select,textarea{
 .status-icons{color:rgba(255,255,255,.9);font-size:10px;}
 .page{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
 .page.active{display:flex;}
-
+/* ================================================================ */
+/* ★★★ NEW MINIMAL HEADER DESIGN ★★★                             */
 /* White-based, Apple Calendar / Notion inspired                    */
-
+/* ================================================================ */
 .app-header{
   position:relative;
   background:#ffffff;
@@ -305,6 +370,7 @@ button,input,select,textarea{
 .header-icon-btn:active{background:rgba(0,0,0,.06);}
 .header-icon-btn svg{width:18px;height:18px;}
 
+/* ★★★ ドロワーオーバーレイ ★★★ */
 .drawer-overlay{
   position:fixed;
   inset:0;
@@ -316,6 +382,7 @@ button,input,select,textarea{
 }
 .drawer-overlay.show{opacity:1;pointer-events:auto;}
 
+/* ★★★ ドロワー本体：右からスライドイン ★★★ */
 .drawer{
   position:fixed;
   top:0;right:0;bottom:0;
@@ -424,8 +491,27 @@ button,input,select,textarea{
 }
 .drawer-cat-item.is-off .drawer-cat-label{color:var(--text-tertiary);}
 .drawer-cat-item.is-off .drawer-cat-dot{opacity:.35;}
-
-.drawer-cat-item:not(.is-off) 
+/* iOS風スイッチ */
+.drawer-toggle{
+  width:36px;height:20px;
+  border-radius:10px;
+  background:#D8E0DD;
+  position:relative;
+  flex-shrink:0;
+  transition:background .2s;
+}
+.drawer-toggle::after{
+  content:'';
+  position:absolute;
+  top:2px;left:2px;
+  width:16px;height:16px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.15);
+  transition:transform .2s;
+}
+.drawer-cat-item:not(.is-off) .drawer-toggle{background:var(--green-main);}
+.drawer-cat-item:not(.is-off) .drawer-toggle::after{transform:translateX(16px);}
 
 /* フッターのバージョン表記 */
 .drawer-footer{
@@ -665,6 +751,13 @@ button,input,select,textarea{
 }
 .month-picker-item.is-current:active{background:var(--green-dark);}
 /* ダークモード対応 */
+:root[data-theme="dark"] .month-picker{background:#2c2c2e;box-shadow:0 8px 30px rgba(0,0,0,.4);}
+:root[data-theme="dark"] .month-picker-year{color:#f5f5f7;}
+:root[data-theme="dark"] .month-picker-year-btn{color:#f5f5f7;}
+:root[data-theme="dark"] .month-picker-header{border-bottom-color:#3a3a3c;}
+:root[data-theme="dark"] .month-picker-item{color:#f5f5f7;}
+:root[data-theme="dark"] .month-picker-item:active{background:#3a3a3c;}
+:root[data-theme="dark"] .month-dropdown-caret{color:#636366;}
 .cal-header{
   background:#ffffff;
   padding:0;
@@ -694,6 +787,7 @@ button,input,select,textarea{
 .cal-cell.newly-added{animation:flashCell .7s ease;}
 @keyframes flashCell{0%{background:#7BEEC0}50%{background:#C8F5E2}100%{background:var(--green-chip)}}
 
+/* ★★★ 範囲選択ハイライト ★★★ */
 /* 範囲内（中間）セル */
 .cal-cell.range-mid{
   background:#D6F5E8;
@@ -754,6 +848,7 @@ button,input,select,textarea{
 .cal-num.today-txt.sun,.cal-num.today-txt.sat{color:#fff;}
 .chips{display:flex;flex-direction:column;gap:2px;width:100%;overflow:hidden;flex:1 1 0;min-height:0;padding:0 0 2px;}
 
+/* ★★★ 複数日イベントの横バー ★★★ */
 /* 週行（cal-row）の上にオーバーレイし、複数セルにまたがる連続バーを描画する */
 .cal-multiday-layer{
   position:absolute;
@@ -763,10 +858,10 @@ button,input,select,textarea{
   display:grid;
   grid-template-columns:repeat(7,1fr);
   /* セル左上の日付ぶんを避けるため、上に余白（padding-top:4 + 日付18 + margin-bottom:2 = 24px） */
-  padding-top:30px;
-  /* セルpadding(4)+date-wrap margin-top(0)+height(24)+margin-bottom(2)=30px */
+  padding-top:31px;
+  /* セルpadding(4)+date-wrap margin-top(1)+height(24)+margin-bottom(2)=31px */
   align-content:start;
-  grid-auto-rows:14px; /* バー1本の高さ(14px)＋gap(2px)はrow-gapで管理 */
+  grid-auto-rows:16px; /* バー1本の高さ(14px)＋gap(2px) */
   row-gap:2px;
   z-index:1; /* ★ cal-row(z-index:5) より下に — セルのタッチが最優先 */
 }
@@ -822,6 +917,13 @@ button,input,select,textarea{
   flex-shrink:0;
 }
 /* バーカラー（チップと同じ色味） */
+.mdbar-jgto{background:var(--green-main);}
+.mdbar-jlpga{background:#E0567E;}
+.mdbar-pga{background:#2D7DD2;}
+.mdbar-qualifier{background:#A0631A;}
+.mdbar-mini{background:#D4771A;}
+.mdbar-open{background:#7B4DB5;}
+.mdbar-personal{background:#6B6ED4;}
 
 /* ★ チップ：ドラッグ可能・カードとして浮き上がる */
 .ev-chip{
@@ -842,6 +944,7 @@ button,input,select,textarea{
   pointer-events:none;
 }
 
+/* ★★★ セルドラッグ：日付セル全体を持ち上げ ★★★ */
 .cal-cell.cell-lifting{
   background:#E0F8EE;
   box-shadow:inset 0 0 0 2px var(--green-main);
@@ -906,6 +1009,7 @@ button,input,select,textarea{
 .chip-qualifier{background:#A0631A;color:#fff;}.chip-mini{background:#D4771A;color:#fff;}.chip-open{background:#7B4DB5;color:#fff;}.chip-personal{background:#6B6ED4;color:#fff;}
 .chip-more{font-size:10px;border-radius:4px;padding:0 4px;width:100%;height:14px;line-height:14px;display:block;font-weight:600;flex-shrink:0;background:#E8F0EE;color:var(--green-dark);cursor:pointer;text-align:center;}
 
+/* ★★★ ドラッグ中のフロートカード（クローン） ★★★ */
 .drag-card{
   position:fixed;
   pointer-events:none;
@@ -965,6 +1069,7 @@ button,input,select,textarea{
   transition:flex-grow .28s cubic-bezier(.4,0,.2,1);
 }
 
+/* ★★★ カテゴリ凡例：ドット＋カテゴリ名のみ（情報表示） ★★★ */
 .cat-legend{
   flex-shrink:0;
   height:22px;
@@ -1040,7 +1145,8 @@ button,input,select,textarea{
 .event-meta{font-size:11px;color:var(--text-secondary);margin-top:2px;}
 .badge-row{display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;}
 .badge{font-size:8.5px;padding:1px 6px;border-radius:9px;font-weight:600;}
-
+.badge-jgto{background:var(--green-chip);color:var(--green-dark);}.badge-jlpga{background:#FCEAF2;color:#A02060;}.badge-pga{background:#E8F0FC;color:#1A50A0;}
+.badge-qualifier{background:#FDF0E0;color:#8A5010;}.badge-mini{background:#FEF4E8;color:#A06010;}.badge-open{background:#F2EAFA;color:#6B3FA0;}.badge-personal{background:#EDEDFC;color:#4040A0;}
 .no-events{font-size:12px;color:var(--text-tertiary);padding:6px 14px 8px;}
 .search-header{
   background:#ffffff;
@@ -1199,6 +1305,11 @@ button,input,select,textarea{
   background:var(--green-chip);color:var(--green-dark);
   white-space:nowrap;
 }
+:root[data-theme="dark"] .sq-suggest{
+  background:var(--card-bg);
+  box-shadow:0 8px 28px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.3);
+}
+:root[data-theme="dark"] .sq-suggest-item.is-focused{background:rgba(255,255,255,.06);}
 /* 検索トークン表示バー（header下） */
 .sq-token-bar{
   display:flex;flex-wrap:wrap;align-items:center;gap:5px;
@@ -1222,6 +1333,7 @@ button,input,select,textarea{
   gap:6px;
   align-items:center;
 }
+:root[data-theme="dark"] .filter-grid{background:var(--card-bg);}
 .filter-grid.is-hidden{display:none;}
 .filter-chip{
   position:relative;
@@ -1248,6 +1360,11 @@ button,input,select,textarea{
   overflow:hidden;
   text-overflow:ellipsis;
 }
+:root[data-theme="dark"] .filter-chip{
+  background:#1A2520;color:#B0BCB6;
+  border-color:rgba(255,255,255,.08);
+  box-shadow:none;
+}
 .filter-chip:has(.filter-chip-star){padding-right:14px;}
 .filter-chip:active{transform:scale(.95);}
 
@@ -1273,7 +1390,15 @@ button,input,select,textarea{
 .filter-chip.active[data-area="hokkaido"]{background:#DCF0F8;color:#0D4B65;}
 .filter-chip.active[data-area="overseas"]{background:#E8E8F0;color:#3A3A5C;}
 /* エリア行のラベル */
-
+.filter-area-label{
+  font-size:9.5px;font-weight:700;letter-spacing:.05em;
+  color:var(--text-tertiary);padding:0 2px 2px;
+  display:block;width:100%;
+}
+:root[data-theme="dark"] .filter-chip.active{
+  filter:brightness(.65) saturate(1.1);
+  color:#fff;
+}
 .result-meta{padding:5px 14px 3px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg);}
 .result-meta.is-hidden{display:none;}
 .result-count{font-size:10.5px;color:var(--text-secondary);font-weight:600;}
@@ -1391,6 +1516,11 @@ button,input,select,textarea{
 .fbs-chip.active[data-area="kyushu"]  {background:#FCE8DC;color:#7A2E0E;}
 .fbs-chip.active[data-area="hokkaido"]{background:#DCF0F8;color:#0D4B65;}
 .fbs-chip.active[data-area="overseas"]{background:#E8E8F0;color:#3A3A5C;}
+:root[data-theme="dark"] .fbs-chip{
+  background:var(--card-bg);color:var(--text-secondary);
+  border-color:rgba(255,255,255,.09);
+}
+:root[data-theme="dark"] .fbs-chip.active{filter:brightness(.7) saturate(1.15);color:#fff;}
 .fbs-footer{
   padding:10px 16px 14px;flex-shrink:0;
   border-top:1px solid var(--border);
@@ -1437,6 +1567,8 @@ button,input,select,textarea{
 .fbs-chip-area.active[data-area="kyushu"]  {background:#FCE8DC;color:#7A2E0E;}
 .fbs-chip-area.active[data-area="hokkaido"]{background:#DCF0F8;color:#0D4B65;}
 .fbs-chip-area.active[data-area="overseas"]{background:#E8E8F0;color:#3A3A5C;}
+:root[data-theme="dark"] .fbs-chip-area{background:var(--card-bg);color:var(--text-secondary);border-color:rgba(255,255,255,.09);}
+:root[data-theme="dark"] .fbs-chip-area.active{filter:brightness(.7) saturate(1.15);color:#fff;}
 /* 都道府県チップ（子）展開パネル */
 .fbs-pref-panel{
   width:100%;
@@ -1468,6 +1600,8 @@ button,input,select,textarea{
   background:var(--green-chip);color:var(--green-dark);
   box-shadow:0 1px 4px rgba(26,175,122,.2);
 }
+:root[data-theme="dark"] .fbs-chip-pref{background:var(--card-bg);color:var(--text-tertiary);border-color:rgba(255,255,255,.08);}
+:root[data-theme="dark"] .fbs-chip-pref.active{background:#1F3329;color:var(--green-light);}
 /* フィルターバナー（既存フィルター + 都道府県対応） */
 .fbs-active-banner{
   display:flex;align-items:center;flex-wrap:wrap;gap:5px;
@@ -1486,9 +1620,14 @@ button,input,select,textarea{
 }
 .fbs-active-clear:active{background:var(--green-chip);}
 
+
+
 .search-scroll{flex:1;overflow-y:auto;background:var(--bg);min-height:0;}
 .search-scroll::-webkit-scrollbar{display:none;}
 
+/* =====================================================================
+   ★ NEW: 初回ガイドtip
+   ===================================================================== */
 .sq-guide-tip{
   position:absolute;left:50%;transform:translateX(-50%);
   top:calc(100% + 8px);
@@ -1507,6 +1646,9 @@ button,input,select,textarea{
 }
 @keyframes guidePop{from{opacity:0;transform:translateX(-50%) scale(.85);}to{opacity:1;transform:translateX(-50%) scale(1);}}
 
+/* =====================================================================
+   ★ NEW: サジェスト：最近の検索 / 人気セクション
+   ===================================================================== */
 .sq-suggest-empty-state{padding:10px 14px;}
 .sq-suggest-empty-section{margin-bottom:10px;}
 .sq-suggest-empty-section-label{
@@ -1526,6 +1668,9 @@ button,input,select,textarea{
 }
 .sq-suggest-empty-item:active{background:rgba(26,175,122,.22);}
 
+/* =====================================================================
+   ★ NEW: フィルター保存UI (ボトムシート内)
+   ===================================================================== */
 .fbs-save-section{
   border-top:1px solid var(--border);
   padding:12px 16px 4px;
@@ -1564,6 +1709,10 @@ button,input,select,textarea{
   cursor:pointer;-webkit-tap-highlight-color:transparent;
   white-space:nowrap;
 }
+
+/* =====================================================================
+   ★ リマインド：iOS風インライン型
+   ===================================================================== */
 
 /* ── カード内リマインド行 ── */
 .t-remind-row{
@@ -1635,7 +1784,13 @@ button,input,select,textarea{
 .t-remind-pill.is-set svg{color:var(--green-main);}
 
 /* ダークモード */
+:root[data-theme="dark"] .t-bell-btn.is-on{background:rgba(26,175,122,.15);}
+:root[data-theme="dark"] .t-remind-pill{background:#1E2A24;color:var(--text-secondary);}
+:root[data-theme="dark"] .t-remind-pill.is-set{background:#1F3329;color:var(--green-light);border-color:rgba(26,175,122,.3);}
 
+/* =====================================================================
+   ★ 時間選択シート（ボトムシート）
+   ===================================================================== */
 .remind-overlay{
   position:absolute;inset:0;
   background:rgba(0,0,0,.38);
@@ -1724,13 +1879,27 @@ button,input,select,textarea{
 .remind-option.is-checked{background:#F7FFFE;}
 
 /* ダークモード：シート */
+:root[data-theme="dark"] .remind-sheet{background:#1C1C1E;}
+:root[data-theme="dark"] .remind-option-list{background:#2C2C2E;}
+:root[data-theme="dark"] .remind-option{background:#2C2C2E;border-bottom-color:rgba(255,255,255,.08);}
+:root[data-theme="dark"] .remind-option:active{background:#3A3A3C;}
+:root[data-theme="dark"] .remind-option-label{color:#EBEBF5;}
+:root[data-theme="dark"] .remind-option.is-checked{background:#1F3329;}
+:root[data-theme="dark"] .remind-option.is-checked .remind-option-label{color:var(--green-light);}
+:root[data-theme="dark"] .remind-sheet-title{color:#EBEBF5;}
+:root[data-theme="dark"] .remind-sheet-cancel{color:#8E8E93;}
+:root[data-theme="dark"] .remind-handle{background:rgba(255,255,255,.2);}
 
+
+
+/* ★★★ モードタブ（お気に入り / すべて） ★★★ */
 .search-mode-tabs{
   display:flex;background:#fff;
   flex-shrink:0;
   padding:4px 12px 0;
   gap:4px;
 }
+:root[data-theme="dark"] .search-mode-tabs{background:var(--card-bg);}
 .search-mode-tab{
   flex:1;background:transparent;border:none;
   font-size:11px;font-weight:600;color:var(--text-tertiary);
@@ -1751,6 +1920,7 @@ button,input,select,textarea{
   border-bottom-color:#E5A41A;
 }
 
+/* ★★★ エントリー締切バッジ・通知ボタン ★★★ */
 .deadline-badge{
   display:inline-flex;align-items:center;gap:3px;
   padding:2px 7px;border-radius:8px;
@@ -1769,6 +1939,12 @@ button,input,select,textarea{
   0%,100%{transform:scale(1);}
   50%{transform:scale(1.04);}
 }
+:root[data-theme="dark"] .deadline-badge.normal{background:#1F2A24;color:#A8B5AC;border-color:#2E3933;}
+:root[data-theme="dark"] .deadline-badge.near{background:#3A2E0A;color:#E8C457;border-color:#5A4810;}
+:root[data-theme="dark"] .deadline-badge.soon{background:#3A2410;color:#E89052;border-color:#5A3A1A;}
+:root[data-theme="dark"] .deadline-badge.today{background:#3F1818;color:#F08080;border-color:#5F2424;}
+:root[data-theme="dark"] .deadline-badge.past{background:#212528;color:#7A8088;border-color:#34393E;}
+:root[data-theme="dark"] .deadline-badge.entered{background:#143A2A;color:#7DD8B0;border-color:#1E5040;}
 
 .deadline-row{
   display:flex;align-items:center;gap:6px;flex-wrap:wrap;
@@ -1788,6 +1964,7 @@ button,input,select,textarea{
 }
 .deadline-event-dim{opacity:.55;}
 
+/* ★★★ 通知設定シート ★★★ */
 .notif-settings-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.45);
   z-index:310;opacity:0;pointer-events:none;
@@ -1803,6 +1980,7 @@ button,input,select,textarea{
   box-shadow:0 -8px 30px rgba(0,0,0,.18);
   transition:transform .26s cubic-bezier(.32,.72,.34,1);
 }
+:root[data-theme="dark"] .notif-settings-sheet{background:var(--card-bg);}
 .notif-settings-sheet.show{transform:translate(-50%,0);}
 .notif-settings-grip{
   width:36px;height:4px;background:var(--border);
@@ -1831,6 +2009,7 @@ button,input,select,textarea{
   color:var(--text-primary);background:var(--bg);
   font-family:inherit;
 }
+:root[data-theme="dark"] .notif-settings-date{color:var(--text-primary);color-scheme:dark;}
 .notif-settings-toggle{padding:8px 0;}
 .notif-switch{
   position:relative;width:38px;height:22px;display:inline-block;
@@ -1870,6 +2049,7 @@ button,input,select,textarea{
   flex-shrink:0;position:relative;
   transition:background .15s,border-color .15s;
 }
+:root[data-theme="dark"] .notif-check-mark{background:var(--card-bg);}
 .notif-check-row input:checked + .notif-check-mark{
   background:var(--green-main);border-color:var(--green-main);
 }
@@ -1901,6 +2081,7 @@ button,input,select,textarea{
 }
 .notif-btn-primary:active{opacity:.85;}
 
+
 .fav-tab-cat-row{
   display:grid;
   grid-template-columns:repeat(4,1fr);
@@ -1911,6 +2092,7 @@ button,input,select,textarea{
 }
 /* チップ自体は .filter-chip クラスを共有 */
 
+/* ★★★ カテゴリchipの右上の⭐ ★★★ */
 .filter-chip-star{
   position:absolute;top:2px;right:2px;
   width:11px;height:11px;border-radius:50%;
@@ -1926,7 +2108,10 @@ button,input,select,textarea{
 .filter-chip-star.is-fav{
   color:#E5A41A;border-color:#E5A41A;background:#FFF4D6;
 }
+:root[data-theme="dark"] .filter-chip-star{background:var(--card-bg);}
+:root[data-theme="dark"] .filter-chip-star.is-fav{background:#3A2C0E;color:#F0B43F;}
 
+/* ★★★ セクションヘッダー ★★★ */
 .search-section-head{
   display:flex;align-items:center;justify-content:space-between;
   padding:14px 16px 6px;
@@ -1948,6 +2133,7 @@ button,input,select,textarea{
   font-weight:500;line-height:1.5;
 }
 
+/* ★★★ 大会カード（軽量化） ★★★ */
 .t-card{
   margin:0 12px 6px;background:var(--card-bg);
   border-radius:10px;border:1px solid var(--border);
@@ -1957,6 +2143,7 @@ button,input,select,textarea{
 }
 .t-card:active{transform:scale(.99);}
 .t-card.is-added{opacity:.62;background:#F4F7F6;}
+:root[data-theme="dark"] .t-card.is-added{background:#15201B;opacity:.7;}
 .t-card-top{display:flex;align-items:stretch;}
 .t-stripe{width:3px;flex-shrink:0;}
 .t-main{flex:1;padding:10px 8px 9px 10px;min-width:0;}
@@ -1999,6 +2186,9 @@ button,input,select,textarea{
 }
 .badge-status-upcoming{background:#EEF3FA;color:#3B6FB0;border:1px solid #C8D8EC;}
 .badge-status-ended{background:#F0F2F4;color:#7A8088;border:1px solid #DDE2E6;}
+:root[data-theme="dark"] .badge-status-live{background:#143A2A;color:#7DD8B0;border-color:#1E5040;}
+:root[data-theme="dark"] .badge-status-upcoming{background:#172638;color:#A8C5E6;border-color:#22405E;}
+:root[data-theme="dark"] .badge-status-ended{background:#212528;color:#A0A6AC;border-color:#34393E;}
 
 .t-action{
   padding:8px 10px 8px 0;
@@ -2049,6 +2239,7 @@ button,input,select,textarea{
 .cat-item.tapping{transform:scale(0.96);}
 .cat-item.sel{border-width:2px;box-shadow:var(--shadow-sm);}
 
+/* ★★★ カテゴリ並び替えモード ★★★ */
 .cat-reorder-toolbar{
   display:flex;align-items:center;justify-content:space-between;
   margin-top:-2px;margin-bottom:6px;
@@ -2125,7 +2316,7 @@ button,input,select,textarea{
 .cat-check{position:absolute;top:7px;right:9px;font-size:12px;opacity:0;transition:opacity .15s;}
 .cat-item.sel .cat-check{opacity:1;}
 /* ★ 追加済みカテゴリバッジは廃止：万一マークアップが残っても何も表示しない */
-
+.cat-enabled-badge{display:none !important;}
 /* ★ 追加済みカテゴリ：Apple純正カレンダー風に枠線を少しだけ濃く（カラーは inline で指定） */
 .cat-item.is-enabled:not(.sel){
   border-width:1.5px;
@@ -2167,7 +2358,8 @@ button,input,select,textarea{
   width:8px;height:8px;
   background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2 2h7l1.5 1.5V10H2V2z' fill='none' stroke='%231AAF7A' stroke-width='1.2'/><line x1='3.5' y1='5' x2='8.5' y2='5' stroke='%231AAF7A' stroke-width='1' stroke-linecap='round'/><line x1='3.5' y1='7' x2='7' y2='7' stroke='%231AAF7A' stroke-width='1' stroke-linecap='round'/></svg>") center/contain no-repeat;
 }
-
+.date-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.date-hint{display:flex;justify-content:space-between;font-size:9px;color:var(--text-tertiary);margin:2px 2px 11px;padding:0 2px;}
 .btn-primary{width:100%;background:linear-gradient(135deg,var(--green-light),var(--green-main));color:#fff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(26,175,122,.35);}
 .btn-primary:disabled{background:#C8D8D0;box-shadow:none;cursor:not-allowed;}
 .btn-secondary{width:100%;background:none;border:none;color:var(--text-tertiary);font-size:13px;padding:8px;cursor:pointer;margin-top:2px;}
@@ -2196,11 +2388,14 @@ button,input,select,textarea{
 .toast{position:fixed;bottom:calc(max(env(safe-area-inset-bottom,0px),0px) + 68px);left:14px;right:14px;background:linear-gradient(135deg,var(--green-main),var(--green-dark));color:#fff;font-size:11px;font-weight:600;padding:8px 14px;border-radius:11px;text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;z-index:30;box-shadow:0 4px 16px rgba(10,107,71,.3);}
 .toast.show{opacity:1;}
 
+/* ================================================================ */
+/* ★★★ Day View（1日表示） ★★★                                     */
+/* ================================================================ */
 .cal-day-view{
   display:flex;flex-direction:column;width:100%;height:100%;
   background:var(--bg);overflow:hidden;
 }
-
+/* ───── 日付ヘッダー ───── */
 .dv-header{
   display:flex;align-items:center;justify-content:space-between;
   padding:8px 14px;background:#fff;border-bottom:1px solid var(--border);
@@ -2242,6 +2437,7 @@ button,input,select,textarea{
 }
 .dv-arrow:active{background:var(--green-chip);color:var(--green-dark);}
 
+/* ───── 終日（All-day）セクション ───── */
 .dv-allday{
   flex-shrink:0;background:#FAFCFB;
   border-bottom:1px solid var(--border);
@@ -2276,6 +2472,7 @@ button,input,select,textarea{
   font-size:9.5px;font-weight:600;color:var(--text-secondary);
 }
 
+/* ───── タイムライン ───── */
 .dv-timeline{
   flex:1;overflow-y:auto;overflow-x:hidden;
   position:relative;background:#fff;
@@ -2322,6 +2519,7 @@ button,input,select,textarea{
 }
 .dv-slot:active{background:rgba(26,175,122,.06);}
 
+/* ───── イベントカード ───── */
 .dv-event{
   position:absolute;
   background:#fff;
@@ -2357,6 +2555,7 @@ button,input,select,textarea{
   -webkit-line-clamp:1;font-size:10px;
 }
 
+/* ───── 現在時刻ライン ───── */
 .dv-now-line{
   position:absolute;left:34px;right:0;
   height:0;border-top:2px solid #E54A4A;
@@ -2371,6 +2570,7 @@ button,input,select,textarea{
 }
 .dv-now-line.is-hidden{display:none;}
 
+/* ───── 空状態 ───── */
 .dv-empty-overlay{
   position:absolute;left:50%;top:120px;transform:translateX(-50%);
   font-size:11px;color:var(--text-tertiary);
@@ -2380,8 +2580,12 @@ button,input,select,textarea{
   font-weight:500;
 }
 
+/* ───── スワイプアニメ用 ───── */
 .cal-day-view.is-swiping .dv-timeline{transition:none;}
 
+/* ================================================================ */
+/* ★★★ デザイン設定パネル ★★★                                       */
+/* ================================================================ */
 .settings-overlay{
   position:absolute;inset:0;background:rgba(10,30,22,.55);
   opacity:0;pointer-events:none;transition:opacity .25s;
@@ -2482,6 +2686,7 @@ button,input,select,textarea{
   transition:box-shadow .18s,transform .12s;
   position:relative;
 }
+:root[data-theme="dark"] .color-swatch{border-color:#2A3833;}
 .color-card.is-active .color-swatch{
   box-shadow:0 0 0 2.5px var(--green-main),0 2px 8px rgba(0,0,0,.15);
   transform:scale(1.05);
@@ -2555,6 +2760,7 @@ button,input,select,textarea{
   border:1px solid var(--border);
   display:flex;align-items:center;gap:5px;padding:0 6px;
 }
+:root[data-theme="dark"] .style-preview{background:#0E1814;}
 .style-preview.is-card{box-shadow:0 2px 6px rgba(0,0,0,.10);}
 .style-preview-bar{
   width:3px;height:18px;border-radius:2px;background:var(--green-main);
@@ -2595,9 +2801,14 @@ button,input,select,textarea{
 .settings-reset:active{
   background:#FFF0F0;border-color:#E8B0B0;color:#C84444;
 }
+:root[data-theme="dark"] .settings-reset:active{
+  background:#3A1A1A;border-color:#5A2828;color:#FF8888;
+}
 
+/* ================================================================ */
+/* ★★★ 収支ページ：Coming Soon（再設計準備中）★★★                   */
 /* 既存テーマカラー（--green-*）に自動追従する最小スタイル           */
-
+/* ================================================================ */
 .fin-coming-header{
   background:#ffffff;
   padding:env(safe-area-inset-top,0px) 16px 16px;
@@ -2625,9 +2836,13 @@ button,input,select,textarea{
   font-size:14px;color:var(--text-secondary);
   text-align:center;line-height:1.7;
 }
-
+/* ================================================================ */
 /* ★ 収支機能 再設計メモ（ここに新CSSを追加していく）              */
+/* ================================================================ */
 
+/* ================================================================ */
+/* ★★★ Day View 時間ドラッグ選択 ★★★                                 */
+/* ================================================================ */
 .dv-drag-select{
   position:absolute;left:0;right:0;
   background:linear-gradient(135deg,
@@ -2700,12 +2915,28 @@ button,input,select,textarea{
   background:#fff;color:var(--green-deep);
   box-shadow:0 1px 3px rgba(0,0,0,.06);
 }
+:root[data-theme="dark"] .time-mode-btn.is-active{
+  background:var(--card-bg);
+}
 .time-row{
   display:grid;grid-template-columns:1fr 12px 1fr;
   gap:8px;align-items:center;margin-bottom:6px;
 }
 .time-row.hidden{display:none;}
-
+.time-input{
+  width:100%;border:1px solid var(--border);
+  background:var(--card-bg);border-radius:9px;
+  padding:8px 10px;font-size:13px;font-weight:600;
+  color:var(--text-primary);font-family:inherit;
+  outline:none;transition:border-color .15s;
+  font-feature-settings:"tnum";
+  -webkit-appearance:none;
+}
+.time-input:focus{border-color:var(--green-main);}
+.time-row-sep{
+  text-align:center;color:var(--text-tertiary);
+  font-weight:700;font-size:13px;
+}
 .time-hint{
   display:flex;justify-content:space-between;
   font-size:9px;color:var(--text-tertiary);
@@ -2713,7 +2944,14 @@ button,input,select,textarea{
   padding:0 2px;
 }
 
+/* =====================================================================
+   ★★★ iOSホイールピッカー
+   ===================================================================== */
+
 /* ── オーバーレイ ── */
+/* ================================================================
+   ★★★ iOSホイールピッカー v2 — Apple純正カレンダー風
+   ================================================================ */
 
 /* ── オーバーレイ ── */
 .wp-overlay{
@@ -2739,6 +2977,7 @@ button,input,select,textarea{
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
 .wp-overlay.show .wp-sheet{transform:translateY(0);}
+:root[data-theme="dark"] .wp-sheet{background:#1C1C1E;}
 
 /* ── グリップバー ── */
 .wp-handle-bar{
@@ -2746,6 +2985,7 @@ button,input,select,textarea{
   background:rgba(0,0,0,.18);
   margin:10px auto 0;
 }
+:root[data-theme="dark"] .wp-handle-bar{background:rgba(255,255,255,.2);}
 
 /* ── ヘッダー ── */
 .wp-header{
@@ -2764,6 +3004,9 @@ button,input,select,textarea{
   font-size:14px;font-weight:700;
   color:#1C1C1E;letter-spacing:.1px;
 }
+:root[data-theme="dark"] .wp-cancel-btn{color:#636366;}
+:root[data-theme="dark"] .wp-title{color:#EBEBF5;}
+:root[data-theme="dark"] .wp-done-btn{color:var(--green-light);}
 
 /* ── タブ（開始/終了） ── */
 .wp-tabs{
@@ -2784,17 +3027,22 @@ button,input,select,textarea{
   background:var(--green-main);
   box-shadow:0 2px 12px rgba(26,175,122,.3);
 }
+:root[data-theme="dark"] .wp-tab{background:#2C2C2E;}
+:root[data-theme="dark"] .wp-tab.active{background:var(--green-dark);}
 .wp-tab-label{
   font-size:10px;font-weight:600;letter-spacing:.4px;
   color:rgba(0,0,0,.45);text-transform:uppercase;
 }
 .wp-tab.active .wp-tab-label{color:rgba(255,255,255,.75);}
+:root[data-theme="dark"] .wp-tab-label{color:#636366;}
+:root[data-theme="dark"] .wp-tab.active .wp-tab-label{color:rgba(255,255,255,.6);}
 .wp-tab-val{
   font-size:13px;font-weight:600;color:#1C1C1E;
   font-feature-settings:"tnum";white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;max-width:100%;
 }
 .wp-tab.active .wp-tab-val{color:#fff;}
+:root[data-theme="dark"] .wp-tab-val{color:#EBEBF5;}
 
 /* ── 終日トグル ── */
 .wp-allday-row{
@@ -2805,9 +3053,11 @@ button,input,select,textarea{
   border-radius:14px;
   box-shadow:0 1px 3px rgba(0,0,0,.06);
 }
+:root[data-theme="dark"] .wp-allday-row{background:#2C2C2E;}
 .wp-allday-label{
   font-size:15px;font-weight:500;color:#1C1C1E;
 }
+:root[data-theme="dark"] .wp-allday-label{color:#EBEBF5;}
 /* iOS風スイッチ */
 .wp-allday-toggle{
   width:50px;height:30px;border-radius:15px;
@@ -2837,6 +3087,7 @@ button,input,select,textarea{
   overflow:hidden;
   box-shadow:0 1px 4px rgba(0,0,0,.06);
 }
+:root[data-theme="dark"] .wp-picker-wrap{background:#2C2C2E;}
 
 /* 中央選択ライン */
 .wp-selector-line{
@@ -2848,6 +3099,7 @@ button,input,select,textarea{
   pointer-events:none;z-index:3;
   border-radius:0;
 }
+:root[data-theme="dark"] .wp-selector-line{background:rgba(255,255,255,.1);}
 
 /* 上下フェード */
 .wp-fade-top,.wp-fade-bot{
@@ -2862,6 +3114,12 @@ button,input,select,textarea{
   bottom:0;
   background:linear-gradient(to top, #fff 0%, rgba(255,255,255,0) 100%);
 }
+:root[data-theme="dark"] .wp-fade-top{
+  background:linear-gradient(to bottom,#2C2C2E 0%,rgba(44,44,46,0) 100%);
+}
+:root[data-theme="dark"] .wp-fade-bot{
+  background:linear-gradient(to top,#2C2C2E 0%,rgba(44,44,46,0) 100%);
+}
 
 /* 各カラム */
 .wp-col{
@@ -2873,6 +3131,7 @@ button,input,select,textarea{
 .wp-col-hour,.wp-col-min{flex:1;}
 /* 時間・分の左ボーダー */
 .wp-col-hour{border-left:1px solid rgba(0,0,0,.08);}
+:root[data-theme="dark"] .wp-col-hour{border-left-color:rgba(255,255,255,.08);}
 
 /* スクロールコンテナ（慣性スクロール） */
 .wp-scroll{
@@ -2905,6 +3164,8 @@ button,input,select,textarea{
   font-weight:600;
   font-size:20px;
 }
+:root[data-theme="dark"] .wp-item{color:rgba(255,255,255,.3);}
+:root[data-theme="dark"] .wp-item.selected{color:#EBEBF5;}
 
 /* スペーサー（高さ = (220-44)/2 = 88px） */
 .wp-spacer{height:88px;flex-shrink:0;}
@@ -2929,6 +3190,8 @@ button,input,select,textarea{
 .wp-interval-btn.is-active{
   background:var(--green-main);color:#fff;
 }
+:root[data-theme="dark"] .wp-interval-btn{background:rgba(255,255,255,.08);color:#aaa;}
+:root[data-theme="dark"] .wp-interval-btn.is-active{background:var(--green-dark);color:#fff;}
 
 /* ── リマインドセクション ── */
 .wp-remind{
@@ -2937,6 +3200,7 @@ button,input,select,textarea{
   border-top:1px solid rgba(0,0,0,.06);
   margin-top:6px;
 }
+:root[data-theme="dark"] .wp-remind{border-top-color:rgba(255,255,255,.07);}
 .wp-bell-btn{
   width:32px;height:32px;border-radius:50%;
   background:rgba(0,0,0,.05);border:none;
@@ -2966,6 +3230,9 @@ button,input,select,textarea{
 }
 .wp-remind-pill:active{opacity:.7;}
 .wp-remind-pill.is-on{background:rgba(26,175,122,.12);color:var(--green-deep);}
+:root[data-theme="dark"] .wp-bell-btn{background:rgba(255,255,255,.08);}
+:root[data-theme="dark"] .wp-remind-pill{background:rgba(255,255,255,.08);color:#EBEBF5;}
+:root[data-theme="dark"] .wp-remind-pill.is-on{background:rgba(26,175,122,.18);color:var(--green-light);}
 
 /* ── 日付フィールド（ピッカー起動ボタン） ── */
 .wp-trigger-row{
@@ -2993,6 +3260,7 @@ button,input,select,textarea{
   font-feature-settings:"tnum";
 }
 .wp-trigger-val.empty{color:var(--text-tertiary);}
+:root[data-theme="dark"] .wp-trigger{background:var(--card-bg);border-color:var(--border);}
 
 /* 時間帯表示ピル（allday/timed） */
 .wp-time-trigger{
@@ -3005,6 +3273,13 @@ button,input,select,textarea{
   gap:6px;transition:border-color .15s;
 }
 .wp-time-trigger.is-timed{border-color:var(--green-light);color:var(--green-deep);}
+:root[data-theme="dark"] .wp-time-trigger{background:var(--card-bg);border-color:var(--border);}
+
+
+/* ================================================================
+   PWA + RESPONSIVE OVERRIDES
+   スマホ実機では phone-wrap/phone/phone-inner を解除、画面全体使用
+   ================================================================ */
 
 /* ---- PC プレビュー時のみ擬似スマホフレームを有効化 ---- */
 @media (min-width: 600px) {
@@ -3046,6 +3321,9 @@ button,input,select,textarea{
   }
 }
 
+/* ================================================================
+   ネイティブアプリらしいタップフィードバック
+   ================================================================ */
 .filter-chip, .cat-card, .filter-grid .filter-chip,
 .search-card, .event-card,
 .bnav-btn, .section-add-btn, .modal-next-btn,
@@ -3103,6 +3381,9 @@ button,input,select,textarea{
   animation: rippleFade 0.35s ease forwards;
 }
 
+/* ================================================================
+   Capacitor対応：フルスクリーン環境での追加調整
+   ================================================================ */
 @media (display-mode: standalone), (display-mode: fullscreen) {
   .app-header, .search-header, .fin-coming-header {
     padding-top: max(env(safe-area-inset-top, 0px), 10px) !important;
@@ -3137,6 +3418,9 @@ button,input,select,textarea{
   html { height: 100%; height: -webkit-fill-available; background: #ffffff; }
 }
 
+/* ================================================================
+   Firebase Auth - ログイン画面 v2 (ProNexaX Redesign)
+   ================================================================ */
 #auth-screen {
   position: fixed; inset: 0; z-index: 9999;
   display: flex;
@@ -3227,7 +3511,8 @@ button,input,select,textarea{
     0 6px 20px rgba(0,0,0,.07),
     0 16px 48px rgba(10,80,50,.10);
 }
-
+@keyframes authFloat {
+  0%,100% { transform: translateY(0); }
   50%      { transform: translateY(-3px); }
 }
 .auth-logo-area { margin-bottom: 22px; }
@@ -3256,7 +3541,7 @@ button,input,select,textarea{
   box-shadow: 0 1px 6px rgba(0,0,0,.1);
 }
 .auth-input-wrap { margin-bottom: 13px; position: relative; }
-
+.auth-input-label { display: none; }
 .auth-input-icon {
   position: absolute; left: 17px; top: 50%; transform: translateY(-50%);
   width: 17px; height: 17px; color: #ccc; pointer-events: none;
@@ -3373,6 +3658,10 @@ button,input,select,textarea{
 /* ユーザーアバター：メールのイニシャル表示 */
 .app-avatar { overflow: hidden; font-size: 9px; }
 
+/* ================================================================
+   ★ モバイル最適化：フルスクリーンネイティブUI追加スタイル
+   ================================================================ */
+
 /* 横スクロール完全禁止 */
 * { box-sizing:border-box; }
 html, body { width:100%; max-width:100%; overflow-x:hidden; }
@@ -3459,7 +3748,7 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
 
 /* Day View */
 .dv-header-date-main { font-size:15px !important; }
-
+.dv-hour-label { font-size:10px !important; }
 .dv-event-title { font-size:12px !important; }
 .dv-allday-chip { font-size:11px !important; }
 
@@ -3471,7 +3760,7 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
 
 /* モーダル入力フォーム */
 .form-input { font-size:15px !important; }
-
+.modal-step-title { font-size:16px !important; }
 .modal-next-btn { font-size:15px !important; padding:13px !important; }
 
 /* dragカード */
@@ -3508,6 +3797,13 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
 /* split handle タッチ領域拡張 */
 .split-handle { min-height:20px !important; }
 
+/* ================================================================
+   iPhone Safari レイアウト修正
+   app-frame が position:fixed を担当（height:100%連鎖を守る）
+   Safariバー伸縮は 100dvh + @supports で吸収
+   phone-inner は app-frame 内で absolute 配置
+   ================================================================ */
+
 /* 横スクロール完全禁止 */
 html, body {
   overflow-x: hidden !important;
@@ -3533,6 +3829,10 @@ html, body {
   flex-shrink: 0 !important;
 }
 
+/* ================================================================
+   カレンダー表示復旧フォールバック
+   flex:1連鎖が機能しない場合でも最低高さを保証
+   ================================================================ */
 .cal-swipe-wrap {
   min-height: 280px !important;
 }
@@ -3558,8 +3858,12 @@ html, body {
   display: block !important;
 }
 
+/* ================================================================ */
+/* ★★★ iOS / Apple純正カレンダー風 タイポグラフィ最適化 ★★★         */
 /* レイアウトは維持し、フォントとUIトーンのみAppleスタイルに刷新     */
+/* ================================================================ */
 
+/* ───── 月タイトル（2025年1月など） ───── */
 .month-nav{
   display:flex !important;
   align-items:center !important;
@@ -3610,6 +3914,7 @@ html, body {
   font-size:inherit !important;
 }
 
+/* ───── 曜日ヘッダー：細め・トラッキング広め ───── */
 .cal-week-labels{
   padding:0 !important;
 }
@@ -3625,6 +3930,7 @@ html, body {
   -moz-osx-font-smoothing:grayscale;
 }
 
+/* ───── 日付セル：余白を広めに ───── */
 .cal-cell{
   padding:4px 2px 3px !important;
   border-color:#E8F2EE !important;
@@ -3643,6 +3949,7 @@ html, body {
   box-shadow:0 1px 4px rgba(26,175,122,.35) !important;
 }
 
+/* ───── 日付数字：太め・シャープ・大きめ ───── */
 .cal-num{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif !important;
   font-size:16px !important;
@@ -3670,7 +3977,10 @@ html, body {
 .cal-num.today-txt.sat{ color:#fff !important; }
 
 /* ダーク時の日付色をiOSダーク風に */
+:root[data-theme="dark"] .cal-num{ color:#F2F2F7 !important; }
+:root[data-theme="dark"] .cal-num.other-txt{ color:#48484A !important; }
 
+/* ───── イベントチップ：細めシャープに ───── */
 .ev-chip,
 .chip-more,
 .cal-multiday-bar{
@@ -3688,6 +3998,7 @@ html, body {
   line-height:14px !important;
 }
 
+/* ───── 下部ナビゲーション：iOSライクなSF Text ───── */
 .bnav-label{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif !important;
   font-size:10.5px !important;
@@ -3700,6 +4011,7 @@ html, body {
   font-weight:600 !important;
 }
 
+/* ───── アプリヘッダーのロゴ／タイトル ───── */
 .app-logo,.page-title{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif !important;
   letter-spacing:-0.01em !important;
@@ -3708,6 +4020,7 @@ html, body {
   -moz-osx-font-smoothing:grayscale;
 }
 
+/* ───── Day View（1日表示）の日付タイトルもApple風 ───── */
 .dv-header-date-main{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif !important;
   font-size:17px !important;
@@ -3722,6 +4035,7 @@ html, body {
   letter-spacing:0.01em !important;
 }
 
+/* ───── レスポンシブ：小さめ画面でも崩れないよう微調整 ───── */
 @media (max-width:380px){
   .month-text{ font-size:20px !important; }
   .cal-num{ font-size:15px !important; }
@@ -3732,6 +4046,7 @@ html, body {
   .cal-num{ font-size:17px !important; }
 }
 
+/* ───── Retina/高解像度ディスプレイでのシャープネス強化 ───── */
 @media (-webkit-min-device-pixel-ratio:2),(min-resolution:192dpi){
   .month-text,.cal-num,.cal-week-labels span,.bnav-label,
   .ev-chip,.chip-more,.cal-multiday-bar,
@@ -3744,6 +4059,9 @@ html, body {
   }
 }
 
+/* ================================================================ */
+/* ★★★ iPhone Safari 横スクロール完全対応 ★★★                        */
+/* ================================================================ */
 html { overflow-x:hidden !important; width:100% !important; }
 body { overflow-x:hidden !important; width:100% !important; max-width:100% !important; overscroll-behavior-x:none !important; }
 .phone-inner { overflow-x:hidden !important; width:100% !important; max-width:100% !important; }
@@ -3751,11 +4069,14 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
 .cal-slide-container { width:300% !important; max-width:300% !important; display:flex !important; }
 .cal-panel { width:33.3333% !important; min-width:0 !important; flex-shrink:0 !important; overflow:hidden !important; overflow-x:hidden !important; }
 .cal-grid { width:100% !important; max-width:100% !important; overflow:hidden !important; }
-.cal-row { display:flex !important; width:100% !important; max-width:100% !important; overflow:visible !important; position:relative !important; }
+.cal-row { display:flex !important; width:100% !important; max-width:100% !important; overflow:hidden !important; }
 .cal-cell { flex:1 1 0 !important; width:0 !important; max-width:calc(100% / 7) !important; min-width:0 !important; overflow:hidden !important; box-sizing:border-box !important; }
-.cal-week-labels { display:flex !important; width:100% !important; max-width:100% !important; overflow:hidden !important; position:relative !important; z-index:10 !important; background:#fff !important; }
+.cal-week-labels { display:flex !important; width:100% !important; max-width:100% !important; overflow:hidden !important; }
 .cal-week-labels span { flex:1 1 0 !important; min-width:0 !important; max-width:calc(100% / 7) !important; box-sizing:border-box !important; }
 
+/* ================================================================ */
+/* ★★★ カレンダーセル：日付エリア / イベントエリア 完全分離          */
+/* ================================================================ */
 /* セル: flex column で date-wrap → chips を縦積み */
 .cal-cell {
   display:flex !important;
@@ -3822,14 +4143,13 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
   pointer-events:none !important;
   width:100% !important;
 }
-/* 複数日バーレイヤー：padding-top = cell padding(4) + date-wrap margin-top(0) + height(24) + margin-bottom(2) = 30px */
+/* 複数日バーレイヤー：padding-top = cell padding(4) + date-wrap margin-top(0) + height(24) + margin-bottom(2) + gap(2) = 32px */
 .cal-multiday-layer {
-  padding-top:30px !important;
-  grid-auto-rows:14px !important;
+  padding-top:32px !important;
+  grid-auto-rows:16px !important;
   row-gap:2px !important;
   pointer-events:none !important; /* ★ レイヤー全体タッチ透過 */
   z-index:2 !important; /* ★ セル(z-index:0)より視覚的に上・タッチは透過 */
-  overflow:visible !important;
 }
 /* 複数日バー本体：タッチ透過・クリックは親パネルのclickイベントで委譲 */
 .cal-multiday-bar {
@@ -3838,6 +4158,10 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
   font-size:10.5px !important;
   pointer-events:none !important; /* ★ バー自体はタッチ不可 — clickはJS側で座標から取得 */
 }
+
+/* ================================================================ */
+/* ★★★ オプトイン型カテゴリ管理 UI ★★★                              */
+/* ================================================================ */
 
 /* ドロワー：固定カテゴリ（個人予定） */
 .drawer-cat-fixed{
@@ -3913,6 +4237,9 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
   font-size:13px;font-weight:600;color:var(--green-deep);
 }
 
+/* ================================================================ */
+/* ★★★ カテゴリ追加 ボトムシート ★★★                                */
+/* ================================================================ */
 .add-cat-overlay{
   position:fixed;inset:0;
   background:rgba(0,0,0,.38);
@@ -4066,10 +4393,18 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
 .add-cat-manage-del:active{background:#FFE8E8;}
 
 /* ダークモード */
+:root[data-theme="dark"] .add-cat-sheet{background:var(--card-bg);}
+:root[data-theme="dark"] .drawer-cat-fixed{background:rgba(107,110,212,.12);}
+:root[data-theme="dark"] .add-cat-action-btn.already-added{
+  background:rgba(255,255,255,.05);
+  border-color:var(--border);
+}
 
+/* ================================================================ */
+/* ★★★ iOS PWA ステータスバー背景：白固定                         */
 /* standalone / 通常ブラウザ / 画面回転後 すべてで白を維持          */
 /* html/body/app-frame/phone-inner を最後尾で上書きして確定させる   */
-
+/* ================================================================ */
 html,
 body{
   background:#ffffff !important;
@@ -4083,10 +4418,10 @@ body{
 .phone-inner{
   /* 背景は --bg のまま維持（カレンダー背景色に影響しない） */
   /* ステータスバー部分だけ透けて見える app-frame が白なので問題なし */
-}
-
+}/* ================================================================ */
+/* ★★★ 横向き対応：オーバーレイなし、UIをそのまま維持             */
 /* viewportに合わせて自動縮小（transform-originで左上起点）        */
-
+/* ================================================================ */
 body{
   overflow:hidden;
 }
@@ -4095,7 +4430,9 @@ body{
   height:100vh;
 }
 
+
 </style>
+
 
 <!-- ★★★ Firebase Auth ログイン画面 ★★★ -->
 <div id="auth-screen">
@@ -4856,6 +5193,7 @@ body{
   <div id="range-banner"></div>
 </div></div></div></div>
 
+
 <script>
 // ================================================================
 // PWA SERVICE WORKER 登録
@@ -4863,6 +5201,7 @@ body{
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then(reg => {
+      console.log('[PWA] SW registered:', reg.scope);
     }).catch(err => console.warn('[PWA] SW failed:', err));
   });
 }
@@ -5154,6 +5493,7 @@ const NAV_ICONS={
   mypage:{active:`<circle cx="11" cy="8" r="3.5" stroke="#1AAF7A" stroke-width="1.7"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>`,inactive:`<circle cx="11" cy="8" r="3.5" stroke="#9BB8AE" stroke-width="1.7"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>`}
 };
 
+
 // ── 新デザイン用追加関数 ─────────────────────────────────────────
 window.authTogglePw = function() {
   var inp = document.getElementById('auth-password');
@@ -5350,8 +5690,6 @@ function savePrefs(){
 let calLastClick={t:0,ds:''},tourLastClick={t:0,idx:-1,q:''};
 let lpTimer=null,lpCell=null;
 let swipeX=0,swipeY=0,swiping=false,swipeLocked=false;
-// ★★★ イベントドラッグ中フラグ：月スワイプを完全ブロックするために使用 ★★★
-let isDraggingEvent=false;
 let searchFilter='all',sortByPrize=false,openSearchCard=null;
 // ★★★ 検索画面の追加状態 ★★★
 // state = { tab, filterCategory } の2軸を分離管理
@@ -5739,7 +6077,6 @@ function bindPanelEvents(){
       // セルドラッグ中：カード追従
       if(cellDrag.started){
         e.preventDefault();
-        e.stopPropagation(); // ★★★ 月スワイプへの伝播を完全ブロック
         moveCellDragCard(e);
         return;
       }
@@ -5749,7 +6086,6 @@ function bindPanelEvents(){
         const dx=t.clientX-cellDrag.startX,dy=t.clientY-cellDrag.startY;
         if(cellDrag.active&&Math.hypot(dx,dy)>CELL_DRAG_THRESHOLD){
           e.preventDefault();
-          e.stopPropagation(); // ★★★ 月スワイプへの伝播を完全ブロック
           beginCellDrag(e);
         }else if(!cellDrag.active&&Math.hypot(dx,dy)>CELL_DRAG_THRESHOLD){
           // 長押し前に動いた → スワイプの可能性、ドラッグキャンセル
@@ -5767,7 +6103,6 @@ function bindPanelEvents(){
       // チップドラッグ中：カード追従
       if(drag.started){
         e.preventDefault();
-        e.stopPropagation(); // ★★★ 月スワイプへの伝播を完全ブロック
         moveDragCard(e);
         return;
       }
@@ -5777,7 +6112,6 @@ function bindPanelEvents(){
         const dx=t.clientX-drag.startX,dy=t.clientY-drag.startY;
         if(drag.active&&Math.hypot(dx,dy)>DRAG_THRESHOLD){
           e.preventDefault();
-          e.stopPropagation(); // ★★★ 月スワイプへの伝播を完全ブロック
           beginDrag(e);
         }else if(!drag.active&&Math.hypot(dx,dy)>DRAG_THRESHOLD){
           cancelChipPress();
@@ -5871,22 +6205,11 @@ function cancelChipPress(){
   if(drag.currentDropTarget){drag.currentDropTarget.classList.remove('drop-target');}
   drag.eventId=null;drag.active=false;drag.started=false;
   drag.origChipEl=null;drag.currentDropTarget=null;
-  // ★★★ 月スワイプブロックを解除 ★★★
-  isDraggingEvent=false;
-  const _csc=document.getElementById('cal-slide-container');
-  if(_csc)_csc.style.pointerEvents='';
 }
 
 // ★ ドラッグ開始：浮遊カード表示 + 元チップをプレースホルダー化
 function beginDrag(e){
   drag.started=true;
-  // ★★★ 月スワイプを完全ブロック ★★★
-  isDraggingEvent=true;
-  // cal-slide-container の pointer-events を無効化してスワイプアニメーションを遮断
-  const sc=document.getElementById('cal-slide-container');
-  if(sc)sc.style.pointerEvents='none';
-  // swiping フラグを強制リセットしてスワイプ判定を中断
-  swiping=false;swipeLocked=false;
   const ev=EVENTS.find(x=>x.id===drag.eventId);
   if(!ev)return;
   
@@ -5919,9 +6242,6 @@ function beginDrag(e){
 
 // ★ ドラッグ中：カードを指の位置に追従
 function moveDragCard(e){
-  // ★★★ touchmove の伝播を完全に止めて月スワイプを防ぐ ★★★
-  if(e&&e.stopPropagation)e.stopPropagation();
-  if(e&&e.preventDefault)e.preventDefault();
   const t=e.touches?e.touches[0]:e;
   const x=t.clientX,y=t.clientY;
   if(drag.cardEl){
@@ -5983,10 +6303,6 @@ function endDrag(e){
   drag.eventId=null;drag.active=false;drag.started=false;
   drag.origChipEl=null;drag.cardEl=null;drag.currentDropTarget=null;
   drag.suppressClickUntil=Date.now()+400;
-  // ★★★ 月スワイプブロックを解除 ★★★
-  isDraggingEvent=false;
-  const _sc=document.getElementById('cal-slide-container');
-  if(_sc)_sc.style.pointerEvents='';
 }
 
 // ★★★ セル全体ドラッグ：その日の予定をまとめて移動 ★★★
@@ -6023,20 +6339,11 @@ function cancelCellPress(){
   cellDrag.sourceDs=null;cellDrag.sourceCellEl=null;
   cellDrag.active=false;cellDrag.started=false;
   cellDrag.cardEl=null;cellDrag.currentDropTarget=null;
-  // ★★★ 月スワイプブロックを解除 ★★★
-  isDraggingEvent=false;
-  const _ccsc=document.getElementById('cal-slide-container');
-  if(_ccsc)_ccsc.style.pointerEvents='';
 }
 
 // セルドラッグ実開始：フロートカード表示 + 元セルをプレースホルダー化
 function beginCellDrag(e){
   cellDrag.started=true;
-  // ★★★ 月スワイプを完全ブロック ★★★
-  isDraggingEvent=true;
-  const sc=document.getElementById('cal-slide-container');
-  if(sc)sc.style.pointerEvents='none';
-  swiping=false;swipeLocked=false;
   const ds=cellDrag.sourceDs;
   // カテゴリフィルタ適用済みのイベントのみドラッグ対象
   const evs=applyCatFiltersToEvents(getEventsOnDate(ds));
@@ -6078,9 +6385,6 @@ function beginCellDrag(e){
 
 // セルドラッグ中：カードを指の位置に追従
 function moveCellDragCard(e){
-  // ★★★ touchmove の伝播を完全に止めて月スワイプを防ぐ ★★★
-  if(e&&e.stopPropagation)e.stopPropagation();
-  if(e&&e.preventDefault)e.preventDefault();
   const t=e.touches?e.touches[0]:e;
   const x=t.clientX,y=t.clientY;
   if(cellDrag.cardEl){
@@ -6157,18 +6461,12 @@ function endCellDrag(e){
   cellDrag.sourceDs=null;cellDrag.sourceCellEl=null;
   cellDrag.active=false;cellDrag.started=false;
   cellDrag.cardEl=null;cellDrag.currentDropTarget=null;
-  // ★★★ 月スワイプブロックを解除 ★★★
-  isDraggingEvent=false;
-  const _esc=document.getElementById('cal-slide-container');
-  if(_esc)_esc.style.pointerEvents='';
 }
 
 function initSwipe(){
   const w=document.getElementById('cal-swipe-wrap');
   w.addEventListener('touchstart',e=>{
     if(viewMode!=='month')return;
-    // ★★★ イベントドラッグ中は月スワイプを完全ブロック ★★★
-    if(isDraggingEvent){swiping=false;swipeLocked=false;return;}
     if(drag.started||cellDrag.started)return;
     // ★ 長押し確定後（active）のみブロック。長押し判定待ち(startDs のみ)はスワイプ開始を許可
     if(rangeSelect.active)return;
@@ -6176,8 +6474,6 @@ function initSwipe(){
   },{passive:true});
   w.addEventListener('touchmove',e=>{
     if(viewMode!=='month')return;
-    // ★★★ イベントドラッグ中は月スワイプを完全ブロック（swiping も強制リセット）★★★
-    if(isDraggingEvent){swiping=false;swipeLocked=false;return;}
     // ★ 長押し確定（active）中のみ月スワイプを停止。判定待ち中は通常スワイプ継続
     if(rangeSelect.active){swiping=false;swipeLocked=false;return;}
     if(drag.eventId||drag.started||cellDrag.active||cellDrag.started)return;
@@ -6190,8 +6486,6 @@ function initSwipe(){
   },{passive:true});
   w.addEventListener('touchend',e=>{
     if(viewMode!=='month')return;
-    // ★★★ イベントドラッグ中は月切り替えを完全ブロック ★★★
-    if(isDraggingEvent){swiping=false;swipeLocked=false;return;}
     // ★ 長押し確定（active）中のみ月切り替えをキャンセル
     if(rangeSelect.active){swiping=false;swipeLocked=false;return;}
     if(drag.eventId||drag.started||cellDrag.active||cellDrag.started){swipeLocked=false;swiping=false;return;}
@@ -6203,8 +6497,6 @@ function initSwipe(){
 }
 
 function animateSwipe(dir){
-  // ★★★ イベントドラッグ中は月スワイプアニメーションを完全ブロック ★★★
-  if(isDraggingEvent)return;
   if(animateSwipe._busy)return; // アニメーション中は多重実行防止
   animateSwipe._busy=true;
   const sc=document.getElementById('cal-slide-container');
@@ -6222,10 +6514,8 @@ function animateSwipe(dir){
 function changeMonthInternal(dir){month+=dir;if(month>11){month=0;year++;}if(month<0){month=11;year--;}selectedDate=null;newlyAddedDate=null;updateMonthLabel();renderAllPanels();renderCalList();}
 function changeMonth(dir){animateSwipe(dir);}
 function updateMonthLabel(){document.getElementById('month-label').textContent=`${year}年 ${month+1}月`;}
-function onCellClick(ds){const now=Date.now();if(ds===calLastClick.ds&&now-calLastClick.t<DC){calLastClick={t:0,ds:''};
-openCreateModal(ds);return;}calLastClick={t:now,ds};selectedDate=selectedDate===ds?null:ds;newlyAddedDate=null;renderAllPanels();renderCalList();}
-function onTouchStartCell(e,ds,cellEl){lpCell=cellEl;cellEl.classList.add('longpress-active');showLpRing(e);lpTimer=setTimeout(()=>{cellEl.classList.remove('longpress-active');hideLpRing();
-openCreateModal(ds);},LP);}
+function onCellClick(ds){const now=Date.now();if(ds===calLastClick.ds&&now-calLastClick.t<DC){calLastClick={t:0,ds:''};console.log('[onCellClick→openCreateModal] tappedDate=',ds);openCreateModal(ds);return;}calLastClick={t:now,ds};selectedDate=selectedDate===ds?null:ds;newlyAddedDate=null;renderAllPanels();renderCalList();}
+function onTouchStartCell(e,ds,cellEl){lpCell=cellEl;cellEl.classList.add('longpress-active');showLpRing(e);lpTimer=setTimeout(()=>{cellEl.classList.remove('longpress-active');hideLpRing();console.log('[longpress→openCreateModal] tappedDate=',ds);openCreateModal(ds);},LP);}
 function onTouchEndCell(){clearTimeout(lpTimer);if(lpCell)lpCell.classList.remove('longpress-active');hideLpRing();lpTimer=null;lpCell=null;}
 
 // ================================================================
@@ -7312,6 +7602,7 @@ function initComplexSearch(){
   _sqUpdateIconState();
 }
 
+
 function applySearchFilters(){
   _updateFbsOpenBtn();
   _sqRenderTokens();
@@ -7551,6 +7842,7 @@ function openCreateModal(cellDate){
   selectedDate=ds;
   newlyAddedDate=null;
   modalPresetDate=ds;
+  console.log('[openCreateModal] cellDate=',cellDate,' → selectedDate=',selectedDate);
   openModal(ds);
 }
 function openModal(ds,editId){
@@ -7563,6 +7855,7 @@ function openModal(ds,editId){
   }
   selectedTour=null;
   // ★ デバッグ確認ログ（iPhone Safari / PWA でも console で確認可能）
+  console.log('[openModal] tappedDate(ds)=',ds,' / selectedDate=',selectedDate,' / modalPresetDate=',modalPresetDate);
   if(editId){const ev=EVENTS.find(e=>e.id===editId);if(!ev)return;editingId=editId;selectedCat=ev.cat;currentStep=3;goStep(3);prefillFormFromEvent(ev);}
   else{editingId=null;selectedCat=null;currentStep=1;goStep(1);}
   document.getElementById('modal-overlay').classList.add('show');
@@ -8567,6 +8860,9 @@ updateMonthLabel=function(){
   }
 };
 
+/* ================================================================ */
+/* ★★★ Day View（1日表示）実装                                      */
+/* ================================================================ */
 const DV_HOUR_HEIGHT=64;            // 1時間 = 64px（推奨値）
 const DV_TOTAL_HEIGHT=24*DV_HOUR_HEIGHT;  // 1536px
 const DV_SNAP_MIN=15;               // ドラッグスナップ：15分
@@ -8987,9 +9283,12 @@ setViewMode=function(mode){
   _prevSetViewMode(mode);
 };
 
+/* ================================================================ */
+/* ★★★ デザイン設定（Theme / Color / Category Colors / Style） ★★★ */
+/* ================================================================ */
 const DESIGN_KEY='pronexax.design.v1';
 const DESIGN_DEFAULTS={
-  theme:'light',
+  theme:'light',                 // 'light' | 'dark' | 'system'
   colorTheme:'green',            // 'green' | 'blue' | 'black' | 'gold' | 'mono'
   categoryColors:{
     jgto:'#1AAF7A',jlpga:'#E0567E',pga:'#2D7DD2',
@@ -9012,7 +9311,7 @@ const COLOR_THEME_PRIMARY={
     if(!raw)return;
     const obj=JSON.parse(raw);
     if(!obj||typeof obj!=='object')return;
-    if(obj.theme==='light')designConfig.theme=obj.theme;
+    if(['light','dark','system'].includes(obj.theme))designConfig.theme=obj.theme;
     if(['green','blue','black','gold','mono','sakura','lavender','mint','peach'].includes(obj.colorTheme))designConfig.colorTheme=obj.colorTheme;
     if(obj.categoryColors&&typeof obj.categoryColors==='object'){
       Object.keys(designConfig.categoryColors).forEach(k=>{
@@ -9042,6 +9341,12 @@ function getContrastTextColor(hex){
   return lum>0.62?'#1A2E27':'#FFFFFF';
 }
 
+// システムのダーク優先設定を検知
+const sysDarkMql=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
+function effectiveTheme(){
+  if(designConfig.theme==='system'){
+    return(sysDarkMql&&sysDarkMql.matches)?'dark':'light';
+  }
   return designConfig.theme;
 }
 
@@ -9049,7 +9354,7 @@ function getContrastTextColor(hex){
 function applyDesign(){
   const root=document.documentElement;
   // テーマ
-  root.setAttribute('data-theme','light');
+  root.setAttribute('data-theme',effectiveTheme());
   // カラーテーマ
   root.setAttribute('data-color-theme',designConfig.colorTheme);
   // 表示スタイル
@@ -9066,7 +9371,19 @@ function applyDesign(){
   });
 }
 
+// システム連動：MQL の変更を監視
+if(sysDarkMql){
+  const handler=()=>{
+    if(designConfig.theme==='system'){
+      document.documentElement.setAttribute('data-theme',effectiveTheme());
+      // 再描画でドロワー等のチェック状態を最新化
+      if(typeof renderAllPanels==='function')renderAllPanels();
+      if(typeof renderCalList==='function')renderCalList();
+    }
   };
+  if(sysDarkMql.addEventListener)sysDarkMql.addEventListener('change',handler);
+  else if(sysDarkMql.addListener)sysDarkMql.addListener(handler);
+}
 
 // 設定変更時の共通フロー：保存 → CSS 反映 → 全画面再描画
 function commitDesign({rerenderUI=true}={}){
@@ -9274,8 +9591,10 @@ function initDesignSettings(){
   },{passive:true});
 }
 
+/* ================================================================ */
+/* ★★★ 収支管理（Finance）モジュール ★★★                            */
 /* 現在リセット中 → このブロックに新しい実装を追加してください       */
-
+/* ================================================================ */
 /*
   TODO: 新しい収支機能の実装ポイント
   
@@ -9305,6 +9624,10 @@ function finRender(){
   // ページ表示時にここが呼ばれる
   // 新しい実装でこの関数を上書きしてください
 }
+
+/* ================================================================ */
+/* ★★★ Day View 時間ドラッグ選択 + モーダル時間入力 ★★★              */
+/* ================================================================ */
 
 // 状態：モーダルに渡したい時刻範囲（Day View からの遷移）
 let dvPresetEndTime=null; // dvPresetStartTime は既存
@@ -9746,6 +10069,9 @@ startNotificationLoop(); // ★★★ 通知エンジンを起動
 dvBindDragSelect();
 setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',checkSubmit);});},200);
 
+/* =====================================================================
+   ★★★ iOSホイールピッカー v2 JS — Apple純正カレンダー風
+   ===================================================================== */
 (function(){
   // ── 定数 ──
   const ITEM_H=44; // アイテム高さ(px) ← CSS .wp-item height と一致
@@ -10448,6 +10774,7 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
         return;
       }
       // ★ openCreateModal でタップしたセルの実日付を確実に渡す
+      console.log('[doubleTap→openCreateModal] tappedDate=', ds);
       if (typeof openCreateModal === 'function') openCreateModal(ds);
       else if (typeof openModal === 'function') { selectedDate = ds; openModal(ds); }
     }
@@ -10485,6 +10812,10 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   });
 })();
 </script>
+
+
+
+
 
 <script>
 // ================================================================
