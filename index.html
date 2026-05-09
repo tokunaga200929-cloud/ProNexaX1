@@ -6006,7 +6006,8 @@ function openEditFromDayModal(id){closeDayModal();setTimeout(()=>openModal(null,
 function deleteEventFromModal(id,ds){
   const ev=EVENTS.find(e=>e.id===id);if(ev){const arr=DB[ev.cat]||[];const idx=arr.findIndex(t=>t.name===ev.name);if(idx>=0)addedIds.delete(`${ev.cat}-${idx}`);}
   EVENTS=EVENTS.filter(e=>e.id!==id);newlyAddedDate=null;renderAllPanels();renderCalList();
-  if(getEventsOnDate(ds).length>0){openDayModal(ds);}else{closeDayModal();}
+  // カテゴリフィルタ適用後の件数で継続判定（非表示カテゴリを誤カウントしない）
+  if(applyCatFiltersToEvents(getEventsOnDate(ds)).length>0){openDayModal(ds);}else{closeDayModal();}
   showToast('予定を削除しました');
 }
 
@@ -6062,8 +6063,8 @@ function bindPanelEvents(){
       if(e.target.classList.contains('chip-more'))return;
       const c=e.target.closest('.cal-cell');
       if(c&&c.dataset.ds&&!swipeLocked){
-        // 予定が入っている日 → セルドラッグ準備
-        const evs=getEventsOnDate(c.dataset.ds);
+        // 予定が入っている日 → セルドラッグ準備（カテゴリフィルタ適用後で判定）
+        const evs=applyCatFiltersToEvents(getEventsOnDate(c.dataset.ds));
         if(evs.length>0){
           startCellPress(e,c.dataset.ds,c);
         }else{
@@ -6345,7 +6346,8 @@ function cancelCellPress(){
 function beginCellDrag(e){
   cellDrag.started=true;
   const ds=cellDrag.sourceDs;
-  const evs=getEventsOnDate(ds);
+  // カテゴリフィルタ適用済みのイベントのみドラッグ対象
+  const evs=applyCatFiltersToEvents(getEventsOnDate(ds));
   if(!evs.length){cancelCellPress();return;}
   
   // 元セルを「抜き取った」プレースホルダー表示に
