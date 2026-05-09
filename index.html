@@ -3920,85 +3920,193 @@ button,input,select,textarea{
 }
 
 /* ================================================================
-   Firebase Auth - ログイン画面
+   Firebase Auth - ログイン画面 v2 (ProNexaX Redesign)
    ================================================================ */
 #auth-screen {
   position: fixed; inset: 0; z-index: 9999;
-  background: linear-gradient(160deg, #0F1612 0%, #1A2E27 50%, #0A4030 100%);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 24px;
-  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
 }
 #auth-screen.hidden { display: none !important; }
 
+.auth-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 85% 60% at 15% 8%, rgba(26,175,122,0.48) 0%, transparent 58%),
+    radial-gradient(ellipse 60% 50% at 90% 6%, rgba(26,175,122,0.24) 0%, transparent 52%),
+    linear-gradient(158deg, #1a5c38 0%, #0e2e1c 38%, #071a0f 100%);
+  z-index: 0;
+}
+.auth-blob {
+  position: absolute; border-radius: 50%;
+  filter: blur(60px); pointer-events: none; z-index: 0;
+}
+.auth-blob-1 {
+  width: 300px; height: 300px;
+  background: rgba(26,175,122,0.52);
+  top: -70px; left: -50px; opacity: .38;
+}
+.auth-blob-2 {
+  width: 240px; height: 240px;
+  background: rgba(26,175,122,0.3);
+  top: -35px; right: -35px; opacity: .32;
+}
+.auth-grass {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 110px; z-index: 1; pointer-events: none;
+}
+.auth-grass svg { width: 100%; height: 100%; }
+.auth-wrap {
+  position: relative; z-index: 10;
+  width: 100%; max-width: 400px;
+  padding: 24px 20px calc(100px + env(safe-area-inset-bottom, 0px));
+  animation: authFadeUp .68s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes authFadeUp {
+  from { opacity: 0; transform: translateY(26px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.auth-card {
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-radius: 28px;
+  padding: 40px 32px 36px;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,.04),
+    0 8px 24px rgba(0,0,0,.09),
+    0 24px 64px rgba(0,0,0,.15);
+  animation: authFloat 6s ease-in-out infinite;
+}
+@keyframes authFloat {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+.auth-logo-area { margin-bottom: 30px; }
+.auth-logo-row  { display: flex; align-items: center; gap: 13px; margin-bottom: 5px; }
+.auth-logo-icon { width: 50px; height: 50px; flex-shrink: 0; }
 .auth-logo {
-  font-size: 28px; font-weight: 900; color: #fff;
-  letter-spacing: 1px; margin-bottom: 6px;
+  font-size: 31px; font-weight: 700;
+  letter-spacing: -.5px; color: #111; line-height: 1;
 }
 .auth-logo span { color: #1AAF7A; }
-.auth-tagline {
-  font-size: 12px; color: rgba(255,255,255,.55);
-  letter-spacing: .5px; margin-bottom: 40px;
-}
-
-.auth-card {
-  background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 20px; padding: 28px 24px 24px;
-  width: 100%; max-width: 360px;
-  backdrop-filter: blur(12px);
-}
-.auth-card-title {
-  font-size: 18px; font-weight: 700; color: #fff;
-  margin-bottom: 20px; text-align: center;
-}
+.auth-tagline { font-size: 13.5px; color: #999; margin-top: 2px; }
 .auth-tab-row {
-  display: flex; background: rgba(255,255,255,.08); border-radius: 10px;
-  padding: 3px; gap: 2px; margin-bottom: 20px;
+  display: flex; background: #F0F1F2; border-radius: 12px;
+  padding: 4px; gap: 3px; margin-bottom: 22px;
 }
 .auth-tab {
-  flex: 1; padding: 9px; border-radius: 8px; border: none;
-  font-size: 13px; font-weight: 600; cursor: pointer;
-  background: transparent; color: rgba(255,255,255,.6);
-  transition: background .2s, color .2s;
+  flex: 1; padding: 10px; border-radius: 9px; border: none;
+  font-size: 13.5px; font-weight: 600; cursor: pointer;
+  background: transparent; color: #999;
+  transition: background .2s, color .2s, box-shadow .2s;
   -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
 }
 .auth-tab.is-active {
-  background: #1AAF7A; color: #fff;
+  background: #fff; color: #111;
+  box-shadow: 0 1px 6px rgba(0,0,0,.1);
 }
-.auth-input-wrap { margin-bottom: 12px; }
-.auth-input-label {
-  font-size: 11px; font-weight: 600; color: rgba(255,255,255,.5);
-  letter-spacing: .4px; margin-bottom: 6px; display: block;
+.auth-input-wrap { margin-bottom: 13px; position: relative; }
+.auth-input-label { display: none; }
+.auth-input-icon {
+  position: absolute; left: 17px; top: 50%; transform: translateY(-50%);
+  width: 17px; height: 17px; color: #ccc; pointer-events: none;
 }
 .auth-input {
-  width: 100%; background: rgba(255,255,255,.08);
-  border: 1.5px solid rgba(255,255,255,.14);
-  border-radius: 12px; padding: 12px 14px;
-  font-size: 15px; color: #fff; outline: none;
-  transition: border-color .2s;
+  width: 100%; height: 54px;
+  background: #F5F6F7;
+  border: 1.5px solid transparent;
+  border-radius: 13px;
+  padding: 0 16px 0 44px;
+  font-size: 15.5px; font-family: inherit; color: #111;
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color .2s, background .2s, box-shadow .2s;
 }
-.auth-input:focus { border-color: #1AAF7A; }
-.auth-input::placeholder { color: rgba(255,255,255,.25); }
+.auth-input:focus {
+  background: #fff;
+  border-color: #1AAF7A;
+  box-shadow: 0 0 0 4px rgba(26,175,122,.12);
+}
+.auth-input::placeholder { color: #ccc; }
+.auth-eye-btn {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; padding: 4px; cursor: pointer;
+  color: #ccc; line-height: 0; transition: color .2s;
+}
+.auth-eye-btn:hover { color: #888; }
+.auth-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 4px 0 22px;
+}
+.auth-remember { display: flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; }
+.auth-remember input { accent-color: #1AAF7A; width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+.auth-remember span { font-size: 13.5px; color: #555; }
+.auth-forgot-btn {
+  font-size: 13.5px; color: #1AAF7A; font-weight: 500;
+  background: none; border: none; cursor: pointer; padding: 0;
+  font-family: inherit; transition: opacity .15s;
+}
+.auth-forgot-btn:hover { opacity: .7; }
 .auth-submit-btn {
-  width: 100%; padding: 14px;
-  background: linear-gradient(135deg, #1AAF7A, #0F8A5C);
-  border: none; border-radius: 12px; color: #fff;
-  font-size: 15px; font-weight: 700; cursor: pointer;
-  margin-top: 6px; letter-spacing: .3px;
-  transition: transform .12s, filter .12s;
+  width: 100%; height: 54px;
+  background: linear-gradient(135deg, #22c88b 0%, #1AAF7A 50%, #149962 100%);
+  border: none; border-radius: 15px;
+  color: #fff; font-size: 16px; font-weight: 600; font-family: inherit; letter-spacing: .3px;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s, filter .18s;
+  box-shadow: 0 2px 8px rgba(26,175,122,.3), 0 8px 24px rgba(26,175,122,.2);
   -webkit-tap-highlight-color: transparent;
 }
-.auth-submit-btn:active { transform: scale(.96); filter: brightness(.92); }
+.auth-submit-btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.18) 0%, transparent 55%);
+  pointer-events: none;
+}
+.auth-submit-btn:hover {
+  transform: translateY(-1px) scale(1.005);
+  box-shadow: 0 4px 16px rgba(26,175,122,.35), 0 12px 32px rgba(26,175,122,.22);
+  filter: brightness(1.05);
+}
+.auth-submit-btn:active { transform: scale(.98); filter: brightness(.97); }
+.auth-submit-btn:disabled { opacity: .65; cursor: not-allowed; transform: none !important; filter: none !important; }
+.auth-divider {
+  display: flex; align-items: center; gap: 11px; margin: 22px 0;
+}
+.auth-divider::before,.auth-divider::after { content: ''; flex: 1; height: 1px; background: #eee; }
+.auth-divider span { font-size: 12.5px; color: #ccc; }
+.auth-sns-row { display: flex; justify-content: center; gap: 18px; margin-bottom: 24px; }
+.auth-sns-btn {
+  width: 54px; height: 54px; border-radius: 50%;
+  border: 1.5px solid #EBEBEB; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s;
+  box-shadow: 0 2px 6px rgba(0,0,0,.05);
+  -webkit-tap-highlight-color: transparent;
+}
+.auth-sns-btn:hover { transform: translateY(-2px) scale(1.07); box-shadow: 0 6px 18px rgba(0,0,0,.1); }
+.auth-sns-btn:active { transform: scale(.93); }
+.auth-signup-row { text-align: center; font-size: 13.5px; color: #aaa; }
+.auth-signup-row a { color: #1AAF7A; font-weight: 600; text-decoration: none; margin-left: 3px; }
 .auth-error {
-  font-size: 12px; color: #FF6B6B; text-align: center;
-  margin-top: 12px; min-height: 16px;
+  font-size: 12.5px; color: #D03030; text-align: center;
+  margin-top: 10px; min-height: 0;
+  border-radius: 9px; padding: 0;
+  display: none;
+}
+.auth-error:not(:empty) {
+  display: block;
+  background: #FFF0F0; border: 1px solid #FFD0D0;
+  padding: 8px 12px;
 }
 .auth-loader {
-  width: 20px; height: 20px; border: 2.5px solid rgba(255,255,255,.3);
-  border-top-color: #fff; border-radius: 50%;
+  width: 20px; height: 20px; border: 2.5px solid rgba(26,175,122,.3);
+  border-top-color: #1AAF7A; border-radius: 50%;
   animation: spin .7s linear infinite;
-  margin: 0 auto; display: none;
+  margin: 12px auto 0; display: none;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -4501,32 +4609,118 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
 
 <!-- ★★★ Firebase Auth ログイン画面 ★★★ -->
 <div id="auth-screen">
-  <div class="auth-logo">ProNexa<span>X</span></div>
-  <div class="auth-tagline">ゴルフスケジュール管理 — Pro Edition</div>
+  <div class="auth-bg"></div>
+  <div class="auth-blob auth-blob-1"></div>
+  <div class="auth-blob auth-blob-2"></div>
 
-  <!-- デモモードバナー（Firebase未設定時のみJS側で表示） -->
-  <div id="auth-demo-banner" style="display:none;background:rgba(255,220,80,.15);border:1px solid rgba(255,220,80,.4);border-radius:10px;padding:9px 14px;margin-bottom:14px;text-align:center;font-size:11.5px;color:rgba(255,240,160,.9);line-height:1.5;">
-    🔓 <strong>デモモード</strong> — Firebase未設定<br>任意のメールアドレスとパスワードでログインできます
+  <div class="auth-grass">
+    <svg viewBox="0 0 390 110" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 72 C48 50,118 88,196 65 C274 42,336 82,390 58 L390 110 L0 110 Z" fill="rgba(10,50,28,0.65)"/>
+      <path d="M0 86 C58 66,148 100,236 76 C306 58,354 92,390 74 L390 110 L0 110 Z" fill="rgba(8,38,20,0.82)"/>
+      <path d="M0 98 C76 82,172 108,272 92 C332 80,364 98,390 92 L390 110 L0 110 Z" fill="#071a0f"/>
+    </svg>
   </div>
 
-  <div class="auth-card">
-    <div class="auth-tab-row">
-      <button class="auth-tab is-active" data-tab="login" onclick="authSwitchTab('login')">ログイン</button>
-      <button class="auth-tab" data-tab="register" onclick="authSwitchTab('register')">新規登録</button>
+  <div class="auth-wrap">
+    <div class="auth-card">
+
+      <div class="auth-logo-area">
+        <div class="auth-logo-row">
+          <svg class="auth-logo-icon" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="52" height="52" rx="14" fill="#F0FBF6"/>
+            <rect x="8" y="14" width="28" height="26" rx="4" fill="none" stroke="#1AAF7A" stroke-width="2.2"/>
+            <rect x="8" y="14" width="28" height="8" rx="4" fill="#1AAF7A"/>
+            <line x1="17" y1="10" x2="17" y2="18" stroke="#1AAF7A" stroke-width="2.2" stroke-linecap="round"/>
+            <line x1="27" y1="10" x2="27" y2="18" stroke="#1AAF7A" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="14" cy="27" r="1.8" fill="#1AAF7A"/>
+            <circle cx="22" cy="27" r="1.8" fill="#1AAF7A"/>
+            <circle cx="30" cy="27" r="1.8" fill="#1AAF7A"/>
+            <circle cx="14" cy="34" r="1.8" fill="#1AAF7A"/>
+            <circle cx="22" cy="34" r="1.8" fill="#ddd"/>
+            <circle cx="38" cy="36" r="9" fill="white" stroke="#e8e8e8" stroke-width="1"/>
+            <path d="M33 34 Q38 31 43 34" stroke="#ddd" stroke-width="0.9" fill="none"/>
+            <path d="M32 37 Q38 34 44 37" stroke="#ddd" stroke-width="0.9" fill="none"/>
+            <path d="M33 40 Q38 37 43 40" stroke="#ddd" stroke-width="0.9" fill="none"/>
+            <path d="M8 37 Q18 28 36 34" stroke="#4CAF76" stroke-width="2" fill="none" stroke-linecap="round"/>
+          </svg>
+          <div class="auth-logo">ProNexa<span>X</span></div>
+        </div>
+        <div class="auth-tagline">あなたのゴルフを、もっとスマートに。</div>
+      </div>
+
+      <div id="auth-demo-banner" style="display:none;background:rgba(255,220,80,.1);border:1px solid rgba(200,160,0,.3);border-radius:10px;padding:9px 14px;margin-bottom:14px;text-align:center;font-size:11.5px;color:#886600;line-height:1.5;">
+        🔓 <strong>デモモード</strong> — Firebase未設定<br>任意のメールアドレスとパスワードでログインできます
+      </div>
+
+      <div class="auth-tab-row">
+        <button class="auth-tab is-active" data-tab="login" onclick="authSwitchTab('login')">ログイン</button>
+        <button class="auth-tab" data-tab="register" onclick="authSwitchTab('register')">新規登録</button>
+      </div>
+
+      <div class="auth-input-wrap">
+        <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        <input class="auth-input" id="auth-email" type="email" placeholder="メールアドレス" autocomplete="email" inputmode="email">
+      </div>
+
+      <div class="auth-input-wrap">
+        <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <input class="auth-input" id="auth-password" type="password" placeholder="パスワード（6文字以上）" autocomplete="current-password" style="padding-right:44px">
+        <button class="auth-eye-btn" onclick="authTogglePw()" aria-label="パスワード表示切替" type="button">
+          <svg id="auth-eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+
+      <div id="auth-register-fields" class="hidden"></div>
+
+      <div class="auth-meta">
+        <label class="auth-remember">
+          <input type="checkbox" id="auth-remember-me" checked>
+          <span>ログインしたままにする</span>
+        </label>
+        <button class="auth-forgot-btn" type="button" onclick="authForgotPassword()">パスワードをお忘れの方</button>
+      </div>
+
+      <button class="auth-submit-btn" id="auth-submit-btn" onclick="authSubmit()">ログイン</button>
+      <div id="auth-loader" class="auth-loader"></div>
+      <div id="auth-error" class="auth-error"></div>
+
+      <div class="auth-divider"><span>または</span></div>
+
+      <div class="auth-sns-row">
+        <button class="auth-sns-btn" aria-label="Googleでログイン" type="button">
+          <svg width="22" height="22" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+        </button>
+        <button class="auth-sns-btn" aria-label="Appleでログイン" type="button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#111">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+        </button>
+        <button class="auth-sns-btn" aria-label="メールで続ける" type="button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1AAF7A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="auth-signup-row">
+        アカウントをお持ちでない方は<a href="#" onclick="authSwitchTab('register');return false;">新規登録</a>
+      </p>
+
     </div>
-    <div class="auth-input-wrap">
-      <label class="auth-input-label">メールアドレス</label>
-      <input class="auth-input" id="auth-email" type="email" placeholder="your@email.com" autocomplete="email">
-    </div>
-    <div class="auth-input-wrap">
-      <label class="auth-input-label">パスワード</label>
-      <input class="auth-input" id="auth-password" type="password" placeholder="6文字以上" autocomplete="current-password">
-    </div>
-    <button class="auth-submit-btn" id="auth-submit-btn" onclick="authSubmit()">ログイン / 登録</button>
-    <div id="auth-loader" class="auth-loader"></div>
-    <div id="auth-error" class="auth-error"></div>
   </div>
-</div>
+</div></div>
 
 <div class="phone-wrap"><div class="phone"><div class="phone-inner">
   <div class="notch"></div>
@@ -5432,7 +5626,32 @@ const NAV_ICONS={
   mypage:{active:`<circle cx="11" cy="8" r="3.5" stroke="#1AAF7A" stroke-width="1.7"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>`,inactive:`<circle cx="11" cy="8" r="3.5" stroke="#9BB8AE" stroke-width="1.7"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>`}
 };
 
-const DB={
+
+// ── 新デザイン用追加関数 ─────────────────────────────────────────
+window.authTogglePw = function() {
+  var inp = document.getElementById('auth-password');
+  var icon = document.getElementById('auth-eye-icon');
+  if (!inp || !icon) return;
+  var hidden = inp.type === 'password';
+  inp.type = hidden ? 'text' : 'password';
+  icon.innerHTML = hidden
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+};
+// タブ切替でボタンラベルも更新
+(function() {
+  var _orig = window.authSwitchTab;
+  window.authSwitchTab = function(tab) {
+    if (_orig) _orig(tab);
+    var btn = document.getElementById('auth-submit-btn');
+    if (btn) btn.textContent = tab === 'register' ? '新規登録' : 'ログイン';
+  };
+})();
+window.authForgotPassword = function() {
+  var email = (document.getElementById('auth-email') || {}).value || '';
+  if (!email.trim()) { alert('メールアドレスを入力してください'); return; }
+  alert('パスワードリセットメールを送信しました');
+};const DB={
   jgto:[{name:'東建ホームメイトカップ',place:'三重県 東建多度CC',start:'2025-04-03',end:'2025-04-06',area:'chubu',prefecture:'mie'},{name:'中日クラウンズ',place:'愛知県 名古屋GC和合C',start:'2025-04-24',end:'2025-04-27',area:'chubu',prefecture:'aichi'},{name:'関西オープン',place:'大阪府 茨木CC',start:'2025-05-01',end:'2025-05-04',area:'kansai',prefecture:'osaka'},{name:'日本プロゴルフ選手権',place:'兵庫県 宝塚GC',start:'2025-05-15',end:'2025-05-18',area:'kansai',prefecture:'hyogo'},{name:'日本ゴルフツアー選手権',place:'茨城県 宍戸ヒルズCC',start:'2025-06-05',end:'2025-06-08',area:'kanto',prefecture:'ibaraki'},{name:'フジサンケイクラシック',place:'山梨県 富士桜CC',start:'2025-08-07',end:'2025-08-10',area:'kanto',prefecture:'yamanashi'},{name:'日本オープン',place:'千葉県 袖ヶ浦CC',start:'2025-10-09',end:'2025-10-12',area:'kanto',prefecture:'chiba'},{name:'ダンロップフェニックス',place:'宮崎県 フェニックスCC',start:'2025-11-20',end:'2025-11-23',area:'kyushu',prefecture:'miyazaki'},{name:'ゴルフ日本シリーズJTカップ',place:'東京都 東京よみうりCC',start:'2025-12-04',end:'2025-12-07',area:'kanto',prefecture:'tokyo'}],
   jlpga:[{name:'ダイキンオーキッドレディス',place:'沖縄県 琉球GC',start:'2025-03-06',end:'2025-03-09',area:'kyushu',prefecture:'okinawa'},{name:'ヤマハレディースオープン葛城',place:'静岡県 葛城GC',start:'2025-05-01',end:'2025-05-04',area:'chubu',prefecture:'shizuoka'},{name:'ワールドレディスチャンピオンシップ',place:'千葉県 勝浦東急GC',start:'2025-05-08',end:'2025-05-11',area:'kanto',prefecture:'chiba'},{name:'日本女子プロ選手権',place:'埼玉県 武蔵丘GC',start:'2025-07-10',end:'2025-07-13',area:'kanto',prefecture:'saitama'},{name:'日本女子オープン',place:'兵庫県 小野GC',start:'2025-10-02',end:'2025-10-05',area:'kansai',prefecture:'hyogo'},{name:'LPGAツアーチャンピオンシップ',place:'宮崎県 UMKCC',start:'2025-11-20',end:'2025-11-23',area:'kyushu',prefecture:'miyazaki'}],
   pga:[{name:'マスターズ',place:'ジョージア州 オーガスタナショナル',start:'2025-04-10',end:'2025-04-13',area:'overseas',prefecture:'overseas'},{name:'全米プロゴルフ選手権',place:'ノースカロライナ州 クエイルホロウ',start:'2025-05-15',end:'2025-05-18',area:'overseas',prefecture:'overseas'},{name:'全米オープン',place:'ペンシルベニア州 オークモント',start:'2025-06-12',end:'2025-06-15',area:'overseas',prefecture:'overseas'},{name:'全英オープン',place:'スコットランド ロイヤルポートラッシュ',start:'2025-07-17',end:'2025-07-20',area:'overseas',prefecture:'overseas'}],
