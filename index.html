@@ -858,10 +858,10 @@ button,input,select,textarea{
   display:grid;
   grid-template-columns:repeat(7,1fr);
   /* セル左上の日付ぶんを避けるため、上に余白（padding-top:4 + 日付18 + margin-bottom:2 = 24px） */
-  padding-top:31px;
-  /* セルpadding(4)+date-wrap margin-top(1)+height(24)+margin-bottom(2)=31px */
+  padding-top:30px;
+  /* セルpadding(4)+date-wrap margin-top(0)+height(24)+margin-bottom(2)=30px */
   align-content:start;
-  grid-auto-rows:16px; /* バー1本の高さ(14px)＋gap(2px) */
+  grid-auto-rows:14px; /* バー1本の高さ(14px)＋gap(2px)はrow-gapで管理 */
   row-gap:2px;
   z-index:1; /* ★ cal-row(z-index:5) より下に — セルのタッチが最優先 */
 }
@@ -4069,9 +4069,9 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
 .cal-slide-container { width:300% !important; max-width:300% !important; display:flex !important; }
 .cal-panel { width:33.3333% !important; min-width:0 !important; flex-shrink:0 !important; overflow:hidden !important; overflow-x:hidden !important; }
 .cal-grid { width:100% !important; max-width:100% !important; overflow:hidden !important; }
-.cal-row { display:flex !important; width:100% !important; max-width:100% !important; overflow:hidden !important; }
+.cal-row { display:flex !important; width:100% !important; max-width:100% !important; overflow:visible !important; position:relative !important; }
 .cal-cell { flex:1 1 0 !important; width:0 !important; max-width:calc(100% / 7) !important; min-width:0 !important; overflow:hidden !important; box-sizing:border-box !important; }
-.cal-week-labels { display:flex !important; width:100% !important; max-width:100% !important; overflow:hidden !important; }
+.cal-week-labels { display:flex !important; width:100% !important; max-width:100% !important; overflow:hidden !important; position:relative !important; z-index:10 !important; background:#fff !important; }
 .cal-week-labels span { flex:1 1 0 !important; min-width:0 !important; max-width:calc(100% / 7) !important; box-sizing:border-box !important; }
 
 /* ================================================================ */
@@ -4143,13 +4143,14 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
   pointer-events:none !important;
   width:100% !important;
 }
-/* 複数日バーレイヤー：padding-top = cell padding(4) + date-wrap margin-top(0) + height(24) + margin-bottom(2) + gap(2) = 32px */
+/* 複数日バーレイヤー：padding-top = cell padding(4) + date-wrap margin-top(0) + height(24) + margin-bottom(2) = 30px */
 .cal-multiday-layer {
-  padding-top:32px !important;
-  grid-auto-rows:16px !important;
+  padding-top:30px !important;
+  grid-auto-rows:14px !important;
   row-gap:2px !important;
   pointer-events:none !important; /* ★ レイヤー全体タッチ透過 */
   z-index:2 !important; /* ★ セル(z-index:0)より視覚的に上・タッチは透過 */
+  overflow:visible !important;
 }
 /* 複数日バー本体：タッチ透過・クリックは親パネルのclickイベントで委譲 */
 .cal-multiday-bar {
