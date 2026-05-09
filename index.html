@@ -7436,7 +7436,7 @@ function syncDrawerState(){
 function setViewMode(mode){
   if(mode===viewMode)return;
   viewMode=mode;
-  // 週/3日モード切替時は基準日を初期化（選択中があればそれ、なければ今月の1日）
+  // 週/3日/日モード切替時は基準日を初期化
   if(mode!=='month'&&!viewBaseDate){
     viewBaseDate=selectedDate||`${year}-${String(month+1).padStart(2,'0')}-01`;
   }
@@ -7445,6 +7445,9 @@ function setViewMode(mode){
   renderAllPanels();
   renderCalList();
   updateMonthLabel();
+  // cal-scroll（月モード下部イベントリスト）の表示制御
+  const calScroll=document.getElementById('cal-scroll');
+  if(calScroll)calScroll.style.display=(mode==='month')?'':'none';
 }
 
 function toggleCatVisibility(key){
@@ -7469,7 +7472,7 @@ function initDrawer(){
   // ドロワー内クリック（イベント委譲）
   drawer.el.addEventListener('click',e=>{
     const vm=e.target.closest('[data-view-mode]');
-    if(vm){setViewMode(vm.dataset.viewMode);return;}
+    if(vm){setViewMode(vm.dataset.viewMode);closeDrawer();return;}
     const cat=e.target.closest('[data-cat-key]');
     if(cat){toggleCatVisibility(cat.dataset.catKey);return;}
     if(e.target.closest('#drawer-design')){
@@ -7595,7 +7598,11 @@ renderAllPanels=function(){
   const html=buildMultiDayHTML(days);
   // 既存があれば差し替え、なければ append
   if(md){
-    md.outerHTML=html;
+    // outerHTML代入は参照が切れるため innerHTML で差し替え
+    const tmp=document.createElement('div');
+    tmp.innerHTML=html;
+    const newMd=tmp.firstElementChild;
+    md.replaceWith(newMd);
   }else{
     wrap.insertAdjacentHTML('beforeend',html);
   }
@@ -8050,10 +8057,9 @@ getViewDays=function(){
   return _prevGetViewDays();
 };
 
-// setViewMode：'day' モード時の初期 viewBaseDate 設定
+// setViewMode：'day' モード時の初期 viewBaseDate 設定（本体側でガード済みのため重複排除）
 const _prevSetViewMode=setViewMode;
 setViewMode=function(mode){
-  if(mode===viewMode)return;
   if(mode==='day'&&!viewBaseDate){
     viewBaseDate=selectedDate||todayStr();
   }
