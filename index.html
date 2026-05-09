@@ -482,24 +482,35 @@ button,input,select,textarea{
 /* ★ 表示モード：週・3日のレイアウト */
 .cal-multi-day{
   width:100%;
-  min-height:100%;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
   background:#fff;
   padding:0;
-  display:block !important;   /* hidden 対策 */
-  visibility:visible !important;
 }
-/* 週・3日モード：cal-swipe-wrap をスクロール可能にする */
-#cal-swipe-wrap.multiday-mode{
-  overflow-y:auto !important;
-  overflow-x:hidden !important;
+/* month-ui-wrap：月表示の専用ラッパー */
+#month-ui-wrap{
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+  flex-direction:column;
 }
-/* 1日モード：内部 dv-timeline がスクロール担当 */
-#cal-swipe-wrap.dayview-mode{
-  overflow:hidden !important;
-  display:flex !important;
-  flex-direction:column !important;
+/* multiday-ui-wrap：週/3日/1日 の共通ラッパー */
+#multiday-ui-wrap{
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+  flex-direction:column;
+}
+/* 週/3日モード：.cal-multi-day がスクロール担当 */
+#multiday-ui-wrap .cal-multi-day{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+/* 1日モード：.cal-day-view がflex columで埋める */
+#multiday-ui-wrap .cal-day-view{
+  flex:1;
+  min-height:0;
 }
 .cal-multi-day::-webkit-scrollbar{display:none;}
 .day-block{
@@ -3927,34 +3938,42 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
         <button class="m-arrow" onclick="changeMonth(1)">&#8250;</button>
       </div>
     </div>
-    <div class="cal-header"><div class="cal-week-labels">
-      <span style="color:rgba(255,160,160,.9)">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span style="color:rgba(160,200,255,.9)">土</span>
-    </div></div>
-    <div class="hint-bar">
-      <div class="hint-item"><div class="hint-dot"></div>セル：選択/追加</div>
-      <div class="hint-item"><div class="hint-dot"></div>予定：タップで編集</div>
-      <div class="hint-item"><div class="hint-dot"></div>長押し→ドラッグで移動</div>
-    </div>
-    <!-- ★ 凡例エリアは削除済み -->
-    <div class="cal-swipe-wrap" id="cal-swipe-wrap">
-      <div class="cal-slide-container" id="cal-slide-container">
-        <div class="cal-panel" id="panel-prev"></div>
-        <div class="cal-panel" id="panel-cur"></div>
-        <div class="cal-panel" id="panel-next"></div>
+
+    <!-- ★ 月表示専用ラッパー（week/3day/day時は display:none） -->
+    <div id="month-ui-wrap" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+      <div class="cal-header"><div class="cal-week-labels">
+        <span style="color:rgba(255,160,160,.9)">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span style="color:rgba(160,200,255,.9)">土</span>
+      </div></div>
+      <div class="hint-bar">
+        <div class="hint-item"><div class="hint-dot"></div>セル：選択/追加</div>
+        <div class="hint-item"><div class="hint-dot"></div>予定：タップで編集</div>
+        <div class="hint-item"><div class="hint-dot"></div>長押し→ドラッグで移動</div>
+      </div>
+      <!-- ★ 凡例エリアは削除済み -->
+      <div class="cal-swipe-wrap" id="cal-swipe-wrap">
+        <div class="cal-slide-container" id="cal-slide-container">
+          <div class="cal-panel" id="panel-prev"></div>
+          <div class="cal-panel" id="panel-cur"></div>
+          <div class="cal-panel" id="panel-next"></div>
+        </div>
+      </div>
+      <div class="split-handle" id="split-handle" role="separator" aria-orientation="horizontal" aria-label="カレンダーと予定リストの境界">
+        <div class="split-handle-bar"></div>
+        <span class="split-handle-hint">▲▼</span>
+      </div>
+      <div class="cat-legend" id="cat-legend" aria-label="カテゴリ別件数"></div>
+      <div class="cal-scroll" id="cal-scroll">
+        <div class="section-header">
+          <span class="section-label" id="cal-section-label"></span>
+          <button class="section-add-btn" onclick="openModal(null)">＋ 予定を追加</button>
+        </div>
+        <div id="cal-event-list"></div>
+        <div style="height:6px;"></div>
       </div>
     </div>
-    <div class="split-handle" id="split-handle" role="separator" aria-orientation="horizontal" aria-label="カレンダーと予定リストの境界">
-      <div class="split-handle-bar"></div>
-      <span class="split-handle-hint">▲▼</span>
-    </div>
-    <div class="cat-legend" id="cat-legend" aria-label="カテゴリ別件数"></div>
-    <div class="cal-scroll" id="cal-scroll">
-      <div class="section-header">
-        <span class="section-label" id="cal-section-label"></span>
-        <button class="section-add-btn" onclick="openModal(null)">＋ 予定を追加</button>
-      </div>
-      <div id="cal-event-list"></div>
-      <div style="height:6px;"></div>
+
+    <!-- ★ 週/3日/1日表示専用ラッパー（month時は display:none） -->
+    <div id="multiday-ui-wrap" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
     </div>
   </div>
 
@@ -7456,51 +7475,28 @@ function setViewMode(mode){
   }
   savePrefs();
   syncDrawerState();
-
-  // ── コンテナ表示制御 ──────────────────────────────
-  const calScroll=document.getElementById('cal-scroll');
-  const calWrap=document.getElementById('cal-swipe-wrap');
-  const calSlide=document.getElementById('cal-slide-container');
-  const handle=document.getElementById('split-handle');
-  const calHeader=document.querySelector('.cal-header');   // 曜日ラベル行
-
-  if(mode==='month'){
-    // 月モード：すべて標準表示
-    if(calScroll)calScroll.style.display='';
-    if(calWrap){
-      calWrap.style.display='';
-      calWrap.style.overflow='';    // インラインを消してCSS側の overflow:hidden に戻す
-      calWrap.classList.remove('multiday-mode','dayview-mode');
-    }
-    if(calSlide)calSlide.style.display='';
-    if(handle)handle.style.display='';
-    if(calHeader)calHeader.style.display='';
-    // 残留 multi-day / day-view を除去
-    calWrap&&calWrap.querySelector('.cal-multi-day')?.remove();
-    calWrap&&calWrap.querySelector('.cal-day-view')?.remove();
-  }else{
-    // 週 / 3日 / 1日モード：cal-scroll・cal-slide-container・ハンドルを隠す
-    if(calScroll)calScroll.style.display='none';
-    if(calSlide)calSlide.style.display='none';
-    if(handle)handle.style.display='none';
-    // cal-swipe-wrap は必ず表示（overflow-y:auto にしてスクロール可能に）
-    if(calWrap){
-      calWrap.style.display='block';
-      if(mode==='day'){
-        calWrap.classList.remove('multiday-mode');
-        calWrap.classList.add('dayview-mode');
-      }else{
-        calWrap.classList.remove('dayview-mode');
-        calWrap.classList.add('multiday-mode');
-      }
-    }
-    if(calHeader)calHeader.style.display=(mode==='day')?'none':'';
-  }
-  // ─────────────────────────────────────────────────
-
-  renderAllPanels();   // ← multi-day / day-view を挿入
+  _applyViewLayout(mode);   // ← 表示コンテナを完全分離
+  renderAllPanels();
   renderCalList();
   updateMonthLabel();
+}
+
+// ── 月 vs 週/3日/1日 の表示レイアウトを完全分離 ──────────────
+function _applyViewLayout(mode){
+  const monthWrap   = document.getElementById('month-ui-wrap');
+  const multidayWrap= document.getElementById('multiday-ui-wrap');
+  if(!monthWrap||!multidayWrap)return;
+  if(mode==='month'){
+    // 月モード：月UIをflex表示、multiday側を完全非表示
+    monthWrap.style.display   ='flex';
+    multidayWrap.style.display='none';
+    // multiday内の残留DOMを除去
+    multidayWrap.innerHTML='';
+  }else{
+    // 週/3日/1日モード：月UIを完全非表示、multiday側を表示
+    monthWrap.style.display   ='none';
+    multidayWrap.style.display='flex';
+  }
 }
 
 function toggleCatVisibility(key){
@@ -7627,38 +7623,23 @@ function getViewDays(){
   return [];
 }
 
-// renderAllPanels の月モード以外の対応：cal-swipe-wrap の中身を multi-day に差し替え
+// renderAllPanels の月モード以外の対応：multiday-ui-wrap に差し替え
 const _origRenderAllPanels=renderAllPanels;
 renderAllPanels=function(){
-  const wrap=document.getElementById('cal-swipe-wrap');
-  const slide=document.getElementById('cal-slide-container');
-  const handle=document.getElementById('split-handle');
   if(viewMode==='month'){
-    // 月モード：従来通り
-    if(slide)slide.style.display='';
-    if(handle)handle.style.display='';
-    // 既存の multi-day があれば除去
-    const md=wrap.querySelector('.cal-multi-day');
-    if(md)md.remove();
+    // 月モード：従来の月グリッド描画
     _origRenderAllPanels();
     return;
   }
-  // 週 / 3日モード：multi-day 表示
-  if(slide)slide.style.display='none';
-  if(handle)handle.style.display='none';
-  const days=getViewDays();
-  let md=wrap.querySelector('.cal-multi-day');
-  const html=buildMultiDayHTML(days);
-  // 既存があれば差し替え、なければ append
-  if(md){
-    // outerHTML代入は参照が切れるため innerHTML で差し替え
-    const tmp=document.createElement('div');
-    tmp.innerHTML=html;
-    const newMd=tmp.firstElementChild;
-    md.replaceWith(newMd);
-  }else{
-    wrap.insertAdjacentHTML('beforeend',html);
+  // 週 / 3日モード：multiday-ui-wrap に .cal-multi-day を描画
+  if(viewMode==='week'||viewMode==='3day'){
+    const container=document.getElementById('multiday-ui-wrap');
+    if(!container)return;
+    const days=getViewDays();
+    const html=buildMultiDayHTML(days);
+    container.innerHTML=html;   // multiday-ui-wrap の中身ごと入れ替え
   }
+  // day モードは後段の _prevRenderAllPanels が処理
 };
 
 // 月切替ボタン：モード別に動作
@@ -8063,6 +8044,7 @@ function jumpToDayView(ds){
   const d=new Date(ds);year=d.getFullYear();month=d.getMonth();
   if(viewMode!=='day'){
     viewMode='day';savePrefs();syncDrawerState();
+    _applyViewLayout('day');   // ← 月UIを非表示・multiday表示
   }
   updateMonthLabel();renderAllPanels();renderCalList();
   setTimeout(()=>{dvRestoreScroll();dvBindSwipe();dvStartNowLineTicker();},30);
@@ -8071,34 +8053,21 @@ function jumpToDayView(ds){
 // ───── renderAllPanels の 'day' モード対応（再オーバーライド） ─────
 const _prevRenderAllPanels=renderAllPanels;
 renderAllPanels=function(){
-  const wrap=document.getElementById('cal-swipe-wrap');
-  const slide=document.getElementById('cal-slide-container');
-  const handle=document.getElementById('split-handle');
   if(viewMode==='day'){
-    if(slide)slide.style.display='none';
-    if(handle)handle.style.display='none';
-    // multi-day が残っていれば除去
-    const md=wrap.querySelector('.cal-multi-day');
-    if(md)md.remove();
-    // 既存の day-view を差し替え
+    // day モード：multiday-ui-wrap に cal-day-view を描画
+    const container=document.getElementById('multiday-ui-wrap');
+    if(!container)return;
     const ds=viewBaseDate||selectedDate||todayStr();
-    const html=dvBuildHTML(ds);
-    let dv=wrap.querySelector('.cal-day-view');
-    if(dv){
-      // outerHTML代入は参照が切れてDOMに反映されないため replaceWith を使用
-      const tmp=document.createElement('div');
-      tmp.innerHTML=html;
-      const newDv=tmp.firstElementChild;
-      dv.replaceWith(newDv);
-    }else{wrap.insertAdjacentHTML('beforeend',html);}
+    container.innerHTML=dvBuildHTML(ds);   // innerHTML で完全置換
     // 描画後の処理
     setTimeout(()=>{dvRestoreScroll();dvBindSwipe();dvStartNowLineTicker();},20);
     return;
   }
-  // それ以外：既存処理に委譲（day-view が残っていれば除去）
-  const dv=wrap.querySelector('.cal-day-view');
-  if(dv)dv.remove();
-  _prevRenderAllPanels();
+  // week / 3day は _origRenderAllPanels が処理済み
+  // month はさらに下の _prevRenderAllPanels（元の月グリッド）が担当
+  if(viewMode!=='week'&&viewMode!=='3day'){
+    _prevRenderAllPanels();
+  }
 };
 
 // changeMonthInternal の 'day' モード対応（再オーバーライド）
@@ -8889,24 +8858,8 @@ updateMonthLabel();
 if(viewMode!=='month'&&!viewBaseDate){viewBaseDate=todayStr();}
 applyDesign(); // ★★★ デザイン設定を最初に CSS 反映
 migrateEventsForDeadline(); // ★★★ 既存イベントに締切・通知設定を補完
-// 初期 viewMode が month 以外の場合、表示制御を適用してから描画
-if(viewMode!=='month'){
-  const _calScroll=document.getElementById('cal-scroll');
-  const _calWrap=document.getElementById('cal-swipe-wrap');
-  const _calSlide=document.getElementById('cal-slide-container');
-  const _handle=document.getElementById('split-handle');
-  if(_calScroll)_calScroll.style.display='none';
-  if(_calSlide)_calSlide.style.display='none';
-  if(_handle)_handle.style.display='none';
-  if(_calWrap){
-    _calWrap.style.display='block';
-    if(viewMode==='day'){
-      _calWrap.classList.add('dayview-mode');
-    }else{
-      _calWrap.classList.add('multiday-mode');
-    }
-  }
-}
+// 初期 viewMode の表示制御（month / それ以外 を完全分離）
+_applyViewLayout(viewMode);
 renderAllPanels();renderCalList();initSwipe();renderSearchFilters();initSplitHandle();initCatLegend();
 initDrawer();syncDrawerState();
 initDesignSettings(); // ★★★ デザイン設定 UI を初期化
