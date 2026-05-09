@@ -28,7 +28,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="pronexaX_logo.png">
   <link rel="shortcut icon" href="pronexaX_logo.png">
   <!-- iOS Splash Screens (startup image) — 黒背景 -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="white">
   <link rel="apple-touch-startup-image" media="(device-width:390px)and(device-height:844px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
   <link rel="apple-touch-startup-image" media="(device-width:414px)and(device-height:896px)and(-webkit-device-pixel-ratio:2)" href="pronexaX_logo.png">
   <link rel="apple-touch-startup-image" media="(device-width:375px)and(device-height:812px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
@@ -3423,8 +3423,8 @@ button,input,select,textarea{
     bottom: 0 !important;
     height: 100% !important;
   }
-  body { background: #000; height: 100%; height: -webkit-fill-available; }
-  html { height: 100%; height: -webkit-fill-available; background: #000; }
+  body { background: #ffffff; height: 100%; height: -webkit-fill-available; }
+  html { height: 100%; height: -webkit-fill-available; background: #ffffff; }
 }
 
 /* ================================================================
@@ -4404,6 +4404,26 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
 :root[data-theme="dark"] .add-cat-action-btn.already-added{
   background:rgba(255,255,255,.05);
   border-color:var(--border);
+}
+
+/* ================================================================ */
+/* ★★★ iOS PWA ステータスバー背景：白固定                         */
+/* standalone / 通常ブラウザ / 画面回転後 すべてで白を維持          */
+/* html/body/app-frame/phone-inner を最後尾で上書きして確定させる   */
+/* ================================================================ */
+html,
+body{
+  background:#ffffff !important;
+}
+.app-frame{
+  background:#ffffff !important;
+}
+/* phone-inner は --bg（テーマ色）を使うが、ステータスバー背後は
+   app-frame が担当するため app-frame を白にすれば十分。
+   ただし phone-inner が app-frame より大きくなるケースを念のため封鎖。 */
+.phone-inner{
+  /* 背景は --bg のまま維持（カレンダー背景色に影響しない） */
+  /* ステータスバー部分だけ透けて見える app-frame が白なので問題なし */
 }
 
 /* ================================================================ */
