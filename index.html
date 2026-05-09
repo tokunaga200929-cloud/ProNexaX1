@@ -5350,6 +5350,8 @@ function savePrefs(){
 let calLastClick={t:0,ds:''},tourLastClick={t:0,idx:-1,q:''};
 let lpTimer=null,lpCell=null;
 let swipeX=0,swipeY=0,swiping=false,swipeLocked=false;
+// ★★★ イベントドラッグ中フラグ：月スワイプを完全ブロックするために使用 ★★★
+let isDraggingEvent=false;
 let searchFilter='all',sortByPrize=false,openSearchCard=null;
 // ★★★ 検索画面の追加状態 ★★★
 // state = { tab, filterCategory } の2軸を分離管理
@@ -5737,6 +5739,7 @@ function bindPanelEvents(){
       // セルドラッグ中：カード追従
       if(cellDrag.started){
         e.preventDefault();
+        e.stopPropagation(); // ★★★ 月スワイプへの伝播を完全ブロック
         moveCellDragCard(e);
         return;
       }
@@ -5746,6 +5749,7 @@ function bindPanelEvents(){
         const dx=t.clientX-cellDrag.startX,dy=t.clientY-cellDrag.startY;
         if(cellDrag.active&&Math.hypot(dx,dy)>CELL_DRAG_THRESHOLD){
           e.preventDefault();
+          e.stopPropagation(); // ★★★ 月スワイプへの伝播を完全ブロック
           beginCellDrag(e);
         }else if(!cellDrag.active&&Math.hypot(dx,dy)>CELL_DRAG_THRESHOLD){
           // 長押し前に動いた → スワイプの可能性、ドラッグキャンセル
@@ -5763,6 +5767,7 @@ function bindPanelEvents(){
       // チップドラッグ中：カード追従
       if(drag.started){
         e.preventDefault();
+        e.stopPropagation(); // ★★★ 月スワイプへの伝播を完全ブロック
         moveDragCard(e);
         return;
       }
@@ -5772,6 +5777,7 @@ function bindPanelEvents(){
         const dx=t.clientX-drag.startX,dy=t.clientY-drag.startY;
         if(drag.active&&Math.hypot(dx,dy)>DRAG_THRESHOLD){
           e.preventDefault();
+          e.stopPropagation(); // ★★★ 月スワイプへの伝播を完全ブロック
           beginDrag(e);
         }else if(!drag.active&&Math.hypot(dx,dy)>DRAG_THRESHOLD){
           cancelChipPress();
@@ -5865,11 +5871,22 @@ function cancelChipPress(){
   if(drag.currentDropTarget){drag.currentDropTarget.classList.remove('drop-target');}
   drag.eventId=null;drag.active=false;drag.started=false;
   drag.origChipEl=null;drag.currentDropTarget=null;
+  // ★★★ 月スワイプブロックを解除 ★★★
+  isDraggingEvent=false;
+  const _csc=document.getElementById('cal-slide-container');
+  if(_csc)_csc.style.pointerEvents='';
 }
 
 // ★ ドラッグ開始：浮遊カード表示 + 元チップをプレースホルダー化
 function beginDrag(e){
   drag.started=true;
+  // ★★★ 月スワイプを完全ブロック ★★★
+  isDraggingEvent=true;
+  // cal-slide-container の pointer-events を無効化してスワイプアニメーションを遮断
+  const sc=document.getElementById('cal-slide-container');
+  if(sc)sc.style.pointerEvents='none';
+  // swiping フラグを強制リセットしてスワイプ判定を中断
+  swiping=false;swipeLocked=false;
   const ev=EVENTS.find(x=>x.id===drag.eventId);
   if(!ev)return;
   
@@ -5902,6 +5919,9 @@ function beginDrag(e){
 
 // ★ ドラッグ中：カードを指の位置に追従
 function moveDragCard(e){
+  // ★★★ touchmove の伝播を完全に止めて月スワイプを防ぐ ★★★
+  if(e&&e.stopPropagation)e.stopPropagation();
+  if(e&&e.preventDefault)e.preventDefault();
   const t=e.touches?e.touches[0]:e;
   const x=t.clientX,y=t.clientY;
   if(drag.cardEl){
@@ -5963,6 +5983,10 @@ function endDrag(e){
   drag.eventId=null;drag.active=false;drag.started=false;
   drag.origChipEl=null;drag.cardEl=null;drag.currentDropTarget=null;
   drag.suppressClickUntil=Date.now()+400;
+  // ★★★ 月スワイプブロックを解除 ★★★
+  isDraggingEvent=false;
+  const _sc=document.getElementById('cal-slide-container');
+  if(_sc)_sc.style.pointerEvents='';
 }
 
 // ★★★ セル全体ドラッグ：その日の予定をまとめて移動 ★★★
@@ -5999,11 +6023,20 @@ function cancelCellPress(){
   cellDrag.sourceDs=null;cellDrag.sourceCellEl=null;
   cellDrag.active=false;cellDrag.started=false;
   cellDrag.cardEl=null;cellDrag.currentDropTarget=null;
+  // ★★★ 月スワイプブロックを解除 ★★★
+  isDraggingEvent=false;
+  const _ccsc=document.getElementById('cal-slide-container');
+  if(_ccsc)_ccsc.style.pointerEvents='';
 }
 
 // セルドラッグ実開始：フロートカード表示 + 元セルをプレースホルダー化
 function beginCellDrag(e){
   cellDrag.started=true;
+  // ★★★ 月スワイプを完全ブロック ★★★
+  isDraggingEvent=true;
+  const sc=document.getElementById('cal-slide-container');
+  if(sc)sc.style.pointerEvents='none';
+  swiping=false;swipeLocked=false;
   const ds=cellDrag.sourceDs;
   // カテゴリフィルタ適用済みのイベントのみドラッグ対象
   const evs=applyCatFiltersToEvents(getEventsOnDate(ds));
@@ -6045,6 +6078,9 @@ function beginCellDrag(e){
 
 // セルドラッグ中：カードを指の位置に追従
 function moveCellDragCard(e){
+  // ★★★ touchmove の伝播を完全に止めて月スワイプを防ぐ ★★★
+  if(e&&e.stopPropagation)e.stopPropagation();
+  if(e&&e.preventDefault)e.preventDefault();
   const t=e.touches?e.touches[0]:e;
   const x=t.clientX,y=t.clientY;
   if(cellDrag.cardEl){
@@ -6121,12 +6157,18 @@ function endCellDrag(e){
   cellDrag.sourceDs=null;cellDrag.sourceCellEl=null;
   cellDrag.active=false;cellDrag.started=false;
   cellDrag.cardEl=null;cellDrag.currentDropTarget=null;
+  // ★★★ 月スワイプブロックを解除 ★★★
+  isDraggingEvent=false;
+  const _esc=document.getElementById('cal-slide-container');
+  if(_esc)_esc.style.pointerEvents='';
 }
 
 function initSwipe(){
   const w=document.getElementById('cal-swipe-wrap');
   w.addEventListener('touchstart',e=>{
     if(viewMode!=='month')return;
+    // ★★★ イベントドラッグ中は月スワイプを完全ブロック ★★★
+    if(isDraggingEvent){swiping=false;swipeLocked=false;return;}
     if(drag.started||cellDrag.started)return;
     // ★ 長押し確定後（active）のみブロック。長押し判定待ち(startDs のみ)はスワイプ開始を許可
     if(rangeSelect.active)return;
@@ -6134,6 +6176,8 @@ function initSwipe(){
   },{passive:true});
   w.addEventListener('touchmove',e=>{
     if(viewMode!=='month')return;
+    // ★★★ イベントドラッグ中は月スワイプを完全ブロック（swiping も強制リセット）★★★
+    if(isDraggingEvent){swiping=false;swipeLocked=false;return;}
     // ★ 長押し確定（active）中のみ月スワイプを停止。判定待ち中は通常スワイプ継続
     if(rangeSelect.active){swiping=false;swipeLocked=false;return;}
     if(drag.eventId||drag.started||cellDrag.active||cellDrag.started)return;
@@ -6146,6 +6190,8 @@ function initSwipe(){
   },{passive:true});
   w.addEventListener('touchend',e=>{
     if(viewMode!=='month')return;
+    // ★★★ イベントドラッグ中は月切り替えを完全ブロック ★★★
+    if(isDraggingEvent){swiping=false;swipeLocked=false;return;}
     // ★ 長押し確定（active）中のみ月切り替えをキャンセル
     if(rangeSelect.active){swiping=false;swipeLocked=false;return;}
     if(drag.eventId||drag.started||cellDrag.active||cellDrag.started){swipeLocked=false;swiping=false;return;}
@@ -6157,6 +6203,8 @@ function initSwipe(){
 }
 
 function animateSwipe(dir){
+  // ★★★ イベントドラッグ中は月スワイプアニメーションを完全ブロック ★★★
+  if(isDraggingEvent)return;
   if(animateSwipe._busy)return; // アニメーション中は多重実行防止
   animateSwipe._busy=true;
   const sc=document.getElementById('cal-slide-container');
