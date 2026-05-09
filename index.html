@@ -53,6 +53,10 @@ html,body{
   letter-spacing:-0.01em;
   width:100%;
   overflow-x:hidden;
+  margin:0;
+  padding:0;
+  background:#000;
+  overflow:hidden;
 }
 body{
   position:relative;
@@ -265,7 +269,7 @@ button,input,select,textarea{
   position:fixed;
   inset:0;
   overflow:hidden;
-  border-radius:0;          /* 実機はフルスクリーンなので基本0 */
+  border-radius:0;
   background:var(--bg);
   z-index:0;
 }
@@ -283,11 +287,15 @@ button,input,select,textarea{
     var(--green-main) 45%,
     var(--green-dark) 100%
   );
-  padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 0;flex-shrink:0;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-right:16px;
+  padding-bottom:0;
+  padding-left:16px;
+  flex-shrink:0;
   box-shadow:0 2px 10px rgba(10,107,71,.22);
   color:#fff;
 }
-.app-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;}
+.app-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;padding-top:10px;}
 .app-logo{color:#fff;font-size:15px;font-weight:800;letter-spacing:.8px;}
 .app-logo span{color:#C8FFEC;}
 .app-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;}
@@ -876,11 +884,11 @@ button,input,select,textarea{
     color-mix(in srgb,var(--green-main) 92%,#fff) 45%,
     color-mix(in srgb,var(--green-dark) 95%,#fff) 100%
   );
-  padding:7px 16px 10px;flex-shrink:0;
+  padding:env(safe-area-inset-top,0px) 16px 10px;flex-shrink:0;
   box-shadow:0 2px 8px rgba(10,107,71,.12);
   color:#fff;
 }
-.search-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.search-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-top:7px;}
 .page-title{color:#fff;font-size:15px;font-weight:800;letter-spacing:.8px;}
 .page-title span{color:#ADFFD8;}
 /* ===== 複合検索ボックス ===== */
@@ -2533,13 +2541,14 @@ button,input,select,textarea{
     color-mix(in srgb,var(--green-main) 92%,#fff) 45%,
     color-mix(in srgb,var(--green-dark) 95%,#fff) 100%
   );
-  padding:7px 16px 0;flex-shrink:0;
+  padding:env(safe-area-inset-top,0px) 16px 0;flex-shrink:0;
   box-shadow:0 2px 8px rgba(10,107,71,.12);
   color:#fff;
 }
 .fin-header-top{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:8px;
+  padding-top:7px;
 }
 .fin-header-title{
   display:flex;align-items:center;gap:8px;
@@ -3909,7 +3918,7 @@ button,input,select,textarea{
    ================================================================ */
 @media (display-mode: standalone), (display-mode: fullscreen) {
   .app-header, .search-header, .fin-header {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
   }
   .bottom-nav {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px) !important;
@@ -3934,8 +3943,8 @@ button,input,select,textarea{
     bottom: 0 !important;
     height: 100% !important;
   }
-  body { background: var(--bg); height: 100%; height: -webkit-fill-available; }
-  html { height: 100%; height: -webkit-fill-available; }
+  body { background: #000; height: 100%; height: -webkit-fill-available; }
+  html { height: 100%; height: -webkit-fill-available; background: #000; }
 }
 
 /* ================================================================
@@ -4237,15 +4246,15 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
 
 /* アプリヘッダー */
 .app-header {
-  padding-top: max(env(safe-area-inset-top,0px), 12px) !important;
+  padding-top: env(safe-area-inset-top,0px) !important;
   padding-bottom:8px !important;
 }
 .search-header {
-  padding-top: max(env(safe-area-inset-top,0px), 12px) !important;
+  padding-top: env(safe-area-inset-top,0px) !important;
   padding-bottom:8px !important;
 }
 .fin-header {
-  padding-top: max(env(safe-area-inset-top,0px), 12px) !important;
+  padding-top: env(safe-area-inset-top,0px) !important;
 }
 
 /* ドロワー */
