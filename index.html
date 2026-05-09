@@ -28,7 +28,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="pronexaX_logo.png">
   <link rel="shortcut icon" href="pronexaX_logo.png">
   <!-- iOS Splash Screens (startup image) — 黒背景 -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-startup-image" media="(device-width:390px)and(device-height:844px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
   <link rel="apple-touch-startup-image" media="(device-width:414px)and(device-height:896px)and(-webkit-device-pixel-ratio:2)" href="pronexaX_logo.png">
   <link rel="apple-touch-startup-image" media="(device-width:375px)and(device-height:812px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
@@ -282,12 +282,8 @@ button,input,select,textarea{
   inset:0;
   overflow:hidden;
   border-radius:0;
-  /* black-translucent 時、ステータスバー背面はここが透けて見える */
-  background:linear-gradient(160deg,
-    var(--green-light) 0%,
-    var(--green-main) 45%,
-    var(--green-dark) 100%
-  );
+  /* ステータスバー背面：白背景で統一 */
+  background:#ffffff;
   z-index:0;
 }
 /* ── phone-inner：角丸なし・スクロール制御のみ ── */
@@ -10747,9 +10743,9 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     document.getElementById('month-picker-year').textContent = pickerYear + '年';
     const grid = document.getElementById('month-picker-grid');
     if(!grid) return;
-    // 現在表示中の年月を取得（グローバルの currentYear/currentMonth を参照）
-    const curY = typeof currentYear !== 'undefined' ? currentYear : new Date().getFullYear();
-    const curM = typeof currentMonth !== 'undefined' ? currentMonth : new Date().getMonth();
+    // 現在表示中の年月を取得（実際のカレンダー変数 year / month を参照）
+    const curY = typeof year  !== 'undefined' ? year  : new Date().getFullYear();
+    const curM = typeof month !== 'undefined' ? month : new Date().getMonth();
     grid.innerHTML = '';
     MONTHS.forEach((name, idx) => {
       const btn = document.createElement('button');
@@ -10757,16 +10753,7 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
       btn.textContent = name;
       if(pickerYear === curY && idx === curM) btn.classList.add('is-current');
       btn.onclick = function(){
-        // currentYear / currentMonth を書き換えてカレンダー再描画
-        if(typeof currentYear !== 'undefined') currentYear = pickerYear;
-        if(typeof currentMonth !== 'undefined') currentMonth = idx;
-        // 既存の再描画関数を呼ぶ（renderCalendar or updateMonthLabel）
-        if(typeof renderCalendar === 'function') renderCalendar();
-        else if(typeof updateMonthLabel === 'function') updateMonthLabel();
-        // month-label テキストを即時更新（フォールバック）
-        const lbl = document.getElementById('month-label');
-        if(lbl) lbl.textContent = pickerYear + '年' + (idx+1) + '月';
-        closeMonthPicker();
+        selectMonth(pickerYear, idx);
       };
       grid.appendChild(btn);
     });
@@ -10778,8 +10765,8 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   };
 
   window.openMonthPicker = function(){
-    // 現在の年を pickerYear の初期値に
-    if(typeof currentYear !== 'undefined') pickerYear = currentYear;
+    // 現在の年を pickerYear の初期値に（実際のカレンダー変数 year を参照）
+    if(typeof year !== 'undefined') pickerYear = year;
     else pickerYear = new Date().getFullYear();
     renderPickerGrid();
     // ボタン位置からピッカーのtopを動的に計算
@@ -10808,6 +10795,27 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   window.shiftPickerYear = function(delta){
     pickerYear += delta;
     renderPickerGrid();
+  };
+
+  // ── 月選択：state更新→全パネル再描画→ピッカーを閉じる ──
+  window.selectMonth = function(selectedYear, monthIndex){
+    // 実際のカレンダー変数（year / month）を直接更新
+    if(typeof year !== 'undefined')  year  = selectedYear;
+    if(typeof month !== 'undefined') month = monthIndex;
+    // 選択日をリセット（月切り替え時はクリア）
+    if(typeof selectedDate  !== 'undefined') selectedDate  = null;
+    if(typeof newlyAddedDate !== 'undefined') newlyAddedDate = null;
+    // ① タイトル更新
+    if(typeof updateMonthLabel === 'function') updateMonthLabel();
+    // ② カレンダー・イベントパネル全再描画
+    if(typeof renderAllPanels === 'function')  renderAllPanels();
+    // ③ カレンダーリスト再描画
+    if(typeof renderCalList === 'function')    renderCalList();
+    // ④ フォールバック：month-label を直接書き換え
+    const lbl = document.getElementById('month-label');
+    if(lbl) lbl.textContent = selectedYear + '年 ' + (monthIndex + 1) + '月';
+    // ⑤ ピッカーを閉じる
+    window.closeMonthPicker();
   };
 
   // ── イベントリスナー接続（指示通りの実装） ──
