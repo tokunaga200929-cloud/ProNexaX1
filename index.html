@@ -6133,8 +6133,8 @@ function animateSwipe(dir){
 function changeMonthInternal(dir){month+=dir;if(month>11){month=0;year++;}if(month<0){month=11;year--;}selectedDate=null;newlyAddedDate=null;updateMonthLabel();renderAllPanels();renderCalList();}
 function changeMonth(dir){animateSwipe(dir);}
 function updateMonthLabel(){document.getElementById('month-label').textContent=`${year}年 ${month+1}月`;}
-function onCellClick(ds){const now=Date.now();if(ds===calLastClick.ds&&now-calLastClick.t<DC){calLastClick={t:0,ds:''};selectedDate=ds;newlyAddedDate=null;console.log('[onCellClick] tappedDate=',ds,'selectedDate=',selectedDate);openModal(ds);return;}calLastClick={t:now,ds};selectedDate=selectedDate===ds?null:ds;newlyAddedDate=null;renderAllPanels();renderCalList();}
-function onTouchStartCell(e,ds,cellEl){lpCell=cellEl;cellEl.classList.add('longpress-active');showLpRing(e);lpTimer=setTimeout(()=>{cellEl.classList.remove('longpress-active');hideLpRing();selectedDate=ds;console.log('[longpress] tappedDate=',ds,'selectedDate=',selectedDate);openModal(ds);},LP);}
+function onCellClick(ds){const now=Date.now();if(ds===calLastClick.ds&&now-calLastClick.t<DC){calLastClick={t:0,ds:''};console.log('[onCellClick→openCreateModal] tappedDate=',ds);openCreateModal(ds);return;}calLastClick={t:now,ds};selectedDate=selectedDate===ds?null:ds;newlyAddedDate=null;renderAllPanels();renderCalList();}
+function onTouchStartCell(e,ds,cellEl){lpCell=cellEl;cellEl.classList.add('longpress-active');showLpRing(e);lpTimer=setTimeout(()=>{cellEl.classList.remove('longpress-active');hideLpRing();console.log('[longpress→openCreateModal] tappedDate=',ds);openCreateModal(ds);},LP);}
 function onTouchEndCell(){clearTimeout(lpTimer);if(lpCell)lpCell.classList.remove('longpress-active');hideLpRing();lpTimer=null;lpCell=null;}
 function showLpRing(e){const ring=document.getElementById('lp-ring');const rect=document.querySelector('.phone-inner').getBoundingClientRect();const t=e.touches?e.touches[0]:e,x=t.clientX-rect.left,y=t.clientY-rect.top,s=44;ring.style.cssText=`width:${s}px;height:${s}px;left:${x-s/2}px;top:${y-s/2}px;`;ring.classList.remove('animating');void ring.offsetWidth;ring.classList.add('animating');}
 function hideLpRing(){document.getElementById('lp-ring').classList.remove('animating');}
@@ -7237,6 +7237,28 @@ function toggleSearchAdd(id){
     showToast(`「${t.name}」をカレンダーに追加しました ✓`);
   }
   applySearchFilters();renderAllPanels();renderCalList();
+}
+// ★★★ カレンダーセルをタップして「予定追加」を開く統一エントリー ★★★
+// cellDate: タップしたセルが持つ実日付。Date オブジェクト or 'YYYY-MM-DD' 文字列。
+// 月送り後でも、必ず "タップしたセルが持つ実 Date" を渡すこと
+// （year / month グローバルから現在月で再構築してはいけない）。
+function openCreateModal(cellDate){
+  let ds;
+  if(cellDate instanceof Date && !isNaN(cellDate.getTime())){
+    ds=dsFromDate(cellDate);
+  }else if(typeof cellDate==='string' && cellDate){
+    ds=cellDate;
+  }else{
+    // 何も渡されなかった場合のみ「今日」にフォールバック。
+    // タップ経由ではここに来てはいけない（来たらタップ日が伝わっていないバグ）。
+    ds=todayStr();
+    console.warn('[openCreateModal] cellDate が無いため今日を使用（呼び出し側を確認）');
+  }
+  selectedDate=ds;       // タップ日を保存（DatePicker 初期値の単一ソース）
+  newlyAddedDate=null;
+  modalPresetDate=ds;    // defaultDateStr() からも参照される
+  console.log('[openCreateModal] cellDate=',cellDate,' → selectedDate=',selectedDate);
+  openModal(ds);
 }
 function openModal(ds,editId){
   // ★ UTC日付ズレ修正：dsが文字列の場合はselectedDateを必ず先に同期してからモーダルを開く
@@ -8507,8 +8529,8 @@ function dvOnSlotClick(ds,timeStr){
   // 開始時刻は将来 input-start-time フィールドが追加された際に prefil するため、
   // 一時グローバルに保持する（既存 modal はそのまま使用）。
   dvPresetStartTime=timeStr;
-  modalPresetDate=ds;
-  openModal(ds);
+  // ★ タップしたスロットの日付を必ず DatePicker に渡す
+  openCreateModal(ds);
   // 開いたモーダルの開始日付に時刻ヒントをトーストで案内
   showToast(`${timeStr} から新規予定を作成`);
 }
@@ -9411,8 +9433,8 @@ function _dvFinishDragSelect(){
   // モーダルを開いて時刻を流し込む
   dvPresetStartTime=_minToHHMM(startMin);
   dvPresetEndTime=_minToHHMM(endMin);
-  modalPresetDate=ds;
-  openModal(ds);
+  // ★ タップしたスロットの実日付を DatePicker に渡す
+  openCreateModal(ds);
   showToast(`${dvPresetStartTime}–${dvPresetEndTime} で予定作成`);
 }
 
@@ -9429,8 +9451,8 @@ dvOnSlotClick=function(ds,timeStr){
   const endMin=Math.min(24*60,startMin+60);
   dvPresetStartTime=timeStr;
   dvPresetEndTime=_minToHHMM(endMin);
-  modalPresetDate=ds;
-  openModal(ds);
+  // ★ タップしたスロットの実日付を DatePicker に渡す
+  openCreateModal(ds);
   showToast(`${dvPresetStartTime}–${dvPresetEndTime} で予定作成`);
 };
 
@@ -9607,6 +9629,20 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
 
   function buildCols(targetDate){
     const d=targetDate||new Date();
+    // ★ 安全弁：targetDate が _dateList に含まれない場合は d を中心に再構築
+    // （wpSwitchTab など wpOpen を経由しない呼び出しでも、ピッカー先頭日に固定されるバグを防止）
+    if(!_dateList.some(x=>x.toDateString()===d.toDateString())){
+      _dateList=(function(center){
+        const list=[];
+        const b=new Date(center.getFullYear(),center.getMonth(),center.getDate());
+        for(let i=-365;i<=730;i++){
+          const dd=new Date(b);
+          dd.setDate(b.getDate()+i);
+          list.push(dd);
+        }
+        return list;
+      })(d);
+    }
     // 日付列
     fillDateScroll(d);
     const dateIdx=_dateList.findIndex(x=>x.toDateString()===d.toDateString());
@@ -9854,11 +9890,27 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
       baseDate=parseDateLocal(selDs||inS);
     }
 
-    // fallback：今日
+    // fallback：今日（タップ日が存在する限りここには来ない）
     if(!baseDate||isNaN(baseDate.getTime())){
       const t=new Date();
       baseDate=new Date(t.getFullYear(),t.getMonth(),t.getDate());
     }
+
+    // ★★★ 重要修正：baseDate（タップ日）を中心に _dateList を再構築 ★★★
+    // 元実装は「ページ読み込み日」を中心に ±180 日固定で _dateList を作っていたため、
+    // それより前後の月をタップすると findIndex が -1 を返し、Math.max(0,-1)=0 により
+    // _dateList の先頭日（例：11月10日）に固定されてしまっていた。
+    // ここで毎回 baseDate を中心に再構築することで、タップ日が必ず list 内に存在する状態を保証する。
+    _dateList=(function(center){
+      const list=[];
+      const b=new Date(center.getFullYear(),center.getMonth(),center.getDate());
+      for(let i=-365;i<=730;i++){
+        const dd=new Date(b);
+        dd.setDate(b.getDate()+i);
+        list.push(dd);
+      }
+      return list;
+    })(baseDate);
 
     if(isEdit&&hasTime){
       // 編集かつ時刻あり：既存の時刻を復元
@@ -10115,10 +10167,11 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
         document.getElementById('auth-screen')?.classList.remove('hidden');
         return;
       }
-      // ★ selectedDate を確実にセットしてからモーダルを開く
-      selectedDate = ds;
-      console.log('[doubleTap] tappedDate=', ds, 'selectedDate=', selectedDate);
-      if (typeof openModal === 'function') openModal(ds);
+      // ★ openCreateModal でタップしたセルの実日付を確実に渡す
+      // （selectedDate のセットは openCreateModal 内で行う）
+      console.log('[doubleTap→openCreateModal] tappedDate=', ds);
+      if (typeof openCreateModal === 'function') openCreateModal(ds);
+      else if (typeof openModal === 'function') { selectedDate = ds; openModal(ds); }
     }
     lastTap = now;
     lastDs = ds;
