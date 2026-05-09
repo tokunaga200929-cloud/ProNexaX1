@@ -787,7 +787,7 @@ button,input,select,textarea{
 .cal-panel{width:33.3333%;min-width:0;height:100%;flex-shrink:0;overflow:hidden;overflow-x:hidden;display:flex;flex-direction:column;}
 /* ★ table → flex 化：6週月でも均等可変 */
 .cal-grid{display:flex;flex-direction:column;width:100%;height:100%;flex:1;min-height:0;}
-.cal-row{display:flex;flex:1 1 0;min-height:0;width:100%;position:relative;}
+.cal-row{display:flex;flex:1 1 0;min-height:0;width:100%;position:relative;z-index:0;}
 .cal-cell{flex:1 1 0;width:0;max-width:calc(100% / 7);min-width:0;min-height:0;padding:3px 2px 2px;border:0.5px solid #DFF0EB;cursor:pointer;overflow:hidden;user-select:none;-webkit-user-select:none;background:#fff;transition:background .15s,box-shadow .15s;display:flex;flex-direction:column;}
 .cal-cell:active{background:var(--green-chip);}
 .cal-cell.other{background:#FAFCFB;}
@@ -863,7 +863,7 @@ button,input,select,textarea{
   position:absolute;
   left:0;right:0;
   top:0;bottom:0;
-  pointer-events:none; /* レイヤ自体は透過。バーだけ pointer-events 復活 */
+  pointer-events:none; /* ★ レイヤ全体タッチ透過 — セルの touch を邪魔しない */
   display:grid;
   grid-template-columns:repeat(7,1fr);
   /* セル左上の日付ぶんを避けるため、上に余白（padding-top:4 + 日付18 + margin-bottom:2 = 24px） */
@@ -872,10 +872,10 @@ button,input,select,textarea{
   align-content:start;
   grid-auto-rows:16px; /* バー1本の高さ(14px)＋gap(2px) */
   row-gap:2px;
-  z-index:3;
+  z-index:1; /* ★ cal-row(z-index:5) より下に — セルのタッチが最優先 */
 }
 .cal-multiday-bar{
-  pointer-events:auto;
+  pointer-events:none; /* ★ バー自体もタッチ透過 — click は JS側で委譲処理 */
   height:14px;
   line-height:14px;
   font-size:10.5px;
@@ -4157,12 +4157,15 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
   padding-top:32px !important;
   grid-auto-rows:16px !important;
   row-gap:2px !important;
+  pointer-events:none !important; /* ★ レイヤー全体タッチ透過 */
+  z-index:2 !important; /* ★ セル(z-index:0)より視覚的に上・タッチは透過 */
 }
-/* 複数日バー本体 */
+/* 複数日バー本体：タッチ透過・クリックは親パネルのclickイベントで委譲 */
 .cal-multiday-bar {
   height:14px !important;
   line-height:14px !important;
   font-size:10.5px !important;
+  pointer-events:none !important; /* ★ バー自体はタッチ不可 — clickはJS側で座標から取得 */
 }
 
 /* ================================================================ */
@@ -4463,17 +4466,26 @@ body{
   60%{transform:rotate(-90deg);}
 }
 @media screen and (orientation: landscape){
-  /* html/body のスクロール・リサイズ影響を封鎖 */
+  /* html/body のスクロール・リサイズ・タッチを完全封鎖 */
   html, body{
     overflow:hidden !important;
     overscroll-behavior:none !important;
     touch-action:none !important;
+    pointer-events:none !important;
   }
-  /* オーバーレイを前面に表示 */
+  /* オーバーレイだけポインター受け付ける */
   #portrait-lock-overlay{
     display:flex !important;
+    pointer-events:all !important;
+    touch-action:none !important;
   }
-  /* app-frame はそのまま維持（回転・リサイズ一切しない） */
+  /* app-frame・phone-inner はサイズ変更しない */
+  .app-frame, .phone-inner{
+    width:100vh !important;   /* landscape時：vhがポートレートのvwに相当 */
+    height:100vw !important;  /* landscape時：vwがポートレートのvhに相当 */
+    transform:none !important;
+    transition:none !important;
+  }
 }
 </style>
 
@@ -6050,11 +6062,22 @@ function bindPanelEvents(){
     ng.addEventListener('click',e=>{
       // +N件は専用処理に委譲
       if(e.target.classList.contains('chip-more'))return;
-      // ★ 複数日バーのタップ → 編集モーダルを開く
-      const bar=e.target.closest('.cal-multiday-bar');
-      if(bar&&bar.dataset.eventId){
+      // ★ 複数日バーのタップ検出：pointer-events:none でも座標からバーを特定
+      //    e.target はバーにならないが、クリック座標にバーが存在すれば編集モーダルを開く
+      const barAtPoint=(function(){
+        // まずそのまま closest で確認（pointer-events:auto の場合）
+        const direct=e.target.closest('.cal-multiday-bar');
+        if(direct)return direct;
+        // pointer-events:none の場合：座標上の全要素を走査
+        const els=document.elementsFromPoint(e.clientX,e.clientY);
+        for(const el of els){
+          if(el.classList&&el.classList.contains('cal-multiday-bar'))return el;
+        }
+        return null;
+      })();
+      if(barAtPoint&&barAtPoint.dataset.eventId){
         e.stopPropagation();
-        const eid=parseInt(bar.dataset.eventId,10);
+        const eid=parseInt(barAtPoint.dataset.eventId,10);
         if(!isNaN(eid))openModal(null,eid);
         return;
       }
@@ -6072,8 +6095,9 @@ function bindPanelEvents(){
     
     // ★ touchstart：チップ→チップドラッグ判定 / セル→セルドラッグ判定 / 予定なし→範囲選択
     ng.addEventListener('touchstart',e=>{
-      // ★ 複数日バー：ドラッグ判定をスキップ（クリックで編集モーダル）
-      if(e.target.closest('.cal-multiday-bar'))return;
+      // ★ 複数日バー：pointer-events:none でも Safari PWA では e.target がバーになることがある
+      //    バーのタップ = 親セルへの操作として扱う（クリックはclick側で data-event-id を処理）
+      //    ただし長押し・ドラッグはバーを無視してセルの処理を優先する
       const chip=e.target.closest('.ev-chip');
       if(chip&&chip.dataset.eventId){
         startChipPress(e,chip);
@@ -6081,15 +6105,26 @@ function bindPanelEvents(){
       }
       // chip-more（+N件）はモーダル開く処理に流す
       if(e.target.classList.contains('chip-more'))return;
-      const c=e.target.closest('.cal-cell');
-      if(c&&c.dataset.ds&&!swipeLocked){
+      // バーをタップした場合：短タップはclickに任せる。長押し・ドラッグはセル単位で処理
+      const bar=e.target.closest('.cal-multiday-bar');
+      const c=bar ? bar.closest('.cal-row')  // バーの場合は行内のセルを座標から取得
+                   : e.target.closest('.cal-cell');
+      // バータップ時：座標からセルを特定（バーを pointer-events:none にしても保険）
+      let targetCell=e.target.closest('.cal-cell');
+      if(!targetCell&&bar){
+        // バーが pointer-events を持っていた場合：座標からセルを逆引き
+        const t=e.touches[0];
+        const elBelow=_cellFromPoint(t.clientX,t.clientY);
+        targetCell=elBelow;
+      }
+      if(targetCell&&targetCell.dataset.ds&&!swipeLocked){
         // 予定が入っている日 → セルドラッグ準備（カテゴリフィルタ適用後で判定）
-        const evs=applyCatFiltersToEvents(getEventsOnDate(c.dataset.ds));
+        const evs=applyCatFiltersToEvents(getEventsOnDate(targetCell.dataset.ds));
         if(evs.length>0){
-          startCellPress(e,c.dataset.ds,c);
+          startCellPress(e,targetCell.dataset.ds,targetCell);
         }else{
           // 予定なしの日 → 範囲選択開始（長押し判定）
-          startRangePress(e,c.dataset.ds,c);
+          startRangePress(e,targetCell.dataset.ds,targetCell);
         }
       }
     },{passive:false});
@@ -6486,7 +6521,13 @@ function endCellDrag(e){
 
 function initSwipe(){
   const w=document.getElementById('cal-swipe-wrap');
+  // ── 横向き判定ヘルパー（lockPortrait と同一ロジック） ──
+  function _isLandscapeSwipe(){
+    if(window.matchMedia) return window.matchMedia('(orientation: landscape)').matches;
+    return window.innerWidth > window.innerHeight;
+  }
   w.addEventListener('touchstart',e=>{
+    if(_isLandscapeSwipe())return; // ★ 横向き時は月スワイプを一切しない
     if(viewMode!=='month')return;
     if(drag.started||cellDrag.started)return;
     // ★ 長押し確定後（active）のみブロック。長押し判定待ち(startDs のみ)はスワイプ開始を許可
@@ -6494,6 +6535,7 @@ function initSwipe(){
     swipeX=e.touches[0].clientX;swipeY=e.touches[0].clientY;swiping=true;swipeLocked=false;
   },{passive:true});
   w.addEventListener('touchmove',e=>{
+    if(_isLandscapeSwipe()){swiping=false;swipeLocked=false;return;} // ★ 横向き時は即キャンセル
     if(viewMode!=='month')return;
     // ★ 長押し確定（active）中のみ月スワイプを停止。判定待ち中は通常スワイプ継続
     if(rangeSelect.active){swiping=false;swipeLocked=false;return;}
@@ -6506,6 +6548,7 @@ function initSwipe(){
     }
   },{passive:true});
   w.addEventListener('touchend',e=>{
+    if(_isLandscapeSwipe()){swiping=false;swipeLocked=false;return;} // ★ 横向き時は月切り替えしない
     if(viewMode!=='month')return;
     // ★ 長押し確定（active）中のみ月切り替えをキャンセル
     if(rangeSelect.active){swiping=false;swipeLocked=false;return;}
@@ -6616,6 +6659,27 @@ function _updateRangeBanner(){
   banner.classList.add('show');
 }
 
+// ★★★ _cellFromPoint：バーを透過してセルを確実に取得するヘルパー ★★★
+// Safari PWA では pointer-events:none のバーも elementFromPoint で返ることがある。
+// バーを一時的に visibility:hidden にして elementFromPoint し直すことで確実にセルを取得。
+function _cellFromPoint(x,y){
+  const el=document.elementFromPoint(x,y);
+  if(!el)return null;
+  // バー・レイヤーでなければそのまま closest で返す
+  if(!el.closest('.cal-multiday-bar')&&!el.closest('.cal-multiday-layer')){
+    return el.closest('.cal-cell')||null;
+  }
+  // バーが返ってきた場合：バーを一時的に隠して再取得
+  const bars=document.querySelectorAll('.cal-multiday-bar');
+  const layer=document.querySelectorAll('.cal-multiday-layer');
+  bars.forEach(b=>b.style.visibility='hidden');
+  layer.forEach(l=>l.style.pointerEvents='none');
+  const elBelow=document.elementFromPoint(x,y);
+  bars.forEach(b=>b.style.visibility='');
+  layer.forEach(l=>l.style.pointerEvents='');
+  return elBelow?elBelow.closest('.cal-cell')||null:null;
+}
+
 // 範囲選択：長押し開始（予定なしセルのみ）
 function startRangePress(e,ds,cellEl){
   rangeSelect.startDs=ds;
@@ -6673,8 +6737,8 @@ function onRangeMove(e){
   if(!rangeSelect.active)return;
   e.preventDefault();
   const t=e.touches[0];
-  const elBelow=document.elementFromPoint(t.clientX,t.clientY);
-  const cell=elBelow?elBelow.closest('.cal-cell'):null;
+  // ★ _cellFromPoint を使いバーを透過してセルを取得（1行目でも確実に動作）
+  const cell=_cellFromPoint(t.clientX,t.clientY);
   if(cell&&cell.dataset.ds){
     const newEnd=cell.dataset.ds;
     if(newEnd!==rangeSelect.endDs){
@@ -8709,12 +8773,16 @@ function initDrawer(){
   // 右スワイプで閉じる
   drawer.el.addEventListener('touchstart',e=>{
     if(!drawer.open)return;
+    // ★ 横向き時はドロワースワイプを無効化
+    if(window.matchMedia && window.matchMedia('(orientation: landscape)').matches) return;
     const t=e.touches[0];
     drawer.startX=t.clientX;drawer.startY=t.clientY;
     drawer.curX=0;drawer.dragging=true;drawer.horizLocked=false;
   },{passive:true});
   drawer.el.addEventListener('touchmove',e=>{
     if(!drawer.dragging)return;
+    // ★ 横向き時はドロワースワイプを無効化
+    if(window.matchMedia && window.matchMedia('(orientation: landscape)').matches){drawer.dragging=false;return;}
     const t=e.touches[0];
     const dx=t.clientX-drawer.startX,dy=t.clientY-drawer.startY;
     if(!drawer.horizLocked){
@@ -8733,6 +8801,12 @@ function initDrawer(){
     }
   },{passive:true});
   drawer.el.addEventListener('touchend',()=>{
+    // ★ 横向き時はドロワースワイプ判定を無効化してリセット
+    if(window.matchMedia && window.matchMedia('(orientation: landscape)').matches){
+      drawer.dragging=false;drawer.el.classList.remove('dragging');
+      drawer.el.style.transform='';drawer.overlay.style.opacity='';
+      drawer.curX=0;drawer.horizLocked=false;return;
+    }
     if(!drawer.dragging){drawer.el.classList.remove('dragging');return;}
     drawer.dragging=false;
     drawer.el.classList.remove('dragging');
@@ -10787,8 +10861,6 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
 <script>
 // ================================================================
 // Safari PWA（ホーム画面追加）余白修正
-// ================================================================
-// Safari PWA（ホーム画面追加）余白修正
 // ★ 横向き時は一切動かない（高さ再計算・UI変形を防ぐ）
 // ================================================================
 (function fixSafariPWAHeight(){
@@ -10796,10 +10868,16 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     || window.matchMedia('(display-mode: standalone)').matches;
   if (!isStandalone) return;
 
-  function isPortrait(){ return window.innerHeight >= window.innerWidth; }
+  function isPortrait(){
+    // matchMediaが最も信頼性が高い
+    if(window.matchMedia){
+      return window.matchMedia('(orientation: portrait)').matches;
+    }
+    return window.innerHeight >= window.innerWidth;
+  }
 
   function applyHeight(){
-    // 横向き時は何もしない（portrait時のみ高さを適用）
+    // 横向き時は絶対に何もしない
     if(!isPortrait()) return;
     var inner = document.querySelector('.app-frame');
     if (!inner) return;
@@ -10807,19 +10885,31 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   }
 
   applyHeight();
-  // resizeは縦向き時のみ反応
-  window.addEventListener('resize', applyHeight);
+
+  // resize：縦向き時のみ反応（window.addEventListener は lockPortrait がガード済みだが念のため自前チェック）
+  window.addEventListener('resize', function(){
+    if(!isPortrait()) return; // 横向き時は何もしない
+    applyHeight();
+  });
+
+  // orientationchange：縦に戻った場合のみ高さを再適用
   window.addEventListener('orientationchange', function(){
-    // orientationchange後、縦に戻った場合のみ高さを再適用
-    setTimeout(applyHeight, 250);
+    setTimeout(function(){
+      if(!isPortrait()) return; // 横向きなら何もしない
+      applyHeight();
+    }, 300);
   });
 })();
 </script>
 
 <script>
 // ================================================================
-// 縦画面完全固定システム
-// 3層防御：① Screen Orientation API  ② オーバーレイ遮断  ③ イベント凍結
+// 縦画面完全固定システム v2
+// 4層防御：
+//   ① Screen Orientation API lock
+//   ② CSS @media landscape でイベント・スクロール完全封鎖
+//   ③ JS captureフェーズでイベントを横向き時に全吸収
+//   ④ resize / orientationchange での UI 再計算を完全ガード
 // ================================================================
 (function lockPortrait(){
 
@@ -10829,11 +10919,12 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
       screen.orientation.lock('portrait').catch(function(){});
     }
     // 旧API（iOS対応なし・Android旧ブラウザ向け）
-    if(screen.lockOrientation)        screen.lockOrientation('portrait-primary');
-    else if(screen.mozLockOrientation) screen.mozLockOrientation('portrait-primary');
-    else if(screen.msLockOrientation)  screen.msLockOrientation('portrait-primary');
+    if(screen.lockOrientation)         screen.lockOrientation('portrait-primary');
+    else if(screen.mozLockOrientation)  screen.mozLockOrientation('portrait-primary');
+    else if(screen.msLockOrientation)   screen.msLockOrientation('portrait-primary');
   }
   tryLockOrientation();
+
   // PWAとして開かれた後に再試行（Safari PWAでは遅延後に有効になる場合がある）
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState === 'visible') tryLockOrientation();
@@ -10841,7 +10932,6 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
 
   // ── 縦/横の判定ヘルパー ──
   function isLandscape(){
-    // matchMedia優先（screen.orientation.typeより信頼性が高い）
     if(window.matchMedia){
       return window.matchMedia('(orientation: landscape)').matches;
     }
@@ -10855,46 +10945,130 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     if(isLandscape()){
       overlay.style.display = 'flex';
     } else {
-      overlay.style.display = 'none';
+      overlay.style.display = '';  // CSSの display:none に戻す
     }
   }
 
   // ── ③ 横向き中のイベント完全凍結 ──
-  // touchstart / touchmove / touchend / click / mousedown を横向き時に吸収
-  var BLOCK_EVENTS = ['touchstart','touchmove','touchend','click','mousedown','mouseup'];
+  // captureフェーズ最前段で横向きなら全イベントを止める
+  // （オーバーレイ自体へのイベントは通過させる）
+  var BLOCK_EVENTS = ['touchstart','touchmove','touchend','touchcancel',
+                      'click','mousedown','mouseup','mousemove',
+                      'pointerdown','pointermove','pointerup','pointercancel',
+                      'wheel','scroll'];
   function blockIfLandscape(e){
-    if(isLandscape()){
-      e.preventDefault();
-      e.stopImmediatePropagation();
-    }
+    if(!isLandscape()) return;
+    // オーバーレイ内のイベントは通過（縦に戻すUI表示用）
+    if(overlay && overlay.contains(e.target)) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
   }
   BLOCK_EVENTS.forEach(function(type){
-    // captureフェーズ最前段で横向きなら全イベントを止める
     document.addEventListener(type, blockIfLandscape, {capture:true, passive:false});
   });
+  // window の scroll / resize も横向き時に無効化
+  window.addEventListener('scroll', function(e){
+    if(isLandscape()){ e.preventDefault(); }
+  }, {capture:true, passive:false});
 
-  // ── orientationchange / resize の処理 ──
-  // 横向きに変わった → UI再計算を一切しない、オーバーレイだけ出す
-  // 縦向きに戻った → オーバーレイを消す
+  // ── ④ resize イベントの横向きガード ──
+  // resize が発火しても横向き中は一切 UI 再計算しないようにする
+  // 既存の resize ハンドラを安全にラップするパッチ
+  var _origAddEventListener = window.addEventListener.bind(window);
+  window._landscapeBlockedResizeHandlers = [];
+  // resize リスナーを登録するときに横向きガードを注入
+  window.addEventListener = function(type, handler, options){
+    if(type === 'resize' && typeof handler === 'function'){
+      var guarded = function(e){
+        if(isLandscape()) return; // 横向き時は何もしない
+        handler.call(this, e);
+      };
+      // 元のハンドラとguard済みハンドラを紐付けて保持
+      window._landscapeBlockedResizeHandlers.push({orig:handler, guarded:guarded});
+      return _origAddEventListener(type, guarded, options);
+    }
+    return _origAddEventListener(type, handler, options);
+  };
+
+  // ── orientationchange / matchMedia change の処理 ──
+  // 横向きに変わった → オーバーレイを出すだけ（UI再計算は一切しない）
+  // 縦向きに戻った → オーバーレイを消す（fixSafariPWAHeightが高さを再適用する）
   function onOrientationChange(){
-    // 即時 + 安定後の2回更新（iOS Safariはchangeイベントが遅延するため）
+    // 即時 + iOS Safariの遅延に対応して複数回チェック
     updateOverlay();
-    setTimeout(updateOverlay, 100);
-    setTimeout(updateOverlay, 400);
+    setTimeout(updateOverlay, 80);
+    setTimeout(updateOverlay, 300);
+    setTimeout(updateOverlay, 600);
   }
 
   window.addEventListener('orientationchange', onOrientationChange);
-  // resize は matchMedia の方が確実なため、resize での UI 再計算は行わない
-  // （fixSafariPWAHeight側でguardしているのでここでは監視しない）
+
   if(window.matchMedia){
-    window.matchMedia('(orientation: landscape)').addEventListener('change', function(){
-      updateOverlay();
-    });
+    var mql = window.matchMedia('(orientation: landscape)');
+    var mqHandler = function(){ updateOverlay(); };
+    if(mql.addEventListener){ mql.addEventListener('change', mqHandler); }
+    else if(mql.addListener){ mql.addListener(mqHandler); } // 旧API互換
   }
 
   // 初期状態を反映
   updateOverlay();
 
+})();
+</script>
+
+<script>
+// ================================================================
+// ★★★ 横向きガード：UI再計算関数を横向き時に完全無効化 ★★★
+// renderAllPanels / changeMonthInternal / renderCalList が
+// 横向き中に呼ばれても何も実行しないようパッチする。
+// lockPortrait の orientationchange ガードの最終防衛線。
+// ================================================================
+(function patchLandscapeGuard(){
+  function _isLandscape(){
+    if(window.matchMedia) return window.matchMedia('(orientation: landscape)').matches;
+    return window.innerWidth > window.innerHeight;
+  }
+
+  // 対象関数を横向き時にスキップするラッパーを返す
+  function makeGuarded(fn, name){
+    return function(){
+      if(_isLandscape()){
+        // 横向き中は実行しない（console.debug で検知可能にしておく）
+        // console.debug('[landscapeGuard] blocked:', name);
+        return;
+      }
+      return fn.apply(this, arguments);
+    };
+  }
+
+  // DOMContentLoaded後に確実にパッチ（変数が確定してから）
+  document.addEventListener('DOMContentLoaded', function(){
+    // renderAllPanels
+    if(typeof window.renderAllPanels === 'function'){
+      window.renderAllPanels = makeGuarded(window.renderAllPanels, 'renderAllPanels');
+    }
+    // changeMonthInternal
+    if(typeof window.changeMonthInternal === 'function'){
+      window.changeMonthInternal = makeGuarded(window.changeMonthInternal, 'changeMonthInternal');
+    }
+    // renderCalList
+    if(typeof window.renderCalList === 'function'){
+      window.renderCalList = makeGuarded(window.renderCalList, 'renderCalList');
+    }
+    // updateMonthLabel
+    if(typeof window.updateMonthLabel === 'function'){
+      window.updateMonthLabel = makeGuarded(window.updateMonthLabel, 'updateMonthLabel');
+    }
+    // animateSwipe
+    if(typeof window.animateSwipe === 'function'){
+      var _origAnimateSwipe = window.animateSwipe;
+      window.animateSwipe = function(dir){
+        if(_isLandscape()) return;
+        return _origAnimateSwipe.apply(this, arguments);
+      };
+      window.animateSwipe._busy = _origAnimateSwipe._busy || false;
+    }
+  });
 })();
 </script>
 
