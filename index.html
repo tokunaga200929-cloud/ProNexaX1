@@ -2079,10 +2079,18 @@ button,input,select,textarea{
 .cat-desc{font-size:9px;color:var(--text-tertiary);margin-top:1px;}
 .cat-check{position:absolute;top:7px;right:9px;font-size:12px;opacity:0;transition:opacity .15s;}
 .cat-item.sel .cat-check{opacity:1;}
-/* ★ 追加済みカテゴリ：カテゴリカラーの枠線でミニマルに強調（文字・バッジ一切なし） */
+/* ★ 追加済みカテゴリバッジ */
+.cat-enabled-badge{
+  display:inline-block;
+  font-size:8.5px;font-weight:700;
+  padding:2px 6px;border-radius:7px;
+  border:1px solid;
+  margin-top:3px;
+  letter-spacing:.2px;
+}
+/* ★ 追加済みカテゴリ：左ボーダーで視覚的に区別 */
 .cat-item.is-enabled:not(.sel){
-  border-width:2px;
-  box-shadow:0 0 0 1px rgba(0,0,0,.04), inset 0 0 0 0.5px rgba(255,255,255,.6);
+  border-left-width:3px;
 }
 .tour-hint{font-size:10px;color:var(--text-tertiary);text-align:center;padding:4px 0 8px;}
 .tour-list{display:flex;flex-direction:column;gap:5px;margin-bottom:4px;}
@@ -7241,12 +7249,14 @@ function openCreateModal(cellDate){
   }else if(typeof cellDate==='string' && cellDate){
     ds=cellDate;
   }else{
+    // 何も渡されなかった場合のみ「今日」にフォールバック。
+    // タップ経由ではここに来てはいけない（来たらタップ日が伝わっていないバグ）。
     ds=todayStr();
     console.warn('[openCreateModal] cellDate が無いため今日を使用（呼び出し側を確認）');
   }
-  selectedDate=ds;
+  selectedDate=ds;       // タップ日を保存（DatePicker 初期値の単一ソース）
   newlyAddedDate=null;
-  modalPresetDate=ds;
+  modalPresetDate=ds;    // defaultDateStr() からも参照される
   console.log('[openCreateModal] cellDate=',cellDate,' → selectedDate=',selectedDate);
   openModal(ds);
 }
@@ -7292,16 +7302,9 @@ function renderCatGrid(){
   grid.innerHTML=CATEGORIES.map(c=>{
     const isSel=selectedCat===c.key;
     const isEnabled=c.key==='personal'||userEnabledCategories.includes(c.key);
-    // 選択中：カテゴリカラーの薄背景＋枠線
-    // 追加済み（未選択）：カテゴリカラーの枠線のみ（バッジ・文字表示なし）
-    // 未追加：デフォルト枠線
-    let inlineStyle='';
-    if(isSel){
-      inlineStyle=`border-color:${c.color};background:${c.color}14;`;
-    } else if(isEnabled){
-      inlineStyle=`border-color:${c.color}80;`;
-    }
-    return`<div class="cat-item${isSel?' sel':''}${isEnabled?' is-enabled':''}" style="${inlineStyle}" id="cat-${c.key}" data-cat-key="${c.key}"><div class="cat-color-dot" style="background:${c.color}"></div><div style="flex:1;min-width:0;"><div class="cat-name">${c.label}</div><div class="cat-desc">${c.desc}</div></div><div class="cat-check" style="color:${c.color}">✓</div></div>`;
+    const selStyle=isSel?`border-color:${c.color};background:${c.color}12`:'';
+    const enabledBadge=isEnabled&&!isSel?`<span class="cat-enabled-badge" style="color:${c.color};border-color:${c.color}20;background:${c.color}12">追加済み</span>`:'';
+    return`<div class="cat-item${isSel?' sel':''}${isEnabled?' is-enabled':''}" style="${selStyle}" id="cat-${c.key}" data-cat-key="${c.key}"><div class="cat-color-dot" style="background:${c.color}"></div><div style="flex:1;"><div class="cat-name">${c.label}</div><div class="cat-desc">${c.desc}</div>${enabledBadge}</div><div class="cat-check" style="color:${c.color}">✓</div></div>`;
   }).join('');
   grid.classList.toggle('reorder-mode',catReorderMode);
   // ★ クリック / ドラッグハンドラを取り付け
@@ -8526,7 +8529,7 @@ function dvOnSlotClick(ds,timeStr){
   // 開始時刻は将来 input-start-time フィールドが追加された際に prefil するため、
   // 一時グローバルに保持する（既存 modal はそのまま使用）。
   dvPresetStartTime=timeStr;
-  // ★ タップしたスロットの実日付を DatePicker に渡す
+  // ★ タップしたスロットの日付を必ず DatePicker に渡す
   openCreateModal(ds);
   // 開いたモーダルの開始日付に時刻ヒントをトーストで案内
   showToast(`${timeStr} から新規予定を作成`);
@@ -9430,6 +9433,7 @@ function _dvFinishDragSelect(){
   // モーダルを開いて時刻を流し込む
   dvPresetStartTime=_minToHHMM(startMin);
   dvPresetEndTime=_minToHHMM(endMin);
+  // ★ タップしたスロットの実日付を DatePicker に渡す
   openCreateModal(ds);
   showToast(`${dvPresetStartTime}–${dvPresetEndTime} で予定作成`);
 }
@@ -9447,6 +9451,7 @@ dvOnSlotClick=function(ds,timeStr){
   const endMin=Math.min(24*60,startMin+60);
   dvPresetStartTime=timeStr;
   dvPresetEndTime=_minToHHMM(endMin);
+  // ★ タップしたスロットの実日付を DatePicker に渡す
   openCreateModal(ds);
   showToast(`${dvPresetStartTime}–${dvPresetEndTime} で予定作成`);
 };
@@ -9625,6 +9630,7 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   function buildCols(targetDate){
     const d=targetDate||new Date();
     // ★ 安全弁：targetDate が _dateList に含まれない場合は d を中心に再構築
+    // （wpSwitchTab など wpOpen を経由しない呼び出しでも、ピッカー先頭日に固定されるバグを防止）
     if(!_dateList.some(x=>x.toDateString()===d.toDateString())){
       _dateList=(function(center){
         const list=[];
@@ -9884,16 +9890,17 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
       baseDate=parseDateLocal(selDs||inS);
     }
 
-    // fallback：今日
+    // fallback：今日（タップ日が存在する限りここには来ない）
     if(!baseDate||isNaN(baseDate.getTime())){
       const t=new Date();
       baseDate=new Date(t.getFullYear(),t.getMonth(),t.getDate());
     }
 
-    // ★★★ baseDate（タップ日）を中心に _dateList を再構築 ★★★
-    // 元実装は「ページ読み込み日」を中心に ±180 日固定だったため、
+    // ★★★ 重要修正：baseDate（タップ日）を中心に _dateList を再構築 ★★★
+    // 元実装は「ページ読み込み日」を中心に ±180 日固定で _dateList を作っていたため、
     // それより前後の月をタップすると findIndex が -1 を返し、Math.max(0,-1)=0 により
     // _dateList の先頭日（例：11月10日）に固定されてしまっていた。
+    // ここで毎回 baseDate を中心に再構築することで、タップ日が必ず list 内に存在する状態を保証する。
     _dateList=(function(center){
       const list=[];
       const b=new Date(center.getFullYear(),center.getMonth(),center.getDate());
@@ -10161,6 +10168,7 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
         return;
       }
       // ★ openCreateModal でタップしたセルの実日付を確実に渡す
+      // （selectedDate のセットは openCreateModal 内で行う）
       console.log('[doubleTap→openCreateModal] tappedDate=', ds);
       if (typeof openCreateModal === 'function') openCreateModal(ds);
       else if (typeof openModal === 'function') { selectedDate = ds; openModal(ds); }
