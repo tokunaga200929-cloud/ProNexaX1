@@ -1,13 +1,12 @@
 {
-  "name": "ProNexaX - ゴルフスケジュール管理",
+  "name": "ProNexaX",
   "short_name": "ProNexaX",
-  "description": "プロゴルファー向けスケジュール・試合管理アプリ",
+  "description": "ProNexaX ゴルフトーナメント管理アプリ",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#000000",
-  "theme_color": "#000000",
-  "lang": "ja",
+  "background_color": "#ffffff",
+  "theme_color": "#39C892",
   "icons": [
     {
       "src": "pronexaX_logo.png",
@@ -21,8 +20,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "categories": ["sports", "productivity"],
-  "screenshots": [],
-  "prefer_related_applications": false
+  ]
 }

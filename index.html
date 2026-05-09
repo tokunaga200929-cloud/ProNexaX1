@@ -4395,6 +4395,48 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
   background:rgba(255,255,255,.05);
   border-color:var(--border);
 }
+
+/* ================================================================ */
+/* ★★★ 縦画面固定：横向き完全ロック                               */
+/* 端末を横向きにしてもUIを回転させず、縦レイアウトを維持する       */
+/* ================================================================ */
+@media screen and (orientation: landscape){
+  /* ── html/body をビューポート幅・高さに固定してはみ出しを封鎖 ── */
+  html, body{
+    width:100vw !important;
+    height:100vh !important;
+    overflow:hidden !important;
+    overscroll-behavior:none !important;
+  }
+  /* ── app-frame：縦向き時の幅(=landscape時の短辺)をベースに中央固定 ── */
+  .app-frame{
+    /* landscape時: vhが「画面短辺」相当になる。縦向きUIをそのまま維持 */
+    width:100vh !important;   /* 縦向き時の幅 = landscape時の高さ(短辺) */
+    height:100vw !important;  /* 縦向き時の高さ = landscape時の幅(長辺) */
+    /* CSS transformで-90度回転して縦向きに見せる */
+    transform:rotate(-90deg) !important;
+    transform-origin:top left !important;
+    position:fixed !important;
+    top:100% !important;      /* 回転軸の原点補正 */
+    left:0 !important;
+    overflow:hidden !important;
+    max-width:none !important;
+  }
+  /* ── phone-inner も同様に縦比率で固定 ── */
+  .phone-inner{
+    width:100vh !important;
+    max-width:100vh !important;
+    overflow-x:hidden !important;
+  }
+  /* ── landscape中のモーダル・ドロワー・month-pickerも回転に追従 ── */
+  .modal-sheet,
+  .drawer,
+  .drawer-overlay,
+  .month-picker,
+  .month-picker-overlay{
+    /* app-frame 内で position:fixed/absolute なのでそのまま追従 */
+  }
+}
 </style>
 
 
@@ -10725,6 +10767,39 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   window.addEventListener('orientationchange', function(){
     setTimeout(applyHeight, 200);
   });
+})();
+</script>
+
+<script>
+// ================================================================
+// 縦画面固定：Screen Orientation API による portrait ロック
+// PWAモードで利用可能な場合に portrait-primary に固定する
+// ================================================================
+(function lockPortrait(){
+  // Screen Orientation API（Chrome/Android PWA等でサポート）
+  if(screen.orientation && typeof screen.orientation.lock === 'function'){
+    screen.orientation.lock('portrait-primary').catch(function(){
+      // ロック失敗（iOS Safari等はサポート外）は無視
+    });
+  }
+  // iOS Safari / 一般ブラウザ向け：横向き時に縦レイアウトを維持するフォールバック
+  function applyOrientationFix(){
+    const isLandscape = window.innerWidth > window.innerHeight;
+    const frame = document.querySelector('.app-frame');
+    if(!frame) return;
+    if(isLandscape){
+      // CSS @media landscape で transform:rotate(-90deg) を適用済み
+      // JS側では scrollTo で余計なスクロールをリセット
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+    }
+  }
+  window.addEventListener('orientationchange', function(){
+    setTimeout(applyOrientationFix, 50);
+    setTimeout(applyOrientationFix, 300);
+  });
+  window.addEventListener('resize', applyOrientationFix);
+  applyOrientationFix();
 })();
 </script>
 
