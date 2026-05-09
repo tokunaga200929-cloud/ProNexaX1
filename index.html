@@ -305,9 +305,9 @@ button,input,select,textarea{
 .app-header{
   position:relative;
   background:#ffffff;
-  padding-top:10px;
+  padding-top:8px;
   padding-right:16px;
-  padding-bottom:14px;
+  padding-bottom:10px;
   padding-left:16px;
   flex-shrink:0;
   box-shadow:none;
@@ -318,7 +318,7 @@ button,input,select,textarea{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding-top:4px;
+  padding-top:2px;
 }
 /* ロゴ：左寄せ、"ProNexa" はダークグレー、"X" だけグリーンアクセント */
 .app-logo{
@@ -611,8 +611,9 @@ button,input,select,textarea{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:16px 18px 12px;
-  gap:8px;
+  padding:12px 14px 10px;
+  gap:4px;
+  position:relative;
 }
 .month-text{
   color:#1d1d1f;
@@ -657,6 +658,106 @@ button,input,select,textarea{
   display:block;
   flex-shrink:0;
 }
+
+/* ── 月タイトルボタン（"2025年5月 ▼"） ── */
+.month-title-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:4px 8px 4px 4px;
+  border-radius:8px;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .12s;
+  flex:1;
+}
+.month-title-btn:active{background:rgba(0,0,0,.05);}
+.month-dropdown-caret{
+  color:#8e8e93;
+  flex-shrink:0;
+  margin-top:1px;
+  transition:transform .2s cubic-bezier(.4,0,.2,1);
+}
+.month-title-btn.is-open .month-dropdown-caret{transform:rotate(180deg);}
+
+/* ── 月ピッカー ── */
+.month-picker-overlay{
+  position:fixed;inset:0;z-index:299;
+  display:none;
+}
+.month-picker-overlay.show{display:block;}
+.month-picker{
+  position:absolute;
+  top:calc(100% + 4px);
+  left:16px;
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 8px 30px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.07);
+  z-index:300;
+  width:260px;
+  padding:12px 8px 10px;
+  opacity:0;
+  transform:translateY(-6px) scale(.97);
+  pointer-events:none;
+  transition:opacity .18s cubic-bezier(.4,0,.2,1),transform .18s cubic-bezier(.4,0,.2,1);
+  transform-origin:top left;
+}
+.month-picker.show{
+  opacity:1;
+  transform:translateY(0) scale(1);
+  pointer-events:auto;
+}
+.month-picker-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 6px 10px;
+  border-bottom:1px solid #f0f0f0;
+  margin-bottom:8px;
+}
+.month-picker-year{
+  font-size:15px;font-weight:700;color:#1d1d1f;
+  letter-spacing:-.3px;
+}
+.month-picker-year-btn{
+  background:none;border:none;cursor:pointer;
+  width:32px;height:32px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  color:#3a3a3a;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .1s;
+}
+.month-picker-year-btn:active{background:#f2f2f7;}
+.month-picker-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:4px;
+}
+.month-picker-item{
+  background:none;border:none;cursor:pointer;
+  padding:9px 4px;
+  border-radius:10px;
+  font-size:13.5px;font-weight:500;
+  color:#1d1d1f;
+  text-align:center;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .1s;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
+}
+.month-picker-item:active{background:#f2f2f7;}
+.month-picker-item.is-current{
+  background:var(--green-main);
+  color:#fff;
+  font-weight:700;
+}
+.month-picker-item.is-current:active{background:var(--green-dark);}
+/* ダークモード対応 */
+:root[data-theme="dark"] .month-picker{background:#2c2c2e;box-shadow:0 8px 30px rgba(0,0,0,.4);}
+:root[data-theme="dark"] .month-picker-year{color:#f5f5f7;}
+:root[data-theme="dark"] .month-picker-year-btn{color:#f5f5f7;}
+:root[data-theme="dark"] .month-picker-header{border-bottom-color:#3a3a3c;}
+:root[data-theme="dark"] .month-picker-item{color:#f5f5f7;}
+:root[data-theme="dark"] .month-picker-item:active{background:#3a3a3c;}
+:root[data-theme="dark"] .month-dropdown-caret{color:#636366;}
 .cal-header{
   background:#ffffff;
   padding:0;
@@ -3205,7 +3306,7 @@ button,input,select,textarea{
     min-width:0 !important;
     flex:1 1 0 !important;
   }
-  .cal-cell { min-height:54px !important; }
+  .cal-cell { min-height:68px !important; }
   .cal-panel { width:100% !important; }
   .cal-swipe-wrap, .cal-slide-container, .cal-panel {
     max-width:100% !important;
@@ -3612,8 +3713,8 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
 
 /* アプリヘッダー */
 .app-header {
-  padding-top: max(env(safe-area-inset-top,0px), 10px) !important;
-  padding-bottom:14px !important;
+  padding-top: max(env(safe-area-inset-top,0px), 8px) !important;
+  padding-bottom:10px !important;
 }
 .search-header {
   padding-top: max(env(safe-area-inset-top,0px), 10px) !important;
@@ -3767,8 +3868,14 @@ html, body {
   display:flex !important;
   align-items:center !important;
   justify-content:space-between !important;
-  padding:16px 18px 12px !important;
-  gap:8px !important;
+  padding:12px 14px 10px !important;
+  gap:4px !important;
+  position:relative !important;
+}
+.month-title-btn{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:5px !important;
 }
 .month-text{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif !important;
@@ -3778,7 +3885,6 @@ html, body {
   color:#1d1d1f !important;
   line-height:1 !important;
   text-align:left !important;
-  flex:1 !important;
   align-self:center !important;
   -webkit-font-smoothing:antialiased !important;
   -moz-osx-font-smoothing:grayscale !important;
@@ -3824,9 +3930,9 @@ html, body {
 
 /* ───── 日付セル：余白を広めに ───── */
 .cal-cell{
-  padding:4px 2px 2px !important;
+  padding:4px 2px 3px !important;
   border-color:#E8F2EE !important;
-  min-height:60px !important;
+  min-height:72px !important;
 }
 
 /* 日付の囲み（today）— iOSの赤ドット風よりミニマルな緑丸を維持しつつシャープに */
@@ -3973,8 +4079,8 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
 .cal-cell {
   display:flex !important;
   flex-direction:column !important;
-  min-height:60px !important;
-  padding:4px 2px 2px !important;
+  min-height:72px !important;
+  padding:4px 2px 3px !important;
   overflow:hidden !important;
 }
 /* 日付エリア：常に上部固定・縮まない */
@@ -4428,7 +4534,10 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
     <div id="month-ui-wrap" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
       <div class="cal-header">
         <div class="month-nav">
-          <span class="month-text" id="month-label"></span>
+          <button class="month-title-btn" id="month-title-btn" onclick="toggleMonthPicker()" aria-label="月を選択">
+            <span class="month-text" id="month-label"></span>
+            <svg class="month-dropdown-caret" width="10" height="7" viewBox="0 0 10 7" fill="none"><polyline points="1,1 5,6 9,1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
           <div class="month-nav-arrows">
             <button class="m-arrow" onclick="changeMonth(-1)" aria-label="前の月">
               <svg width="9" height="15" viewBox="0 0 9 15" fill="none"><polyline points="8,1 1,7.5 8,14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -4437,6 +4546,20 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
               <svg width="9" height="15" viewBox="0 0 9 15" fill="none"><polyline points="1,1 8,7.5 1,14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </div>
+        </div>
+        <!-- ★ 月ピッカードロップダウン -->
+        <div class="month-picker-overlay" id="month-picker-overlay" onclick="closeMonthPicker()"></div>
+        <div class="month-picker" id="month-picker">
+          <div class="month-picker-header">
+            <button class="month-picker-year-btn" id="month-picker-year-prev" onclick="shiftPickerYear(-1)">
+              <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><polyline points="7,1 1,6.5 7,12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <span class="month-picker-year" id="month-picker-year"></span>
+            <button class="month-picker-year-btn" id="month-picker-year-next" onclick="shiftPickerYear(1)">
+              <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><polyline points="1,1 7,6.5 1,12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="month-picker-grid" id="month-picker-grid"></div>
         </div>
         <div class="cal-week-labels">
           <span style="color:rgba(220,80,80,.85)">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span style="color:rgba(60,130,220,.85)">土</span>
@@ -10599,6 +10722,78 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   window.addEventListener('orientationchange', function(){
     setTimeout(applyHeight, 200);
   });
+})();
+</script>
+
+<script>
+// ================================================================
+// 月ピッカー（"2025年5月 ▼" タップで開くドロップダウン）
+// ================================================================
+(function initMonthPicker(){
+  const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  let pickerYear = new Date().getFullYear();
+  let pickerOpen = false;
+
+  function getPickerEl(){ return document.getElementById('month-picker'); }
+  function getOverlayEl(){ return document.getElementById('month-picker-overlay'); }
+  function getTitleBtn(){ return document.getElementById('month-title-btn'); }
+
+  function renderPickerGrid(){
+    document.getElementById('month-picker-year').textContent = pickerYear + '年';
+    const grid = document.getElementById('month-picker-grid');
+    if(!grid) return;
+    // 現在表示中の年月を取得（グローバルの currentYear/currentMonth を参照）
+    const curY = typeof currentYear !== 'undefined' ? currentYear : new Date().getFullYear();
+    const curM = typeof currentMonth !== 'undefined' ? currentMonth : new Date().getMonth();
+    grid.innerHTML = '';
+    MONTHS.forEach((name, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'month-picker-item';
+      btn.textContent = name;
+      if(pickerYear === curY && idx === curM) btn.classList.add('is-current');
+      btn.onclick = function(){
+        // currentYear / currentMonth を書き換えてカレンダー再描画
+        if(typeof currentYear !== 'undefined') currentYear = pickerYear;
+        if(typeof currentMonth !== 'undefined') currentMonth = idx;
+        // 既存の再描画関数を呼ぶ（renderCalendar or updateMonthLabel）
+        if(typeof renderCalendar === 'function') renderCalendar();
+        else if(typeof updateMonthLabel === 'function') updateMonthLabel();
+        // month-label テキストを即時更新（フォールバック）
+        const lbl = document.getElementById('month-label');
+        if(lbl) lbl.textContent = pickerYear + '年' + (idx+1) + '月';
+        closeMonthPicker();
+      };
+      grid.appendChild(btn);
+    });
+  }
+
+  window.toggleMonthPicker = function(){
+    if(pickerOpen){ closeMonthPicker(); return; }
+    openMonthPicker();
+  };
+
+  window.openMonthPicker = function(){
+    // 現在の年を pickerYear の初期値に
+    if(typeof currentYear !== 'undefined') pickerYear = currentYear;
+    else pickerYear = new Date().getFullYear();
+    renderPickerGrid();
+    getPickerEl()?.classList.add('show');
+    getOverlayEl()?.classList.add('show');
+    getTitleBtn()?.classList.add('is-open');
+    pickerOpen = true;
+  };
+
+  window.closeMonthPicker = function(){
+    getPickerEl()?.classList.remove('show');
+    getOverlayEl()?.classList.remove('show');
+    getTitleBtn()?.classList.remove('is-open');
+    pickerOpen = false;
+  };
+
+  window.shiftPickerYear = function(delta){
+    pickerYear += delta;
+    renderPickerGrid();
+  };
 })();
 </script>
 
