@@ -621,7 +621,6 @@ button,input,select,textarea{
   font-weight:700;
   letter-spacing:-.5px;
   line-height:1;
-  flex:1;
   text-align:left;
   align-self:center;
 }
@@ -659,19 +658,20 @@ button,input,select,textarea{
   flex-shrink:0;
 }
 
-/* ── 月タイトルボタン（"2025年5月 ▼"） ── */
+/* ── 月タイトルボタン（"2025年5月▼"） ── */
 .month-title-btn{
   display:inline-flex;
   align-items:center;
-  gap:5px;
+  gap:2px;
   background:none;
   border:none;
   cursor:pointer;
-  padding:4px 8px 4px 4px;
+  padding:4px 6px 4px 4px;
   border-radius:8px;
   -webkit-tap-highlight-color:transparent;
   transition:background .12s;
-  flex:1;
+  width:fit-content;
+  flex:0 0 auto;
 }
 .month-title-btn:active{background:rgba(0,0,0,.05);}
 .month-dropdown-caret{
@@ -684,20 +684,22 @@ button,input,select,textarea{
 
 /* ── 月ピッカー ── */
 .month-picker-overlay{
-  position:fixed;inset:0;z-index:299;
+  position:fixed;inset:0;z-index:298;
   display:none;
+  background:transparent;
 }
 .month-picker-overlay.show{display:block;}
 .month-picker{
-  position:absolute;
-  top:calc(100% + 4px);
+  position:fixed;
+  top:120px;
   left:16px;
   background:#fff;
   border-radius:16px;
-  box-shadow:0 8px 30px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.07);
-  z-index:300;
+  box-shadow:0 8px 30px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.10);
+  z-index:400;
   width:260px;
   padding:12px 8px 10px;
+  display:none;
   opacity:0;
   transform:translateY(-6px) scale(.97);
   pointer-events:none;
@@ -705,6 +707,7 @@ button,input,select,textarea{
   transform-origin:top left;
 }
 .month-picker.show{
+  display:block;
   opacity:1;
   transform:translateY(0) scale(1);
   pointer-events:auto;
@@ -3875,7 +3878,9 @@ html, body {
 .month-title-btn{
   display:inline-flex !important;
   align-items:center !important;
-  gap:5px !important;
+  gap:2px !important;
+  width:fit-content !important;
+  flex:0 0 auto !important;
 }
 .month-text{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif !important;
@@ -10777,6 +10782,16 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     if(typeof currentYear !== 'undefined') pickerYear = currentYear;
     else pickerYear = new Date().getFullYear();
     renderPickerGrid();
+    // ボタン位置からピッカーのtopを動的に計算
+    const btn = getTitleBtn();
+    if(btn){
+      const rect = btn.getBoundingClientRect();
+      const picker = getPickerEl();
+      if(picker){
+        picker.style.top = (rect.bottom + 6) + 'px';
+        picker.style.left = Math.max(8, rect.left) + 'px';
+      }
+    }
     getPickerEl()?.classList.add('show');
     getOverlayEl()?.classList.add('show');
     getTitleBtn()?.classList.add('is-open');
@@ -10794,6 +10809,30 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     pickerYear += delta;
     renderPickerGrid();
   };
+
+  // ── イベントリスナー接続（指示通りの実装） ──
+  document.addEventListener('DOMContentLoaded', function(){
+    const monthBtn     = document.getElementById('month-title-btn');
+    const monthPicker  = document.getElementById('month-picker');
+    const monthOverlay = document.getElementById('month-picker-overlay');
+    if(!monthBtn || !monthPicker || !monthOverlay) return;
+
+    // onclick属性と重複しないよう、onclick属性を削除してaddEventListenerで管理
+    monthBtn.removeAttribute('onclick');
+
+    monthBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      if(monthPicker.classList.contains('show')){
+        window.closeMonthPicker();
+      } else {
+        window.openMonthPicker();
+      }
+    });
+
+    monthOverlay.addEventListener('click', function(){
+      window.closeMonthPicker();
+    });
+  });
 })();
 </script>
 
