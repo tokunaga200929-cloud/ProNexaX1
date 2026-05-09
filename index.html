@@ -2706,9 +2706,14 @@ button,input,select,textarea{
    ===================================================================== */
 
 /* ── オーバーレイ ── */
+/* ================================================================
+   ★★★ iOSホイールピッカー v2 — Apple純正カレンダー風
+   ================================================================ */
+
+/* ── オーバーレイ ── */
 .wp-overlay{
   position:absolute;inset:0;
-  background:rgba(0,0,0,.45);
+  background:rgba(0,0,0,.48);
   z-index:200;
   display:flex;align-items:flex-end;
   opacity:0;pointer-events:none;
@@ -2717,157 +2722,240 @@ button,input,select,textarea{
 }
 .wp-overlay.show{opacity:1;pointer-events:all;}
 
-/* ── シート ── */
+/* ── シート本体 ── */
 .wp-sheet{
   width:100%;
-  background:#fff;
-  border-radius:20px 20px 0 0;
+  background:#F2F2F7;
+  border-radius:22px 22px 0 0;
   transform:translateY(100%);
-  transition:transform .35s cubic-bezier(.32,.72,0,1);
-  box-shadow:0 -6px 32px rgba(0,0,0,.14);
+  transition:transform .38s cubic-bezier(.32,.72,0,1);
+  box-shadow:0 -4px 40px rgba(0,0,0,.18);
   overflow:hidden;
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 .wp-overlay.show .wp-sheet{transform:translateY(0);}
 :root[data-theme="dark"] .wp-sheet{background:#1C1C1E;}
 
+/* ── グリップバー ── */
+.wp-handle-bar{
+  width:36px;height:4px;border-radius:2px;
+  background:rgba(0,0,0,.18);
+  margin:10px auto 0;
+}
+:root[data-theme="dark"] .wp-handle-bar{background:rgba(255,255,255,.2);}
+
 /* ── ヘッダー ── */
 .wp-header{
   display:flex;justify-content:space-between;align-items:center;
-  padding:12px 20px 8px;
-  border-bottom:1px solid rgba(0,0,0,.08);
+  padding:10px 20px 8px;
 }
-:root[data-theme="dark"] .wp-header{border-bottom-color:rgba(255,255,255,.08);}
 .wp-cancel-btn,.wp-done-btn{
-  font-size:14px;font-weight:600;
+  font-size:16px;font-weight:500;
   background:none;border:none;cursor:pointer;
-  padding:4px 0;-webkit-tap-highlight-color:transparent;
+  padding:6px 0;-webkit-tap-highlight-color:transparent;
+  font-family:inherit;
 }
 .wp-cancel-btn{color:#8E8E93;}
-.wp-done-btn{color:var(--green-main);}
+.wp-done-btn{color:var(--green-main);font-weight:600;}
 .wp-title{
-  font-size:13px;font-weight:700;
-  color:var(--text-primary);letter-spacing:.2px;
+  font-size:14px;font-weight:700;
+  color:#1C1C1E;letter-spacing:.1px;
 }
 :root[data-theme="dark"] .wp-cancel-btn{color:#636366;}
 :root[data-theme="dark"] .wp-title{color:#EBEBF5;}
+:root[data-theme="dark"] .wp-done-btn{color:var(--green-light);}
 
-/* ── セクションラベル（開始/終了タブ） ── */
+/* ── タブ（開始/終了） ── */
 .wp-tabs{
-  display:flex;gap:0;
-  background:rgba(0,0,0,.04);
-  margin:10px 16px 0;
-  border-radius:10px;
-  padding:2px;
+  display:flex;gap:8px;
+  padding:0 14px 6px;
 }
-:root[data-theme="dark"] .wp-tabs{background:rgba(255,255,255,.06);}
 .wp-tab{
-  flex:1;font-size:12px;font-weight:600;
-  color:var(--text-secondary);
-  background:none;border:none;cursor:pointer;
-  padding:7px 4px;border-radius:8px;
-  -webkit-tap-highlight-color:transparent;
-  transition:background .18s,color .18s;
+  flex:1;
+  background:#fff;
+  border:none;border-radius:14px;
+  padding:10px 12px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+  transition:background .16s,box-shadow .16s;
 }
 .wp-tab.active{
-  background:#fff;color:var(--green-deep);
-  box-shadow:0 1px 4px rgba(0,0,0,.1);
+  background:var(--green-main);
+  box-shadow:0 2px 12px rgba(26,175,122,.3);
 }
-:root[data-theme="dark"] .wp-tab.active{background:#2C2C2E;color:var(--green-light);}
+:root[data-theme="dark"] .wp-tab{background:#2C2C2E;}
+:root[data-theme="dark"] .wp-tab.active{background:var(--green-dark);}
+.wp-tab-label{
+  font-size:10px;font-weight:600;letter-spacing:.4px;
+  color:rgba(0,0,0,.45);text-transform:uppercase;
+}
+.wp-tab.active .wp-tab-label{color:rgba(255,255,255,.75);}
+:root[data-theme="dark"] .wp-tab-label{color:#636366;}
+:root[data-theme="dark"] .wp-tab.active .wp-tab-label{color:rgba(255,255,255,.6);}
+.wp-tab-val{
+  font-size:13px;font-weight:600;color:#1C1C1E;
+  font-feature-settings:"tnum";white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
+.wp-tab.active .wp-tab-val{color:#fff;}
+:root[data-theme="dark"] .wp-tab-val{color:#EBEBF5;}
 
-/* ── ピッカー本体 ── */
-.wp-pickers{
-  display:flex;
-  padding:0 8px 4px;
-  height:200px;
+/* ── 終日トグル ── */
+.wp-allday-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px 8px;
+  background:#fff;
+  margin:0 14px 8px;
+  border-radius:14px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+:root[data-theme="dark"] .wp-allday-row{background:#2C2C2E;}
+.wp-allday-label{
+  font-size:15px;font-weight:500;color:#1C1C1E;
+}
+:root[data-theme="dark"] .wp-allday-label{color:#EBEBF5;}
+/* iOS風スイッチ */
+.wp-allday-toggle{
+  width:50px;height:30px;border-radius:15px;
+  background:#D1D1D6;
+  position:relative;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .22s cubic-bezier(.4,0,.2,1);
+}
+.wp-allday-toggle.is-on{background:var(--green-main);}
+.wp-allday-knob{
+  position:absolute;top:2px;left:2px;
+  width:26px;height:26px;border-radius:50%;
+  background:#fff;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);
+  transition:transform .22s cubic-bezier(.4,0,.2,1);
+}
+.wp-allday-toggle.is-on .wp-allday-knob{transform:translateX(20px);}
+
+/* ── ピッカーラッパー（統合ホイール） ── */
+.wp-picker-wrap{
   position:relative;
+  height:220px;
+  display:flex;
+  margin:0 14px;
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);
 }
+:root[data-theme="dark"] .wp-picker-wrap{background:#2C2C2E;}
 
-/* 選択中セルのハイライトライン */
-.wp-pickers::before,.wp-pickers::after{
-  content:'';position:absolute;left:8px;right:8px;
-  height:36px;top:50%;
-  transform:translateY(-50%);
-  pointer-events:none;z-index:1;
+/* 中央選択ライン */
+.wp-selector-line{
+  position:absolute;
+  top:50%;transform:translateY(-50%);
+  left:0;right:0;
+  height:44px;
+  background:rgba(0,0,0,.065);
+  pointer-events:none;z-index:3;
+  border-radius:0;
 }
-.wp-pickers::before{
-  background:rgba(0,0,0,.06);
-  border-radius:9px;
-}
-:root[data-theme="dark"] .wp-pickers::before{background:rgba(255,255,255,.1);}
+:root[data-theme="dark"] .wp-selector-line{background:rgba(255,255,255,.1);}
 
 /* 上下フェード */
-.wp-pickers::after{
-  background:linear-gradient(
-    to bottom,
-    #fff 0%,transparent 36%,
-    transparent 64%,#fff 100%
-  );
-  z-index:2;height:100%;
-  border-radius:0;
-  transform:none;top:0;
+.wp-fade-top,.wp-fade-bot{
+  position:absolute;left:0;right:0;
+  height:38%;pointer-events:none;z-index:4;
 }
-:root[data-theme="dark"] .wp-pickers::after{
-  background:linear-gradient(
-    to bottom,
-    #1C1C1E 0%,transparent 36%,
-    transparent 64%,#1C1C1E 100%
-  );
+.wp-fade-top{
+  top:0;
+  background:linear-gradient(to bottom, #fff 0%, rgba(255,255,255,0) 100%);
+}
+.wp-fade-bot{
+  bottom:0;
+  background:linear-gradient(to top, #fff 0%, rgba(255,255,255,0) 100%);
+}
+:root[data-theme="dark"] .wp-fade-top{
+  background:linear-gradient(to bottom,#2C2C2E 0%,rgba(44,44,46,0) 100%);
+}
+:root[data-theme="dark"] .wp-fade-bot{
+  background:linear-gradient(to top,#2C2C2E 0%,rgba(44,44,46,0) 100%);
 }
 
-/* 個別カラム */
+/* 各カラム */
 .wp-col{
-  flex:1;overflow:hidden;position:relative;
+  flex:1;position:relative;
   display:flex;flex-direction:column;
-  align-items:center;
+  overflow:hidden;
 }
-/* 年月日を特定幅に */
-.wp-col[data-type="year"]{flex:1.6;}
-.wp-col[data-type="month"],.wp-col[data-type="day"]{flex:1;}
-.wp-col[data-type="hour"],.wp-col[data-type="minute"]{flex:1;}
+.wp-col-date{flex:2.8;}
+.wp-col-hour,.wp-col-min{flex:1;}
+/* 時間・分の左ボーダー */
+.wp-col-hour{border-left:1px solid rgba(0,0,0,.08);}
+:root[data-theme="dark"] .wp-col-hour{border-left-color:rgba(255,255,255,.08);}
 
-/* ラベル（年・月・日） */
-.wp-col-label{
-  font-size:9px;font-weight:700;letter-spacing:.6px;
-  color:var(--text-tertiary);text-transform:uppercase;
-  padding:4px 0 0;flex-shrink:0;
-}
-
-/* スクロールコンテナ */
+/* スクロールコンテナ（慣性スクロール） */
 .wp-scroll{
-  flex:1;overflow-y:scroll;
+  flex:1;
+  overflow-y:scroll;
+  overflow-x:hidden;
   scroll-snap-type:y mandatory;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
   width:100%;
+  /* 慣性: iOS Safari はネイティブ対応 */
 }
 .wp-scroll::-webkit-scrollbar{display:none;}
 
 /* 各アイテム */
 .wp-item{
-  height:36px;
+  height:44px;
   display:flex;align-items:center;justify-content:center;
   scroll-snap-align:center;
-  font-size:16px;font-weight:500;
-  color:var(--text-tertiary);
-  transition:color .12s,font-weight .12s,font-size .12s;
-  user-select:none;white-space:nowrap;
+  font-size:17px;font-weight:400;
+  color:rgba(0,0,0,.3);
+  user-select:none;-webkit-user-select:none;
+  white-space:nowrap;
+  font-feature-settings:"tnum";
+  letter-spacing:-.3px;
+  transition:color .1s,font-weight .1s,font-size .1s,transform .1s;
 }
 .wp-item.selected{
-  color:var(--text-primary);
-  font-weight:700;
-  font-size:18px;
+  color:#1C1C1E;
+  font-weight:600;
+  font-size:20px;
 }
-:root[data-theme="dark"] .wp-item{color:#636366;}
+:root[data-theme="dark"] .wp-item{color:rgba(255,255,255,.3);}
 :root[data-theme="dark"] .wp-item.selected{color:#EBEBF5;}
 
-/* 上下の余白（先頭/末尾がセンターにくるよう） */
-.wp-spacer{height:82px;flex-shrink:0;}
+/* スペーサー（高さ = (220-44)/2 = 88px） */
+.wp-spacer{height:88px;flex-shrink:0;}
 
-/* ── リマインドセクション（ピッカー内） ── */
+/* ── 分インターバル選択 ── */
+.wp-interval-row{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 20px 4px;
+}
+.wp-interval-label{
+  font-size:11px;font-weight:600;color:#8E8E93;
+  flex-shrink:0;letter-spacing:.2px;
+}
+.wp-interval-btns{display:flex;gap:5px;flex:1;}
+.wp-interval-btn{
+  flex:1;height:28px;border-radius:8px;
+  background:rgba(0,0,0,.06);border:none;
+  font-size:12px;font-weight:600;color:#555;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  font-family:inherit;transition:background .15s,color .15s;
+}
+.wp-interval-btn.is-active{
+  background:var(--green-main);color:#fff;
+}
+:root[data-theme="dark"] .wp-interval-btn{background:rgba(255,255,255,.08);color:#aaa;}
+:root[data-theme="dark"] .wp-interval-btn.is-active{background:var(--green-dark);color:#fff;}
+
+/* ── リマインドセクション ── */
 .wp-remind{
   display:flex;align-items:center;gap:10px;
-  padding:10px 20px 14px;
+  padding:8px 20px 12px;
   border-top:1px solid rgba(0,0,0,.06);
+  margin-top:6px;
 }
 :root[data-theme="dark"] .wp-remind{border-top-color:rgba(255,255,255,.07);}
 .wp-bell-btn{
@@ -2882,13 +2970,9 @@ button,input,select,textarea{
 .wp-bell-btn .bell-svg{width:16px;height:16px;color:#8E8E93;transition:color .2s;}
 .wp-bell-btn.is-on .bell-svg{color:var(--green-main);}
 @keyframes wpBellRing{
-  0%{transform:rotate(0);}
-  15%{transform:rotate(-18deg);}
-  30%{transform:rotate(15deg);}
-  50%{transform:rotate(-10deg);}
-  70%{transform:rotate(7deg);}
-  85%{transform:rotate(-3deg);}
-  100%{transform:rotate(0);}
+  0%{transform:rotate(0);}15%{transform:rotate(-18deg);}
+  30%{transform:rotate(15deg);}50%{transform:rotate(-10deg);}
+  70%{transform:rotate(7deg);}85%{transform:rotate(-3deg);}100%{transform:rotate(0);}
 }
 .wp-bell-btn.ring .bell-svg{animation:wpBellRing .5s ease;}
 .wp-remind-info{flex:1;display:flex;flex-direction:column;gap:2px;}
@@ -2899,14 +2983,10 @@ button,input,select,textarea{
   border:none;border-radius:20px;padding:4px 10px;
   font-size:11px;font-weight:600;color:var(--text-secondary);
   cursor:pointer;-webkit-tap-highlight-color:transparent;
-  transition:background .15s,color .15s;
-  width:fit-content;
+  transition:background .15s,color .15s;width:fit-content;
 }
 .wp-remind-pill:active{opacity:.7;}
-.wp-remind-pill.is-on{
-  background:rgba(26,175,122,.12);
-  color:var(--green-deep);
-}
+.wp-remind-pill.is-on{background:rgba(26,175,122,.12);color:var(--green-deep);}
 :root[data-theme="dark"] .wp-bell-btn{background:rgba(255,255,255,.08);}
 :root[data-theme="dark"] .wp-remind-pill{background:rgba(255,255,255,.08);color:#EBEBF5;}
 :root[data-theme="dark"] .wp-remind-pill.is-on{background:rgba(26,175,122,.18);color:var(--green-light);}
@@ -4399,43 +4479,64 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
     </div>
   </div>
 
-  <!-- ★★★ iOSホイールピッカー ★★★ -->
+  <!-- ★★★ iOSホイールピッカー v2（Apple純正カレンダー風） ★★★ -->
   <div class="wp-overlay" id="wp-overlay" onclick="if(event.target===this)wpClose()">
     <div class="wp-sheet" onclick="event.stopPropagation()">
+      <!-- ハンドルバー -->
+      <div class="wp-handle-bar"></div>
+      <!-- ヘッダー -->
       <div class="wp-header">
         <button class="wp-cancel-btn" onclick="wpClose()">キャンセル</button>
-        <span class="wp-title" id="wp-sheet-title">日付を選択</span>
+        <span class="wp-title" id="wp-sheet-title">日時を選択</span>
         <button class="wp-done-btn" onclick="wpDone()">完了</button>
       </div>
       <!-- 開始/終了タブ -->
       <div class="wp-tabs">
-        <button class="wp-tab active" id="wp-tab-start" onclick="wpSwitchTab('start')">📅 開始日時</button>
-        <button class="wp-tab" id="wp-tab-end" onclick="wpSwitchTab('end')">🏁 終了日時</button>
+        <button class="wp-tab active" id="wp-tab-start" onclick="wpSwitchTab('start')">
+          <span class="wp-tab-label">開始日時</span>
+          <span class="wp-tab-val" id="wp-tab-start-val">—</span>
+        </button>
+        <button class="wp-tab" id="wp-tab-end" onclick="wpSwitchTab('end')">
+          <span class="wp-tab-label">終了日時</span>
+          <span class="wp-tab-val" id="wp-tab-end-val">—</span>
+        </button>
       </div>
-      <!-- 日付ピッカー -->
-      <div class="wp-pickers" id="wp-date-pickers">
-        <div class="wp-col" data-type="year">
-          <span class="wp-col-label">年</span>
-          <div class="wp-scroll" id="wp-year-scroll"></div>
-        </div>
-        <div class="wp-col" data-type="month">
-          <span class="wp-col-label">月</span>
-          <div class="wp-scroll" id="wp-month-scroll"></div>
-        </div>
-        <div class="wp-col" data-type="day">
-          <span class="wp-col-label">日</span>
-          <div class="wp-scroll" id="wp-day-scroll"></div>
+      <!-- 終日トグル -->
+      <div class="wp-allday-row">
+        <span class="wp-allday-label">終日</span>
+        <div class="wp-allday-toggle" id="wp-allday-toggle" onclick="wpToggleAllDay()">
+          <div class="wp-allday-knob"></div>
         </div>
       </div>
-      <!-- 時刻ピッカー（時間指定時のみ） -->
-      <div class="wp-pickers" id="wp-time-pickers" style="display:none;">
-        <div class="wp-col" data-type="hour">
-          <span class="wp-col-label">時</span>
+      <!-- ピッカー統合エリア：日付 | 時 | 分 (Apple純正風) -->
+      <div class="wp-picker-wrap" id="wp-picker-wrap">
+        <!-- 選択ライン -->
+        <div class="wp-selector-line"></div>
+        <!-- 上下グラデフェード -->
+        <div class="wp-fade-top"></div>
+        <div class="wp-fade-bot"></div>
+        <!-- 日付列（月日曜日合体） -->
+        <div class="wp-col wp-col-date" id="wp-col-date">
+          <div class="wp-scroll" id="wp-date-scroll"></div>
+        </div>
+        <!-- 時間列（終日時は非表示） -->
+        <div class="wp-col wp-col-hour" id="wp-col-hour">
           <div class="wp-scroll" id="wp-hour-scroll"></div>
         </div>
-        <div class="wp-col" data-type="minute">
-          <span class="wp-col-label">分</span>
+        <!-- 分列（終日時は非表示） -->
+        <div class="wp-col wp-col-min" id="wp-col-min">
           <div class="wp-scroll" id="wp-minute-scroll"></div>
+        </div>
+      </div>
+      <!-- 分インターバル選択 -->
+      <div class="wp-interval-row" id="wp-interval-row">
+        <span class="wp-interval-label">分の単位</span>
+        <div class="wp-interval-btns" id="wp-interval-btns">
+          <button class="wp-interval-btn" data-interval="1" onclick="wpSetInterval(1)">1</button>
+          <button class="wp-interval-btn is-active" data-interval="5" onclick="wpSetInterval(5)">5</button>
+          <button class="wp-interval-btn" data-interval="10" onclick="wpSetInterval(10)">10</button>
+          <button class="wp-interval-btn" data-interval="15" onclick="wpSetInterval(15)">15</button>
+          <button class="wp-interval-btn" data-interval="30" onclick="wpSetInterval(30)">30</button>
         </div>
       </div>
       <!-- リマインドUI -->
@@ -8882,15 +8983,20 @@ dvBindDragSelect();
 setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',checkSubmit);});},200);
 
 /* =====================================================================
-   ★★★ iOSホイールピッカー JS
+   ★★★ iOSホイールピッカー v2 JS — Apple純正カレンダー風
    ===================================================================== */
 (function(){
+  // ── 定数 ──
+  const ITEM_H=44; // アイテム高さ(px) ← CSS .wp-item height と一致
+  const SPACER_H=88; // スペーサー高さ ← CSS .wp-spacer と一致
+
   // ── 状態 ──
   const WP={
-    isTimed:false,
-    activeTab:'start',  // 'start'|'end'
-    start:{year:2025,month:1,day:1,hour:9,minute:0},
-    end:{year:2025,month:1,day:1,hour:10,minute:0},
+    isAllDay:false,
+    minuteInterval:5,
+    activeTab:'start',
+    startDate:null, // Date オブジェクト
+    endDate:null,
     remind:{on:false,key:'30min'},
   };
   const REMIND_OPTIONS=[
@@ -8900,197 +9006,377 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     {key:'sameDay',label:'当日朝'},
     {key:'1week',label:'1週間前'},
   ];
-  const ITEM_H=36;
-  let activeScrollTarget=null; // 現在スクロール中カラム
-  let scrollRafId=null;
 
-  // ── ヘルパー ──
+  const DOW=['日','月','火','水','木','金','土'];
+
   function pad(n){return String(n).padStart(2,'0');}
-  function daysInMonth(y,m){return new Date(y,m,0).getDate();}
-  function nowState(){
+  function cloneDate(d){return new Date(d.getTime());}
+
+  function nowDate(){
     const d=new Date();
-    return{year:d.getFullYear(),month:d.getMonth()+1,day:d.getDate(),hour:d.getHours(),minute:Math.round(d.getMinutes()/30)*30%60};
+    // 分を minuteInterval に丸める
+    d.setSeconds(0,0);
+    const m=d.getMinutes();
+    const interval=WP.minuteInterval||5;
+    d.setMinutes(Math.ceil(m/interval)*interval%60);
+    if(Math.ceil(m/interval)*interval>=60){d.setHours(d.getHours()+1);d.setMinutes(0);}
+    return d;
   }
 
-  // ── リスト生成 ──
-  function makeItems(el,items,selectedVal){
+  // ── 日付リスト生成 ──
+  function buildDateList(){
+    // ±180日
+    const items=[];
+    const base=new Date(); base.setHours(0,0,0,0);
+    for(let i=-180;i<=365;i++){
+      const d=new Date(base);
+      d.setDate(base.getDate()+i);
+      items.push(d);
+    }
+    return items;
+  }
+  let _dateList=buildDateList();
+
+  function _dateLabel(d){
+    const m=d.getMonth()+1;
+    const day=d.getDate();
+    const dow=DOW[d.getDay()];
+    const today=new Date();today.setHours(0,0,0,0);
+    const isToday=d.getTime()===today.getTime();
+    const tmr=new Date(today);tmr.setDate(today.getDate()+1);
+    const isYes=d.getTime()-today.getTime()===-86400000;
+    if(isToday) return`今日 ${m}/${day}(${dow})`;
+    if(d.getTime()===tmr.getTime()) return`明日 ${m}/${day}(${dow})`;
+    return`${m}月${day}日(${dow})`;
+  }
+
+  function _hourList(){return Array.from({length:24},(_,i)=>i);}
+  function _minuteList(){
+    const iv=WP.minuteInterval||5;
+    const list=[];
+    for(let m=0;m<60;m+=iv)list.push(m);
+    return list;
+  }
+
+  // ── ピッカー描画 ──
+  function fillScroll(elId,items,selectedVal,labelFn){
+    const el=document.getElementById(elId);
+    if(!el)return;
     el.innerHTML='';
     const top=document.createElement('div');top.className='wp-spacer';el.appendChild(top);
     items.forEach(v=>{
       const d=document.createElement('div');
-      d.className='wp-item'+(v===selectedVal?' selected':'');
+      d.className='wp-item';
       d.dataset.val=v;
-      d.textContent=typeof v==='number'&&v<100?pad(v):v;
+      const lbl=labelFn?labelFn(v):pad(v);
+      d.textContent=lbl;
+      if(v===selectedVal||
+        (v instanceof Date&&selectedVal instanceof Date&&v.toDateString()===selectedVal.toDateString())){
+        d.classList.add('selected');
+      }
       el.appendChild(d);
     });
     const bot=document.createElement('div');bot.className='wp-spacer';el.appendChild(bot);
   }
-  function range(a,b){const r=[];for(let i=a;i<=b;i++)r.push(i);return r;}
 
-  function buildCols(){
-    const t=WP.activeTab;
-    const s=WP[t];
-    const years=range(2020,2035);
-    const months=range(1,12);
-    const days=range(1,daysInMonth(s.year,s.month));
-    const hours=range(0,23);
-    const minutes=[0,30];
-
-    makeItems(document.getElementById('wp-year-scroll'),years,s.year);
-    makeItems(document.getElementById('wp-month-scroll'),months,s.month);
-    makeItems(document.getElementById('wp-day-scroll'),days,s.day);
-    makeItems(document.getElementById('wp-hour-scroll'),hours,s.hour);
-    makeItems(document.getElementById('wp-minute-scroll'),minutes,s.minute);
-
-    // スクロール位置をセット
-    setTimeout(()=>{
-      scrollToVal('wp-year-scroll',s.year);
-      scrollToVal('wp-month-scroll',s.month);
-      scrollToVal('wp-day-scroll',s.day);
-      if(WP.isTimed){
-        scrollToVal('wp-hour-scroll',s.hour);
-        scrollToVal('wp-minute-scroll',s.minute);
-      }
-    },20);
-  }
-
-  function scrollToVal(scrollId,val,smooth){
-    const el=document.getElementById(scrollId);
+  function scrollToIdx(elId,idx,smooth){
+    const el=document.getElementById(elId);
     if(!el)return;
-    const items=[...el.querySelectorAll('.wp-item')];
-    const idx=items.findIndex(i=>+i.dataset.val===val||i.dataset.val==val);
-    if(idx<0)return;
     el.scrollTo({top:idx*ITEM_H,behavior:smooth?'smooth':'auto'});
   }
 
-  // ── スクロール → 選択値 読み取り ──
-  function getSelectedVal(scrollId){
-    const el=document.getElementById(scrollId);
-    if(!el)return null;
-    const idx=Math.round(el.scrollTop/ITEM_H);
+  function getIdxByVal(elId,val){
+    const el=document.getElementById(elId);
+    if(!el)return 0;
     const items=[...el.querySelectorAll('.wp-item')];
-    return items[idx]?+items[idx].dataset.val:null;
-  }
-
-  function updateSelectedClass(scrollId){
-    const el=document.getElementById(scrollId);
-    if(!el)return;
-    const idx=Math.round(el.scrollTop/ITEM_H);
-    el.querySelectorAll('.wp-item').forEach((item,i)=>{
-      item.classList.toggle('selected',i===idx);
+    const idx=items.findIndex(it=>{
+      if(val instanceof Date){
+        const dv=_dateList[parseInt(it.dataset.val,10)];
+        return dv&&dv.toDateString()===val.toDateString();
+      }
+      return +it.dataset.val===val;
     });
+    return Math.max(0,idx);
   }
 
-  function onScroll(scrollId,key){
-    updateSelectedClass(scrollId);
-    const val=getSelectedVal(scrollId);
-    if(val===null)return;
-    const t=WP.activeTab;
-    WP[t][key]=val;
-    // 日が月をはみ出したら補正
-    if(key==='year'||key==='month'){
-      const maxD=daysInMonth(WP[t].year,WP[t].month);
-      if(WP[t].day>maxD){WP[t].day=maxD;scrollToVal('wp-day-scroll',maxD,true);}
-      const days=range(1,maxD);
-      const curD=WP[t].day;
-      makeItems(document.getElementById('wp-day-scroll'),days,curD);
-      setTimeout(()=>scrollToVal('wp-day-scroll',curD),10);
+  // 日付スクロールは Date を dataset に index で保持
+  function fillDateScroll(selectedDate){
+    const el=document.getElementById('wp-date-scroll');
+    if(!el)return;
+    el.innerHTML='';
+    const top=document.createElement('div');top.className='wp-spacer';el.appendChild(top);
+    _dateList.forEach((d,i)=>{
+      const item=document.createElement('div');
+      item.className='wp-item';
+      item.dataset.val=i;
+      item.textContent=_dateLabel(d);
+      if(d.toDateString()===selectedDate.toDateString())item.classList.add('selected');
+      el.appendChild(item);
+    });
+    const bot=document.createElement('div');bot.className='wp-spacer';el.appendChild(bot);
+  }
+
+  function getSelectedDateIdx(){
+    const el=document.getElementById('wp-date-scroll');
+    if(!el)return 0;
+    return Math.round(el.scrollTop/ITEM_H);
+  }
+  function getSelectedDate(){
+    return _dateList[getSelectedDateIdx()]||new Date();
+  }
+
+  function buildCols(targetDate){
+    const d=targetDate||new Date();
+    // 日付列
+    fillDateScroll(d);
+    const dateIdx=_dateList.findIndex(x=>x.toDateString()===d.toDateString());
+    setTimeout(()=>scrollToIdx('wp-date-scroll',Math.max(0,dateIdx),false),20);
+
+    // 時間列
+    const hours=_hourList();
+    fillScroll('wp-hour-scroll',hours,d.getHours(),(v)=>pad(v));
+    setTimeout(()=>scrollToIdx('wp-hour-scroll',d.getHours(),false),20);
+
+    // 分列
+    const minutes=_minuteList();
+    const closestMin=minutes.reduce((a,b)=>Math.abs(b-d.getMinutes())<Math.abs(a-d.getMinutes())?b:a,0);
+    const minIdx=minutes.indexOf(closestMin);
+    fillScroll('wp-minute-scroll',minutes,closestMin,(v)=>pad(v));
+    setTimeout(()=>scrollToIdx('wp-minute-scroll',Math.max(0,minIdx),false),20);
+  }
+
+  function getActiveDate(){return WP.activeTab==='start'?WP.startDate:WP.endDate;}
+  function setActiveDate(d){
+    if(WP.activeTab==='start'){WP.startDate=d;}
+    else{WP.endDate=d;}
+  }
+
+  // ── 現在のピッカー値を読み取り → Dateに変換 ──
+  function readPickerDate(){
+    const dateEl=document.getElementById('wp-date-scroll');
+    const dateIdx=dateEl?Math.round(dateEl.scrollTop/ITEM_H):0;
+    const base=_dateList[Math.max(0,Math.min(dateIdx,_dateList.length-1))];
+    const d=new Date(base);
+
+    if(!WP.isAllDay){
+      // 時
+      const hEl=document.getElementById('wp-hour-scroll');
+      const hIdx=hEl?Math.round(hEl.scrollTop/ITEM_H):0;
+      const hours=_hourList();
+      d.setHours(hours[Math.max(0,Math.min(hIdx,hours.length-1))]);
+      // 分
+      const mEl=document.getElementById('wp-minute-scroll');
+      const mIdx=mEl?Math.round(mEl.scrollTop/ITEM_H):0;
+      const mins=_minuteList();
+      d.setMinutes(mins[Math.max(0,Math.min(mIdx,mins.length-1))]);
+    }else{
+      d.setHours(0,0,0,0);
     }
-    updateTriggers();
+    return d;
   }
 
-  // ── トリガーボタン表示更新 ──
+  // ── UIテキスト更新 ──
+  function fmtDate(d,allDay){
+    const m=d.getMonth()+1;
+    const day=d.getDate();
+    const dow=DOW[d.getDay()];
+    if(allDay) return`${m}/${day}(${dow})`;
+    return`${m}/${day}(${dow}) ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function updateTabVals(){
+    const sv=document.getElementById('wp-tab-start-val');
+    const ev=document.getElementById('wp-tab-end-val');
+    if(sv&&WP.startDate)sv.textContent=fmtDate(WP.startDate,WP.isAllDay);
+    if(ev&&WP.endDate)ev.textContent=fmtDate(WP.endDate,WP.isAllDay);
+  }
+
   function updateTriggers(){
-    const s=WP.start,e=WP.end;
-    function fmt(st,timed){
-      let str=`${st.year}/${pad(st.month)}/${pad(st.day)}`;
-      if(timed)str+=` ${pad(st.hour)}:${pad(st.minute)}`;
-      return str;
+    if(!WP.startDate||!WP.endDate)return;
+    function fmt(d){
+      if(WP.isAllDay){
+        return`${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`;
+      }
+      return`${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
     const sd=document.getElementById('wp-start-date-display');
     const ed=document.getElementById('wp-end-date-display');
-    if(sd){sd.textContent=fmt(s,WP.isTimed);sd.classList.remove('empty');}
-    if(ed){ed.textContent=fmt(e,WP.isTimed);ed.classList.remove('empty');}
+    if(sd){sd.textContent=fmt(WP.startDate);sd.classList.remove('empty');}
+    if(ed){ed.textContent=fmt(WP.endDate);ed.classList.remove('empty');}
     document.getElementById('wp-start-trigger')?.classList.add('is-set');
     document.getElementById('wp-end-trigger')?.classList.add('is-set');
     // 時間トグル
     const tt=document.getElementById('wp-time-trigger');
     const tl=document.getElementById('wp-time-trigger-label');
     if(tt&&tl){
-      if(WP.isTimed){
+      if(!WP.isAllDay){
         tt.classList.add('is-timed');
-        tl.textContent=`${pad(s.hour)}:${pad(s.minute)} 〜 ${pad(e.hour)}:${pad(e.minute)}`;
+        tl.textContent=`${pad(WP.startDate.getHours())}:${pad(WP.startDate.getMinutes())} 〜 ${pad(WP.endDate.getHours())}:${pad(WP.endDate.getMinutes())}`;
       }else{
         tt.classList.remove('is-timed');
         tl.textContent='終日';
       }
     }
-    // 隠しフィールドに書き込み（既存ロジックと互換）
-    const toDateStr=(st)=>`${st.year}-${pad(st.month)}-${pad(st.day)}`;
-    const toTimeStr=(st)=>`${pad(st.hour)}:${pad(st.minute)}`;
+    // 隠しフィールド互換
+    const toDateStr=dt=>`${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+    const toTimeStr=dt=>`${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
     const inS=document.getElementById('input-start');
     const inE=document.getElementById('input-end');
     const inST=document.getElementById('input-start-time');
     const inET=document.getElementById('input-end-time');
-    if(inS)inS.value=toDateStr(s);
-    if(inE)inE.value=toDateStr(e);
-    if(inST)inST.value=toTimeStr(s);
-    if(inET)inET.value=toTimeStr(e);
+    if(inS)inS.value=toDateStr(WP.startDate);
+    if(inE)inE.value=toDateStr(WP.endDate);
+    if(inST)inST.value=toTimeStr(WP.startDate);
+    if(inET)inET.value=toTimeStr(WP.endDate);
     if(typeof checkSubmit==='function')checkSubmit();
+    updateTabVals();
   }
+
+  // ── 開始>終了のとき自動補正 ──
+  function autoCorrect(){
+    if(!WP.startDate||!WP.endDate)return;
+    if(WP.isAllDay){
+      if(WP.endDate<WP.startDate){
+        WP.endDate=cloneDate(WP.startDate);
+      }
+    }else{
+      if(WP.endDate<=WP.startDate){
+        WP.endDate=new Date(WP.startDate.getTime()+60*60*1000);
+      }
+    }
+  }
+
+  // ── スクロール完了→値確定 ──
+  let _scrollTimers={};
+  function bindScroll(scrollId,onChanged){
+    const el=document.getElementById(scrollId);
+    if(!el)return;
+    // updateSelected クラス
+    function updateSel(){
+      const idx=Math.round(el.scrollTop/ITEM_H);
+      el.querySelectorAll('.wp-item').forEach((it,i)=>it.classList.toggle('selected',i===idx));
+    }
+    el.addEventListener('scroll',()=>{
+      updateSel();
+      clearTimeout(_scrollTimers[scrollId]);
+      _scrollTimers[scrollId]=setTimeout(()=>{
+        // スナップ位置に吸着
+        const idx=Math.round(el.scrollTop/ITEM_H);
+        el.scrollTo({top:idx*ITEM_H,behavior:'smooth'});
+        updateSel();
+        if(typeof onChanged==='function')onChanged();
+      },120);
+    },{passive:true});
+  }
+
+  function initScrollBindings(){
+    bindScroll('wp-date-scroll',()=>{
+      const d=readPickerDate();
+      setActiveDate(d);
+      autoCorrect();
+      updateTriggers();
+    });
+    bindScroll('wp-hour-scroll',()=>{
+      const d=readPickerDate();
+      setActiveDate(d);
+      autoCorrect();
+      updateTriggers();
+    });
+    bindScroll('wp-minute-scroll',()=>{
+      const d=readPickerDate();
+      setActiveDate(d);
+      autoCorrect();
+      updateTriggers();
+    });
+  }
+
+  // ── 終日トグル ──
+  window.wpToggleAllDay=function(){
+    WP.isAllDay=!WP.isAllDay;
+    // 隠しフィールドとのsetTimeMode互換
+    if(typeof setTimeMode==='function'){
+      setTimeMode(WP.isAllDay?'allday':'timed');
+    }
+    _wpRefreshTimeCols();
+    updateTriggers();
+    // form内の時間トグルも同期
+    const tt=document.getElementById('wp-time-trigger');
+    const tl=document.getElementById('wp-time-trigger-label');
+    if(tt)tt.classList.toggle('is-timed',!WP.isAllDay);
+  };
+  function _wpRefreshTimeCols(){
+    const colH=document.getElementById('wp-col-hour');
+    const colM=document.getElementById('wp-col-min');
+    const tog=document.getElementById('wp-allday-toggle');
+    const intervalRow=document.getElementById('wp-interval-row');
+    if(colH)colH.style.display=WP.isAllDay?'none':'flex';
+    if(colM)colM.style.display=WP.isAllDay?'none':'flex';
+    if(tog)tog.classList.toggle('is-on',WP.isAllDay);
+    if(intervalRow)intervalRow.style.display=WP.isAllDay?'none':'flex';
+  }
+
+  // ── 分インターバル変更 ──
+  window.wpSetInterval=function(iv){
+    WP.minuteInterval=iv;
+    // アクティブボタン更新
+    document.querySelectorAll('.wp-interval-btn').forEach(btn=>{
+      btn.classList.toggle('is-active',+btn.dataset.interval===iv);
+    });
+    // 現在の選択日時を保持しつつ再描画
+    const cur=getActiveDate();
+    const mins=_minuteList();
+    const closest=mins.reduce((a,b)=>Math.abs(b-cur.getMinutes())<Math.abs(a-cur.getMinutes())?b:a,0);
+    fillScroll('wp-minute-scroll',mins,closest,(v)=>pad(v));
+    const mIdx=mins.indexOf(closest);
+    setTimeout(()=>scrollToIdx('wp-minute-scroll',Math.max(0,mIdx),false),10);
+  };
+
+  // ── タブ切替 ──
+  window.wpSwitchTab=function(tab){
+    WP.activeTab=tab;
+    document.getElementById('wp-tab-start')?.classList.toggle('active',tab==='start');
+    document.getElementById('wp-tab-end')?.classList.toggle('active',tab==='end');
+    buildCols(getActiveDate());
+  };
 
   // ── ピッカーを開く ──
   window.wpOpen=function(tab){
     WP.activeTab=tab||'start';
-    // 初期値を input-start / input-end から読み込み
-    function parseDate(str,fallback){
-      if(!str)return fallback;
-      const [y,m,d]=str.split('-').map(Number);
-      return{year:y||fallback.year,month:m||fallback.month,day:d||fallback.day,
-        hour:fallback.hour,minute:fallback.minute};
+    // 隠しフィールドから初期値を読み込み
+    function parseDH(dateStr,timeStr,fallback){
+      let d=fallback?cloneDate(fallback):new Date();
+      if(dateStr){
+        const[y,mo,dy]=dateStr.split('-').map(Number);
+        if(y)d.setFullYear(y,mo-1,dy);
+      }
+      if(timeStr){
+        const[h,mi]=timeStr.split(':').map(Number);
+        d.setHours(h||0,mi||0,0,0);
+      }else{
+        d.setSeconds(0,0);
+      }
+      return d;
     }
-    function parseTime(str,obj){
-      if(!str)return;
-      const [h,m]=str.split(':').map(Number);
-      obj.hour=h||0;obj.minute=m||0;
-    }
-    const now=nowState();
-    WP.start=parseDate(document.getElementById('input-start')?.value,{...now});
-    WP.end=parseDate(document.getElementById('input-end')?.value,{...now,hour:now.hour+1});
-    parseTime(document.getElementById('input-start-time')?.value,WP.start);
-    parseTime(document.getElementById('input-end-time')?.value,WP.end);
-
-    _wpRefreshUI();
-    document.getElementById('wp-overlay').classList.add('show');
-  };
-
-  function _wpRefreshUI(){
-    // タブ
-    document.getElementById('wp-tab-start')?.classList.toggle('active',WP.activeTab==='start');
-    document.getElementById('wp-tab-end')?.classList.toggle('active',WP.activeTab==='end');
-    // 時間ピッカー表示
-    const tp=document.getElementById('wp-time-pickers');
-    if(tp)tp.style.display=WP.isTimed?'flex':'none';
-    // カラム再構築
-    buildCols();
-    // リマインド
+    const now=new Date();
+    WP.startDate=parseDH(
+      document.getElementById('input-start')?.value,
+      document.getElementById('input-start-time')?.value,
+      now
+    );
+    const endFallback=new Date(WP.startDate.getTime()+3600000);
+    WP.endDate=parseDH(
+      document.getElementById('input-end')?.value,
+      document.getElementById('input-end-time')?.value,
+      endFallback
+    );
+    // allDay判定
+    const stEl=document.getElementById('input-start-time');
+    WP.isAllDay=!stEl?.value;
+    _wpRefreshTimeCols();
+    updateTabVals();
+    buildCols(getActiveDate());
     _wpRefreshRemind();
-  }
-
-  window.wpSwitchTab=function(tab){
-    WP.activeTab=tab;
-    _wpRefreshUI();
-  };
-
-  window.wpToggleTimed=function(){
-    WP.isTimed=!WP.isTimed;
-    updateTriggers();
-    const tp=document.getElementById('wp-time-pickers');
-    if(tp)tp.style.display=WP.isTimed?'flex':'none';
-    // 既存setTimeMode互換
-    if(typeof setTimeMode==='function'){
-      setTimeMode(WP.isTimed?'timed':'allday');
-    }
+    document.getElementById('wp-overlay').classList.add('show');
   };
 
   window.wpClose=function(){
@@ -9098,32 +9384,23 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   };
 
   window.wpDone=function(){
+    // 最終値を確定
+    const d=readPickerDate();
+    setActiveDate(d);
+    autoCorrect();
     updateTriggers();
     wpClose();
   };
 
-  // ── スクロールイベント バインド ──
-  function bindScrollCol(scrollId,key){
-    const el=document.getElementById(scrollId);
-    if(!el)return;
-    let timer;
-    el.addEventListener('scroll',()=>{
-      updateSelectedClass(scrollId);
-      clearTimeout(timer);
-      timer=setTimeout(()=>{
-        // スナップ後に値確定
-        onScroll(scrollId,key);
-      },120);
-    },{passive:true});
-  }
-
-  function initScrollBindings(){
-    bindScrollCol('wp-year-scroll','year');
-    bindScrollCol('wp-month-scroll','month');
-    bindScrollCol('wp-day-scroll','day');
-    bindScrollCol('wp-hour-scroll','hour');
-    bindScrollCol('wp-minute-scroll','minute');
-  }
+  // 旧 wpToggleTimed 互換（form 内の時間トグルボタンから呼ばれる）
+  window.wpToggleTimed=function(){
+    WP.isAllDay=!WP.isAllDay;
+    _wpRefreshTimeCols();
+    updateTriggers();
+    if(typeof setTimeMode==='function'){
+      setTimeMode(WP.isAllDay?'allday':'timed');
+    }
+  };
 
   // ── リマインドUI ──
   function _wpRefreshRemind(){
@@ -9143,34 +9420,20 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     const bell=document.getElementById('wp-bell-btn');
     if(bell){bell.classList.add('ring');setTimeout(()=>bell.classList.remove('ring'),600);}
     _wpRefreshRemind();
-    // 既存リマインドとの同期
     if(typeof _syncRemindFromWP==='function')_syncRemindFromWP();
   };
 
   window.wpOpenRemind=function(){
-    // 既存のリマインドシートを流用
     if(typeof openRemindSheet==='function'){
       openRemindSheet();
-      // シートが閉じたら選択値を反映
       const orig=window._onRemindSelected;
       window._onRemindSelected=function(key){
         WP.remind.key=key;WP.remind.on=true;
         _wpRefreshRemind();
         if(typeof orig==='function')orig(key);
       };
-    }else{
-      // フォールバック：簡易セレクタ
-      _wpInlineRemindMenu();
     }
   };
-
-  function _wpInlineRemindMenu(){
-    // シンプルなアクションシート
-    const opts=REMIND_OPTIONS.map(o=>`<div class="remind-option${o.key===WP.remind.key?' is-checked':''}" onclick="wpPickRemind('${o.key}')"><span class="remind-option-label">${o.label}</span><span class="remind-option-check"><svg width='16' height='16' viewBox='0 0 16 16' fill='none'><polyline points='3,8.5 6.5,12 13,5' stroke='var(--green-main)' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg></span></div>`).join('');
-    const ov=document.getElementById('remind-overlay');
-    const list=document.getElementById('remind-option-list')||ov?.querySelector('.remind-option-list');
-    if(ov&&list){list.innerHTML=opts;ov.classList.add('show');}
-  }
 
   window.wpPickRemind=function(key){
     WP.remind.key=key;WP.remind.on=true;
@@ -9178,7 +9441,6 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     closeRemindSheet?.();
   };
 
-  // ── 既存 _selectRemindOption をフック ──
   const _origSelectRemind=window._selectRemindOption;
   window._selectRemindOption=function(key){
     WP.remind.key=key;
@@ -9186,31 +9448,42 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     if(typeof _origSelectRemind==='function')_origSelectRemind(key);
   };
 
-  // ── 初期化 ──
-  initScrollBindings();
-
-  // 既存モーダルが開いたとき（step3）に初期値を更新
-  const _origRenderStep=window.renderStep||window.goStep;
-  // prefillForm フック：既存イベント編集時に WP 状態を同期
+  // prefillForm フック
   const _origPrefill=window.prefillForm;
   window.prefillForm=function(tour){
     if(typeof _origPrefill==='function')_origPrefill(tour);
-    // 少し遅らせて隠しフィールドから読む
     setTimeout(()=>{
-      function parseDate(str,fallback){
-        if(!str)return{...fallback};
-        const [y,m,d]=str.split('-').map(Number);
-        return{year:y,month:m,day:d,hour:fallback.hour,minute:fallback.minute};
-      }
-      const now=nowState();
-      WP.start=parseDate(document.getElementById('input-start')?.value,{...now});
-      WP.end=parseDate(document.getElementById('input-end')?.value,{...now,hour:now.hour+1});
+      const inS=document.getElementById('input-start');
+      const inE=document.getElementById('input-end');
+      const inST=document.getElementById('input-start-time');
+      const now=new Date();
+      if(inS?.value){
+        const[y,m,d]=inS.value.split('-').map(Number);
+        WP.startDate=new Date(y,m-1,d,9,0,0);
+        if(inST?.value){
+          const[h,mi]=inST.value.split(':').map(Number);
+          WP.startDate.setHours(h,mi);
+        }
+      }else{WP.startDate=cloneDate(now);}
+      if(inE?.value){
+        const[y,m,d]=inE.value.split('-').map(Number);
+        WP.endDate=new Date(y,m-1,d,9,0,0);
+      }else{WP.endDate=new Date(WP.startDate.getTime()+3600000);}
+      WP.isAllDay=!inST?.value;
       updateTriggers();
     },80);
   };
 
+  // ── 初期化 ──
+  initScrollBindings();
+
   // 初期表示更新
-  setTimeout(updateTriggers,300);
+  setTimeout(()=>{
+    const now=new Date();
+    if(!WP.startDate)WP.startDate=now;
+    if(!WP.endDate)WP.endDate=new Date(now.getTime()+3600000);
+    updateTriggers();
+  },300);
 })();
 </script>
 
