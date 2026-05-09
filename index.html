@@ -30,11 +30,13 @@ html,body{
   -webkit-text-size-adjust:100%;
   letter-spacing:-0.01em;
   width:100%;
-  overflow-x:hidden;
+  height:100%;
+  overflow:hidden;
 }
 body{
-  position:relative;
-  overscroll-behavior-x:none;
+  position:fixed;
+  inset:0;
+  overscroll-behavior:none;
 }
 *,*::before,*::after{
   font-family:inherit;
@@ -196,7 +198,7 @@ button,input,select,textarea{
 :root[data-theme="dark"] .search-header{filter:brightness(.82);}
 
 /* ダークモード：白背景を card-bg に置換 */
-:root[data-theme="dark"] .phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--bg);width:100%;max-width:100%;height:100dvh;min-height:-webkit-fill-available;display:flex;flex-direction:column;position:fixed;inset:0;}
+:root[data-theme="dark"] .phone-inner{background:var(--bg);}
 :root[data-theme="dark"] .cal-swipe-wrap,
 :root[data-theme="dark"] .cal-cell,
 :root[data-theme="dark"] .filter-grid,
@@ -238,7 +240,10 @@ button,input,select,textarea{
 }
 .phone-wrap{display:block;padding:0;margin:0;}
 .phone{width:100%;background:transparent;border-radius:0;padding:0;box-shadow:none;}
-.phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--bg);width:100%;max-width:100%;height:100dvh;min-height:-webkit-fill-available;display:flex;flex-direction:column;position:fixed;inset:0;}
+.phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--bg);width:100%;max-width:100%;height:100dvh;display:flex;flex-direction:column;position:fixed;inset:0;}
+@supports not (height: 100dvh) {
+  .phone-inner { height: 100vh; height: -webkit-fill-available; }
+}
 .notch{display:none;}
 .status-bar{display:none;}
 .status-time{color:#fff;font-size:11px;font-weight:500;}
@@ -2065,7 +2070,7 @@ button,input,select,textarea{
 .day-event-del{font-size:11px;border:1px solid #FFD5D5;border-radius:6px;padding:2px 6px;background:#FFF5F5;color:#C84444;cursor:pointer;align-self:center;margin-right:8px;flex-shrink:0;}
 .longpress-ring{position:absolute;border-radius:50%;border:2px solid var(--green-main);pointer-events:none;z-index:50;opacity:0;transform:scale(0);transition:none;}
 .longpress-ring.animating{opacity:1;transform:scale(1);transition:transform .5s ease-out,opacity .5s ease-out;}
-.bottom-nav{background:#fff;border-top:none;box-shadow:none;display:flex;padding:4px 0 max(env(safe-area-inset-bottom,4px),4px);flex-shrink:0;}
+.bottom-nav{background:#fff;border-top:none;box-shadow:none;display:flex;padding:6px 0 max(env(safe-area-inset-bottom,0px),6px);flex-shrink:0;}
 .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:12px;transition:background .08s ease-out,transform .1s;-webkit-tap-highlight-color:transparent;}
 .bnav-btn:active{background:rgba(26,175,122,0.12);transform:scale(.92);}
 .bnav-label{font-size:11px;color:var(--text-tertiary);line-height:1;font-weight:400;transition:color .15s;}
@@ -3878,9 +3883,6 @@ button,input,select,textarea{
   .app-header, .search-header, .fin-header {
     padding-top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
   }
-  .bottom-nav {
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px) !important;
-  }
   body { background: var(--bg); }
 }
 
@@ -4031,7 +4033,10 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
   flex-shrink:0;
   background:var(--card-bg,#fff);
   border-top:1px solid var(--border,#E4EDEB);
-  padding:6px 0 max(env(safe-area-inset-bottom,6px),6px) !important;
+  padding-top:6px !important;
+  padding-bottom:max(env(safe-area-inset-bottom,0px),6px) !important;
+  padding-left:0 !important;
+  padding-right:0 !important;
 }
 .bnav-btn {
   min-height:44px !important;
@@ -4145,13 +4150,13 @@ html, body {
 /* dvh非対応Safari向けフォールバック */
 @supports not (height: 100dvh) {
   .phone-inner {
-    height: -webkit-fill-available !important;
+    height: 100vh;
+    height: -webkit-fill-available;
   }
 }
 
-/* bottom-nav：safe-area確実対応 */
+/* bottom-nav：safe-area確実対応（上書き禁止：padding-bottomのみ） */
 .bottom-nav {
-  padding-bottom: max(env(safe-area-inset-bottom, 4px), 4px) !important;
   width: 100% !important;
   overflow: hidden !important;
   flex-shrink: 0 !important;
