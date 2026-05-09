@@ -5742,8 +5742,10 @@ function switchPage(page){
 function todayStr(){const t=new Date();return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;}
 function defaultDateStr(){return modalPresetDate||selectedDate||todayStr();}
 function dsFromDate(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function getEventsOnDate(ds){return EVENTS.filter(e=>ds>=e.date&&ds<=e.end);}
-function getEventsInMonth(y,m){const ym=`${y}-${String(m+1).padStart(2,'0')}`;return EVENTS.filter(e=>e.date<=ym+'-31'&&e.end>=ym+'-01').sort((a,b)=>a.date.localeCompare(b.date));}
+// カテゴリ未設定イベントを除外するフィルタ（データ自体は保持）
+function hasCat(e){ return e.category ? e.category.trim() !== '' : (e.cat && e.cat.trim() !== ''); }
+function getEventsOnDate(ds){return EVENTS.filter(e=>hasCat(e)&&ds>=e.date&&ds<=e.end);}
+function getEventsInMonth(y,m){const ym=`${y}-${String(m+1).padStart(2,'0')}`;return EVENTS.filter(e=>hasCat(e)&&e.date<=ym+'-31'&&e.end>=ym+'-01').sort((a,b)=>a.date.localeCompare(b.date));}
 // ★ カテゴリ表示ON/OFF：オプトイン型
 // personal は常時ON。その他は userEnabledCategories に含まれるものだけON。
 function isCatVisible(catKey){
@@ -5811,7 +5813,7 @@ function computeMultidayLayoutForWeek(weekDates){
   if(!weekDates||weekDates.length===0)return{bars:[],laneByDate:{}};
   const weekStart=weekDates[0],weekEnd=weekDates[6];
   // この週に重なる「複数日」イベントを抽出（カテゴリフィルタも適用）
-  let evs=EVENTS.filter(e=>e.date!==e.end&&e.date<=weekEnd&&e.end>=weekStart);
+  let evs=EVENTS.filter(e=>hasCat(e)&&e.date!==e.end&&e.date<=weekEnd&&e.end>=weekStart);
   evs=applyCatFiltersToEvents(evs);
   // 開始日順、長いもの優先
   evs.sort((a,b)=>{
@@ -8807,7 +8809,7 @@ function dvGetEventsForDay(ds){
   const [_gfy,_gfm,_gfd]=ds.split('-').map(Number);
   const dayStart=new Date(_gfy,_gfm-1,_gfd);dayStart.setHours(0,0,0,0);
   const dayEnd=new Date(_gfy,_gfm-1,_gfd);dayEnd.setHours(23,59,59,999);
-  const all=EVENTS.filter(e=>ds>=e.date&&ds<=e.end);
+  const all=EVENTS.filter(e=>hasCat(e)&&ds>=e.date&&ds<=e.end);
   const filtered=applyCatFiltersToEvents(all);
   const timed=[],allday=[];
   filtered.forEach(ev=>{
