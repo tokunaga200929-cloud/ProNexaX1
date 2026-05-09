@@ -36,6 +36,16 @@
   <title>ProNexaX</title>
 </head>
 <body>
+<!-- ★★★ 横向き検知オーバーレイ：縦画面に戻してください表示 ★★★ -->
+<div id="portrait-lock-overlay" aria-live="polite">
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="4" width="28" height="40" rx="5" stroke="white" stroke-width="2.5" fill="none"/>
+    <circle cx="24" cy="38" r="2" fill="white"/>
+    <path d="M20 15 L28 15 M24 11 L24 15" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+  <div>縦向きでご利用ください</div>
+  <div style="font-size:12px;font-weight:400;opacity:.6;margin-top:4px;">端末を縦に戻してください</div>
+</div>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -4397,45 +4407,53 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
 }
 
 /* ================================================================ */
-/* ★★★ 縦画面固定：横向き完全ロック                               */
-/* 端末を横向きにしてもUIを回転させず、縦レイアウトを維持する       */
+/* ★★★ 縦画面固定：横向き検知 → 全UI凍結オーバーレイ表示         */
+/* rotate方式は座標系のズレを招くため採用しない。                   */
+/* 横向き時はオーバーレイで全操作をブロックし、何も起こさない。     */
 /* ================================================================ */
+#portrait-lock-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  background:#000;
+  color:#fff;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:16px;
+  font-size:15px;
+  font-weight:600;
+  letter-spacing:.02em;
+  text-align:center;
+  -webkit-tap-highlight-color:transparent;
+  /* タッチ・クリックを完全吸収 */
+  pointer-events:all;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+#portrait-lock-overlay svg{
+  opacity:.7;
+  animation:portrait-rotate 2s ease-in-out infinite;
+}
+@keyframes portrait-rotate{
+  0%,100%{transform:rotate(0deg);}
+  40%{transform:rotate(-90deg);}
+  60%{transform:rotate(-90deg);}
+}
 @media screen and (orientation: landscape){
-  /* ── html/body をビューポート幅・高さに固定してはみ出しを封鎖 ── */
+  /* html/body のスクロール・リサイズ影響を封鎖 */
   html, body{
-    width:100vw !important;
-    height:100vh !important;
     overflow:hidden !important;
     overscroll-behavior:none !important;
+    touch-action:none !important;
   }
-  /* ── app-frame：縦向き時の幅(=landscape時の短辺)をベースに中央固定 ── */
-  .app-frame{
-    /* landscape時: vhが「画面短辺」相当になる。縦向きUIをそのまま維持 */
-    width:100vh !important;   /* 縦向き時の幅 = landscape時の高さ(短辺) */
-    height:100vw !important;  /* 縦向き時の高さ = landscape時の幅(長辺) */
-    /* CSS transformで-90度回転して縦向きに見せる */
-    transform:rotate(-90deg) !important;
-    transform-origin:top left !important;
-    position:fixed !important;
-    top:100% !important;      /* 回転軸の原点補正 */
-    left:0 !important;
-    overflow:hidden !important;
-    max-width:none !important;
+  /* オーバーレイを前面に表示 */
+  #portrait-lock-overlay{
+    display:flex !important;
   }
-  /* ── phone-inner も同様に縦比率で固定 ── */
-  .phone-inner{
-    width:100vh !important;
-    max-width:100vh !important;
-    overflow-x:hidden !important;
-  }
-  /* ── landscape中のモーダル・ドロワー・month-pickerも回転に追従 ── */
-  .modal-sheet,
-  .drawer,
-  .drawer-overlay,
-  .month-picker,
-  .month-picker-overlay{
-    /* app-frame 内で position:fixed/absolute なのでそのまま追従 */
-  }
+  /* app-frame はそのまま維持（回転・リサイズ一切しない） */
 }
 </style>
 
@@ -10748,58 +10766,113 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
 // ================================================================
 // Safari PWA（ホーム画面追加）余白修正
 // ================================================================
+// Safari PWA（ホーム画面追加）余白修正
+// ★ 横向き時は一切動かない（高さ再計算・UI変形を防ぐ）
+// ================================================================
 (function fixSafariPWAHeight(){
-  // スタンドアローン（PWA）モードのみ適用
   var isStandalone = window.navigator.standalone === true
     || window.matchMedia('(display-mode: standalone)').matches;
   if (!isStandalone) return;
 
+  function isPortrait(){ return window.innerHeight >= window.innerWidth; }
+
   function applyHeight(){
+    // 横向き時は何もしない（portrait時のみ高さを適用）
+    if(!isPortrait()) return;
     var inner = document.querySelector('.app-frame');
     if (!inner) return;
-    // window.innerHeightはSafari PWAでは実際の表示領域を返す
     inner.style.height = window.innerHeight + 'px';
   }
 
   applyHeight();
+  // resizeは縦向き時のみ反応
   window.addEventListener('resize', applyHeight);
-  // 画面回転時にも再計算
   window.addEventListener('orientationchange', function(){
-    setTimeout(applyHeight, 200);
+    // orientationchange後、縦に戻った場合のみ高さを再適用
+    setTimeout(applyHeight, 250);
   });
 })();
 </script>
 
 <script>
 // ================================================================
-// 縦画面固定：Screen Orientation API による portrait ロック
-// PWAモードで利用可能な場合に portrait-primary に固定する
+// 縦画面完全固定システム
+// 3層防御：① Screen Orientation API  ② オーバーレイ遮断  ③ イベント凍結
 // ================================================================
 (function lockPortrait(){
-  // Screen Orientation API（Chrome/Android PWA等でサポート）
-  if(screen.orientation && typeof screen.orientation.lock === 'function'){
-    screen.orientation.lock('portrait-primary').catch(function(){
-      // ロック失敗（iOS Safari等はサポート外）は無視
-    });
+
+  // ── ① Screen Orientation API（Android Chrome PWA / 一部ブラウザ）──
+  function tryLockOrientation(){
+    if(screen.orientation && typeof screen.orientation.lock === 'function'){
+      screen.orientation.lock('portrait').catch(function(){});
+    }
+    // 旧API（iOS対応なし・Android旧ブラウザ向け）
+    if(screen.lockOrientation)        screen.lockOrientation('portrait-primary');
+    else if(screen.mozLockOrientation) screen.mozLockOrientation('portrait-primary');
+    else if(screen.msLockOrientation)  screen.msLockOrientation('portrait-primary');
   }
-  // iOS Safari / 一般ブラウザ向け：横向き時に縦レイアウトを維持するフォールバック
-  function applyOrientationFix(){
-    const isLandscape = window.innerWidth > window.innerHeight;
-    const frame = document.querySelector('.app-frame');
-    if(!frame) return;
-    if(isLandscape){
-      // CSS @media landscape で transform:rotate(-90deg) を適用済み
-      // JS側では scrollTo で余計なスクロールをリセット
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
+  tryLockOrientation();
+  // PWAとして開かれた後に再試行（Safari PWAでは遅延後に有効になる場合がある）
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible') tryLockOrientation();
+  });
+
+  // ── 縦/横の判定ヘルパー ──
+  function isLandscape(){
+    // matchMedia優先（screen.orientation.typeより信頼性が高い）
+    if(window.matchMedia){
+      return window.matchMedia('(orientation: landscape)').matches;
+    }
+    return window.innerWidth > window.innerHeight;
+  }
+
+  // ── ② オーバーレイ表示／非表示制御 ──
+  var overlay = document.getElementById('portrait-lock-overlay');
+  function updateOverlay(){
+    if(!overlay) return;
+    if(isLandscape()){
+      overlay.style.display = 'flex';
+    } else {
+      overlay.style.display = 'none';
     }
   }
-  window.addEventListener('orientationchange', function(){
-    setTimeout(applyOrientationFix, 50);
-    setTimeout(applyOrientationFix, 300);
+
+  // ── ③ 横向き中のイベント完全凍結 ──
+  // touchstart / touchmove / touchend / click / mousedown を横向き時に吸収
+  var BLOCK_EVENTS = ['touchstart','touchmove','touchend','click','mousedown','mouseup'];
+  function blockIfLandscape(e){
+    if(isLandscape()){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  }
+  BLOCK_EVENTS.forEach(function(type){
+    // captureフェーズ最前段で横向きなら全イベントを止める
+    document.addEventListener(type, blockIfLandscape, {capture:true, passive:false});
   });
-  window.addEventListener('resize', applyOrientationFix);
-  applyOrientationFix();
+
+  // ── orientationchange / resize の処理 ──
+  // 横向きに変わった → UI再計算を一切しない、オーバーレイだけ出す
+  // 縦向きに戻った → オーバーレイを消す
+  function onOrientationChange(){
+    // 即時 + 安定後の2回更新（iOS Safariはchangeイベントが遅延するため）
+    updateOverlay();
+    setTimeout(updateOverlay, 100);
+    setTimeout(updateOverlay, 400);
+  }
+
+  window.addEventListener('orientationchange', onOrientationChange);
+  // resize は matchMedia の方が確実なため、resize での UI 再計算は行わない
+  // （fixSafariPWAHeight側でguardしているのでここでは監視しない）
+  if(window.matchMedia){
+    window.matchMedia('(orientation: landscape)').addEventListener('change', function(){
+      updateOverlay();
+    });
+  }
+
+  // 初期状態を反映
+  updateOverlay();
+
 })();
 </script>
 
