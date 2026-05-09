@@ -191,70 +191,13 @@ button,input,select,textarea{
 }
 
 /* パステル + ダーク：チップ色を deep ベースで暗めに */
-:root[data-theme="dark"][data-color-theme="sakura"]{--green-chip:#3A1F26;}
-:root[data-theme="dark"][data-color-theme="lavender"]{--green-chip:#231D33;}
-:root[data-theme="dark"][data-color-theme="mint"]{--green-chip:#16332A;}
-:root[data-theme="dark"][data-color-theme="peach"]{--green-chip:#3A2418;}
 
 /* ===== ダークモード ===== */
-:root[data-theme="dark"]{
-  --bg:#0F1612;--card-bg:#1A2620;
-  --border:#2A3833;--text-primary:#E8F0EC;--text-secondary:#A8BEB4;--text-tertiary:#7A8E86;
-  --green-chip:#1F3329;
-}
-:root[data-theme="dark"][data-color-theme="blue"]{--green-chip:#162538;}
-:root[data-theme="dark"][data-color-theme="black"]{--green-chip:#22252A;}
-:root[data-theme="dark"][data-color-theme="gold"]{--green-chip:#2E2410;}
-:root[data-theme="dark"][data-color-theme="mono"]{--green-chip:#22252A;}
 
 /* ダーク時に明るすぎるトーンを抑制 */
-:root[data-theme="dark"] .app-header,
-:root[data-theme="dark"] .search-header{
-  background:#1c1c1e;
-  border-bottom-color:var(--green-main);
-  box-shadow:none;
-}
-:root[data-theme="dark"] .app-logo{color:#f5f5f7;}
-:root[data-theme="dark"] .month-text{color:#f5f5f7 !important;}
-:root[data-theme="dark"] .m-arrow{background:#2c2c2e !important;border-color:#3a3a3c !important;color:#f5f5f7 !important;box-shadow:none !important;}
-:root[data-theme="dark"] .hamburger-btn svg line{stroke:#f5f5f7;}
-:root[data-theme="dark"] .header-icon-btn svg{stroke:#f5f5f7;}
-:root[data-theme="dark"] .app-avatar{background:#2c2c2e;border-color:#3a3a3c;color:#f5f5f7;}
-:root[data-theme="dark"] .cal-header{background:#1c1c1e;border-bottom-color:#2c2c2e;}
-:root[data-theme="dark"] .cal-week-labels{border-top-color:#2c2c2e;}
-:root[data-theme="dark"] .cal-week-labels span{color:#636366 !important;}
 
 /* ダークモード：白背景を card-bg に置換 */
-:root[data-theme="dark"] .phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--green-main);width:100%;max-width:100%;height:100%;display:flex;flex-direction:column;position:absolute;top:0;left:0;right:0;bottom:0;}
-:root[data-theme="dark"] .cal-swipe-wrap,
-:root[data-theme="dark"] .cal-cell,
-:root[data-theme="dark"] .filter-grid,
-:root[data-theme="dark"] .filter-chip,
-:root[data-theme="dark"] .modal-sheet,
-:root[data-theme="dark"] .event-card,
-:root[data-theme="dark"] .day-event-item,
-:root[data-theme="dark"] .bottom-nav,
-:root[data-theme="dark"] .dv-header,
-:root[data-theme="dark"] .dv-timeline,
-:root[data-theme="dark"] .dv-event,
-:root[data-theme="dark"] .dv-allday-chip,
-:root[data-theme="dark"] .day-block,
-:root[data-theme="dark"] .day-event-row,
-:root[data-theme="dark"] .drawer{background:var(--card-bg);color:var(--text-primary);}
-:root[data-theme="dark"] .cal-cell.other,
-:root[data-theme="dark"] .dv-allday{background:#131D18;}
 /* ダークモード：範囲選択ハイライト */
-:root[data-theme="dark"] .cal-cell.range-mid{background:#1A3D2C;}
-:root[data-theme="dark"] .cal-cell.range-edge{background:var(--green-dark);box-shadow:inset 0 0 0 2px var(--green-light);}
-:root[data-theme="dark"] .form-input,
-:root[data-theme="dark"] textarea.form-input{background:#13201B;color:var(--text-primary);border-color:var(--border);}
-:root[data-theme="dark"] .event-del-btn,
-:root[data-theme="dark"] .day-event-del{background:#3A1A1A;border-color:#5A2828;color:#FF8888;}
-:root[data-theme="dark"] .hint-bar,
-:root[data-theme="dark"] .cal-header,
-:root[data-theme="dark"] .cat-legend{background:var(--card-bg);}
-:root[data-theme="dark"] .search-scroll,
-:root[data-theme="dark"] .cal-scroll{background:var(--bg);}
 
 /* ===== 表示スタイル：フラット（影なし） ===== */
 :root[data-style="flat"]{
@@ -722,13 +665,6 @@ button,input,select,textarea{
 }
 .month-picker-item.is-current:active{background:var(--green-dark);}
 /* ダークモード対応 */
-:root[data-theme="dark"] .month-picker{background:#2c2c2e;box-shadow:0 8px 30px rgba(0,0,0,.4);}
-:root[data-theme="dark"] .month-picker-year{color:#f5f5f7;}
-:root[data-theme="dark"] .month-picker-year-btn{color:#f5f5f7;}
-:root[data-theme="dark"] .month-picker-header{border-bottom-color:#3a3a3c;}
-:root[data-theme="dark"] .month-picker-item{color:#f5f5f7;}
-:root[data-theme="dark"] .month-picker-item:active{background:#3a3a3c;}
-:root[data-theme="dark"] .month-dropdown-caret{color:#636366;}
 .cal-header{
   background:#ffffff;
   padding:0;
@@ -1263,11 +1199,6 @@ button,input,select,textarea{
   background:var(--green-chip);color:var(--green-dark);
   white-space:nowrap;
 }
-:root[data-theme="dark"] .sq-suggest{
-  background:var(--card-bg);
-  box-shadow:0 8px 28px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.3);
-}
-:root[data-theme="dark"] .sq-suggest-item.is-focused{background:rgba(255,255,255,.06);}
 /* 検索トークン表示バー（header下） */
 .sq-token-bar{
   display:flex;flex-wrap:wrap;align-items:center;gap:5px;
@@ -1291,7 +1222,6 @@ button,input,select,textarea{
   gap:6px;
   align-items:center;
 }
-:root[data-theme="dark"] .filter-grid{background:var(--card-bg);}
 .filter-grid.is-hidden{display:none;}
 .filter-chip{
   position:relative;
@@ -1317,11 +1247,6 @@ button,input,select,textarea{
   box-sizing:border-box;
   overflow:hidden;
   text-overflow:ellipsis;
-}
-:root[data-theme="dark"] .filter-chip{
-  background:#1A2520;color:#B0BCB6;
-  border-color:rgba(255,255,255,.08);
-  box-shadow:none;
 }
 .filter-chip:has(.filter-chip-star){padding-right:14px;}
 .filter-chip:active{transform:scale(.95);}
@@ -1349,10 +1274,6 @@ button,input,select,textarea{
 .filter-chip.active[data-area="overseas"]{background:#E8E8F0;color:#3A3A5C;}
 /* エリア行のラベル */
 
-:root[data-theme="dark"] .filter-chip.active{
-  filter:brightness(.65) saturate(1.1);
-  color:#fff;
-}
 .result-meta{padding:5px 14px 3px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg);}
 .result-meta.is-hidden{display:none;}
 .result-count{font-size:10.5px;color:var(--text-secondary);font-weight:600;}
@@ -1470,11 +1391,6 @@ button,input,select,textarea{
 .fbs-chip.active[data-area="kyushu"]  {background:#FCE8DC;color:#7A2E0E;}
 .fbs-chip.active[data-area="hokkaido"]{background:#DCF0F8;color:#0D4B65;}
 .fbs-chip.active[data-area="overseas"]{background:#E8E8F0;color:#3A3A5C;}
-:root[data-theme="dark"] .fbs-chip{
-  background:var(--card-bg);color:var(--text-secondary);
-  border-color:rgba(255,255,255,.09);
-}
-:root[data-theme="dark"] .fbs-chip.active{filter:brightness(.7) saturate(1.15);color:#fff;}
 .fbs-footer{
   padding:10px 16px 14px;flex-shrink:0;
   border-top:1px solid var(--border);
@@ -1521,8 +1437,6 @@ button,input,select,textarea{
 .fbs-chip-area.active[data-area="kyushu"]  {background:#FCE8DC;color:#7A2E0E;}
 .fbs-chip-area.active[data-area="hokkaido"]{background:#DCF0F8;color:#0D4B65;}
 .fbs-chip-area.active[data-area="overseas"]{background:#E8E8F0;color:#3A3A5C;}
-:root[data-theme="dark"] .fbs-chip-area{background:var(--card-bg);color:var(--text-secondary);border-color:rgba(255,255,255,.09);}
-:root[data-theme="dark"] .fbs-chip-area.active{filter:brightness(.7) saturate(1.15);color:#fff;}
 /* 都道府県チップ（子）展開パネル */
 .fbs-pref-panel{
   width:100%;
@@ -1554,8 +1468,6 @@ button,input,select,textarea{
   background:var(--green-chip);color:var(--green-dark);
   box-shadow:0 1px 4px rgba(26,175,122,.2);
 }
-:root[data-theme="dark"] .fbs-chip-pref{background:var(--card-bg);color:var(--text-tertiary);border-color:rgba(255,255,255,.08);}
-:root[data-theme="dark"] .fbs-chip-pref.active{background:#1F3329;color:var(--green-light);}
 /* フィルターバナー（既存フィルター + 都道府県対応） */
 .fbs-active-banner{
   display:flex;align-items:center;flex-wrap:wrap;gap:5px;
@@ -1723,9 +1635,6 @@ button,input,select,textarea{
 .t-remind-pill.is-set svg{color:var(--green-main);}
 
 /* ダークモード */
-:root[data-theme="dark"] .t-bell-btn.is-on{background:rgba(26,175,122,.15);}
-:root[data-theme="dark"] .t-remind-pill{background:#1E2A24;color:var(--text-secondary);}
-:root[data-theme="dark"] .t-remind-pill.is-set{background:#1F3329;color:var(--green-light);border-color:rgba(26,175,122,.3);}
 
 .remind-overlay{
   position:absolute;inset:0;
@@ -1815,16 +1724,6 @@ button,input,select,textarea{
 .remind-option.is-checked{background:#F7FFFE;}
 
 /* ダークモード：シート */
-:root[data-theme="dark"] .remind-sheet{background:#1C1C1E;}
-:root[data-theme="dark"] .remind-option-list{background:#2C2C2E;}
-:root[data-theme="dark"] .remind-option{background:#2C2C2E;border-bottom-color:rgba(255,255,255,.08);}
-:root[data-theme="dark"] .remind-option:active{background:#3A3A3C;}
-:root[data-theme="dark"] .remind-option-label{color:#EBEBF5;}
-:root[data-theme="dark"] .remind-option.is-checked{background:#1F3329;}
-:root[data-theme="dark"] .remind-option.is-checked .remind-option-label{color:var(--green-light);}
-:root[data-theme="dark"] .remind-sheet-title{color:#EBEBF5;}
-:root[data-theme="dark"] .remind-sheet-cancel{color:#8E8E93;}
-:root[data-theme="dark"] .remind-handle{background:rgba(255,255,255,.2);}
 
 .search-mode-tabs{
   display:flex;background:#fff;
@@ -1832,7 +1731,6 @@ button,input,select,textarea{
   padding:4px 12px 0;
   gap:4px;
 }
-:root[data-theme="dark"] .search-mode-tabs{background:var(--card-bg);}
 .search-mode-tab{
   flex:1;background:transparent;border:none;
   font-size:11px;font-weight:600;color:var(--text-tertiary);
@@ -1871,12 +1769,6 @@ button,input,select,textarea{
   0%,100%{transform:scale(1);}
   50%{transform:scale(1.04);}
 }
-:root[data-theme="dark"] .deadline-badge.normal{background:#1F2A24;color:#A8B5AC;border-color:#2E3933;}
-:root[data-theme="dark"] .deadline-badge.near{background:#3A2E0A;color:#E8C457;border-color:#5A4810;}
-:root[data-theme="dark"] .deadline-badge.soon{background:#3A2410;color:#E89052;border-color:#5A3A1A;}
-:root[data-theme="dark"] .deadline-badge.today{background:#3F1818;color:#F08080;border-color:#5F2424;}
-:root[data-theme="dark"] .deadline-badge.past{background:#212528;color:#7A8088;border-color:#34393E;}
-:root[data-theme="dark"] .deadline-badge.entered{background:#143A2A;color:#7DD8B0;border-color:#1E5040;}
 
 .deadline-row{
   display:flex;align-items:center;gap:6px;flex-wrap:wrap;
@@ -1911,7 +1803,6 @@ button,input,select,textarea{
   box-shadow:0 -8px 30px rgba(0,0,0,.18);
   transition:transform .26s cubic-bezier(.32,.72,.34,1);
 }
-:root[data-theme="dark"] .notif-settings-sheet{background:var(--card-bg);}
 .notif-settings-sheet.show{transform:translate(-50%,0);}
 .notif-settings-grip{
   width:36px;height:4px;background:var(--border);
@@ -1940,7 +1831,6 @@ button,input,select,textarea{
   color:var(--text-primary);background:var(--bg);
   font-family:inherit;
 }
-:root[data-theme="dark"] .notif-settings-date{color:var(--text-primary);color-scheme:dark;}
 .notif-settings-toggle{padding:8px 0;}
 .notif-switch{
   position:relative;width:38px;height:22px;display:inline-block;
@@ -1980,7 +1870,6 @@ button,input,select,textarea{
   flex-shrink:0;position:relative;
   transition:background .15s,border-color .15s;
 }
-:root[data-theme="dark"] .notif-check-mark{background:var(--card-bg);}
 .notif-check-row input:checked + .notif-check-mark{
   background:var(--green-main);border-color:var(--green-main);
 }
@@ -2037,8 +1926,6 @@ button,input,select,textarea{
 .filter-chip-star.is-fav{
   color:#E5A41A;border-color:#E5A41A;background:#FFF4D6;
 }
-:root[data-theme="dark"] .filter-chip-star{background:var(--card-bg);}
-:root[data-theme="dark"] .filter-chip-star.is-fav{background:#3A2C0E;color:#F0B43F;}
 
 .search-section-head{
   display:flex;align-items:center;justify-content:space-between;
@@ -2070,7 +1957,6 @@ button,input,select,textarea{
 }
 .t-card:active{transform:scale(.99);}
 .t-card.is-added{opacity:.62;background:#F4F7F6;}
-:root[data-theme="dark"] .t-card.is-added{background:#15201B;opacity:.7;}
 .t-card-top{display:flex;align-items:stretch;}
 .t-stripe{width:3px;flex-shrink:0;}
 .t-main{flex:1;padding:10px 8px 9px 10px;min-width:0;}
@@ -2113,9 +1999,6 @@ button,input,select,textarea{
 }
 .badge-status-upcoming{background:#EEF3FA;color:#3B6FB0;border:1px solid #C8D8EC;}
 .badge-status-ended{background:#F0F2F4;color:#7A8088;border:1px solid #DDE2E6;}
-:root[data-theme="dark"] .badge-status-live{background:#143A2A;color:#7DD8B0;border-color:#1E5040;}
-:root[data-theme="dark"] .badge-status-upcoming{background:#172638;color:#A8C5E6;border-color:#22405E;}
-:root[data-theme="dark"] .badge-status-ended{background:#212528;color:#A0A6AC;border-color:#34393E;}
 
 .t-action{
   padding:8px 10px 8px 0;
@@ -2599,7 +2482,6 @@ button,input,select,textarea{
   transition:box-shadow .18s,transform .12s;
   position:relative;
 }
-:root[data-theme="dark"] .color-swatch{border-color:#2A3833;}
 .color-card.is-active .color-swatch{
   box-shadow:0 0 0 2.5px var(--green-main),0 2px 8px rgba(0,0,0,.15);
   transform:scale(1.05);
@@ -2673,7 +2555,6 @@ button,input,select,textarea{
   border:1px solid var(--border);
   display:flex;align-items:center;gap:5px;padding:0 6px;
 }
-:root[data-theme="dark"] .style-preview{background:#0E1814;}
 .style-preview.is-card{box-shadow:0 2px 6px rgba(0,0,0,.10);}
 .style-preview-bar{
   width:3px;height:18px;border-radius:2px;background:var(--green-main);
@@ -2713,9 +2594,6 @@ button,input,select,textarea{
 }
 .settings-reset:active{
   background:#FFF0F0;border-color:#E8B0B0;color:#C84444;
-}
-:root[data-theme="dark"] .settings-reset:active{
-  background:#3A1A1A;border-color:#5A2828;color:#FF8888;
 }
 
 /* 既存テーマカラー（--green-*）に自動追従する最小スタイル           */
@@ -2822,9 +2700,6 @@ button,input,select,textarea{
   background:#fff;color:var(--green-deep);
   box-shadow:0 1px 3px rgba(0,0,0,.06);
 }
-:root[data-theme="dark"] .time-mode-btn.is-active{
-  background:var(--card-bg);
-}
 .time-row{
   display:grid;grid-template-columns:1fr 12px 1fr;
   gap:8px;align-items:center;margin-bottom:6px;
@@ -2864,7 +2739,6 @@ button,input,select,textarea{
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
 .wp-overlay.show .wp-sheet{transform:translateY(0);}
-:root[data-theme="dark"] .wp-sheet{background:#1C1C1E;}
 
 /* ── グリップバー ── */
 .wp-handle-bar{
@@ -2872,7 +2746,6 @@ button,input,select,textarea{
   background:rgba(0,0,0,.18);
   margin:10px auto 0;
 }
-:root[data-theme="dark"] .wp-handle-bar{background:rgba(255,255,255,.2);}
 
 /* ── ヘッダー ── */
 .wp-header{
@@ -2891,9 +2764,6 @@ button,input,select,textarea{
   font-size:14px;font-weight:700;
   color:#1C1C1E;letter-spacing:.1px;
 }
-:root[data-theme="dark"] .wp-cancel-btn{color:#636366;}
-:root[data-theme="dark"] .wp-title{color:#EBEBF5;}
-:root[data-theme="dark"] .wp-done-btn{color:var(--green-light);}
 
 /* ── タブ（開始/終了） ── */
 .wp-tabs{
@@ -2914,22 +2784,17 @@ button,input,select,textarea{
   background:var(--green-main);
   box-shadow:0 2px 12px rgba(26,175,122,.3);
 }
-:root[data-theme="dark"] .wp-tab{background:#2C2C2E;}
-:root[data-theme="dark"] .wp-tab.active{background:var(--green-dark);}
 .wp-tab-label{
   font-size:10px;font-weight:600;letter-spacing:.4px;
   color:rgba(0,0,0,.45);text-transform:uppercase;
 }
 .wp-tab.active .wp-tab-label{color:rgba(255,255,255,.75);}
-:root[data-theme="dark"] .wp-tab-label{color:#636366;}
-:root[data-theme="dark"] .wp-tab.active .wp-tab-label{color:rgba(255,255,255,.6);}
 .wp-tab-val{
   font-size:13px;font-weight:600;color:#1C1C1E;
   font-feature-settings:"tnum";white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;max-width:100%;
 }
 .wp-tab.active .wp-tab-val{color:#fff;}
-:root[data-theme="dark"] .wp-tab-val{color:#EBEBF5;}
 
 /* ── 終日トグル ── */
 .wp-allday-row{
@@ -2940,11 +2805,9 @@ button,input,select,textarea{
   border-radius:14px;
   box-shadow:0 1px 3px rgba(0,0,0,.06);
 }
-:root[data-theme="dark"] .wp-allday-row{background:#2C2C2E;}
 .wp-allday-label{
   font-size:15px;font-weight:500;color:#1C1C1E;
 }
-:root[data-theme="dark"] .wp-allday-label{color:#EBEBF5;}
 /* iOS風スイッチ */
 .wp-allday-toggle{
   width:50px;height:30px;border-radius:15px;
@@ -2974,7 +2837,6 @@ button,input,select,textarea{
   overflow:hidden;
   box-shadow:0 1px 4px rgba(0,0,0,.06);
 }
-:root[data-theme="dark"] .wp-picker-wrap{background:#2C2C2E;}
 
 /* 中央選択ライン */
 .wp-selector-line{
@@ -2986,7 +2848,6 @@ button,input,select,textarea{
   pointer-events:none;z-index:3;
   border-radius:0;
 }
-:root[data-theme="dark"] .wp-selector-line{background:rgba(255,255,255,.1);}
 
 /* 上下フェード */
 .wp-fade-top,.wp-fade-bot{
@@ -3001,12 +2862,6 @@ button,input,select,textarea{
   bottom:0;
   background:linear-gradient(to top, #fff 0%, rgba(255,255,255,0) 100%);
 }
-:root[data-theme="dark"] .wp-fade-top{
-  background:linear-gradient(to bottom,#2C2C2E 0%,rgba(44,44,46,0) 100%);
-}
-:root[data-theme="dark"] .wp-fade-bot{
-  background:linear-gradient(to top,#2C2C2E 0%,rgba(44,44,46,0) 100%);
-}
 
 /* 各カラム */
 .wp-col{
@@ -3018,7 +2873,6 @@ button,input,select,textarea{
 .wp-col-hour,.wp-col-min{flex:1;}
 /* 時間・分の左ボーダー */
 .wp-col-hour{border-left:1px solid rgba(0,0,0,.08);}
-:root[data-theme="dark"] .wp-col-hour{border-left-color:rgba(255,255,255,.08);}
 
 /* スクロールコンテナ（慣性スクロール） */
 .wp-scroll{
@@ -3051,8 +2905,6 @@ button,input,select,textarea{
   font-weight:600;
   font-size:20px;
 }
-:root[data-theme="dark"] .wp-item{color:rgba(255,255,255,.3);}
-:root[data-theme="dark"] .wp-item.selected{color:#EBEBF5;}
 
 /* スペーサー（高さ = (220-44)/2 = 88px） */
 .wp-spacer{height:88px;flex-shrink:0;}
@@ -3077,8 +2929,6 @@ button,input,select,textarea{
 .wp-interval-btn.is-active{
   background:var(--green-main);color:#fff;
 }
-:root[data-theme="dark"] .wp-interval-btn{background:rgba(255,255,255,.08);color:#aaa;}
-:root[data-theme="dark"] .wp-interval-btn.is-active{background:var(--green-dark);color:#fff;}
 
 /* ── リマインドセクション ── */
 .wp-remind{
@@ -3087,7 +2937,6 @@ button,input,select,textarea{
   border-top:1px solid rgba(0,0,0,.06);
   margin-top:6px;
 }
-:root[data-theme="dark"] .wp-remind{border-top-color:rgba(255,255,255,.07);}
 .wp-bell-btn{
   width:32px;height:32px;border-radius:50%;
   background:rgba(0,0,0,.05);border:none;
@@ -3117,9 +2966,6 @@ button,input,select,textarea{
 }
 .wp-remind-pill:active{opacity:.7;}
 .wp-remind-pill.is-on{background:rgba(26,175,122,.12);color:var(--green-deep);}
-:root[data-theme="dark"] .wp-bell-btn{background:rgba(255,255,255,.08);}
-:root[data-theme="dark"] .wp-remind-pill{background:rgba(255,255,255,.08);color:#EBEBF5;}
-:root[data-theme="dark"] .wp-remind-pill.is-on{background:rgba(26,175,122,.18);color:var(--green-light);}
 
 /* ── 日付フィールド（ピッカー起動ボタン） ── */
 .wp-trigger-row{
@@ -3147,7 +2993,6 @@ button,input,select,textarea{
   font-feature-settings:"tnum";
 }
 .wp-trigger-val.empty{color:var(--text-tertiary);}
-:root[data-theme="dark"] .wp-trigger{background:var(--card-bg);border-color:var(--border);}
 
 /* 時間帯表示ピル（allday/timed） */
 .wp-time-trigger{
@@ -3160,7 +3005,6 @@ button,input,select,textarea{
   gap:6px;transition:border-color .15s;
 }
 .wp-time-trigger.is-timed{border-color:var(--green-light);color:var(--green-deep);}
-:root[data-theme="dark"] .wp-time-trigger{background:var(--card-bg);border-color:var(--border);}
 
 /* ---- PC プレビュー時のみ擬似スマホフレームを有効化 ---- */
 @media (min-width: 600px) {
@@ -3826,8 +3670,6 @@ html, body {
 .cal-num.today-txt.sat{ color:#fff !important; }
 
 /* ダーク時の日付色をiOSダーク風に */
-:root[data-theme="dark"] .cal-num{ color:#F2F2F7 !important; }
-:root[data-theme="dark"] .cal-num.other-txt{ color:#48484A !important; }
 
 .ev-chip,
 .chip-more,
@@ -4224,12 +4066,6 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
 .add-cat-manage-del:active{background:#FFE8E8;}
 
 /* ダークモード */
-:root[data-theme="dark"] .add-cat-sheet{background:var(--card-bg);}
-:root[data-theme="dark"] .drawer-cat-fixed{background:rgba(107,110,212,.12);}
-:root[data-theme="dark"] .add-cat-action-btn.already-added{
-  background:rgba(255,255,255,.05);
-  border-color:var(--border);
-}
 
 /* standalone / 通常ブラウザ / 画面回転後 すべてで白を維持          */
 /* html/body/app-frame/phone-inner を最後尾で上書きして確定させる   */
@@ -9105,7 +8941,7 @@ setViewMode=function(mode){
 
 const DESIGN_KEY='pronexax.design.v1';
 const DESIGN_DEFAULTS={
-  theme:'light',                 // 'light' | 'dark' | 'system'
+  theme:'light',
   colorTheme:'green',            // 'green' | 'blue' | 'black' | 'gold' | 'mono'
   categoryColors:{
     jgto:'#1AAF7A',jlpga:'#E0567E',pga:'#2D7DD2',
@@ -9128,7 +8964,7 @@ const COLOR_THEME_PRIMARY={
     if(!raw)return;
     const obj=JSON.parse(raw);
     if(!obj||typeof obj!=='object')return;
-    if(['light','dark','system'].includes(obj.theme))designConfig.theme=obj.theme;
+    if(obj.theme==='light')designConfig.theme=obj.theme;
     if(['green','blue','black','gold','mono','sakura','lavender','mint','peach'].includes(obj.colorTheme))designConfig.colorTheme=obj.colorTheme;
     if(obj.categoryColors&&typeof obj.categoryColors==='object'){
       Object.keys(designConfig.categoryColors).forEach(k=>{
@@ -9158,12 +8994,6 @@ function getContrastTextColor(hex){
   return lum>0.62?'#1A2E27':'#FFFFFF';
 }
 
-// システムのダーク優先設定を検知
-const sysDarkMql=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
-function effectiveTheme(){
-  if(designConfig.theme==='system'){
-    return(sysDarkMql&&sysDarkMql.matches)?'dark':'light';
-  }
   return designConfig.theme;
 }
 
@@ -9171,7 +9001,7 @@ function effectiveTheme(){
 function applyDesign(){
   const root=document.documentElement;
   // テーマ
-  root.setAttribute('data-theme',effectiveTheme());
+  root.setAttribute('data-theme','light');
   // カラーテーマ
   root.setAttribute('data-color-theme',designConfig.colorTheme);
   // 表示スタイル
@@ -9188,19 +9018,7 @@ function applyDesign(){
   });
 }
 
-// システム連動：MQL の変更を監視
-if(sysDarkMql){
-  const handler=()=>{
-    if(designConfig.theme==='system'){
-      document.documentElement.setAttribute('data-theme',effectiveTheme());
-      // 再描画でドロワー等のチェック状態を最新化
-      if(typeof renderAllPanels==='function')renderAllPanels();
-      if(typeof renderCalList==='function')renderCalList();
-    }
   };
-  if(sysDarkMql.addEventListener)sysDarkMql.addEventListener('change',handler);
-  else if(sysDarkMql.addListener)sysDarkMql.addListener(handler);
-}
 
 // 設定変更時の共通フロー：保存 → CSS 反映 → 全画面再描画
 function commitDesign({rerenderUI=true}={}){
