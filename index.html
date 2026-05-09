@@ -2079,6 +2079,19 @@ button,input,select,textarea{
 .cat-desc{font-size:9px;color:var(--text-tertiary);margin-top:1px;}
 .cat-check{position:absolute;top:7px;right:9px;font-size:12px;opacity:0;transition:opacity .15s;}
 .cat-item.sel .cat-check{opacity:1;}
+/* ★ 追加済みカテゴリバッジ */
+.cat-enabled-badge{
+  display:inline-block;
+  font-size:8.5px;font-weight:700;
+  padding:2px 6px;border-radius:7px;
+  border:1px solid;
+  margin-top:3px;
+  letter-spacing:.2px;
+}
+/* ★ 追加済みカテゴリ：左ボーダーで視覚的に区別 */
+.cat-item.is-enabled:not(.sel){
+  border-left-width:3px;
+}
 .tour-hint{font-size:10px;color:var(--text-tertiary);text-align:center;padding:4px 0 8px;}
 .tour-list{display:flex;flex-direction:column;gap:5px;margin-bottom:4px;}
 .tour-item{border:1.5px solid var(--border);border-radius:10px;padding:9px 11px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;background:var(--bg);box-shadow:var(--shadow-sm);}
@@ -6138,7 +6151,14 @@ function renderCalList(){
     lbl.textContent=lbl.textContent+`（${catLbl}のみ）`;
   }
   if(!events.length){
-    const msg=calCatFilter?'このカテゴリの予定はありません。':'予定がありません。日付をダブルタップ / 長押しで追加できます。';
+    let msg;
+    if(userEnabledCategories.length===0&&!calCatFilter){
+      msg='<span style="cursor:pointer;color:var(--green-dark);font-weight:600;" onclick="openAddCatSheet()">＋ カテゴリを追加してください</span>';
+    } else if(calCatFilter){
+      msg='このカテゴリの予定はありません。';
+    } else {
+      msg='予定がありません。日付をダブルタップ / 長押しで追加できます。';
+    }
     document.getElementById('cal-event-list').innerHTML=`<div class="no-events">${msg}</div>`;
     return;
   }
@@ -6171,6 +6191,10 @@ function renderCatLegend(){
   if(calCatFilter&&!presentCats.has(calCatFilter)){calCatFilter=null;}
   // フィルタ適用中ならクラス付与（非選択を薄表示）
   el.classList.toggle('has-filter',!!calCatFilter);
+  if(userEnabledCategories.length===0){
+    el.innerHTML='<span class="cat-legend-empty" style="cursor:pointer;" onclick="openAddCatSheet()">＋ カテゴリを追加してください</span>';
+    return;
+  }
   if(items.length===0){
     el.innerHTML='<span class="cat-legend-empty">この月の予定はありません</span>';
     return;
@@ -6395,6 +6419,10 @@ function renderSearchFilters(){
   const enabledSearchFilters=SEARCH_FILTERS.filter(f=>
     f.key==='all'||f.key==='added'||userEnabledCategories.includes(f.key)
   );
+  if(userEnabledCategories.length===0){
+    grid.innerHTML=`<div class="filter-row"><span style="font-size:11px;color:var(--text-tertiary);padding:4px 2px;">カテゴリが未追加です</span></div>`;
+    return;
+  }
   const catChips=enabledSearchFilters.map(f=>{
     const showStar=f.key!=='all'&&f.key!=='added';
     const isFav=favTours.has(f.key);
@@ -7249,7 +7277,13 @@ function goStep(n){
 }
 function renderCatGrid(){
   const grid=document.getElementById('cat-grid');
-  grid.innerHTML=CATEGORIES.map(c=>`<div class="cat-item${selectedCat===c.key?' sel':''}" style="${selectedCat===c.key?`border-color:${c.color};background:${c.color}12`:''}" id="cat-${c.key}" data-cat-key="${c.key}"><div class="cat-color-dot" style="background:${c.color}"></div><div style="flex:1;"><div class="cat-name">${c.label}</div><div class="cat-desc">${c.desc}</div></div><div class="cat-check" style="color:${c.color}">✓</div></div>`).join('');
+  grid.innerHTML=CATEGORIES.map(c=>{
+    const isSel=selectedCat===c.key;
+    const isEnabled=c.key==='personal'||userEnabledCategories.includes(c.key);
+    const selStyle=isSel?`border-color:${c.color};background:${c.color}12`:'';
+    const enabledBadge=isEnabled&&!isSel?`<span class="cat-enabled-badge" style="color:${c.color};border-color:${c.color}20;background:${c.color}12">追加済み</span>`:'';
+    return`<div class="cat-item${isSel?' sel':''}${isEnabled?' is-enabled':''}" style="${selStyle}" id="cat-${c.key}" data-cat-key="${c.key}"><div class="cat-color-dot" style="background:${c.color}"></div><div style="flex:1;"><div class="cat-name">${c.label}</div><div class="cat-desc">${c.desc}</div>${enabledBadge}</div><div class="cat-check" style="color:${c.color}">✓</div></div>`;
+  }).join('');
   grid.classList.toggle('reorder-mode',catReorderMode);
   // ★ クリック / ドラッグハンドラを取り付け
   bindCatItemHandlers();
