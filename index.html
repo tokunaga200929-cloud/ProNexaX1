@@ -30,13 +30,11 @@ html,body{
   -webkit-text-size-adjust:100%;
   letter-spacing:-0.01em;
   width:100%;
-  height:100%;
-  overflow:hidden;
+  overflow-x:hidden;
 }
 body{
-  position:fixed;
-  inset:0;
-  overscroll-behavior:none;
+  position:relative;
+  overscroll-behavior-x:none;
 }
 *,*::before,*::after{
   font-family:inherit;
@@ -198,7 +196,7 @@ button,input,select,textarea{
 :root[data-theme="dark"] .search-header{filter:brightness(.82);}
 
 /* ダークモード：白背景を card-bg に置換 */
-:root[data-theme="dark"] .phone-inner{background:var(--bg);}
+:root[data-theme="dark"] .phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--bg);width:100%;max-width:100%;height:100%;min-height:-webkit-fill-available;display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;}
 :root[data-theme="dark"] .cal-swipe-wrap,
 :root[data-theme="dark"] .cal-cell,
 :root[data-theme="dark"] .filter-grid,
@@ -240,10 +238,7 @@ button,input,select,textarea{
 }
 .phone-wrap{display:block;padding:0;margin:0;}
 .phone{width:100%;background:transparent;border-radius:0;padding:0;box-shadow:none;}
-.phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--bg);width:100%;max-width:100%;height:100dvh;display:flex;flex-direction:column;position:fixed;inset:0;}
-@supports not (height: 100dvh) {
-  .phone-inner { height: 100vh; height: -webkit-fill-available; }
-}
+.phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--bg);width:100%;max-width:100%;height:100%;min-height:-webkit-fill-available;display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;}
 .notch{display:none;}
 .status-bar{display:none;}
 .status-time{color:#fff;font-size:11px;font-weight:500;}
@@ -2070,37 +2065,15 @@ button,input,select,textarea{
 .day-event-del{font-size:11px;border:1px solid #FFD5D5;border-radius:6px;padding:2px 6px;background:#FFF5F5;color:#C84444;cursor:pointer;align-self:center;margin-right:8px;flex-shrink:0;}
 .longpress-ring{position:absolute;border-radius:50%;border:2px solid var(--green-main);pointer-events:none;z-index:50;opacity:0;transform:scale(0);transition:none;}
 .longpress-ring.animating{opacity:1;transform:scale(1);transition:transform .5s ease-out,opacity .5s ease-out;}
+.bottom-nav{background:#fff;border-top:none;box-shadow:none;display:flex;padding:4px 0 max(env(safe-area-inset-bottom,4px),4px);flex-shrink:0;}
 .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:12px;transition:background .08s ease-out,transform .1s;-webkit-tap-highlight-color:transparent;}
 .bnav-btn:active{background:rgba(26,175,122,0.12);transform:scale(.92);}
 .bnav-label{font-size:11px;color:var(--text-tertiary);line-height:1;font-weight:400;transition:color .15s;}
 .bnav-btn.active{background:none;}
 .bnav-btn.active .bnav-label{color:var(--green-main);font-weight:600;}
-/* home-bar は bottom-nav の padding-bottom で吸収するため非表示 */
-.home-bar{display:none;}
-/* bottom-nav ベース定義：column flex でボタン行 ＋ 安全余白を分離管理 */
-.bottom-nav{
-  background:#fff;
-  border-top:1px solid var(--border);
-  box-shadow:none;
-  display:flex;
-  flex-direction:column;
-  flex-shrink:0;
-  padding:0;
-}
-/* ボタン行ラッパー */
-.bottom-nav-inner{
-  display:flex;
-  width:100%;
-  padding:6px 0 4px;
-}
-/* ホームインジケーター余白：safe-area のみ、最小4px */
-.bottom-nav-safe{
-  height:max(env(safe-area-inset-bottom,0px),0px);
-  min-height:0;
-  width:100%;
-  flex-shrink:0;
-}
+.home-bar{height:3px;width:68px;background:#DDE8E4;border-radius:2px;margin:2px auto 1px;}
 .toast{position:fixed;bottom:calc(max(env(safe-area-inset-bottom,0px),0px) + 68px);left:14px;right:14px;background:linear-gradient(135deg,var(--green-main),var(--green-dark));color:#fff;font-size:11px;font-weight:600;padding:8px 14px;border-radius:11px;text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;z-index:30;box-shadow:0 4px 16px rgba(10,107,71,.3);}
+.toast.show{opacity:1;}
 
 /* ================================================================ */
 /* ★★★ Day View（1日表示） ★★★                                     */
@@ -3905,7 +3878,23 @@ button,input,select,textarea{
   .app-header, .search-header, .fin-header {
     padding-top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
   }
-  body { background: var(--bg); }
+  .bottom-nav {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px) !important;
+    /* PWA時：ホームバー領域をボトムナビ内に含める */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6px) !important;
+  }
+  /* PWA時：phone-innerをSafariのツールバーなし画面高さに合わせる */
+  .phone-inner {
+    height: 100% !important;
+    height: -webkit-fill-available !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+  }
+  body { background: var(--bg); height: 100%; height: -webkit-fill-available; }
+  html { height: 100%; height: -webkit-fill-available; }
 }
 
 /* ================================================================
@@ -4052,21 +4041,10 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
 
 /* ボトムナビゲーション */
 .bottom-nav {
-  flex-shrink:0 !important;
-  background:var(--card-bg,#fff) !important;
-  border-top:1px solid var(--border,#E4EDEB) !important;
-  padding:0 !important;
-}
-.bottom-nav-inner {
-  display:flex !important;
-  width:100% !important;
-  padding:6px 0 4px !important;
-}
-.bottom-nav-safe {
-  width:100% !important;
-  height:env(safe-area-inset-bottom,0px) !important;
-  min-height:0 !important;
-  flex-shrink:0 !important;
+  flex-shrink:0;
+  background:var(--card-bg,#fff);
+  border-top:1px solid var(--border,#E4EDEB);
+  padding:6px 0 max(env(safe-area-inset-bottom,6px),6px) !important;
 }
 .bnav-btn {
   min-height:44px !important;
@@ -4180,15 +4158,15 @@ html, body {
 /* dvh非対応Safari向けフォールバック */
 @supports not (height: 100dvh) {
   .phone-inner {
-    height: 100vh;
-    height: -webkit-fill-available;
+    height: -webkit-fill-available !important;
   }
 }
 
-/* bottom-nav：構造はbottom-nav-safe要素で管理済み */
+/* bottom-nav：safe-area確実対応 */
 .bottom-nav {
+  padding-bottom: max(env(safe-area-inset-bottom, 4px), 4px) !important;
   width: 100% !important;
-  overflow: visible !important;
+  overflow: hidden !important;
   flex-shrink: 0 !important;
 }
 
@@ -4496,143 +4474,6 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
   line-height:14px !important;
   font-size:10.5px !important;
 }
-
-/* ================================================================
-   ★★★ PWA / iPhone Safari 最終確定レイアウト修正 ★★★
-   目的：下余白ゼロ、カレンダー縦最大化、Apple Calendar に近い表示
-   ================================================================ */
-
-/* ── 1. html / body：完全固定、余白ゼロ ── */
-html {
-  height: 100% !important;
-  overflow: hidden !important;
-  margin: 0 !important; padding: 0 !important;
-}
-body {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: hidden !important;
-  margin: 0 !important; padding: 0 !important;
-  overscroll-behavior: none !important;
-}
-
-/* ── 2. phone-inner：dvh優先、inset:0 で絶対に余白なし ── */
-.phone-inner {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100% !important;
-  /* 100dvh = Safari アドレスバー含む実viewport、PWAでも正確 */
-  height: 100dvh !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
-  padding: 0 !important; margin: 0 !important;
-}
-/* dvh非対応の古いSafari向けフォールバック */
-@supports not (height: 100dvh) {
-  .phone-inner {
-    height: 100vh !important;
-    /* -webkit-fill-available = PWAホーム画面追加時のビューポート */
-    height: -webkit-fill-available !important;
-  }
-}
-
-/* ── 3. page：flex:1 で phone-inner の残り全域を使用 ── */
-.page {
-  display: none !important;
-  flex: 1 1 0 !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
-  min-height: 0 !important;
-}
-.page.active { display: flex !important; }
-
-/* ── 4. ヒントバー：非常にコンパクトに ── */
-.hint-bar {
-  padding: 1px 8px !important;
-  flex-shrink: 0 !important;
-  min-height: 0 !important;
-}
-.hint-item { font-size: 9px !important; }
-
-/* ── 5. カレンダーグリッド：flex:1で縦最大化 ── */
-.cal-swipe-wrap {
-  flex: 1 1 0 !important;
-  min-height: 0 !important;
-  /* 固定min-heightを持たせない：flex連鎖で自然に広がる */
-}
-.cal-row { min-height: 0 !important; }
-.cal-cell {
-  min-height: 0 !important;
-  /* 高さはflex連鎖に任せる */
-}
-
-/* ── 6. split-handle：最小限 ── */
-.split-handle {
-  min-height: 10px !important;
-  height: 10px !important;
-  flex-shrink: 0 !important;
-}
-
-/* ── 7. cal-scroll（予定リスト）：min-height 0で邪魔しない ── */
-.cal-scroll {
-  flex: 1 1 0 !important;
-  min-height: 0 !important;
-}
-
-/* ── 8. bottom-nav：padding:0、高さ最小化 ── */
-.bottom-nav {
-  flex-shrink: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  /* ここには余白なし：safe-areaはbottom-nav-safeで管理 */
-}
-.bottom-nav-inner {
-  display: flex !important;
-  width: 100% !important;
-  /* 上下paddingを最小に：ボタンの見た目を維持しつつ高さ節約 */
-  padding: 4px 0 3px !important;
-}
-.bnav-btn {
-  flex: 1 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  gap: 1px !important;
-  /* min-heightをパディングで確保しない：flex で自然サイズ */
-  min-height: 0 !important;
-  padding: 4px 4px !important;
-}
-.bnav-btn svg { width: 20px !important; height: 20px !important; }
-.bnav-label { font-size: 10px !important; margin-top: 1px !important; }
-
-/* ── 9. bottom-nav-safe：safe-area-inset-bottom のみ ── */
-/* PWA: 約34px（iPhone13等）、Safari通常: 0、ホームインジケーターなし端末: 0 */
-.bottom-nav-safe {
-  width: 100% !important;
-  /* env() が 0 なら高さ 0 になる = 余白なし */
-  height: env(safe-area-inset-bottom, 0px) !important;
-  min-height: 0 !important;
-  flex-shrink: 0 !important;
-  /* 背景は bottom-nav と同色でシームレスに */
-  background: var(--card-bg, #fff) !important;
-}
-
-/* ── 10. PWA standalone / fullscreen モード専用 ── */
-@media (display-mode: standalone), (display-mode: fullscreen) {
-  /* ステータスバー下余白：ノッチ/Dynamic Island対応 */
-  .app-header, .search-header, .fin-header {
-    padding-top: max(env(safe-area-inset-top, 0px), 10px) !important;
-  }
-  /* bottom-nav-safe が safe-area-inset-bottom を正確に取得するはずだが
-     念のため background 一致を保証 */
-  .bottom-nav, .bottom-nav-safe {
-    background: var(--card-bg, #fff) !important;
-  }
-}
-
 </style>
 
 
@@ -4681,7 +4522,11 @@ body {
     <div class="cal-header"><div class="cal-week-labels">
       <span style="color:rgba(255,160,160,.9)">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span style="color:rgba(160,200,255,.9)">土</span>
     </div></div>
-    <!-- hint-bar 削除：縦スペース確保のため非表示 -->
+    <div class="hint-bar">
+      <div class="hint-item"><div class="hint-dot"></div>セル：選択/追加</div>
+      <div class="hint-item"><div class="hint-dot"></div>予定：タップで編集</div>
+      <div class="hint-item"><div class="hint-dot"></div>長押し→ドラッグで移動</div>
+    </div>
     <!-- ★ 凡例エリアは削除済み -->
     <div class="cal-swipe-wrap" id="cal-swipe-wrap">
       <div class="cal-slide-container" id="cal-slide-container">
@@ -5084,7 +4929,6 @@ body {
   </div>
 
   <div class="bottom-nav">
-    <div class="bottom-nav-inner">
     <button class="bnav-btn active" id="nav-calendar" onclick="switchPage('calendar')">
       <svg id="icon-calendar" width="20" height="20" viewBox="0 0 22 22" fill="none">
         <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#1AAF7A" stroke-width="1.7"/>
@@ -5116,9 +4960,8 @@ body {
       </svg>
       <span class="bnav-label">マイページ</span>
     </button>
-    </div>
-    <div class="bottom-nav-safe"></div>
   </div>
+  <div class="home-bar"></div>
 
   <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
     <div class="modal-sheet">
@@ -8125,8 +7968,8 @@ function snapToNearest(calRatio){
 
 function initSplitHandle(){
   const {cal,list,handle}=getSplitElems();
-  // 初期比率：カレンダー70% / リスト30%（Apple Calendar に近い比率）
-  setSplitRatio(0.70,false);
+  // 初期比率：カレンダー62% / リスト38%（バランス寄りカレンダー優先）
+  setSplitRatio(0.62,false);
 
   const onStart=(e)=>{
     SPLIT.pressed=true;
@@ -11557,6 +11400,32 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     lastTap = now;
     lastDs = ds;
   }, { passive: false });
+})();
+</script>
+
+<script>
+// ================================================================
+// Safari PWA（ホーム画面追加）余白修正
+// ================================================================
+(function fixSafariPWAHeight(){
+  // スタンドアローン（PWA）モードのみ適用
+  var isStandalone = window.navigator.standalone === true
+    || window.matchMedia('(display-mode: standalone)').matches;
+  if (!isStandalone) return;
+
+  function applyHeight(){
+    var inner = document.querySelector('.phone-inner');
+    if (!inner) return;
+    // window.innerHeightはSafari PWAでは実際の表示領域を返す
+    inner.style.height = window.innerHeight + 'px';
+  }
+
+  applyHeight();
+  window.addEventListener('resize', applyHeight);
+  // 画面回転時にも再計算
+  window.addEventListener('orientationchange', function(){
+    setTimeout(applyHeight, 200);
+  });
 })();
 </script>
 
