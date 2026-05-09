@@ -5296,7 +5296,8 @@ function buildCalHTML(y,m){
     for(let c=0;c<7;c++){
       const cell=cells[r*7+c];if(!cell){h+='<div class="cal-cell other"></div>';continue;}
       const{day,ds,other,isToday}=cell;const isSel=ds===selectedDate,isNew=ds===newlyAddedDate;
-      const dow=new Date(ds).getDay();const nc=other?' other-txt':isToday?' today-txt':dow===0?' sun':dow===6?' sat':'';
+      // ★ UTC日付ズレ修正: ローカル日付として曜日を取得
+      const [_cy,_cm,_cd]=ds.split('-').map(Number);const dow=new Date(_cy,_cm-1,_cd).getDay();const nc=other?' other-txt':isToday?' today-txt':dow===0?' sun':dow===6?' sat':'';
       const occupiedLanes=layout.laneByDate[ds]||new Set();
       h+=`<div class="cal-cell${other?' other':''}${isSel?' selected':''}${isNew?' newly-added':''}" data-ds="${ds}">
         <div class="cal-date-wrap${isToday?' today-circle':''}"><span class="cal-num${nc}">${day}</span></div>
@@ -5312,7 +5313,9 @@ function buildCalHTML(y,m){
 function openDayModal(ds){
   let evs=getEventsOnDate(ds);
   evs=applyCatFiltersToEvents(evs);
-  const d=new Date(ds);
+  // ★ UTC日付ズレ修正: 'YYYY-MM-DD' 文字列をローカル日付として生成
+  const [_y,_m,_d]=ds.split('-').map(Number);
+  const d=new Date(_y,_m-1,_d);
   const filterNote=calCatFilter?`（${(CATEGORIES.find(c=>c.key===calCatFilter)||{}).label||calCatFilter}）`:'';
   document.getElementById('day-modal-title').textContent=`${d.getMonth()+1}月${d.getDate()}日の予定${filterNote}（${evs.length}件）`;
   document.getElementById('day-modal-list').innerHTML='<div style="padding:0 0 4px;">'+evs.map(e=>{
@@ -5590,10 +5593,14 @@ function endDrag(e){
   if(ev&&target&&target.dataset.ds){
     // ★ 日付を更新（期間予定なら長さを維持）
     const newDate=target.dataset.ds;
-    const oldStart=new Date(ev.date+'T00:00:00');
-    const oldEnd=new Date(ev.end+'T00:00:00');
+    // ★ UTC日付ズレ修正: ローカル日付として生成
+    const [_os1,_os2,_os3]=ev.date.split('-').map(Number);
+    const [_oe1,_oe2,_oe3]=ev.end.split('-').map(Number);
+    const [_ns1,_ns2,_ns3]=newDate.split('-').map(Number);
+    const oldStart=new Date(_os1,_os2-1,_os3);
+    const oldEnd=new Date(_oe1,_oe2-1,_oe3);
     const diffDays=Math.round((oldEnd-oldStart)/(1000*60*60*24));
-    const newStart=new Date(newDate+'T00:00:00');
+    const newStart=new Date(_ns1,_ns2-1,_ns3);
     const newEndD=new Date(newStart);
     newEndD.setDate(newStart.getDate()+diffDays);
     ev.date=newDate;
@@ -5661,7 +5668,9 @@ function beginCellDrag(e){
   }
   
   // フロートカード構築（複数件をまとめて表示）
-  const d=new Date(ds);
+  // ★ UTC日付ズレ修正: ローカル日付として生成
+  const [_bcy,_bcm,_bcd]=ds.split('-').map(Number);
+  const d=new Date(_bcy,_bcm-1,_bcd);
   const dateLabel=`${d.getMonth()+1}月${d.getDate()}日`;
   const MAX_SHOW=3;
   const shown=evs.slice(0,MAX_SHOW);
@@ -5737,10 +5746,13 @@ function endCellDrag(e){
       cellDrag.cardEl=null;cellDrag.currentDropTarget=null;
       return;
     }
-    const newStart=new Date(newDate+'T00:00:00');
+    const [_nd1,_nd2,_nd3]=newDate.split('-').map(Number);
+    const newStart=new Date(_nd1,_nd2-1,_nd3);
     targetEvents.forEach(ev=>{
-      const oldStart=new Date(ev.date+'T00:00:00');
-      const oldEnd=new Date(ev.end+'T00:00:00');
+      const [_es1,_es2,_es3]=ev.date.split('-').map(Number);
+      const [_ee1,_ee2,_ee3]=ev.end.split('-').map(Number);
+      const oldStart=new Date(_es1,_es2-1,_es3);
+      const oldEnd=new Date(_ee1,_ee2-1,_ee3);
       const diffDays=Math.round((oldEnd-oldStart)/(1000*60*60*24));
       const newEndD=new Date(newStart);
       newEndD.setDate(newStart.getDate()+diffDays);
@@ -5808,8 +5820,8 @@ function animateSwipe(dir){
 function changeMonthInternal(dir){month+=dir;if(month>11){month=0;year++;}if(month<0){month=11;year--;}selectedDate=null;newlyAddedDate=null;updateMonthLabel();renderAllPanels();renderCalList();}
 function changeMonth(dir){animateSwipe(dir);}
 function updateMonthLabel(){document.getElementById('month-label').textContent=`${year}年 ${month+1}月`;}
-function onCellClick(ds){const now=Date.now();if(ds===calLastClick.ds&&now-calLastClick.t<DC){calLastClick={t:0,ds:''};openModal(ds);return;}calLastClick={t:now,ds};selectedDate=selectedDate===ds?null:ds;newlyAddedDate=null;renderAllPanels();renderCalList();}
-function onTouchStartCell(e,ds,cellEl){lpCell=cellEl;cellEl.classList.add('longpress-active');showLpRing(e);lpTimer=setTimeout(()=>{cellEl.classList.remove('longpress-active');hideLpRing();openModal(ds);},LP);}
+function onCellClick(ds){const now=Date.now();if(ds===calLastClick.ds&&now-calLastClick.t<DC){calLastClick={t:0,ds:''};selectedDate=ds;newlyAddedDate=null;console.log('[onCellClick] tappedDate=',ds,'selectedDate=',selectedDate);openModal(ds);return;}calLastClick={t:now,ds};selectedDate=selectedDate===ds?null:ds;newlyAddedDate=null;renderAllPanels();renderCalList();}
+function onTouchStartCell(e,ds,cellEl){lpCell=cellEl;cellEl.classList.add('longpress-active');showLpRing(e);lpTimer=setTimeout(()=>{cellEl.classList.remove('longpress-active');hideLpRing();selectedDate=ds;console.log('[longpress] tappedDate=',ds,'selectedDate=',selectedDate);openModal(ds);},LP);}
 function onTouchEndCell(){clearTimeout(lpTimer);if(lpCell)lpCell.classList.remove('longpress-active');hideLpRing();lpTimer=null;lpCell=null;}
 function showLpRing(e){const ring=document.getElementById('lp-ring');const rect=document.querySelector('.phone-inner').getBoundingClientRect();const t=e.touches?e.touches[0]:e,x=t.clientX-rect.left,y=t.clientY-rect.top,s=44;ring.style.cssText=`width:${s}px;height:${s}px;left:${x-s/2}px;top:${y-s/2}px;`;ring.classList.remove('animating');void ring.offsetWidth;ring.classList.add('animating');}
 function hideLpRing(){document.getElementById('lp-ring').classList.remove('animating');}
@@ -5817,7 +5829,7 @@ function renderCalList(){
   // ★ カテゴリ凡例は常に「表示中の月の予定」を集計（日付選択中でも月単位表示）
   renderCatLegend();
   const lbl=document.getElementById('cal-section-label');let events,isNew=false;
-  if(selectedDate){events=getEventsOnDate(selectedDate);const d=new Date(selectedDate);lbl.textContent=`${d.getMonth()+1}月${d.getDate()}日の予定`;isNew=selectedDate===newlyAddedDate;}
+  if(selectedDate){events=getEventsOnDate(selectedDate);const [_sy,_sm,_sd]=selectedDate.split('-').map(Number);const d=new Date(_sy,_sm-1,_sd);lbl.textContent=`${d.getMonth()+1}月${d.getDate()}日の予定`;isNew=selectedDate===newlyAddedDate;}
   else{events=getEventsInMonth(year,month);lbl.textContent=`${month+1}月の試合・予定`;}
   // ★ カテゴリフィルタ＋表示ON/OFF適用
   events=applyCatFiltersToEvents(events);
@@ -6881,7 +6893,16 @@ function toggleSearchAdd(id){
   applySearchFilters();renderAllPanels();renderCalList();
 }
 function openModal(ds,editId){
-  modalPresetDate=ds||null;selectedTour=null;
+  // ★ UTC日付ズレ修正：dsが文字列の場合はselectedDateを必ず先に同期してからモーダルを開く
+  if(ds&&typeof ds==='string'){
+    modalPresetDate=ds;
+    selectedDate=ds; // state更新前にmodalが開くバグを防ぐ
+  }else{
+    modalPresetDate=ds||null;
+  }
+  selectedTour=null;
+  // ★ デバッグ確認ログ（iPhone Safari / PWA でも console で確認可能）
+  console.log('[openModal] tappedDate(ds)=',ds,' / selectedDate=',selectedDate,' / modalPresetDate=',modalPresetDate);
   if(editId){const ev=EVENTS.find(e=>e.id===editId);if(!ev)return;editingId=editId;selectedCat=ev.cat;currentStep=3;goStep(3);prefillFormFromEvent(ev);}
   else{editingId=null;selectedCat=null;currentStep=1;goStep(1);}
   document.getElementById('modal-overlay').classList.add('show');
@@ -7184,7 +7205,7 @@ function submitEvent(){
       const newDb=DB[selectedCat]||[];const newIdx=newDb.findIndex(t=>t.name===title);if(newIdx>=0)addedIds.add(`${selectedCat}-${newIdx}`);}
     closeModal();newlyAddedDate=start;selectedDate=start;modalPresetDate=null;renderAllPanels();renderCalList();showToast(`「${title}」を更新しました ✎`);
   } else {
-    const _dl=(()=>{if(!start)return null;const d=new Date(start);d.setDate(d.getDate()-7);return dsFromDate(d);})();
+    const _dl=(()=>{if(!start)return null;const[_sy,_sm,_sd]=start.split('-').map(Number);const d=new Date(_sy,_sm-1,_sd);d.setDate(d.getDate()-7);return dsFromDate(d);})();
     EVENTS.push({
       id:nextId++,name:title,date:start,end:end||start,place,memo,cat:selectedCat,
       entryDeadline:_dl,
@@ -7208,7 +7229,8 @@ function migrateEventsForDeadline(){
     // 締切：開始日の7日前をデフォルト
     if(e.entryDeadline===undefined){
       if(e.date){
-        const d=new Date(e.date);d.setDate(d.getDate()-7);
+        const [_my,_mm,_md]=e.date.split('-').map(Number);
+        const d=new Date(_my,_mm-1,_md);d.setDate(d.getDate()-7);
         e.entryDeadline=dsFromDate(d);
       }else{
         e.entryDeadline=null;
@@ -7223,7 +7245,9 @@ function migrateEventsForDeadline(){
 function _deadlineDays(ev){
   if(!ev||!ev.entryDeadline)return null;
   const d0=new Date();d0.setHours(0,0,0,0);
-  const d1=new Date(ev.entryDeadline);d1.setHours(0,0,0,0);
+  // ★ UTC日付ズレ修正: ローカル日付として生成
+  const [_dy,_dm,_dd]=ev.entryDeadline.split('-').map(Number);
+  const d1=new Date(_dy,_dm-1,_dd);d1.setHours(0,0,0,0);
   return Math.round((d1-d0)/86400000);
 }
 
@@ -7685,7 +7709,9 @@ function buildMultiDayHTML(days){
   // days: ISO日付文字列の配列
   const today=todayStr();
   return`<div class="cal-multi-day">${days.map(ds=>{
-    const d=new Date(ds);
+    // ★ UTC日付ズレ修正: ローカル日付として生成
+    const [_bdy,_bdm,_bdd]=ds.split('-').map(Number);
+    const d=new Date(_bdy,_bdm-1,_bdd);
     const dow=d.getDay();
     const isToday=ds===today;
     const isSun=dow===0,isSat=dow===6;
@@ -7711,14 +7737,18 @@ function buildMultiDayHTML(days){
 }
 function getViewDays(){
   if(viewMode==='week'){
-    const base=new Date(viewBaseDate||todayStr());
+    const _wBase=viewBaseDate||todayStr();
+    const [_wY,_wM,_wD]=_wBase.split('-').map(Number);
+    const base=new Date(_wY,_wM-1,_wD);
     // 週の開始：日曜
     const dow=base.getDay();
     const sunday=new Date(base);sunday.setDate(base.getDate()-dow);
     return Array.from({length:7},(_,i)=>{const d=new Date(sunday);d.setDate(sunday.getDate()+i);return dsFromDate(d);});
   }
   if(viewMode==='3day'){
-    const base=new Date(viewBaseDate||todayStr());
+    const _3Base=viewBaseDate||todayStr();
+    const [_3Y,_3M,_3D]=_3Base.split('-').map(Number);
+    const base=new Date(_3Y,_3M-1,_3D);
     return Array.from({length:3},(_,i)=>{const d=new Date(base);d.setDate(base.getDate()+i);return dsFromDate(d);});
   }
   return [];
@@ -7749,7 +7779,9 @@ changeMonthInternal=function(dir){
   if(viewMode==='month'){_origChangeMonthInternal(dir);return;}
   // 週/3日モード：基準日を移動
   const step=viewMode==='week'?7:3;
-  const base=new Date(viewBaseDate||todayStr());
+  const _cmBase=viewBaseDate||todayStr();
+  const [_cmY,_cmM,_cmD]=_cmBase.split('-').map(Number);
+  const base=new Date(_cmY,_cmM-1,_cmD);
   base.setDate(base.getDate()+dir*step);
   viewBaseDate=dsFromDate(base);
   // 表示中の月もずらす（年月ラベルとの整合）
@@ -7766,13 +7798,16 @@ updateMonthLabel=function(){
   if(!lbl)return;
   if(viewMode==='day'){
     const ds=viewBaseDate||todayStr();
-    const d=new Date(ds);
+    const [_umy,_umm,_umd]=ds.split('-').map(Number);
+    const d=new Date(_umy,_umm-1,_umd);
     lbl.textContent=`${d.getFullYear()}年 ${d.getMonth()+1}月 ${d.getDate()}日`;
     return;
   }
   const days=getViewDays();
   if(days.length===0){_origUpdateMonthLabel();return;}
-  const first=new Date(days[0]),last=new Date(days[days.length-1]);
+  const [_fy,_fm,_fd]=days[0].split('-').map(Number);
+  const [_ly,_lm,_ld]=days[days.length-1].split('-').map(Number);
+  const first=new Date(_fy,_fm-1,_fd),last=new Date(_ly,_lm-1,_ld);
   if(first.getMonth()===last.getMonth()){
     lbl.textContent=`${first.getFullYear()}年 ${first.getMonth()+1}月 ${first.getDate()}日〜${last.getDate()}日`;
   }else{
@@ -7807,8 +7842,10 @@ function dvIsAllDay(ev){
 // ───── その日のイベント取得（時間付き/終日 を分ける） ─────
 function dvGetEventsForDay(ds){
   // 全イベントから「ds が表示日に該当する」ものを抽出
-  const dayStart=new Date(ds);dayStart.setHours(0,0,0,0);
-  const dayEnd=new Date(ds);dayEnd.setHours(23,59,59,999);
+  // ★ UTC日付ズレ修正: ローカル日付として生成
+  const [_gfy,_gfm,_gfd]=ds.split('-').map(Number);
+  const dayStart=new Date(_gfy,_gfm-1,_gfd);dayStart.setHours(0,0,0,0);
+  const dayEnd=new Date(_gfy,_gfm-1,_gfd);dayEnd.setHours(23,59,59,999);
   const all=EVENTS.filter(e=>ds>=e.date&&ds<=e.end);
   const filtered=applyCatFiltersToEvents(all);
   const timed=[],allday=[];
@@ -7874,7 +7911,9 @@ function dvComputeLayout(timed){
 
 // ───── Day View 描画 ─────
 function dvBuildHTML(ds){
-  const d=new Date(ds);
+  // ★ UTC日付ズレ修正: ローカル日付として生成
+  const [_dvY,_dvM,_dvD]=ds.split('-').map(Number);
+  const d=new Date(_dvY,_dvM-1,_dvD);
   const today=todayStr();
   const isToday=ds===today;
   const dow=d.getDay();
@@ -7883,8 +7922,9 @@ function dvBuildHTML(ds){
   // 今日との差分日数で副ラベル
   let headerSub='';
   {
-    const t=new Date(today);t.setHours(0,0,0,0);
-    const x=new Date(ds);x.setHours(0,0,0,0);
+    const [_ty,_tm,_td]=today.split('-').map(Number);
+    const t=new Date(_ty,_tm-1,_td);t.setHours(0,0,0,0);
+    const x=new Date(_dvY,_dvM-1,_dvD);x.setHours(0,0,0,0);
     const diff=Math.round((x-t)/86400000);
     if(diff===0)headerSub='今日';
     else if(diff===1)headerSub='明日';
@@ -8008,7 +8048,9 @@ function escapeHtml(s){
 // ───── ナビゲーション ─────
 function dvNavigate(dir){
   const cur=viewBaseDate||todayStr();
-  const d=new Date(cur);d.setDate(d.getDate()+dir);
+  // ★ UTC日付ズレ修正: ローカル日付として生成
+  const [_nvY,_nvM,_nvD]=cur.split('-').map(Number);
+  const d=new Date(_nvY,_nvM-1,_nvD);d.setDate(d.getDate()+dir);
   viewBaseDate=dsFromDate(d);
   year=d.getFullYear();month=d.getMonth();
   selectedDate=null;newlyAddedDate=null;
@@ -8142,7 +8184,9 @@ function jumpToDayView(ds){
   if(!ds)return;
   viewBaseDate=ds;
   selectedDate=ds;newlyAddedDate=null;
-  const d=new Date(ds);year=d.getFullYear();month=d.getMonth();
+  // ★ UTC日付ズレ修正: ローカル日付として生成
+  const [_jy,_jm,_jd]=ds.split('-').map(Number);
+  const d=new Date(_jy,_jm-1,_jd);year=d.getFullYear();month=d.getMonth();
   if(viewMode!=='day'){
     viewMode='day';savePrefs();syncDrawerState();
     _applyViewLayout('day');   // ← 月UIを非表示・multiday表示
@@ -9569,7 +9613,10 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
         document.getElementById('auth-screen')?.classList.remove('hidden');
         return;
       }
-      if (typeof openModal === 'function') openModal(null);
+      // ★ selectedDate を確実にセットしてからモーダルを開く
+      selectedDate = ds;
+      console.log('[doubleTap] tappedDate=', ds, 'selectedDate=', selectedDate);
+      if (typeof openModal === 'function') openModal(ds);
     }
     lastTap = now;
     lastDs = ds;
