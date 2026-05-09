@@ -8,7 +8,7 @@
 
   <meta name="apple-mobile-web-app-title" content="ProNexaX">
   <meta name="application-name" content="ProNexaX">
-  <meta name="theme-color" content="#DFF8EE">
+  <meta name="theme-color" content="#39C892">
   <meta name="msapplication-TileColor" content="#000000">
   <meta name="msapplication-TileImage" content="pronexaX_logo.png">
   <link rel="manifest" href="manifest.json">
@@ -28,7 +28,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="pronexaX_logo.png">
   <link rel="shortcut icon" href="pronexaX_logo.png">
   <!-- iOS Splash Screens (startup image) — 黒背景 -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-startup-image" media="(device-width:390px)and(device-height:844px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
   <link rel="apple-touch-startup-image" media="(device-width:414px)and(device-height:896px)and(-webkit-device-pixel-ratio:2)" href="pronexaX_logo.png">
   <link rel="apple-touch-startup-image" media="(device-width:375px)and(device-height:812px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
@@ -222,7 +222,7 @@ button,input,select,textarea{
 :root[data-theme="dark"] .search-header{filter:brightness(.82);}
 
 /* ダークモード：白背景を card-bg に置換 */
-:root[data-theme="dark"] .phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--bg);width:100%;max-width:100%;height:100%;display:flex;flex-direction:column;position:absolute;top:0;left:0;right:0;bottom:0;}
+:root[data-theme="dark"] .phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--green-main);width:100%;max-width:100%;height:100%;display:flex;flex-direction:column;position:absolute;top:0;left:0;right:0;bottom:0;}
 :root[data-theme="dark"] .cal-swipe-wrap,
 :root[data-theme="dark"] .cal-cell,
 :root[data-theme="dark"] .filter-grid,
@@ -270,11 +270,16 @@ button,input,select,textarea{
   inset:0;
   overflow:hidden;
   border-radius:0;
-  background:var(--bg);
+  /* black-translucent 時、ステータスバー背面はここが透けて見える */
+  background:linear-gradient(160deg,
+    var(--green-light) 0%,
+    var(--green-main) 45%,
+    var(--green-dark) 100%
+  );
   z-index:0;
 }
 /* ── phone-inner：角丸なし・スクロール制御のみ ── */
-.phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--bg);width:100%;max-width:100%;height:100%;display:flex;flex-direction:column;position:absolute;top:0;left:0;right:0;bottom:0;}
+.phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--bg);display:flex;flex-direction:column;position:absolute;top:env(safe-area-inset-top,0px);left:0;right:0;bottom:0;}
 .notch{display:none;}
 .status-bar{display:none;}
 .status-time{color:#fff;font-size:11px;font-weight:500;}
@@ -282,12 +287,13 @@ button,input,select,textarea{
 .page{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
 .page.active{display:flex;}
 .app-header{
+  position:relative;
   background:linear-gradient(160deg,
     var(--green-light) 0%,
     var(--green-main) 45%,
     var(--green-dark) 100%
   );
-  padding-top:calc(env(safe-area-inset-top,0px) + 10px);
+  padding-top:10px;
   padding-right:16px;
   padding-bottom:0;
   padding-left:16px;
@@ -2934,7 +2940,7 @@ button,input,select,textarea{
   body { display:flex; justify-content:center; align-items:flex-start; min-height:100vh; padding:24px 0 32px; }
   .phone-wrap { display:flex; justify-content:center; }
   .phone { width:320px !important; background:#0D1F18 !important; border-radius:44px !important; padding:12px !important; box-shadow:0 0 0 1px #1a3028,0 28px 60px rgba(0,0,0,.4) !important; }
-  .app-frame { border-radius:34px !important; width:296px !important; height:660px !important; position:relative !important; overflow:hidden !important; background:var(--bg) !important; }
+  .app-frame { border-radius:34px !important; width:296px !important; height:660px !important; position:relative !important; overflow:hidden !important; background:transparent !important; }
   .phone-inner { border-radius:0 !important; width:100% !important; height:100% !important; position:absolute !important; overflow:hidden !important; background:var(--bg) !important; }
   .notch { display:block !important; }
   .status-bar { display:flex !important; }
@@ -5646,11 +5652,25 @@ function initSwipe(){
     if(!swiping){swipeLocked=false;return;}
     const dx=e.changedTouches[0].clientX-swipeX,dy=e.changedTouches[0].clientY-swipeY;
     swiping=false;if(Math.abs(dy)>Math.abs(dx)){swipeLocked=false;return;}
-    if(Math.abs(dx)>=SW){dx<0?animateSwipe(1):animateSwipe(-1);}swipeLocked=false;
+    if(Math.abs(dx)>=SW&&!animateSwipe._busy){dx<0?animateSwipe(1):animateSwipe(-1);}swipeLocked=false;
   },{passive:true});
 }
 
-function animateSwipe(dir){const sc=document.getElementById('cal-slide-container');sc.classList.add('animating');sc.style.transform=dir===1?'translateX(-66.666%)':'translateX(0%)';sc.addEventListener('transitionend',()=>{sc.classList.remove('animating');changeMonthInternal(dir);},{once:true});}
+function animateSwipe(dir){
+  if(animateSwipe._busy)return; // アニメーション中は多重実行防止
+  animateSwipe._busy=true;
+  const sc=document.getElementById('cal-slide-container');
+  sc.classList.add('animating');
+  sc.style.transform=dir===1?'translateX(-66.666%)':'translateX(0%)';
+  sc.addEventListener('transitionend',()=>{
+    sc.classList.remove('animating');
+    sc.style.transform='translateX(-33.333%)';
+    changeMonthInternal(dir);
+    animateSwipe._busy=false; // 完了後に解除
+  },{once:true});
+  // フォールバック：transitionend が発火しない場合のタイムアウト
+  setTimeout(()=>{ animateSwipe._busy=false; },600);
+}
 function changeMonthInternal(dir){month+=dir;if(month>11){month=0;year++;}if(month<0){month=11;year--;}selectedDate=null;newlyAddedDate=null;updateMonthLabel();renderAllPanels();renderCalList();}
 function changeMonth(dir){animateSwipe(dir);}
 function updateMonthLabel(){document.getElementById('month-label').textContent=`${year}年 ${month+1}月`;}
@@ -9192,31 +9212,10 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
 })();
 
 // ================================================================
-// スワイプで月切り替え（カレンダー） - 既存と共存
+// スワイプで月切り替え（カレンダー） - 無効化済み
+// initSwipe() が同じ要素に登録済みのため、重複を防ぐため削除
 // ================================================================
-(function enhanceCalendarSwipe(){
-  // カレンダーページのスワイプ検出強化
-  const wrap = document.getElementById('cal-swipe-wrap');
-  if (!wrap) return;
-  let startX = 0, startY = 0, moved = false;
-  wrap.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    moved = false;
-  }, { passive: true });
-  wrap.addEventListener('touchmove', e => {
-    const dx = Math.abs(e.touches[0].clientX - startX);
-    const dy = Math.abs(e.touches[0].clientY - startY);
-    if (dx > 12 && dx > dy) moved = true;
-  }, { passive: true });
-  wrap.addEventListener('touchend', e => {
-    if (!moved) return;
-    const dx = e.changedTouches[0].clientX - startX;
-    if (Math.abs(dx) > 50 && typeof changeMonth === 'function') {
-      changeMonth(dx < 0 ? 1 : -1);
-    }
-  }, { passive: true });
-})();
+// (function enhanceCalendarSwipe(){ ... })(); // 削除：2重スワイプの原因
 
 // ================================================================
 // カテゴリ単一選択の強制（検索画面）
