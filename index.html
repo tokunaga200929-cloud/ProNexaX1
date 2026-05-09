@@ -3887,6 +3887,247 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
   line-height:14px !important;
   font-size:10.5px !important;
 }
+
+/* ================================================================ */
+/* ★★★ オプトイン型カテゴリ管理 UI ★★★                              */
+/* ================================================================ */
+
+/* ドロワー：固定カテゴリ（個人予定） */
+.drawer-cat-fixed{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 18px;
+  background:var(--green-chip);
+  border-left:3px solid #6B6ED4;
+}
+.drawer-cat-fixed-badge{
+  font-size:9px;font-weight:700;
+  color:#6B6ED4;
+  background:rgba(107,110,212,.12);
+  padding:2px 7px;border-radius:8px;
+  letter-spacing:.3px;
+  flex-shrink:0;
+}
+/* ドロワー：追加済みカテゴリ行（削除ボタン付き） */
+.drawer-cat-added{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 18px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .12s;
+  position:relative;
+}
+.drawer-cat-added:active{background:#FFF4F0;}
+.drawer-cat-added-label{
+  flex:1;font-size:13px;font-weight:500;color:var(--text-primary);
+}
+.drawer-cat-added-desc{
+  font-size:10px;color:var(--text-tertiary);
+}
+.drawer-cat-del-btn{
+  width:28px;height:28px;
+  border:none;background:transparent;
+  color:var(--text-tertiary);
+  font-size:16px;line-height:1;
+  border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .12s,color .12s;
+  position:relative;
+}
+.drawer-cat-del-btn::after{
+  content:'';position:absolute;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  width:44px;height:44px;
+}
+.drawer-cat-del-btn:active{background:#FFE8E8;color:#E05555;}
+
+/* ドロワー：カテゴリ追加ボタン */
+.drawer-add-cat-btn{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 18px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .12s;
+  border-top:1px solid var(--border);
+  margin-top:4px;
+}
+.drawer-add-cat-btn:active{background:var(--green-chip);}
+.drawer-add-cat-icon{
+  width:24px;height:24px;
+  border-radius:50%;
+  background:var(--green-main);
+  color:#fff;font-size:16px;font-weight:300;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  line-height:1;
+}
+.drawer-add-cat-label{
+  font-size:13px;font-weight:600;color:var(--green-deep);
+}
+
+/* ================================================================ */
+/* ★★★ カテゴリ追加 ボトムシート ★★★                                */
+/* ================================================================ */
+.add-cat-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.38);
+  z-index:210;
+  opacity:0;pointer-events:none;
+  transition:opacity .25s ease;
+}
+.add-cat-overlay.show{opacity:1;pointer-events:auto;}
+
+.add-cat-sheet{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  background:var(--card-bg);
+  border-radius:20px 20px 0 0;
+  z-index:211;
+  transform:translateY(100%);
+  transition:transform .32s cubic-bezier(.32,.72,0,1);
+  max-height:85dvh;
+  display:flex;flex-direction:column;
+  box-shadow:0 -6px 28px rgba(0,0,0,.15);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.add-cat-sheet.show{transform:translateY(0);}
+
+.add-cat-grip{
+  width:36px;height:4px;
+  background:var(--border);border-radius:2px;
+  margin:10px auto 6px;flex-shrink:0;
+}
+.add-cat-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:4px 18px 12px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.add-cat-title{
+  font-size:16px;font-weight:700;color:var(--text-primary);
+  letter-spacing:-.2px;
+}
+.add-cat-close{
+  border:none;background:transparent;
+  color:var(--text-tertiary);font-size:17px;
+  width:32px;height:32px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .12s;
+  position:relative;
+}
+.add-cat-close::after{
+  content:'';position:absolute;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  width:44px;height:44px;
+}
+.add-cat-close:active{background:var(--green-chip);}
+
+.add-cat-section-label{
+  font-size:11px;font-weight:700;color:var(--text-tertiary);
+  letter-spacing:.6px;text-transform:uppercase;
+  padding:14px 18px 6px;
+  flex-shrink:0;
+}
+.add-cat-list{
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  flex:1;min-height:0;
+  padding-bottom:8px;
+}
+
+/* カテゴリ行 */
+.add-cat-row{
+  display:flex;align-items:center;gap:14px;
+  padding:13px 18px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .12s;
+  border-bottom:1px solid var(--border);
+}
+.add-cat-row:last-child{border-bottom:none;}
+.add-cat-row:active{background:var(--green-chip);}
+
+.add-cat-row-left{
+  display:flex;align-items:center;gap:12px;flex:1;
+  min-width:0;
+}
+.add-cat-color-dot{
+  width:12px;height:12px;border-radius:50%;
+  flex-shrink:0;
+  box-shadow:0 1px 3px rgba(0,0,0,.15);
+}
+.add-cat-row-info{flex:1;min-width:0;}
+.add-cat-row-label{
+  font-size:14px;font-weight:600;color:var(--text-primary);
+}
+.add-cat-row-desc{
+  font-size:11px;color:var(--text-tertiary);margin-top:1px;
+}
+
+/* 追加ボタン */
+.add-cat-action-btn{
+  flex-shrink:0;
+  border:none;border-radius:20px;
+  font-size:12px;font-weight:700;
+  padding:7px 16px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .15s,transform .12s,color .15s;
+  letter-spacing:.2px;
+  position:relative;
+}
+.add-cat-action-btn::after{
+  content:'';position:absolute;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  width:calc(100% + 24px);height:44px;
+}
+.add-cat-action-btn:active{transform:scale(.94);}
+
+/* 未追加 */
+.add-cat-action-btn.not-added{
+  background:var(--green-main);
+  color:#fff;
+  box-shadow:0 2px 8px rgba(26,175,122,.3);
+}
+.add-cat-action-btn.not-added:active{background:var(--green-dark);}
+
+/* 追加済み */
+.add-cat-action-btn.already-added{
+  background:var(--bg);
+  color:var(--text-tertiary);
+  border:1px solid var(--border);
+}
+
+/* 追加済みカテゴリ管理リスト */
+.add-cat-manage-list{
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-bottom:6px;
+}
+.add-cat-manage-row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 18px;
+  border-bottom:1px solid var(--border);
+}
+.add-cat-manage-row:last-child{border-bottom:none;}
+.add-cat-manage-del{
+  border:none;background:transparent;
+  color:#E05555;font-size:13px;font-weight:700;
+  padding:4px 10px;border-radius:8px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background .12s;
+  flex-shrink:0;
+}
+.add-cat-manage-del:active{background:#FFE8E8;}
+
+/* ダークモード */
+:root[data-theme="dark"] .add-cat-sheet{background:var(--card-bg);}
+:root[data-theme="dark"] .drawer-cat-fixed{background:rgba(107,110,212,.12);}
+:root[data-theme="dark"] .add-cat-action-btn.already-added{
+  background:rgba(255,255,255,.05);
+  border-color:var(--border);
+}
 </style>
 
 
@@ -4197,8 +4438,20 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
         </div>
       </div>
       <div class="drawer-section">
-        <div class="drawer-section-title">カテゴリ表示</div>
+        <div class="drawer-section-title">マイカレンダー</div>
+        <!-- 個人予定：常時固定表示 -->
+        <div class="drawer-cat-item drawer-cat-fixed">
+          <span class="drawer-cat-dot" style="background:#6B6ED4"></span>
+          <span class="drawer-cat-label">個人予定</span>
+          <span class="drawer-cat-fixed-badge">固定</span>
+        </div>
+        <!-- 追加済みカテゴリ -->
         <div id="drawer-cat-list"></div>
+        <!-- カテゴリを追加ボタン -->
+        <div class="drawer-add-cat-btn" id="drawer-add-cat-btn" onclick="openAddCatSheet()">
+          <span class="drawer-add-cat-icon">＋</span>
+          <span class="drawer-add-cat-label">カテゴリを追加</span>
+        </div>
       </div>
       <div class="drawer-section">
         <div class="drawer-section-title">その他</div>
@@ -4565,6 +4818,25 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
       <div class="modal-footer">
         <button class="btn-secondary" onclick="closeDayModal()">閉じる</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ★★★ カテゴリ追加 ボトムシート ★★★ -->
+  <div class="add-cat-overlay" id="add-cat-overlay" onclick="if(event.target===this)closeAddCatSheet()"></div>
+  <div class="add-cat-sheet" id="add-cat-sheet">
+    <div class="add-cat-grip"></div>
+    <div class="add-cat-header">
+      <span class="add-cat-title">カテゴリを追加</span>
+      <button class="add-cat-close" onclick="closeAddCatSheet()">✕</button>
+    </div>
+    <div class="add-cat-section-label">おすすめカテゴリ</div>
+    <div class="add-cat-list" id="add-cat-list">
+      <!-- JS で描画 -->
+    </div>
+    <!-- 編集モード：追加済みカテゴリの並び替え・削除 -->
+    <div class="add-cat-manage-section" id="add-cat-manage-section" style="display:none;">
+      <div class="add-cat-section-label" style="margin-top:18px;">追加済みカテゴリ</div>
+      <div class="add-cat-manage-list" id="add-cat-manage-list"></div>
     </div>
   </div>
 
@@ -5039,17 +5311,31 @@ let calCatFilter=null; // ★ カレンダー上のカテゴリフィルタ：nu
 // ★★★ ドロワー関連の状態 ★★★
 let viewMode='month';                  // 'day' | '3day' | 'week' | 'month'
 let viewBaseDate=null;                 // 週/3日モードの基準日（月モードでは未使用）
-const catVisibility={};                // カテゴリkey→表示ON(true)/OFF(false)
+const catVisibility={};                // カテゴリkey→表示ON(true)/OFF(false) ※後方互換
 const VIEW_MODE_KEY='pronexax.viewMode.v1';
 const CAT_VIS_KEY='pronexax.catVisibility.v1';
+// ★★★ オプトイン型カテゴリ管理 ★★★
+// personal は常時表示。その他は userEnabledCategories に追加したものだけ表示。
+const ENABLED_CATS_KEY='pronexax.enabledCategories.v1';
+let userEnabledCategories=[];  // 追加済みカテゴリのkeyリスト（personalは除く）
 (function restorePrefs(){
   try{
     const m=localStorage.getItem(VIEW_MODE_KEY);
     if(m==='month'||m==='week'||m==='3day'||m==='day')viewMode=m;
+    // オプトイン型：有効カテゴリを復元
+    const ec=localStorage.getItem(ENABLED_CATS_KEY);
+    if(ec){
+      const arr=JSON.parse(ec);
+      if(Array.isArray(arr))userEnabledCategories=arr.filter(k=>typeof k==='string');
+    }
+    // 旧来のcatVisibility（後方互換：今後はENABLED_CATSを使う）
     const v=localStorage.getItem(CAT_VIS_KEY);
     if(v){const obj=JSON.parse(v);if(obj&&typeof obj==='object'){Object.assign(catVisibility,obj);}}
   }catch(e){}
 })();
+function saveEnabledCategories(){
+  try{localStorage.setItem(ENABLED_CATS_KEY,JSON.stringify(userEnabledCategories));}catch(e){}
+}
 function savePrefs(){
   try{
     localStorage.setItem(VIEW_MODE_KEY,viewMode);
@@ -5149,11 +5435,25 @@ function defaultDateStr(){return modalPresetDate||selectedDate||todayStr();}
 function dsFromDate(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function getEventsOnDate(ds){return EVENTS.filter(e=>ds>=e.date&&ds<=e.end);}
 function getEventsInMonth(y,m){const ym=`${y}-${String(m+1).padStart(2,'0')}`;return EVENTS.filter(e=>e.date<=ym+'-31'&&e.end>=ym+'-01').sort((a,b)=>a.date.localeCompare(b.date));}
-// ★ カテゴリ表示ON/OFF（ドロワー）と一時フィルタ（凡例）の両方を考慮
+// ★ カテゴリ表示ON/OFF：オプトイン型
+// personal は常時ON。その他は userEnabledCategories に含まれるものだけON。
 function isCatVisible(catKey){
-  // 明示的に false が入っていれば非表示。未設定 / true は表示。
-  if(catVisibility[catKey]===false)return false;
-  return true;
+  if(catKey==='personal')return true;
+  return userEnabledCategories.includes(catKey);
+}
+// カテゴリ追加
+function addCategory(key){
+  if(key==='personal')return;
+  if(!userEnabledCategories.includes(key)){
+    userEnabledCategories.push(key);
+    saveEnabledCategories();
+  }
+}
+// カテゴリ削除
+function removeCategory(key){
+  if(key==='personal')return;
+  userEnabledCategories=userEnabledCategories.filter(k=>k!==key);
+  saveEnabledCategories();
 }
 function applyCatFiltersToEvents(events){
   return events.filter(e=>{
@@ -5974,12 +6274,14 @@ function _fbsToggleCat(catKey){
 function _renderFbsSheet(){
   const body=document.getElementById('fbs-scroll-body');
   if(!body)return;
-  const CAT_SHEET=[
+  // 有効カテゴリのみ絞り込み（オプトイン型）
+  const CAT_SHEET_ALL=[
     {key:'jgto',label:'JGTO 男子'},{key:'jlpga',label:'JLPGA 女子'},
     {key:'pga',label:'PGA TOUR'},{key:'qualifier',label:'予選会'},
     {key:'mini',label:'ミニツアー'},{key:'open',label:'オープン大会'},
     {key:'added',label:'✓ 登録済み'},
   ];
+  const CAT_SHEET=CAT_SHEET_ALL.filter(c=>c.key==='added'||userEnabledCategories.includes(c.key));
   // ── カテゴリセクション ──
   const catHtml=`
     <div>
@@ -6088,8 +6390,12 @@ function renderSearchFilters(){
     </div>`;
     return;
   }
-  // FBS未使用時：カテゴリチップのみ（シンプル1行）
-  const catChips=SEARCH_FILTERS.map(f=>{
+  // FBS未使用時：カテゴリチップのみ（有効なカテゴリのみ表示）
+  // SEARCH_FILTERSから有効カテゴリのみフィルタ
+  const enabledSearchFilters=SEARCH_FILTERS.filter(f=>
+    f.key==='all'||f.key==='added'||userEnabledCategories.includes(f.key)
+  );
+  const catChips=enabledSearchFilters.map(f=>{
     const showStar=f.key!=='all'&&f.key!=='added';
     const isFav=favTours.has(f.key);
     return`<button class="filter-chip${searchFilter===f.key?' active':''}" data-key="${f.key}" onclick="setSearchFilter('${f.key}',this)">${f.label}${showStar?`<span class="filter-chip-star${isFav?' is-fav':''}" data-fav-key="${f.key}" onclick="event.stopPropagation();toggleFavTour('${f.key}')">★</span>`:''}</button>`;
@@ -6709,7 +7015,19 @@ function applySearchFilters(){
   filterGrid.classList.remove('is-hidden');
   resultMeta.classList.remove('is-hidden');
 
+  // カテゴリが一つも追加されていない場合の誘導
+  if(userEnabledCategories.length===0){
+    list.innerHTML=`<div class="empty-search" style="text-align:center;padding:32px 24px;">
+      <div style="font-size:36px;margin-bottom:10px;">📂</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">カテゴリを追加してください</div>
+      <div style="font-size:12px;color:var(--text-tertiary);line-height:1.6;">カレンダー画面のメニュー（☰）から<br>「カテゴリを追加」で追加できます</div>
+    </div>`;
+    return;
+  }
+
   let arr=TOURNAMENTS_FLAT.filter(t=>{
+    // ── 有効カテゴリのみ表示（オプトイン型） ──
+    if(!isCatVisible(t.cat))return false;
     // ── カテゴリ判定（トークン優先 → FBS → searchFilter） ──
     const catTokens=sqTokens.filter(x=>x.type==='cat').map(x=>x.key);
     let mc;
@@ -7380,6 +7698,85 @@ function startNotificationLoop(){
   });
 }
 
+// ================================================================
+// ★★★ カテゴリ追加 ボトムシート ★★★
+// ================================================================
+function openAddCatSheet(){
+  _renderAddCatSheet();
+  document.getElementById('add-cat-overlay').classList.add('show');
+  document.getElementById('add-cat-sheet').classList.add('show');
+  // ドロワーを閉じる（UX向上）
+  closeDrawer();
+}
+function closeAddCatSheet(){
+  document.getElementById('add-cat-overlay').classList.remove('show');
+  document.getElementById('add-cat-sheet').classList.remove('show');
+}
+function _renderAddCatSheet(){
+  const listEl=document.getElementById('add-cat-list');
+  const manageSection=document.getElementById('add-cat-manage-section');
+  const manageList=document.getElementById('add-cat-manage-list');
+  // personal以外のカテゴリを表示
+  const cats=CATEGORIES.filter(c=>c.key!=='personal');
+  listEl.innerHTML=cats.map(c=>{
+    const isAdded=userEnabledCategories.includes(c.key);
+    return`<div class="add-cat-row">
+      <div class="add-cat-row-left">
+        <span class="add-cat-color-dot" style="background:${c.color}"></span>
+        <div class="add-cat-row-info">
+          <div class="add-cat-row-label">${c.label}</div>
+          <div class="add-cat-row-desc">${c.desc}</div>
+        </div>
+      </div>
+      ${isAdded
+        ?`<button class="add-cat-action-btn already-added" disabled>追加済み ✓</button>`
+        :`<button class="add-cat-action-btn not-added" onclick="addCatFromSheet('${c.key}')">追加</button>`
+      }
+    </div>`;
+  }).join('');
+
+  // 追加済みカテゴリの管理セクション
+  const enabled=CATEGORIES.filter(c=>c.key!=='personal'&&userEnabledCategories.includes(c.key));
+  if(enabled.length>0){
+    manageSection.style.display='block';
+    manageList.innerHTML=enabled.map(c=>`
+      <div class="add-cat-manage-row">
+        <span class="add-cat-color-dot" style="background:${c.color};width:10px;height:10px;border-radius:50%;flex-shrink:0;"></span>
+        <span style="flex:1;font-size:13px;font-weight:500;color:var(--text-primary);">${c.label}</span>
+        <button class="add-cat-manage-del" onclick="removeCatFromSheet('${c.key}')">削除</button>
+      </div>`).join('');
+  }else{
+    manageSection.style.display='none';
+  }
+}
+function addCatFromSheet(key){
+  addCategory(key);
+  _renderAddCatSheet();
+  syncDrawerState();
+  renderAllPanels();
+  renderCalList();
+  showToast(`「${(CATEGORIES.find(c=>c.key===key)||{}).label||key}」を追加しました`);
+}
+function removeCatFromSheet(key){
+  removeCategory(key);
+  _renderAddCatSheet();
+  syncDrawerState();
+  // カレンダーフィルタが削除されたカテゴリだった場合は解除
+  if(calCatFilter===key)calCatFilter=null;
+  renderAllPanels();
+  renderCalList();
+  showToast(`「${(CATEGORIES.find(c=>c.key===key)||{}).label||key}」を削除しました`);
+}
+function removeCategoryFromDrawer(key){
+  // ドロワー内の − ボタンからの削除
+  removeCategory(key);
+  syncDrawerState();
+  if(calCatFilter===key)calCatFilter=null;
+  renderAllPanels();
+  renderCalList();
+  showToast(`「${(CATEGORIES.find(c=>c.key===key)||{}).label||key}」を削除しました`);
+}
+
 // ──── 通知設定モーダル ────
 let _notifSettingsTargetId=null;
 function openNotifSettings(eid){
@@ -7579,16 +7976,22 @@ function syncDrawerState(){
   drawer.el.querySelectorAll('[data-view-mode]').forEach(el=>{
     el.classList.toggle('is-active',el.dataset.viewMode===viewMode);
   });
-  // カテゴリトグルのレンダリング
+  // ★ オプトイン型：追加済みカテゴリのみ一覧表示（personalは除く）
   const list=document.getElementById('drawer-cat-list');
-  list.innerHTML=CATEGORIES.map(c=>{
-    const off=catVisibility[c.key]===false;
-    return`<div class="drawer-cat-item${off?' is-off':''}" data-cat-key="${c.key}">
-      <span class="drawer-cat-dot" style="background:${c.color}"></span>
-      <span class="drawer-cat-label">${c.label}</span>
-      <span class="drawer-toggle"></span>
-    </div>`;
-  }).join('');
+  const enabledCats=CATEGORIES.filter(c=>c.key!=='personal'&&userEnabledCategories.includes(c.key));
+  if(enabledCats.length===0){
+    list.innerHTML='<div style="padding:8px 18px 4px;font-size:11px;color:var(--text-tertiary);">まだカテゴリが追加されていません</div>';
+  }else{
+    list.innerHTML=enabledCats.map(c=>`
+      <div class="drawer-cat-added" data-cat-key="${c.key}">
+        <span class="drawer-cat-dot" style="background:${c.color}"></span>
+        <div style="flex:1;min-width:0;">
+          <div class="drawer-cat-added-label">${c.label}</div>
+          <div class="drawer-cat-added-desc">${c.desc}</div>
+        </div>
+        <button class="drawer-cat-del-btn" onclick="event.stopPropagation();removeCategoryFromDrawer('${c.key}')" aria-label="${c.label}を削除">−</button>
+      </div>`).join('');
+  }
 }
 
 function setViewMode(mode){
@@ -7647,8 +8050,7 @@ function initDrawer(){
   drawer.el.addEventListener('click',e=>{
     const vm=e.target.closest('[data-view-mode]');
     if(vm){setViewMode(vm.dataset.viewMode);closeDrawer();return;}
-    const cat=e.target.closest('[data-cat-key]');
-    if(cat){toggleCatVisibility(cat.dataset.catKey);return;}
+    // drawer-add-cat-btn はHTML側でonclickを持つのでここでは不要
     if(e.target.closest('#drawer-design')){
       closeDrawer();
       setTimeout(()=>{if(typeof openDesignSettings==='function')openDesignSettings();},260);
