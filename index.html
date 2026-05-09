@@ -279,7 +279,7 @@ button,input,select,textarea{
   z-index:0;
 }
 /* ── phone-inner：角丸なし・スクロール制御のみ ── */
-.phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:var(--bg);width:100%;max-width:100%;height:100%;display:flex;flex-direction:column;position:absolute;top:0;left:0;right:0;bottom:0;}
+.phone-inner{border-radius:0;overflow:hidden;overflow-x:hidden;background:transparent;width:100%;max-width:100%;height:100%;display:flex;flex-direction:column;position:absolute;top:env(safe-area-inset-top,0px);left:0;right:0;bottom:0;}
 .notch{display:none;}
 .status-bar{display:none;}
 .status-time{color:#fff;font-size:11px;font-weight:500;}
@@ -293,7 +293,7 @@ button,input,select,textarea{
     var(--green-main) 45%,
     var(--green-dark) 100%
   );
-  padding-top:calc(env(safe-area-inset-top) + 10px);
+  padding-top:16px; /* phone-inner が safe-area 下から始まるので safe-area 加算不要 */
   padding-right:16px;
   padding-bottom:0;
   padding-left:16px;
@@ -2940,7 +2940,7 @@ button,input,select,textarea{
   body { display:flex; justify-content:center; align-items:flex-start; min-height:100vh; padding:24px 0 32px; }
   .phone-wrap { display:flex; justify-content:center; }
   .phone { width:320px !important; background:#0D1F18 !important; border-radius:44px !important; padding:12px !important; box-shadow:0 0 0 1px #1a3028,0 28px 60px rgba(0,0,0,.4) !important; }
-  .app-frame { border-radius:34px !important; width:296px !important; height:660px !important; position:relative !important; overflow:hidden !important; background:var(--bg) !important; }
+  .app-frame { border-radius:34px !important; width:296px !important; height:660px !important; position:relative !important; overflow:hidden !important; background:transparent !important; }
   .phone-inner { border-radius:0 !important; width:100% !important; height:100% !important; position:absolute !important; overflow:hidden !important; background:var(--bg) !important; }
   .notch { display:block !important; }
   .status-bar { display:flex !important; }
