@@ -9788,36 +9788,62 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   // ── ピッカーを開く ──
   window.wpOpen=function(tab){
     WP.activeTab=tab||'start';
-    // 隠しフィールドから初期値を読み込み
-    function parseDH(dateStr,timeStr,fallback){
-      let d=fallback?cloneDate(fallback):new Date();
-      if(dateStr){
-        const[y,mo,dy]=dateStr.split('-').map(Number);
-        if(y)d.setFullYear(y,mo-1,dy);
-      }
-      if(timeStr){
-        const[h,mi]=timeStr.split(':').map(Number);
-        d.setHours(h||0,mi||0,0,0);
-      }else{
-        d.setSeconds(0,0);
-      }
-      return d;
+
+    // ★★★ 修正：selectedDate（カレンダータップ日）を単一ソースとして使う ★★★
+    // new Date('YYYY-MM-DD') はUTCパースでズレが出るため new Date(y,m,d) 形式を使用
+    function parseDateLocal(dateStr){
+      // 'YYYY-MM-DD' → new Date(year, monthIndex, day)
+      if(!dateStr)return null;
+      const[y,mo,dy]=dateStr.split('-').map(Number);
+      if(!y||isNaN(y))return null;
+      return new Date(y,mo-1,dy);
     }
-    const now=new Date();
-    WP.startDate=parseDH(
-      document.getElementById('input-start')?.value,
-      document.getElementById('input-start-time')?.value,
-      now
-    );
-    const endFallback=new Date(WP.startDate.getTime()+3600000);
-    WP.endDate=parseDH(
-      document.getElementById('input-end')?.value,
-      document.getElementById('input-end-time')?.value,
-      endFallback
-    );
-    // allDay判定
+
+    // 隠しフィールドの時刻文字列を読む（編集時のみ有効な値が入っている）
     const stEl=document.getElementById('input-start-time');
-    WP.isAllDay=!stEl?.value;
+    const enEl=document.getElementById('input-end-time');
+    const hasTime=!!(stEl?.value);
+
+    // カレンダーでタップされた日付（グローバル selectedDate / input-start のどちらか）
+    // 編集モード（editingId あり）の場合は隠しフィールドの日付をそのまま使う
+    const isEdit=typeof editingId!=='undefined'&&editingId!=null;
+
+    let baseDate=null;
+    if(isEdit){
+      // 編集：既存イベントの日付をベースにする
+      baseDate=parseDateLocal(document.getElementById('input-start')?.value);
+    } else {
+      // 新規：グローバル selectedDate（カレンダーでタップした日）を最優先
+      const selDs=typeof selectedDate!=='undefined'?selectedDate:null;
+      const inS=document.getElementById('input-start')?.value;
+      // selectedDate と input-start が一致しているはずだが、selectedDate を信頼する
+      baseDate=parseDateLocal(selDs||inS);
+    }
+
+    // fallback：今日
+    if(!baseDate||isNaN(baseDate.getTime())){
+      const t=new Date();
+      baseDate=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+    }
+
+    if(isEdit&&hasTime){
+      // 編集かつ時刻あり：既存の時刻を復元
+      const[sh,sm]=stEl.value.split(':').map(Number);
+      WP.startDate=new Date(baseDate.getFullYear(),baseDate.getMonth(),baseDate.getDate(),sh||9,sm||0,0,0);
+      const endBase=parseDateLocal(document.getElementById('input-end')?.value)||baseDate;
+      const[eh,em]=enEl.value.split(':').map(Number);
+      WP.endDate=new Date(endBase.getFullYear(),endBase.getMonth(),endBase.getDate(),eh||10,em||0,0,0);
+      WP.isAllDay=false;
+    } else {
+      // 新規 or 終日：selectedDate 基準で毎回リセット（以前の値を残さない）
+      WP.startDate=new Date(baseDate.getFullYear(),baseDate.getMonth(),baseDate.getDate(),9,0,0,0);
+      WP.endDate  =new Date(baseDate.getFullYear(),baseDate.getMonth(),baseDate.getDate(),10,0,0,0);
+      WP.isAllDay =!hasTime;
+    }
+
+    console.log('[wpOpen] selectedDate=',typeof selectedDate!=='undefined'?selectedDate:'(undef)',
+      '→ WP.startDate=',WP.startDate,'WP.endDate=',WP.endDate,'isEdit=',isEdit);
+
     _wpRefreshTimeCols();
     updateTabVals();
     buildCols(getActiveDate());
@@ -9902,20 +9928,60 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
       const inS=document.getElementById('input-start');
       const inE=document.getElementById('input-end');
       const inST=document.getElementById('input-start-time');
-      const now=new Date();
-      if(inS?.value){
-        const[y,m,d]=inS.value.split('-').map(Number);
-        WP.startDate=new Date(y,m-1,d,9,0,0);
-        if(inST?.value){
-          const[h,mi]=inST.value.split(':').map(Number);
-          WP.startDate.setHours(h,mi);
+      const isEdit=typeof editingId!=='undefined'&&editingId!=null;
+
+      // ★★★ 単一ソース管理：
+      //   編集時  → input-start の値（既存イベント日付）を使う
+      //   新規時  → グローバル selectedDate を最優先（カレンダータップ日）
+      //             new Date('YYYY-MM-DD') はUTCズレが出るため new Date(y,m,d) を使う
+      function parseDateLocalStr(str){
+        if(!str)return null;
+        const[y,m,d]=str.split('-').map(Number);
+        if(!y||isNaN(y))return null;
+        return new Date(y,m-1,d);
+      }
+
+      let baseDate=null;
+      if(isEdit){
+        baseDate=parseDateLocalStr(inS?.value);
+      }else{
+        // 新規：selectedDate が最優先
+        const selDs=typeof selectedDate!=='undefined'?selectedDate:null;
+        baseDate=parseDateLocalStr(selDs||inS?.value);
+      }
+
+      if(!baseDate||isNaN(baseDate.getTime())){
+        const t=new Date();baseDate=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+      }
+
+      const y=baseDate.getFullYear(),mo=baseDate.getMonth(),dd=baseDate.getDate();
+
+      if(inST?.value){
+        const[h,mi]=inST.value.split(':').map(Number);
+        WP.startDate=new Date(y,mo,dd,h||9,mi||0,0,0);
+        WP.isAllDay=false;
+      }else{
+        WP.startDate=new Date(y,mo,dd,9,0,0,0);
+        WP.isAllDay=true;
+      }
+
+      if(isEdit&&inE?.value){
+        const endBase=parseDateLocalStr(inE.value)||baseDate;
+        const ey=endBase.getFullYear(),emo=endBase.getMonth(),edd=endBase.getDate();
+        const enEl=document.getElementById('input-end-time');
+        if(enEl?.value){
+          const[eh,em]=enEl.value.split(':').map(Number);
+          WP.endDate=new Date(ey,emo,edd,eh||10,em||0,0,0);
+        }else{
+          WP.endDate=new Date(ey,emo,edd,10,0,0,0);
         }
-      }else{WP.startDate=cloneDate(now);}
-      if(inE?.value){
-        const[y,m,d]=inE.value.split('-').map(Number);
-        WP.endDate=new Date(y,m-1,d,9,0,0);
-      }else{WP.endDate=new Date(WP.startDate.getTime()+3600000);}
-      WP.isAllDay=!inST?.value;
+      }else{
+        // 新規：終了も同じ日付ベース
+        WP.endDate=new Date(y,mo,dd,10,0,0,0);
+      }
+
+      console.log('[prefillForm hook] isEdit=',isEdit,'selectedDate=',typeof selectedDate!=='undefined'?selectedDate:'(undef)',
+        '\u2192 WP.startDate=',WP.startDate,'WP.endDate=',WP.endDate);
       updateTriggers();
     },80);
   };
