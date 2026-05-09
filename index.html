@@ -36,16 +36,7 @@
   <title>ProNexaX</title>
 </head>
 <body>
-<!-- ★★★ 横向き検知オーバーレイ：縦画面に戻してください表示 ★★★ -->
-<div id="portrait-lock-overlay" aria-live="polite">
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="10" y="4" width="28" height="40" rx="5" stroke="white" stroke-width="2.5" fill="none"/>
-    <circle cx="24" cy="38" r="2" fill="white"/>
-    <path d="M20 15 L28 15 M24 11 L24 15" stroke="white" stroke-width="2" stroke-linecap="round"/>
-  </svg>
-  <div>縦向きでご利用ください</div>
-  <div style="font-size:12px;font-weight:400;opacity:.6;margin-top:4px;">端末を縦に戻してください</div>
-</div>
+
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -4427,66 +4418,19 @@ body{
 .phone-inner{
   /* 背景は --bg のまま維持（カレンダー背景色に影響しない） */
   /* ステータスバー部分だけ透けて見える app-frame が白なので問題なし */
+}/* ================================================================ */
+/* ★★★ 横向き対応：オーバーレイなし、UIをそのまま維持             */
+/* viewportに合わせて自動縮小（transform-originで左上起点）        */
+/* ================================================================ */
+body{
+  overflow:hidden;
+}
+.app-frame{
+  width:100vw;
+  height:100vh;
 }
 
-/* ================================================================ */
-/* ★★★ 縦画面固定：横向き検知 → 全UI凍結オーバーレイ表示         */
-/* rotate方式は座標系のズレを招くため採用しない。                   */
-/* 横向き時はオーバーレイで全操作をブロックし、何も起こさない。     */
-/* ================================================================ */
-#portrait-lock-overlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:99999;
-  background:#000;
-  color:#fff;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  gap:16px;
-  font-size:15px;
-  font-weight:600;
-  letter-spacing:.02em;
-  text-align:center;
-  -webkit-tap-highlight-color:transparent;
-  /* タッチ・クリックを完全吸収 */
-  pointer-events:all;
-  touch-action:none;
-  user-select:none;
-  -webkit-user-select:none;
-}
-#portrait-lock-overlay svg{
-  opacity:.7;
-  animation:portrait-rotate 2s ease-in-out infinite;
-}
-@keyframes portrait-rotate{
-  0%,100%{transform:rotate(0deg);}
-  40%{transform:rotate(-90deg);}
-  60%{transform:rotate(-90deg);}
-}
-@media screen and (orientation: landscape){
-  /* html/body のスクロール・リサイズ・タッチを完全封鎖 */
-  html, body{
-    overflow:hidden !important;
-    overscroll-behavior:none !important;
-    touch-action:none !important;
-    pointer-events:none !important;
-  }
-  /* オーバーレイだけポインター受け付ける */
-  #portrait-lock-overlay{
-    display:flex !important;
-    pointer-events:all !important;
-    touch-action:none !important;
-  }
-  /* app-frame・phone-inner はサイズ変更しない */
-  .app-frame, .phone-inner{
-    width:100vh !important;   /* landscape時：vhがポートレートのvwに相当 */
-    height:100vw !important;  /* landscape時：vwがポートレートのvhに相当 */
-    transform:none !important;
-    transition:none !important;
-  }
-}
+
 </style>
 
 
@@ -6521,13 +6465,7 @@ function endCellDrag(e){
 
 function initSwipe(){
   const w=document.getElementById('cal-swipe-wrap');
-  // ── 横向き判定ヘルパー（lockPortrait と同一ロジック） ──
-  function _isLandscapeSwipe(){
-    if(window.matchMedia) return window.matchMedia('(orientation: landscape)').matches;
-    return window.innerWidth > window.innerHeight;
-  }
   w.addEventListener('touchstart',e=>{
-    if(_isLandscapeSwipe())return; // ★ 横向き時は月スワイプを一切しない
     if(viewMode!=='month')return;
     if(drag.started||cellDrag.started)return;
     // ★ 長押し確定後（active）のみブロック。長押し判定待ち(startDs のみ)はスワイプ開始を許可
@@ -6535,7 +6473,6 @@ function initSwipe(){
     swipeX=e.touches[0].clientX;swipeY=e.touches[0].clientY;swiping=true;swipeLocked=false;
   },{passive:true});
   w.addEventListener('touchmove',e=>{
-    if(_isLandscapeSwipe()){swiping=false;swipeLocked=false;return;} // ★ 横向き時は即キャンセル
     if(viewMode!=='month')return;
     // ★ 長押し確定（active）中のみ月スワイプを停止。判定待ち中は通常スワイプ継続
     if(rangeSelect.active){swiping=false;swipeLocked=false;return;}
@@ -6548,7 +6485,6 @@ function initSwipe(){
     }
   },{passive:true});
   w.addEventListener('touchend',e=>{
-    if(_isLandscapeSwipe()){swiping=false;swipeLocked=false;return;} // ★ 横向き時は月切り替えしない
     if(viewMode!=='month')return;
     // ★ 長押し確定（active）中のみ月切り替えをキャンセル
     if(rangeSelect.active){swiping=false;swipeLocked=false;return;}
@@ -8773,16 +8709,12 @@ function initDrawer(){
   // 右スワイプで閉じる
   drawer.el.addEventListener('touchstart',e=>{
     if(!drawer.open)return;
-    // ★ 横向き時はドロワースワイプを無効化
-    if(window.matchMedia && window.matchMedia('(orientation: landscape)').matches) return;
     const t=e.touches[0];
     drawer.startX=t.clientX;drawer.startY=t.clientY;
     drawer.curX=0;drawer.dragging=true;drawer.horizLocked=false;
   },{passive:true});
   drawer.el.addEventListener('touchmove',e=>{
     if(!drawer.dragging)return;
-    // ★ 横向き時はドロワースワイプを無効化
-    if(window.matchMedia && window.matchMedia('(orientation: landscape)').matches){drawer.dragging=false;return;}
     const t=e.touches[0];
     const dx=t.clientX-drawer.startX,dy=t.clientY-drawer.startY;
     if(!drawer.horizLocked){
@@ -8801,12 +8733,6 @@ function initDrawer(){
     }
   },{passive:true});
   drawer.el.addEventListener('touchend',()=>{
-    // ★ 横向き時はドロワースワイプ判定を無効化してリセット
-    if(window.matchMedia && window.matchMedia('(orientation: landscape)').matches){
-      drawer.dragging=false;drawer.el.classList.remove('dragging');
-      drawer.el.style.transform='';drawer.overlay.style.opacity='';
-      drawer.curX=0;drawer.horizLocked=false;return;
-    }
     if(!drawer.dragging){drawer.el.classList.remove('dragging');return;}
     drawer.dragging=false;
     drawer.el.classList.remove('dragging');
@@ -10861,24 +10787,13 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
 <script>
 // ================================================================
 // Safari PWA（ホーム画面追加）余白修正
-// ★ 横向き時は一切動かない（高さ再計算・UI変形を防ぐ）
 // ================================================================
 (function fixSafariPWAHeight(){
   var isStandalone = window.navigator.standalone === true
     || window.matchMedia('(display-mode: standalone)').matches;
   if (!isStandalone) return;
 
-  function isPortrait(){
-    // matchMediaが最も信頼性が高い
-    if(window.matchMedia){
-      return window.matchMedia('(orientation: portrait)').matches;
-    }
-    return window.innerHeight >= window.innerWidth;
-  }
-
   function applyHeight(){
-    // 横向き時は絶対に何もしない
-    if(!isPortrait()) return;
     var inner = document.querySelector('.app-frame');
     if (!inner) return;
     inner.style.height = window.innerHeight + 'px';
@@ -10886,191 +10801,21 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
 
   applyHeight();
 
-  // resize：縦向き時のみ反応（window.addEventListener は lockPortrait がガード済みだが念のため自前チェック）
   window.addEventListener('resize', function(){
-    if(!isPortrait()) return; // 横向き時は何もしない
     applyHeight();
   });
 
-  // orientationchange：縦に戻った場合のみ高さを再適用
   window.addEventListener('orientationchange', function(){
     setTimeout(function(){
-      if(!isPortrait()) return; // 横向きなら何もしない
       applyHeight();
     }, 300);
   });
 })();
 </script>
 
-<script>
-// ================================================================
-// 縦画面完全固定システム v2
-// 4層防御：
-//   ① Screen Orientation API lock
-//   ② CSS @media landscape でイベント・スクロール完全封鎖
-//   ③ JS captureフェーズでイベントを横向き時に全吸収
-//   ④ resize / orientationchange での UI 再計算を完全ガード
-// ================================================================
-(function lockPortrait(){
 
-  // ── ① Screen Orientation API（Android Chrome PWA / 一部ブラウザ）──
-  function tryLockOrientation(){
-    if(screen.orientation && typeof screen.orientation.lock === 'function'){
-      screen.orientation.lock('portrait').catch(function(){});
-    }
-    // 旧API（iOS対応なし・Android旧ブラウザ向け）
-    if(screen.lockOrientation)         screen.lockOrientation('portrait-primary');
-    else if(screen.mozLockOrientation)  screen.mozLockOrientation('portrait-primary');
-    else if(screen.msLockOrientation)   screen.msLockOrientation('portrait-primary');
-  }
-  tryLockOrientation();
 
-  // PWAとして開かれた後に再試行（Safari PWAでは遅延後に有効になる場合がある）
-  document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState === 'visible') tryLockOrientation();
-  });
 
-  // ── 縦/横の判定ヘルパー ──
-  function isLandscape(){
-    if(window.matchMedia){
-      return window.matchMedia('(orientation: landscape)').matches;
-    }
-    return window.innerWidth > window.innerHeight;
-  }
-
-  // ── ② オーバーレイ表示／非表示制御 ──
-  var overlay = document.getElementById('portrait-lock-overlay');
-  function updateOverlay(){
-    if(!overlay) return;
-    if(isLandscape()){
-      overlay.style.display = 'flex';
-    } else {
-      overlay.style.display = '';  // CSSの display:none に戻す
-    }
-  }
-
-  // ── ③ 横向き中のイベント完全凍結 ──
-  // captureフェーズ最前段で横向きなら全イベントを止める
-  // （オーバーレイ自体へのイベントは通過させる）
-  var BLOCK_EVENTS = ['touchstart','touchmove','touchend','touchcancel',
-                      'click','mousedown','mouseup','mousemove',
-                      'pointerdown','pointermove','pointerup','pointercancel',
-                      'wheel','scroll'];
-  function blockIfLandscape(e){
-    if(!isLandscape()) return;
-    // オーバーレイ内のイベントは通過（縦に戻すUI表示用）
-    if(overlay && overlay.contains(e.target)) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-  }
-  BLOCK_EVENTS.forEach(function(type){
-    document.addEventListener(type, blockIfLandscape, {capture:true, passive:false});
-  });
-  // window の scroll / resize も横向き時に無効化
-  window.addEventListener('scroll', function(e){
-    if(isLandscape()){ e.preventDefault(); }
-  }, {capture:true, passive:false});
-
-  // ── ④ resize イベントの横向きガード ──
-  // resize が発火しても横向き中は一切 UI 再計算しないようにする
-  // 既存の resize ハンドラを安全にラップするパッチ
-  var _origAddEventListener = window.addEventListener.bind(window);
-  window._landscapeBlockedResizeHandlers = [];
-  // resize リスナーを登録するときに横向きガードを注入
-  window.addEventListener = function(type, handler, options){
-    if(type === 'resize' && typeof handler === 'function'){
-      var guarded = function(e){
-        if(isLandscape()) return; // 横向き時は何もしない
-        handler.call(this, e);
-      };
-      // 元のハンドラとguard済みハンドラを紐付けて保持
-      window._landscapeBlockedResizeHandlers.push({orig:handler, guarded:guarded});
-      return _origAddEventListener(type, guarded, options);
-    }
-    return _origAddEventListener(type, handler, options);
-  };
-
-  // ── orientationchange / matchMedia change の処理 ──
-  // 横向きに変わった → オーバーレイを出すだけ（UI再計算は一切しない）
-  // 縦向きに戻った → オーバーレイを消す（fixSafariPWAHeightが高さを再適用する）
-  function onOrientationChange(){
-    // 即時 + iOS Safariの遅延に対応して複数回チェック
-    updateOverlay();
-    setTimeout(updateOverlay, 80);
-    setTimeout(updateOverlay, 300);
-    setTimeout(updateOverlay, 600);
-  }
-
-  window.addEventListener('orientationchange', onOrientationChange);
-
-  if(window.matchMedia){
-    var mql = window.matchMedia('(orientation: landscape)');
-    var mqHandler = function(){ updateOverlay(); };
-    if(mql.addEventListener){ mql.addEventListener('change', mqHandler); }
-    else if(mql.addListener){ mql.addListener(mqHandler); } // 旧API互換
-  }
-
-  // 初期状態を反映
-  updateOverlay();
-
-})();
-</script>
-
-<script>
-// ================================================================
-// ★★★ 横向きガード：UI再計算関数を横向き時に完全無効化 ★★★
-// renderAllPanels / changeMonthInternal / renderCalList が
-// 横向き中に呼ばれても何も実行しないようパッチする。
-// lockPortrait の orientationchange ガードの最終防衛線。
-// ================================================================
-(function patchLandscapeGuard(){
-  function _isLandscape(){
-    if(window.matchMedia) return window.matchMedia('(orientation: landscape)').matches;
-    return window.innerWidth > window.innerHeight;
-  }
-
-  // 対象関数を横向き時にスキップするラッパーを返す
-  function makeGuarded(fn, name){
-    return function(){
-      if(_isLandscape()){
-        // 横向き中は実行しない（console.debug で検知可能にしておく）
-        // console.debug('[landscapeGuard] blocked:', name);
-        return;
-      }
-      return fn.apply(this, arguments);
-    };
-  }
-
-  // DOMContentLoaded後に確実にパッチ（変数が確定してから）
-  document.addEventListener('DOMContentLoaded', function(){
-    // renderAllPanels
-    if(typeof window.renderAllPanels === 'function'){
-      window.renderAllPanels = makeGuarded(window.renderAllPanels, 'renderAllPanels');
-    }
-    // changeMonthInternal
-    if(typeof window.changeMonthInternal === 'function'){
-      window.changeMonthInternal = makeGuarded(window.changeMonthInternal, 'changeMonthInternal');
-    }
-    // renderCalList
-    if(typeof window.renderCalList === 'function'){
-      window.renderCalList = makeGuarded(window.renderCalList, 'renderCalList');
-    }
-    // updateMonthLabel
-    if(typeof window.updateMonthLabel === 'function'){
-      window.updateMonthLabel = makeGuarded(window.updateMonthLabel, 'updateMonthLabel');
-    }
-    // animateSwipe
-    if(typeof window.animateSwipe === 'function'){
-      var _origAnimateSwipe = window.animateSwipe;
-      window.animateSwipe = function(dir){
-        if(_isLandscape()) return;
-        return _origAnimateSwipe.apply(this, arguments);
-      };
-      window.animateSwipe._busy = _origAnimateSwipe._busy || false;
-    }
-  });
-})();
-</script>
 
 <script>
 // ================================================================
