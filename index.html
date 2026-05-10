@@ -2242,42 +2242,613 @@ button,input,select,textarea{
   font-weight:500;line-height:1.5;
 }
 
-/* ★★★ 大会カード（軽量化） ★★★ */
+/* ================================================================
+   ★★★ Phase2: 大会カード 新デザイン ★★★
+   Apple純正 + Notion + ゴルフツアー管理 の統合UI
+   ================================================================ */
+
+/* ── カード本体 ── */
 .t-card{
-  margin:0 12px 6px;background:var(--card-bg);
-  border-radius:10px;border:1px solid var(--border);
-  overflow:hidden;cursor:pointer;
-  box-shadow:0 1px 2px rgba(15,23,42,.03);
-  transition:transform .12s,opacity .15s;
+  margin:0 14px 10px;
+  background:#fff;
+  border-radius:16px;
+  border:1px solid rgba(0,0,0,.07);
+  overflow:hidden;
+  cursor:pointer;
+  box-shadow:0 1px 3px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.04);
+  transition:transform .15s cubic-bezier(.34,1.2,.64,1),
+             box-shadow .15s ease,
+             opacity .2s;
+  -webkit-tap-highlight-color:transparent;
 }
-.t-card:active{transform:scale(.99);}
-.t-card.is-added{opacity:.62;background:#F4F7F6;}
-:root[data-theme="dark"] .t-card.is-added{background:#15201B;opacity:.7;}
+.t-card:active{
+  transform:scale(.978);
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.t-card.is-added{
+  background:#F8FDF9;
+  border-color:rgba(26,175,122,.18);
+}
+:root[data-theme="dark"] .t-card{
+  background:var(--card-bg);
+  border-color:rgba(255,255,255,.08);
+  box-shadow:0 2px 12px rgba(0,0,0,.25);
+}
+:root[data-theme="dark"] .t-card.is-added{
+  background:#0F2018;
+  border-color:rgba(26,175,122,.25);
+}
+
+/* ── カラーアクセントバー（左端） ── */
 .t-card-top{display:flex;align-items:stretch;}
-.t-stripe{width:3px;flex-shrink:0;}
-.t-main{flex:1;padding:10px 8px 9px 10px;min-width:0;}
+.t-stripe{
+  width:4px;flex-shrink:0;
+  border-radius:0;
+}
+
+/* ── カードメインエリア ── */
+.t-main{
+  flex:1;
+  padding:13px 12px 12px 13px;
+  min-width:0;
+  display:flex;flex-direction:column;gap:0;
+}
+
+/* 上段：大会名 */
 .t-name{
-  font-size:12px;font-weight:600;color:var(--text-primary);
-  line-height:1.35;margin-bottom:3px;letter-spacing:-.1px;
-  display:flex;align-items:center;gap:5px;
+  font-size:13.5px;font-weight:700;
+  color:var(--text-primary);
+  line-height:1.4;
+  margin-bottom:5px;
+  letter-spacing:-.2px;
+  display:flex;align-items:flex-start;gap:6px;
 }
 .t-name-text{
   flex:1;min-width:0;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  /* 2行まで表示 */
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
 }
 .t-name-check{
-  flex-shrink:0;font-size:11px;color:var(--green-dark);font-weight:700;
+  flex-shrink:0;
+  font-size:12px;color:var(--green-dark);font-weight:700;
+  margin-top:2px;
 }
-.t-meta{font-size:10px;color:var(--text-tertiary);margin-bottom:5px;font-weight:500;letter-spacing:.1px;}
-.badge-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
-.badge{font-size:8.5px;padding:2px 6px;border-radius:8px;font-weight:600;letter-spacing:.2px;line-height:1.2;}
-.badge-jgto{background:var(--cat-jgto);color:#fff;}
-.badge-jlpga{background:var(--cat-jlpga);color:#fff;}
-.badge-pga{background:var(--cat-pga);color:#fff;}
-.badge-qualifier{background:var(--cat-qualifier);color:#fff;}
-.badge-mini{background:var(--cat-mini);color:#fff;}
-.badge-open{background:var(--cat-open);color:#fff;}
-.badge-personal{background:var(--cat-personal);color:#fff;}
+
+/* 中段：基本情報グリッド */
+.t-info-grid{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  margin-bottom:8px;
+}
+.t-info-row{
+  display:flex;align-items:center;gap:5px;
+}
+.t-info-icon{
+  width:13px;height:13px;
+  flex-shrink:0;
+  color:var(--text-tertiary);
+  display:flex;align-items:center;justify-content:center;
+}
+.t-info-icon svg{width:11px;height:11px;}
+.t-info-label{
+  font-size:10px;font-weight:500;
+  color:var(--text-tertiary);
+  width:52px;flex-shrink:0;
+  letter-spacing:.1px;
+}
+.t-info-value{
+  font-size:11px;font-weight:600;
+  color:var(--text-secondary);
+  flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.t-info-value.highlight{
+  color:var(--green-dark);
+}
+/* 締切日：近い場合のスタイル */
+.t-info-value.deadline-near{color:#B07520;}
+.t-info-value.deadline-today{color:#C03030;}
+
+/* 下段：バッジ行 */
+.t-badge-row{
+  display:flex;align-items:center;gap:5px;
+  flex-wrap:wrap;
+}
+/* カテゴリバッジ */
+.t-cat-badge{
+  display:inline-flex;align-items:center;
+  font-size:9.5px;font-weight:700;
+  padding:2px 8px;border-radius:20px;
+  letter-spacing:.2px;line-height:1.4;
+  white-space:nowrap;
+}
+/* 男女バッジ */
+.t-gender-badge{
+  display:inline-flex;align-items:center;gap:2px;
+  font-size:9.5px;font-weight:600;
+  padding:2px 7px;border-radius:20px;
+  background:#F0F4F8;color:#4A6072;
+  letter-spacing:.1px;line-height:1.4;
+}
+.t-gender-badge.mens{background:#E8F0FB;color:#1A4A8A;}
+.t-gender-badge.womens{background:#FBE8F2;color:#8A1A54;}
+/* ステータスバッジ */
+.t-status-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:9.5px;font-weight:700;
+  padding:2px 8px;border-radius:20px;
+  letter-spacing:.1px;
+}
+.t-status-badge.live{
+  background:#E5F8EE;color:#0B7A44;
+  position:relative;padding-left:14px;
+}
+.t-status-badge.live::before{
+  content:'';position:absolute;left:6px;top:50%;transform:translateY(-50%);
+  width:5px;height:5px;border-radius:50%;
+  background:#0B7A44;
+  animation:pulseLive2 1.6s ease-out infinite;
+}
+@keyframes pulseLive2{
+  0%{box-shadow:0 0 0 0 rgba(11,122,68,.5);}
+  70%{box-shadow:0 0 0 5px rgba(11,122,68,0);}
+  100%{box-shadow:0 0 0 0 rgba(11,122,68,0);}
+}
+.t-status-badge.upcoming{background:#EEF4FC;color:#2A5490;border:1px solid #C8D9EE;}
+.t-status-badge.ended{background:#F0F2F5;color:#8090A0;border:1px solid #DDE2E8;}
+/* 登録済みバッジ */
+.t-added-badge{
+  display:inline-flex;align-items:center;gap:2px;
+  font-size:9.5px;font-weight:700;
+  padding:2px 8px;border-radius:20px;
+  background:rgba(26,175,122,.12);color:var(--green-dark);
+}
+
+/* ── 賞金・エントリー費ライン ── */
+.t-prize-row{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 12px 9px 13px;
+  border-top:1px solid rgba(0,0,0,.05);
+  background:rgba(0,0,0,.015);
+}
+:root[data-theme="dark"] .t-prize-row{
+  border-top-color:rgba(255,255,255,.06);
+  background:rgba(255,255,255,.02);
+}
+.t-prize-item{
+  display:flex;flex-direction:column;gap:1px;
+  flex:1;min-width:0;
+}
+.t-prize-label{
+  font-size:8.5px;font-weight:600;
+  color:var(--text-tertiary);letter-spacing:.3px;text-transform:uppercase;
+}
+.t-prize-value{
+  font-size:11.5px;font-weight:700;
+  color:var(--text-primary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.t-prize-value.money{color:#8A6010;}
+:root[data-theme="dark"] .t-prize-value.money{color:#C4A040;}
+.t-prize-divider{
+  width:1px;height:28px;
+  background:rgba(0,0,0,.08);
+  flex-shrink:0;
+}
+:root[data-theme="dark"] .t-prize-divider{background:rgba(255,255,255,.08);}
+
+/* ── アクションエリア（右側） ── */
+.t-action{
+  padding:13px 10px 12px 4px;
+  display:flex;flex-direction:column;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:8px;
+  flex-shrink:0;
+}
+.t-fav-btn{
+  width:28px;height:28px;
+  background:transparent;border:none;
+  font-size:16px;line-height:1;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center;
+  color:#D0D8D4;
+  transition:color .15s,transform .15s;
+  border-radius:50%;
+}
+.t-fav-btn:active{transform:scale(.8);}
+.t-fav-btn.is-fav{color:#E5A41A;}
+/* 詳細ボタン */
+.t-detail-btn{
+  font-size:10px;font-weight:700;
+  color:var(--green-dark);
+  background:var(--green-chip);
+  border:none;border-radius:8px;
+  padding:5px 9px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  white-space:nowrap;
+  letter-spacing:.2px;
+  transition:background .12s,opacity .12s;
+}
+.t-detail-btn:active{opacity:.7;}
+/* カレンダー追加ボタン */
+.add-btn{
+  font-size:9.5px;font-weight:700;
+  color:var(--green-dark);
+  background:transparent;
+  border:1.5px solid var(--green-main);
+  border-radius:8px;
+  padding:4px 8px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  white-space:nowrap;
+  transition:background .15s,color .15s,opacity .12s;
+}
+.add-btn:active{opacity:.7;}
+.add-btn.added{
+  background:var(--green-chip);
+  border-color:transparent;
+  color:var(--green-dark);
+}
+
+/* ── リマインド行（カード下部） ── */
+.t-remind-row{
+  display:flex;align-items:center;gap:8px;
+  padding:0 12px 11px 12px;
+}
+.t-bell-btn{
+  width:28px;height:28px;border-radius:50%;
+  background:none;border:none;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  flex-shrink:0;
+  transition:background .15s,transform .12s;
+}
+.t-bell-btn:active{transform:scale(.84);}
+.t-bell-btn .bell-svg{
+  width:15px;height:15px;
+  color:var(--text-tertiary);transition:color .2s;
+}
+.t-bell-btn.is-on .bell-svg{color:var(--green-main);}
+.t-bell-btn.is-on{background:rgba(26,175,122,.1);}
+@keyframes bellRing{
+  0%{transform:rotate(0);}15%{transform:rotate(-16deg);}
+  30%{transform:rotate(14deg);}45%{transform:rotate(-10deg);}
+  60%{transform:rotate(7deg);}75%{transform:rotate(-4deg);}100%{transform:rotate(0);}
+}
+.t-bell-btn.ring .bell-svg{animation:bellRing .5s cubic-bezier(.36,.07,.19,.97);}
+.t-remind-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  background:#F1F4F3;border:none;border-radius:20px;
+  padding:5px 11px;font-size:11px;font-weight:600;
+  color:var(--text-secondary);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;white-space:nowrap;
+  transition:background .15s,color .15s,transform .1s;
+  opacity:0;transform:scale(.88) translateX(-4px);pointer-events:none;animation:none;
+}
+.t-remind-pill.visible{
+  opacity:1;transform:scale(1) translateX(0);pointer-events:auto;
+  animation:pillIn .22s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+@keyframes pillIn{from{opacity:0;transform:scale(.82) translateX(-6px);}to{opacity:1;transform:scale(1) translateX(0);}}
+.t-remind-pill:active{transform:scale(.94);}
+.t-remind-pill.is-set{background:var(--green-chip);color:var(--green-dark);border:1px solid rgba(26,175,122,.2);}
+.t-remind-pill svg{width:9px;height:9px;color:var(--text-tertiary);flex-shrink:0;}
+.t-remind-pill.is-set svg{color:var(--green-main);}
+:root[data-theme="dark"] .t-bell-btn.is-on{background:rgba(26,175,122,.15);}
+:root[data-theme="dark"] .t-remind-pill{background:#1E2A24;color:var(--text-secondary);}
+:root[data-theme="dark"] .t-remind-pill.is-set{background:#1F3329;color:var(--green-light);border-color:rgba(26,175,122,.3);}
+
+/* ── カードリスト先頭の余白 ── */
+.search-list-top-pad{height:6px;}
+
+/* ── カードストライプ色（拡張） ── */
+.stripe-jgto{background:linear-gradient(180deg,#1AAF7A,#0F7A55);}
+.stripe-jlpga{background:linear-gradient(180deg,#E0567E,#A83058);}
+.stripe-pga{background:linear-gradient(180deg,#2D7DD2,#1A509A);}
+.stripe-qualifier{background:linear-gradient(180deg,#A0631A,#6E4010);}
+.stripe-mini{background:linear-gradient(180deg,#D4771A,#9A5010);}
+.stripe-open{background:linear-gradient(180deg,#7B4DB5,#5030858);}
+.stripe-personal{background:linear-gradient(180deg,#6B6ED4,#4A4DA0);}
+.stripe-acn{background:linear-gradient(180deg,#2E8B57,#1A6040);}
+.stripe-qt,.stripe-qt_w{background:linear-gradient(180deg,#A0631A,#6E4010);}
+.stripe-qualifier_w{background:linear-gradient(180deg,#C4841A,#8A5810);}
+.stripe-jpga{background:linear-gradient(180deg,#2D7DD2,#1A509A);}
+.stripe-senior{background:linear-gradient(180deg,#6B6B8E,#444466);}
+.stripe-atp_golf{background:linear-gradient(180deg,#4A90D9,#2860A8);}
+.stripe-fj_tour{background:linear-gradient(180deg,#E07B39,#A85020);}
+.stripe-future{background:linear-gradient(180deg,#5C8A3C,#385A22);}
+.stripe-doucus{background:linear-gradient(180deg,#8B5CF6,#6030C0);}
+.stripe-pandc{background:linear-gradient(180deg,#D4771A,#9A5010);}
+.stripe-pref_open{background:linear-gradient(180deg,#7B4DB5,#503080);}
+.stripe-stepup{background:linear-gradient(180deg,#E87FA8,#C04878);}
+.stripe-next_heroine{background:linear-gradient(180deg,#9C59B5,#6A2890);}
+.stripe-oneday{background:linear-gradient(180deg,#E69B3A,#A86818);}
+.stripe-women_open{background:linear-gradient(180deg,#C84B6E,#8A2048);}
+.stripe-lpga{background:linear-gradient(180deg,#2D7DD2,#1A509A);}
+.stripe-klpga{background:linear-gradient(180deg,#E05555,#A02828);}
+
+/* ── 空状態 ── */
+.search-empty{
+  text-align:center;padding:48px 24px;
+}
+.search-empty-icon{font-size:44px;margin-bottom:14px;opacity:.6;}
+.search-empty-title{font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;}
+.search-empty-sub{font-size:12px;color:var(--text-tertiary);line-height:1.7;}
+
+/* ================================================================
+   ★★★ Phase2: 大会詳細モーダル（Apple Maps 風 Bottom Sheet）★★★
+   ================================================================ */
+
+/* オーバーレイ */
+.tdm-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:500;
+  opacity:0;pointer-events:none;
+  transition:opacity .28s ease;
+  -webkit-backdrop-filter:blur(2px);
+  backdrop-filter:blur(2px);
+}
+.tdm-overlay.show{opacity:1;pointer-events:auto;}
+
+/* シート本体 */
+.tdm-sheet{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  background:#fff;
+  border-radius:20px 20px 0 0;
+  z-index:501;
+  display:flex;flex-direction:column;
+  transform:translateY(100%);
+  transition:transform .38s cubic-bezier(.32,.72,.25,1);
+  max-height:92vh;
+  box-shadow:0 -6px 40px rgba(0,0,0,.18),0 -1px 0 rgba(0,0,0,.06);
+  will-change:transform;
+  /* safe area */
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.tdm-sheet.show{transform:translateY(0);}
+.tdm-sheet.is-dragging{transition:none;}
+:root[data-theme="dark"] .tdm-sheet{
+  background:#1C1C1E;
+  box-shadow:0 -6px 40px rgba(0,0,0,.5);
+}
+
+/* グラバーバー */
+.tdm-grabber{
+  width:36px;height:4px;
+  background:#D0D8D5;border-radius:2px;
+  margin:10px auto 0;
+  flex-shrink:0;
+  cursor:grab;
+}
+:root[data-theme="dark"] .tdm-grabber{background:#48484A;}
+
+/* シートヘッダー */
+.tdm-header{
+  padding:10px 16px 12px;
+  flex-shrink:0;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:12px;
+  border-bottom:1px solid rgba(0,0,0,.06);
+}
+:root[data-theme="dark"] .tdm-header{border-bottom-color:rgba(255,255,255,.06);}
+.tdm-header-left{flex:1;min-width:0;}
+.tdm-cat-row{
+  display:flex;align-items:center;gap:6px;
+  margin-bottom:5px;
+}
+.tdm-title{
+  font-size:18px;font-weight:800;
+  color:var(--text-primary);
+  line-height:1.3;
+  letter-spacing:-.4px;
+}
+.tdm-close-btn{
+  width:30px;height:30px;border-radius:50%;
+  background:#F0F2F4;border:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  flex-shrink:0;
+  transition:background .12s,transform .12s;
+  color:#606068;
+  font-size:15px;
+  font-weight:600;
+}
+.tdm-close-btn:active{transform:scale(.88);background:#E0E4E8;}
+:root[data-theme="dark"] .tdm-close-btn{background:#2C2C2E;color:#E0E4E8;}
+
+/* アクションボタン行 */
+.tdm-actions{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px 12px;
+  flex-shrink:0;
+  border-bottom:1px solid rgba(0,0,0,.05);
+  overflow-x:auto;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+.tdm-actions::-webkit-scrollbar{display:none;}
+:root[data-theme="dark"] .tdm-actions{border-bottom-color:rgba(255,255,255,.05);}
+
+/* 各アクションボタン：アイコン＋ラベルの縦並び */
+.tdm-action-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  min-width:60px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:transform .12s;
+  border:none;background:none;padding:0;
+}
+.tdm-action-btn:active{transform:scale(.9);}
+.tdm-action-icon{
+  width:44px;height:44px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .12s;
+}
+.tdm-action-icon.cal{background:#E8F5EE;}
+.tdm-action-icon.detail{background:#EAF0FB;}
+.tdm-action-icon.entry{background:linear-gradient(135deg,var(--green-main),var(--green-dark));}
+.tdm-action-icon.fav{background:#FFF4E0;}
+.tdm-action-icon.web{background:#F0F0F8;}
+.tdm-action-label{
+  font-size:10px;font-weight:600;color:var(--text-secondary);
+  letter-spacing:.1px;white-space:nowrap;
+}
+:root[data-theme="dark"] .tdm-action-icon.cal{background:#1A3025;}
+:root[data-theme="dark"] .tdm-action-icon.detail{background:#1A2535;}
+:root[data-theme="dark"] .tdm-action-icon.fav{background:#3A2A10;}
+:root[data-theme="dark"] .tdm-action-icon.web{background:#1E1E2A;}
+
+/* スクロールエリア */
+.tdm-scroll{
+  flex:1;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.tdm-scroll::-webkit-scrollbar{display:none;}
+
+/* セクション */
+.tdm-section{
+  padding:16px 16px 4px;
+}
+.tdm-section-title{
+  font-size:10.5px;font-weight:700;
+  color:var(--text-tertiary);
+  letter-spacing:.6px;text-transform:uppercase;
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.tdm-section-title::after{
+  content:'';flex:1;height:1px;
+  background:rgba(0,0,0,.06);
+}
+:root[data-theme="dark"] .tdm-section-title::after{background:rgba(255,255,255,.06);}
+
+/* 情報行 */
+.tdm-row{
+  display:flex;align-items:flex-start;
+  padding:9px 0;
+  border-bottom:1px solid rgba(0,0,0,.04);
+  gap:12px;
+}
+.tdm-row:last-child{border-bottom:none;}
+:root[data-theme="dark"] .tdm-row{border-bottom-color:rgba(255,255,255,.04);}
+.tdm-row-icon{
+  width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+}
+.tdm-row-icon svg{width:16px;height:16px;color:var(--text-tertiary);}
+.tdm-row-label{
+  font-size:11px;font-weight:600;
+  color:var(--text-tertiary);
+  width:72px;flex-shrink:0;
+  line-height:1.5;
+  letter-spacing:.1px;
+}
+.tdm-row-value{
+  flex:1;
+  font-size:13px;font-weight:500;
+  color:var(--text-primary);
+  line-height:1.55;
+  letter-spacing:-.1px;
+}
+.tdm-row-value.money{
+  font-size:14px;font-weight:700;
+  color:#7A5800;letter-spacing:-.2px;
+}
+:root[data-theme="dark"] .tdm-row-value.money{color:#C4A040;}
+.tdm-row-value.deadline-near{color:#B07520;font-weight:700;}
+.tdm-row-value.deadline-today{color:#C03030;font-weight:700;}
+.tdm-row-value.empty{color:var(--text-tertiary);font-weight:400;font-style:italic;}
+
+/* リンク行 */
+.tdm-link-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:8px;
+  padding:4px 16px 16px;
+}
+.tdm-link-btn{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background .12s,transform .1s;
+  text-decoration:none;
+}
+.tdm-link-btn:active{transform:scale(.96);}
+.tdm-link-btn.has-url{
+  background:var(--green-chip);
+  border-color:rgba(26,175,122,.25);
+}
+.tdm-link-icon{
+  width:22px;height:22px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:12px;
+}
+.tdm-link-label{
+  font-size:11px;font-weight:600;
+  color:var(--text-secondary);
+  flex:1;line-height:1.3;
+}
+.tdm-link-btn.has-url .tdm-link-label{color:var(--green-dark);}
+:root[data-theme="dark"] .tdm-link-btn{background:var(--card-bg);border-color:rgba(255,255,255,.08);}
+:root[data-theme="dark"] .tdm-link-btn.has-url{background:#1A3025;border-color:rgba(26,175,122,.3);}
+
+/* モーダルフッター（主要CTA） */
+.tdm-footer{
+  flex-shrink:0;
+  padding:10px 16px 16px;
+  border-top:1px solid rgba(0,0,0,.06);
+  display:flex;gap:8px;
+  background:#fff;
+}
+:root[data-theme="dark"] .tdm-footer{
+  background:#1C1C1E;
+  border-top-color:rgba(255,255,255,.06);
+}
+.tdm-footer-cal{
+  flex:1;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  background:var(--green-chip);
+  border:1.5px solid rgba(26,175,122,.3);
+  border-radius:14px;padding:12px 16px;
+  font-size:13px;font-weight:700;color:var(--green-dark);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background .12s,opacity .12s;
+  letter-spacing:.1px;
+}
+.tdm-footer-cal:active{opacity:.8;}
+.tdm-footer-entry{
+  flex:1.2;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  background:linear-gradient(135deg,var(--green-main),var(--green-dark));
+  border:none;border-radius:14px;padding:12px 16px;
+  font-size:13px;font-weight:700;color:#fff;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:opacity .12s,box-shadow .12s;
+  box-shadow:0 4px 14px rgba(26,175,122,.38);
+  letter-spacing:.1px;
+}
+.tdm-footer-entry:active{opacity:.85;box-shadow:0 2px 6px rgba(26,175,122,.2);}
+.tdm-footer-entry.no-url{
+  background:#E0E6E2;color:#8A9A94;
+  box-shadow:none;
+}
+
+/* ドラッグダウン対応 */
+.tdm-sheet.drag-close{
+  transform:translateY(100%) !important;
+  transition:transform .25s cubic-bezier(.4,0,1,1) !important;
+}
 .badge-added{background:var(--green-chip);color:var(--green-dark);}
 .badge-status-live{
   background:#E5F4EC;color:#0F8A5C;border:1px solid #B8E0CC;
@@ -4822,7 +5393,76 @@ body{
         </div>
       </div>
     </div>
-    <div class="search-scroll"><div style="height:4px;"></div><div id="search-list"></div><div style="height:6px;"></div></div>
+    <div class="search-scroll"><div class="search-list-top-pad"></div><div id="search-list"></div><div style="height:20px;"></div></div>
+
+    <!-- ★★★ Phase2: 大会詳細モーダル ★★★ -->
+    <div class="tdm-overlay" id="tdm-overlay" onclick="closeTournamentModal()"></div>
+    <div class="tdm-sheet" id="tdm-sheet">
+      <!-- グラバーバー -->
+      <div class="tdm-grabber" id="tdm-grabber"></div>
+
+      <!-- ヘッダー：大会名＋カテゴリ -->
+      <div class="tdm-header">
+        <div class="tdm-header-left">
+          <div class="tdm-cat-row" id="tdm-cat-row"></div>
+          <div class="tdm-title" id="tdm-title">大会名</div>
+        </div>
+        <button class="tdm-close-btn" onclick="closeTournamentModal()" aria-label="閉じる">✕</button>
+      </div>
+
+      <!-- アクションボタン群 -->
+      <div class="tdm-actions" id="tdm-actions"></div>
+
+      <!-- スクロールエリア -->
+      <div class="tdm-scroll" id="tdm-scroll">
+        <!-- 基本情報 -->
+        <div class="tdm-section">
+          <div class="tdm-section-title">基本情報</div>
+          <div id="tdm-basic-rows"></div>
+        </div>
+
+        <!-- 金額情報 -->
+        <div class="tdm-section">
+          <div class="tdm-section-title">賞金・費用</div>
+          <div id="tdm-money-rows"></div>
+        </div>
+
+        <!-- エントリー情報 -->
+        <div class="tdm-section">
+          <div class="tdm-section-title">エントリー</div>
+          <div id="tdm-entry-rows"></div>
+        </div>
+
+        <!-- リンク -->
+        <div class="tdm-section">
+          <div class="tdm-section-title">リンク</div>
+        </div>
+        <div class="tdm-link-grid" id="tdm-link-grid"></div>
+
+        <div style="height:8px;"></div>
+      </div>
+
+      <!-- フッター：主要CTA -->
+      <div class="tdm-footer" id="tdm-footer">
+        <button class="tdm-footer-cal" id="tdm-footer-cal" onclick="_tdmAddToCalendar()">
+          <svg width="15" height="15" viewBox="0 0 22 22" fill="none">
+            <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/>
+            <line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            <line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            <line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/>
+          </svg>
+          カレンダーに追加
+        </button>
+        <button class="tdm-footer-entry" id="tdm-footer-entry" onclick="_tdmOpenEntry()">
+          <svg width="14" height="14" viewBox="0 0 22 22" fill="none">
+            <path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
+            <path d="M9 11l2 2 4-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="8" y="1" width="6" height="4" rx="1" stroke="#fff" stroke-width="1.7"/>
+          </svg>
+          エントリーへ
+        </button>
+      </div>
+    </div>
     <!-- ★ リマインド：時間選択シート -->
     <div class="remind-overlay" id="remind-overlay" onclick="if(event.target===this)closeRemindSheet()">
       <div class="remind-sheet" onclick="event.stopPropagation()">
@@ -5648,18 +6288,240 @@ window.authForgotPassword = function() {
   var email = (document.getElementById('auth-email') || {}).value || '';
   if (!email.trim()) { alert('メールアドレスを入力してください'); return; }
   alert('パスワードリセットメールを送信しました');
-};const DB={
-  jgto:[{name:'東建ホームメイトカップ',place:'三重県 東建多度CC',start:'2025-04-03',end:'2025-04-06',area:'chubu',prefecture:'mie'},{name:'中日クラウンズ',place:'愛知県 名古屋GC和合C',start:'2025-04-24',end:'2025-04-27',area:'chubu',prefecture:'aichi'},{name:'関西オープン',place:'大阪府 茨木CC',start:'2025-05-01',end:'2025-05-04',area:'kansai',prefecture:'osaka'},{name:'日本プロゴルフ選手権',place:'兵庫県 宝塚GC',start:'2025-05-15',end:'2025-05-18',area:'kansai',prefecture:'hyogo'},{name:'日本ゴルフツアー選手権',place:'茨城県 宍戸ヒルズCC',start:'2025-06-05',end:'2025-06-08',area:'kanto',prefecture:'ibaraki'},{name:'フジサンケイクラシック',place:'山梨県 富士桜CC',start:'2025-08-07',end:'2025-08-10',area:'kanto',prefecture:'yamanashi'},{name:'日本オープン',place:'千葉県 袖ヶ浦CC',start:'2025-10-09',end:'2025-10-12',area:'kanto',prefecture:'chiba'},{name:'ダンロップフェニックス',place:'宮崎県 フェニックスCC',start:'2025-11-20',end:'2025-11-23',area:'kyushu',prefecture:'miyazaki'},{name:'ゴルフ日本シリーズJTカップ',place:'東京都 東京よみうりCC',start:'2025-12-04',end:'2025-12-07',area:'kanto',prefecture:'tokyo'}],
-  jlpga:[{name:'ダイキンオーキッドレディス',place:'沖縄県 琉球GC',start:'2025-03-06',end:'2025-03-09',area:'kyushu',prefecture:'okinawa'},{name:'ヤマハレディースオープン葛城',place:'静岡県 葛城GC',start:'2025-05-01',end:'2025-05-04',area:'chubu',prefecture:'shizuoka'},{name:'ワールドレディスチャンピオンシップ',place:'千葉県 勝浦東急GC',start:'2025-05-08',end:'2025-05-11',area:'kanto',prefecture:'chiba'},{name:'日本女子プロ選手権',place:'埼玉県 武蔵丘GC',start:'2025-07-10',end:'2025-07-13',area:'kanto',prefecture:'saitama'},{name:'日本女子オープン',place:'兵庫県 小野GC',start:'2025-10-02',end:'2025-10-05',area:'kansai',prefecture:'hyogo'},{name:'LPGAツアーチャンピオンシップ',place:'宮崎県 UMKCC',start:'2025-11-20',end:'2025-11-23',area:'kyushu',prefecture:'miyazaki'}],
-  pga:[{name:'マスターズ',place:'ジョージア州 オーガスタナショナル',start:'2025-04-10',end:'2025-04-13',area:'overseas',prefecture:'overseas'},{name:'全米プロゴルフ選手権',place:'ノースカロライナ州 クエイルホロウ',start:'2025-05-15',end:'2025-05-18',area:'overseas',prefecture:'overseas'},{name:'全米オープン',place:'ペンシルベニア州 オークモント',start:'2025-06-12',end:'2025-06-15',area:'overseas',prefecture:'overseas'},{name:'全英オープン',place:'スコットランド ロイヤルポートラッシュ',start:'2025-07-17',end:'2025-07-20',area:'overseas',prefecture:'overseas'}],
-  qualifier:[{name:'QT第1戦',place:'千葉県 PGAゴルフアカデミー',start:'2025-03-17',end:'2025-03-18',area:'kanto',prefecture:'chiba'},{name:'QT第2戦',place:'埼玉県 大宮GC',start:'2025-05-19',end:'2025-05-20',area:'kanto',prefecture:'saitama'},{name:'QT第3戦',place:'兵庫県 神戸GC',start:'2025-06-16',end:'2025-06-17',area:'kansai',prefecture:'hyogo'},{name:'QTファイナル',place:'茨城県 宍戸ヒルズCC',start:'2025-10-20',end:'2025-10-23',area:'kanto',prefecture:'ibaraki'}],
-  mini:[{name:'PGAドリームステージ 第1戦',place:'千葉県 袖ヶ浦CC',start:'2025-04-21',end:'2025-04-22',area:'kanto',prefecture:'chiba'},{name:'PGAドリームステージ 第2戦',place:'神奈川県 川崎GC',start:'2025-05-26',end:'2025-05-27',area:'kanto',prefecture:'kanagawa'},{name:'関東ミニツアー 第1戦',place:'茨城県 水戸GC',start:'2025-04-14',end:'2025-04-14',area:'kanto',prefecture:'ibaraki'}],
-  open:[{name:'ミズノオープン',place:'愛知県 名古屋GC',start:'2025-05-22',end:'2025-05-25',area:'chubu',prefecture:'aichi'},{name:'北海道オープン',place:'北海道 札幌GC',start:'2025-05-29',end:'2025-05-31',area:'hokkaido',prefecture:'hokkaido'},{name:'サントリーオープン',place:'千葉県 習志野CC',start:'2025-06-26',end:'2025-06-29',area:'kanto',prefecture:'chiba'}],
+};// ================================================================
+// ★★★ Phase2: 拡張大会データベース（ダミーデータ）★★★
+// 実データ投入時はここに追記するだけでOK
+// フィールド仕様:
+//   name, place, courseName, start, end, area, prefecture,
+//   gender('mens'|'womens'|'both'), entryDeadline, entryFee,
+//   practiceRoundFee, prize, prizeWinner, entryMethod,
+//   qualification, capacity, cancelDeadline,
+//   organizer, officialUrl, igUrl, entryUrl, pairUrl, resultUrl
+// ================================================================
+const DB={
+  jgto:[
+    {
+      name:'東建ホームメイトカップ',
+      place:'三重県',courseName:'東建多度CC・名古屋',
+      start:'2025-04-03',end:'2025-04-06',
+      area:'chubu',prefecture:'mie',gender:'mens',
+      entryDeadline:'2025-03-10',entryFee:'30,000円',practiceRoundFee:'8,000円',
+      prize:'15,000万円',prizeWinner:'3,000万円',
+      entryMethod:'JGTOオンライン申請',qualification:'JGTO出場資格保持者',capacity:'144名',
+      cancelDeadline:'2025-03-20',organizer:'東建コーポレーション',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+    {
+      name:'中日クラウンズ',
+      place:'愛知県',courseName:'名古屋GC 和合コース',
+      start:'2025-04-24',end:'2025-04-27',
+      area:'chubu',prefecture:'aichi',gender:'mens',
+      entryDeadline:'2025-03-28',entryFee:'35,000円',practiceRoundFee:'9,000円',
+      prize:'15,000万円',prizeWinner:'3,000万円',
+      entryMethod:'JGTO公式サイト',qualification:'JGTO出場資格保持者',capacity:'144名',
+      cancelDeadline:'2025-04-10',organizer:'中日新聞社',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+    {
+      name:'日本プロゴルフ選手権',
+      place:'兵庫県',courseName:'宝塚GC',
+      start:'2025-05-15',end:'2025-05-18',
+      area:'kansai',prefecture:'hyogo',gender:'mens',
+      entryDeadline:'2025-04-20',entryFee:'50,000円',practiceRoundFee:'12,000円',
+      prize:'20,000万円',prizeWinner:'4,000万円',
+      entryMethod:'JPGA会員専用フォーム',qualification:'PGA正会員・特別会員',capacity:'156名',
+      cancelDeadline:'2025-05-01',organizer:'日本プロゴルフ協会',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+    {
+      name:'日本ゴルフツアー選手権 森ビルカップ Shishido Hills',
+      place:'茨城県',courseName:'宍戸ヒルズCC 西コース',
+      start:'2025-06-05',end:'2025-06-08',
+      area:'kanto',prefecture:'ibaraki',gender:'mens',
+      entryDeadline:'2025-05-09',entryFee:'40,000円',practiceRoundFee:'10,000円',
+      prize:'20,000万円',prizeWinner:'4,000万円',
+      entryMethod:'JGTOオンライン申請',qualification:'JGTO出場資格保持者',capacity:'144名',
+      cancelDeadline:'2025-05-22',organizer:'JGTO / 森ビル',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+    {
+      name:'日本オープン',
+      place:'千葉県',courseName:'袖ヶ浦カンツリークラブ',
+      start:'2025-10-09',end:'2025-10-12',
+      area:'kanto',prefecture:'chiba',gender:'mens',
+      entryDeadline:'2025-09-01',entryFee:'60,000円',practiceRoundFee:'15,000円',
+      prize:'25,000万円',prizeWinner:'5,000万円',
+      entryMethod:'JGA公式サイト',qualification:'JGA規定による',capacity:'156名',
+      cancelDeadline:'2025-09-20',organizer:'日本ゴルフ協会',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+    {
+      name:'ダンロップフェニックス',
+      place:'宮崎県',courseName:'フェニックスCC',
+      start:'2025-11-20',end:'2025-11-23',
+      area:'kyushu',prefecture:'miyazaki',gender:'mens',
+      entryDeadline:'2025-10-20',entryFee:'40,000円',practiceRoundFee:'10,000円',
+      prize:'20,000万円',prizeWinner:'4,000万円',
+      entryMethod:'JGTOオンライン申請',qualification:'JGTO出場資格保持者',capacity:'144名',
+      cancelDeadline:'2025-11-05',organizer:'住友ゴム工業',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+  ],
+  jlpga:[
+    {
+      name:'ダイキンオーキッドレディス',
+      place:'沖縄県',courseName:'琉球GC',
+      start:'2025-03-06',end:'2025-03-09',
+      area:'kyushu',prefecture:'okinawa',gender:'womens',
+      entryDeadline:'2025-02-07',entryFee:'25,000円',practiceRoundFee:'7,000円',
+      prize:'12,000万円',prizeWinner:'2,160万円',
+      entryMethod:'JLPGA公式サイト',qualification:'JLPGA出場資格保持者',capacity:'120名',
+      cancelDeadline:'2025-02-20',organizer:'ダイキン工業',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+    {
+      name:'ワールドレディスチャンピオンシップ サロンパスカップ',
+      place:'千葉県',courseName:'勝浦東急GC',
+      start:'2025-05-08',end:'2025-05-11',
+      area:'kanto',prefecture:'chiba',gender:'womens',
+      entryDeadline:'2025-04-11',entryFee:'30,000円',practiceRoundFee:'8,000円',
+      prize:'18,000万円',prizeWinner:'3,240万円',
+      entryMethod:'JLPGA公式サイト',qualification:'JLPGA出場資格保持者',capacity:'120名',
+      cancelDeadline:'2025-04-25',organizer:'ニチバン',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+    {
+      name:'日本女子オープン',
+      place:'兵庫県',courseName:'小野GC',
+      start:'2025-10-02',end:'2025-10-05',
+      area:'kansai',prefecture:'hyogo',gender:'womens',
+      entryDeadline:'2025-09-01',entryFee:'40,000円',practiceRoundFee:'10,000円',
+      prize:'16,000万円',prizeWinner:'2,880万円',
+      entryMethod:'JGA公式サイト',qualification:'JGA規定による',capacity:'120名',
+      cancelDeadline:'2025-09-18',organizer:'日本ゴルフ協会',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+  ],
+  pga:[
+    {
+      name:'マスターズ',
+      place:'米国 ジョージア州',courseName:'オーガスタナショナルGC',
+      start:'2025-04-10',end:'2025-04-13',
+      area:'overseas',prefecture:'overseas',gender:'mens',
+      entryDeadline:null,entryFee:'招待制',practiceRoundFee:'-',
+      prize:'2,000万ドル',prizeWinner:'360万ドル',
+      entryMethod:'招待制（出場資格保持者のみ）',qualification:'マスターズ出場資格者',capacity:'90名前後',
+      cancelDeadline:null,organizer:'オーガスタナショナルGC',
+      officialUrl:'https://www.masters.com',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+    {
+      name:'全米オープン',
+      place:'米国 ペンシルベニア州',courseName:'オークモントCC',
+      start:'2025-06-12',end:'2025-06-15',
+      area:'overseas',prefecture:'overseas',gender:'mens',
+      entryDeadline:'2025-04-14',entryFee:'$200',practiceRoundFee:'-',
+      prize:'2,100万ドル',prizeWinner:'378万ドル',
+      entryMethod:'USGA公式サイト（予選会あり）',qualification:'JGA推薦・予選会通過',capacity:'156名',
+      cancelDeadline:null,organizer:'USGA',
+      officialUrl:'https://www.usopen.com',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+  ],
+  qualifier:[
+    {
+      name:'JGTO QT 第1ステージ 関東会場',
+      place:'千葉県',courseName:'PGAゴルフアカデミー',
+      start:'2025-09-15',end:'2025-09-17',
+      area:'kanto',prefecture:'chiba',gender:'mens',
+      entryDeadline:'2025-08-20',entryFee:'45,000円',practiceRoundFee:'6,000円',
+      prize:'-',prizeWinner:'-',
+      entryMethod:'JGTOオンライン申請',qualification:'プロゴルファー（PGA・JGTO登録者）',capacity:'72名',
+      cancelDeadline:'2025-09-01',organizer:'JGTO',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+    {
+      name:'JGTO QT ファイナルステージ',
+      place:'茨城県',courseName:'宍戸ヒルズCC',
+      start:'2025-10-20',end:'2025-10-23',
+      area:'kanto',prefecture:'ibaraki',gender:'mens',
+      entryDeadline:'2025-09-25',entryFee:'80,000円',practiceRoundFee:'12,000円',
+      prize:'-',prizeWinner:'-',
+      entryMethod:'各ステージ通過者のみ',qualification:'QT各ステージ通過者',capacity:'144名',
+      cancelDeadline:'2025-10-06',organizer:'JGTO',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+  ],
+  mini:[
+    {
+      name:'Future Tour 第1戦 関東大会',
+      place:'千葉県',courseName:'袖ヶ浦カンツリークラブ',
+      start:'2025-04-21',end:'2025-04-22',
+      area:'kanto',prefecture:'chiba',gender:'mens',
+      entryDeadline:'2025-04-07',entryFee:'18,000円',practiceRoundFee:'5,000円',
+      prize:'100万円',prizeWinner:'30万円',
+      entryMethod:'Future Tour公式LINE申請',qualification:'プロ・アマ（ハンデ3以内）',capacity:'48名',
+      cancelDeadline:'2025-04-14',organizer:'Future Tour運営委員会',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+    {
+      name:'P&A CUP 第3戦',
+      place:'神奈川県',courseName:'川崎国際生田緑地GC',
+      start:'2025-05-26',end:'2025-05-27',
+      area:'kanto',prefecture:'kanagawa',gender:'mens',
+      entryDeadline:'2025-05-12',entryFee:'20,000円',practiceRoundFee:'5,500円',
+      prize:'120万円',prizeWinner:'36万円',
+      entryMethod:'P&A CUP公式サイト',qualification:'プロゴルファー（登録不要）',capacity:'60名',
+      cancelDeadline:'2025-05-19',organizer:'P&A CUP実行委員会',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+  ],
+  open:[
+    {
+      name:'ミズノオープン',
+      place:'愛知県',courseName:'名古屋GC',
+      start:'2025-05-22',end:'2025-05-25',
+      area:'chubu',prefecture:'aichi',gender:'mens',
+      entryDeadline:'2025-04-25',entryFee:'35,000円',practiceRoundFee:'9,000円',
+      prize:'12,000万円',prizeWinner:'2,160万円',
+      entryMethod:'JGTOオンライン申請',qualification:'JGTO出場資格保持者',capacity:'144名',
+      cancelDeadline:'2025-05-08',organizer:'ミズノ',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+    {
+      name:'北海道オープン',
+      place:'北海道',courseName:'札幌GC 輪厚コース',
+      start:'2025-05-29',end:'2025-05-31',
+      area:'hokkaido',prefecture:'hokkaido',gender:'mens',
+      entryDeadline:'2025-05-01',entryFee:'30,000円',practiceRoundFee:'8,000円',
+      prize:'5,000万円',prizeWinner:'900万円',
+      entryMethod:'北海道ゴルフ連盟申請',qualification:'プロゴルファー（北海道出身・在住優先）',capacity:'80名',
+      cancelDeadline:'2025-05-15',organizer:'北海道ゴルフ連盟',
+      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
+    },
+  ],
   personal:[],
 };
 const TOURNAMENTS_FLAT=Object.entries(DB).filter(([k])=>k!=='personal').flatMap(([cat,arr])=>arr.map((t,i)=>({...t,cat,id:`${cat}-${i}`})));
-const CAT_LABELS={jgto:'JGTO',jlpga:'JLPGA',pga:'PGA TOUR',qualifier:'予選会',mini:'ミニツアー',open:'オープン大会',personal:'個人予定'};
-const CAT_COLORS={jgto:'#1AAF7A',jlpga:'#E0567E',pga:'#2D7DD2',qualifier:'#A0631A',mini:'#D4771A',open:'#7B4DB5',personal:'#6B6ED4'};
+// ★ Phase2: カテゴリラベル（拡張）
+const CAT_LABELS={
+  jgto:'JGTO',jlpga:'JLPGA',pga:'PGA TOUR',qualifier:'予選会',mini:'ミニツアー',
+  open:'オープン大会',personal:'個人予定',
+  acn:'ACNツアー',qt:'QT',jpga:'JPGA',senior:'シニアツアー',
+  atp_golf:'ATP GOLF',fj_tour:'FJ TOUR',future:'Future Tour',
+  doucus:'DOUCUS OPEN',pandc:'P&A CUP',pref_open:'県オープン',
+  stepup:'ステップアップ',qt_w:'QT',qualifier_w:'予選会',
+  next_heroine:'NEXT HEROINE',oneday:'One Day Tour',women_open:'女子オープン',
+  lpga:'LPGA',klpga:'KLPGA',
+};
+// ★ Phase2: カテゴリ色（拡張）
+const CAT_COLORS={
+  jgto:'#1AAF7A',jlpga:'#E0567E',pga:'#2D7DD2',qualifier:'#A0631A',mini:'#D4771A',
+  open:'#7B4DB5',personal:'#6B6ED4',acn:'#2E8B57',qt:'#A0631A',jpga:'#2D7DD2',
+  senior:'#6B6B8E',atp_golf:'#4A90D9',fj_tour:'#E07B39',future:'#5C8A3C',
+  doucus:'#8B5CF6',pandc:'#D4771A',pref_open:'#7B4DB5',
+  stepup:'#E87FA8',qt_w:'#A0631A',qualifier_w:'#C4841A',
+  next_heroine:'#9C59B5',oneday:'#E69B3A',women_open:'#C84B6E',
+  lpga:'#2D7DD2',klpga:'#E05555',
+};
 const CATEGORIES=[
   {key:'jgto',label:'JGTO',desc:'男子ツアー',color:'#1AAF7A'},
   {key:'jlpga',label:'JLPGA',desc:'女子ツアー',color:'#E0567E'},
@@ -7254,57 +8116,378 @@ function _searchStatus(t){
 }
 function _statusLabel(s){return s==='live'?'開催中':(s==='upcoming'?'予定':'終了');}
 
-// 大会単体カードのHTML
+// ================================================================
+// ★★★ Phase2: 大会詳細モーダル ★★★
+// ================================================================
+
+let _tdmCurrentId = null;
+let _tdmDragStartY = 0;
+let _tdmDragCurrentY = 0;
+let _tdmIsDragging = false;
+
+// 詳細モーダルを開く
+function openTournamentModal(tid){
+  const t = TOURNAMENTS_FLAT.find(x => x.id === tid);
+  if(!t) return;
+  _tdmCurrentId = tid;
+  _renderTdm(t);
+  document.getElementById('tdm-overlay').classList.add('show');
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      document.getElementById('tdm-sheet').classList.add('show');
+    });
+  });
+  // ドラッグ閉じ初期化
+  _tdmInitDrag();
+}
+
+// モーダルを閉じる
+function closeTournamentModal(){
+  const sheet = document.getElementById('tdm-sheet');
+  const overlay = document.getElementById('tdm-overlay');
+  sheet.classList.remove('show');
+  overlay.classList.remove('show');
+  setTimeout(()=>{ _tdmCurrentId = null; }, 400);
+}
+
+// モーダル内容を描画
+function _renderTdm(t){
+  const catColor = CAT_COLORS[t.cat] || '#8090A0';
+  const catLabel = CAT_LABELS[t.cat] || t.cat;
+  const genderLabel = t.gender==='womens'?'女子':t.gender==='both'?'男女':t.gender==='mens'?'男子':'';
+  const status = _searchStatus(t);
+  const statusLabel = {live:'開催中',upcoming:'予定',ended:'終了'}[status];
+  const isAdded = addedIds.has(t.id);
+  const isFav = favTournaments.has(t.id);
+
+  // ヘッダー
+  document.getElementById('tdm-title').textContent = t.name;
+  document.getElementById('tdm-cat-row').innerHTML = `
+    <span class="t-cat-badge" style="background:${catColor}18;color:${catColor};border:1px solid ${catColor}40;font-size:10px;padding:3px 9px;">${catLabel}</span>
+    ${genderLabel?`<span class="t-gender-badge ${t.gender||''}" style="font-size:10px;">${genderLabel}</span>`:''}
+    <span class="t-status-badge ${status}" style="font-size:10px;">${statusLabel}</span>
+  `;
+
+  // アクションボタン群
+  const actionsEl = document.getElementById('tdm-actions');
+  actionsEl.innerHTML = `
+    <button class="tdm-action-btn" onclick="_tdmAddToCalendar()">
+      <div class="tdm-action-icon cal">
+        <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
+          <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#1AAF7A" stroke-width="1.7"/>
+          <line x1="7" y1="2" x2="7" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>
+          <line x1="15" y1="2" x2="15" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>
+          <line x1="3" y1="9" x2="19" y2="9" stroke="#1AAF7A" stroke-width="1.7"/>
+        </svg>
+      </div>
+      <span class="tdm-action-label">${isAdded?'追加済み':'カレンダー'}</span>
+    </button>
+    <button class="tdm-action-btn" onclick="_tdmToggleFav()">
+      <div class="tdm-action-icon fav">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="${isFav?'#E5A41A':'none'}" stroke="${isFav?'#E5A41A':'#B8901A'}" stroke-width="1.8">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      </div>
+      <span class="tdm-action-label">${isFav?'お気に入り済':'お気に入り'}</span>
+    </button>
+    ${t.officialUrl?`<a class="tdm-action-btn" href="${t.officialUrl}" target="_blank" rel="noopener">
+      <div class="tdm-action-icon web">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5060A0" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
+        </svg>
+      </div>
+      <span class="tdm-action-label">公式サイト</span>
+    </a>`:''}
+    ${t.entryUrl?`<a class="tdm-action-btn" href="${t.entryUrl}" target="_blank" rel="noopener">
+      <div class="tdm-action-icon entry">
+        <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
+          <path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
+          <path d="M9 11l2 2 4-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="8" y="1" width="6" height="4" rx="1" stroke="#fff" stroke-width="1.7"/>
+        </svg>
+      </div>
+      <span class="tdm-action-label">エントリー</span>
+    </a>`:''}
+    ${t.igUrl?`<a class="tdm-action-btn" href="${t.igUrl}" target="_blank" rel="noopener">
+      <div class="tdm-action-icon" style="background:#FFF0F6;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C060A0" stroke-width="1.8">
+          <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".5" fill="#C060A0"/>
+        </svg>
+      </div>
+      <span class="tdm-action-label">Instagram</span>
+    </a>`:''}
+  `;
+
+  // ── 基本情報 ──
+  const rows = [
+    {icon:'cal', label:'開催日', value:t.start&&t.end?`${t.start} 〜 ${t.end}`:'-'},
+    {icon:'pin', label:'都道府県', value:t.place||'-'},
+    {icon:'golf', label:'ゴルフ場', value:t.courseName||'-'},
+    {icon:'org', label:'主催', value:t.organizer||'-'},
+    {icon:'deadline', label:'締切日', value:t.entryDeadline||'-', cls:t.entryDeadline?_deadlineClass(t.entryDeadline):''},
+  ];
+  document.getElementById('tdm-basic-rows').innerHTML = rows.map(r=>`
+    <div class="tdm-row">
+      <div class="tdm-row-icon">${_tdmIcon(r.icon)}</div>
+      <div class="tdm-row-label">${r.label}</div>
+      <div class="tdm-row-value${r.cls?' '+r.cls:''}">${r.value||'<span class=\'empty\'>未設定</span>'}</div>
+    </div>
+  `).join('');
+
+  // ── 金額情報 ──
+  const moneyRows = [
+    {icon:'trophy', label:'賞金総額', value:t.prize, money:true},
+    {icon:'trophy', label:'優勝賞金', value:t.prizeWinner, money:true},
+    {icon:'money', label:'参加費', value:t.entryFee},
+    {icon:'money', label:'練習ラウンド', value:t.practiceRoundFee},
+  ];
+  document.getElementById('tdm-money-rows').innerHTML = moneyRows.map(r=>`
+    <div class="tdm-row">
+      <div class="tdm-row-icon">${_tdmIcon(r.icon)}</div>
+      <div class="tdm-row-label">${r.label}</div>
+      <div class="tdm-row-value${r.money?' money':''}">${r.value||'<span class="empty">未設定</span>'}</div>
+    </div>
+  `).join('');
+
+  // ── エントリー情報 ──
+  const entryRows = [
+    {icon:'method', label:'申請方法', value:t.entryMethod},
+    {icon:'user', label:'出場資格', value:t.qualification},
+    {icon:'num', label:'定員', value:t.capacity},
+    {icon:'cancel', label:'キャンセル', value:t.cancelDeadline},
+  ];
+  document.getElementById('tdm-entry-rows').innerHTML = entryRows.map(r=>`
+    <div class="tdm-row">
+      <div class="tdm-row-icon">${_tdmIcon(r.icon)}</div>
+      <div class="tdm-row-label">${r.label}</div>
+      <div class="tdm-row-value">${r.value||'<span class="empty">未設定</span>'}</div>
+    </div>
+  `).join('');
+
+  // ── リンク ──
+  const links = [
+    {label:'公式HP', url:t.officialUrl, icon:'🌐'},
+    {label:'Instagram', url:t.igUrl, icon:'📸'},
+    {label:'エントリーフォーム', url:t.entryUrl, icon:'📋'},
+    {label:'組み合わせ', url:t.pairUrl, icon:'📑'},
+    {label:'結果速報', url:t.resultUrl, icon:'🏆'},
+  ];
+  document.getElementById('tdm-link-grid').innerHTML = links.map(l=>`
+    <a class="tdm-link-btn${l.url?' has-url':''}"
+      href="${l.url||'#'}" ${l.url?'target="_blank" rel="noopener"':'onclick="return false;"'}>
+      <div class="tdm-link-icon">${l.icon}</div>
+      <div class="tdm-link-label">${l.label}</div>
+      ${l.url?'<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><polyline points="3.5,2.5 6.5,5 3.5,7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>':''}
+    </a>
+  `).join('');
+
+  // フッターCTA
+  const entryBtn = document.getElementById('tdm-footer-entry');
+  if(t.entryUrl){
+    entryBtn.classList.remove('no-url');
+    entryBtn.onclick = ()=>{ window.open(t.entryUrl,'_blank'); };
+  } else {
+    entryBtn.classList.add('no-url');
+    entryBtn.onclick = ()=>{ showToast('エントリーURLは未設定です'); };
+  }
+}
+
+// アイコン生成ヘルパー
+function _tdmIcon(type){
+  const icons = {
+    cal:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#9BB8AE" stroke-width="1.6"/><line x1="7" y1="2" x2="7" y2="6" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="#9BB8AE" stroke-width="1.6"/></svg>`,
+    pin:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M11 3.5a5 5 0 015 5c0 4-5 10-5 10S6 12.5 6 8.5a5 5 0 015-5z" stroke="#9BB8AE" stroke-width="1.6"/><circle cx="11" cy="8.5" r="1.8" fill="#9BB8AE"/></svg>`,
+    golf:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M11 3v10" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/><path d="M11 3l5 2.5-5 2.5" stroke="#9BB8AE" stroke-width="1.6" stroke-linejoin="round"/><ellipse cx="11" cy="17" rx="4" ry="1.5" stroke="#9BB8AE" stroke-width="1.4"/></svg>`,
+    org:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M3 19c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/><circle cx="11" cy="8" r="4" stroke="#9BB8AE" stroke-width="1.6"/></svg>`,
+    deadline:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#9BB8AE" stroke-width="1.6"/><path d="M11 7v4.5l3 1.5" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    trophy:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M6 3h10v8a5 5 0 01-10 0V3z" stroke="#9BB8AE" stroke-width="1.6"/><path d="M6 5H3v2a3 3 0 003 3M16 5h3v2a3 3 0 01-3 3" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/><line x1="11" y1="16" x2="11" y2="19" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/><line x1="7" y1="19" x2="15" y2="19" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    money:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#9BB8AE" stroke-width="1.6"/><path d="M11 7v1m0 6v1m-3-4h4a1.5 1.5 0 010 3H9m0-3h2a1.5 1.5 0 000-3H9" stroke="#9BB8AE" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+    method:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><rect x="4" y="3" width="14" height="17" rx="2" stroke="#9BB8AE" stroke-width="1.6"/><line x1="7" y1="8" x2="15" y2="8" stroke="#9BB8AE" stroke-width="1.4" stroke-linecap="round"/><line x1="7" y1="12" x2="15" y2="12" stroke="#9BB8AE" stroke-width="1.4" stroke-linecap="round"/><line x1="7" y1="16" x2="11" y2="16" stroke="#9BB8AE" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+    user:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3.5" stroke="#9BB8AE" stroke-width="1.6"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    num:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M5 8h12M5 12h12M5 16h8" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    cancel:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#9BB8AE" stroke-width="1.6"/><path d="M8 8l6 6M14 8l-6 6" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+  };
+  return icons[type]||icons.cal;
+}
+
+// カレンダーに追加
+function _tdmAddToCalendar(){
+  if(!_tdmCurrentId) return;
+  toggleSearchAdd(_tdmCurrentId);
+  const isAdded = addedIds.has(_tdmCurrentId);
+  showToast(isAdded?'カレンダーに追加しました':'カレンダーから削除しました');
+}
+
+// お気に入りトグル
+function _tdmToggleFav(){
+  if(!_tdmCurrentId) return;
+  toggleFavTournament(_tdmCurrentId);
+  const t = TOURNAMENTS_FLAT.find(x=>x.id===_tdmCurrentId);
+  if(t) _renderTdm(t);
+}
+
+// エントリーURLを開く
+function _tdmOpenEntry(){
+  if(!_tdmCurrentId) return;
+  const t = TOURNAMENTS_FLAT.find(x=>x.id===_tdmCurrentId);
+  if(t&&t.entryUrl) window.open(t.entryUrl,'_blank');
+  else showToast('エントリーURLは未設定です');
+}
+
+// ── ドラッグで閉じる ──
+function _tdmInitDrag(){
+  const sheet = document.getElementById('tdm-sheet');
+  const grabber = document.getElementById('tdm-grabber');
+  if(!sheet||!grabber) return;
+
+  const onStart = (e)=>{
+    _tdmIsDragging = true;
+    _tdmDragStartY = (e.touches?e.touches[0].clientY:e.clientY);
+    _tdmDragCurrentY = 0;
+    sheet.classList.add('is-dragging');
+  };
+  const onMove = (e)=>{
+    if(!_tdmIsDragging) return;
+    const y = (e.touches?e.touches[0].clientY:e.clientY);
+    const dy = y - _tdmDragStartY;
+    if(dy < 0) return; // 上方向は無視
+    _tdmDragCurrentY = dy;
+    sheet.style.transform = `translateY(${dy}px)`;
+  };
+  const onEnd = ()=>{
+    if(!_tdmIsDragging) return;
+    _tdmIsDragging = false;
+    sheet.classList.remove('is-dragging');
+    if(_tdmDragCurrentY > 120){
+      sheet.style.transform = '';
+      closeTournamentModal();
+    } else {
+      sheet.style.transform = '';
+      sheet.style.transition = 'transform .35s cubic-bezier(.32,.72,.25,1)';
+      setTimeout(()=>{ sheet.style.transition=''; }, 350);
+    }
+  };
+
+  // 既存リスナー削除
+  grabber.ontouchstart = onStart;
+  grabber.ontouchmove = onMove;
+  grabber.ontouchend = onEnd;
+  grabber.onmousedown = onStart;
+  document.onmouseup = ()=>{ if(_tdmIsDragging) onEnd(); };
+  document.onmousemove = (e)=>{ if(_tdmIsDragging) onMove(e); };
+}
+
+// ★ Phase2: 日付をフォーマット（YYYY-MM-DD → M/D）
+function _fmtDate(ds){if(!ds)return'-';const[,m,d]=ds.split('-');return`${parseInt(m)}/${parseInt(d)}`;}
+// ★ Phase2: 締切日の緊急度を判定
+function _deadlineClass(ds){
+  if(!ds)return'';
+  const today=todayStr();
+  if(ds<today)return''; // 過去
+  const diff=Math.floor((new Date(ds)-new Date(today))/(1000*60*60*24));
+  if(diff===0)return'deadline-today';
+  if(diff<=3)return'deadline-near';
+  return'';
+}
+// ★ Phase2: 賞金表示（省略なし）
+function _fmtPrize(v){return v||'-';}
+
+// 大会単体カードのHTML（Phase2 新デザイン）
 function _searchCardHTML(t){
   const isAdded=addedIds.has(t.id);
   const isFav=favTournaments.has(t.id);
   const status=_searchStatus(t);
-  const datePart=`${t.start.slice(5).replace('-','/')} 〜 ${t.end.slice(5).replace('-','/')}`;
+  const statusLabel={live:'開催中',upcoming:'予定',ended:'終了'}[status];
   const rState=remindMap[t.id]||{reminder:false,reminderTiming:[]};
   const isRemind=rState.reminder;
   const remindKey=rState.reminderTiming&&rState.reminderTiming[0];
   const REMIND_LABELS={'30min':'30分前','1hour':'1時間前','sameDay':'当日朝','dayBefore':'前日','weekBefore':'1週間前'};
   const pillLabel=remindKey?REMIND_LABELS[remindKey]:'タイミングを選択';
-  // SVGベル（細線アウトライン）
-  const bellSvgOff=`<svg class="bell-svg" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 2.5a5.5 5.5 0 0 1 5.5 5.5v3l1.25 2H3.25L4.5 11V8A5.5 5.5 0 0 1 10 2.5Z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/>
-    <path d="M8 15.5a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
-  </svg>`;
-  // チェブロンSVG（ピル内右矢印）
+
+  // カテゴリ色を取得
+  const catColor=CAT_COLORS[t.cat]||'#8090A0';
+  const catLabel=CAT_LABELS[t.cat]||t.cat;
+
+  // 男女ラベル
+  const genderLabel=t.gender==='womens'?'女子':t.gender==='both'?'男女':t.gender==='mens'?'男子':'';
+
+  // 日付表示
+  const dateStr=`${_fmtDate(t.start)} 〜 ${_fmtDate(t.end)}`;
+  // 場所表示
+  const placeStr=t.courseName?`${t.place} / ${t.courseName}`:t.place||'-';
+  // 締切
+  const dlStr=t.entryDeadline?_fmtDate(t.entryDeadline):'-';
+  const dlCls=t.entryDeadline?_deadlineClass(t.entryDeadline):'';
+
+  // SVGアイコン群（インライン）
+  const svgCal=`<svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><line x1="5" y1="1.5" x2="5" y2="4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="11" y1="1.5" x2="11" y2="4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="2" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.3"/></svg>`;
+  const svgPin=`<svg viewBox="0 0 16 16" fill="none"><path d="M8 2.5a3.5 3.5 0 013.5 3.5c0 2.8-3.5 7-3.5 7S4.5 8.8 4.5 6A3.5 3.5 0 018 2.5z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="6" r="1.2" fill="currentColor"/></svg>`;
+  const svgClock=`<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`;
+  const svgBell=`<svg class="bell-svg" viewBox="0 0 20 20" fill="none"><path d="M10 2.5a5.5 5.5 0 0 1 5.5 5.5v3l1.25 2H3.25L4.5 11V8A5.5 5.5 0 0 1 10 2.5Z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M8 15.5a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>`;
   const chevSvg=`<svg viewBox="0 0 10 10" fill="none"><polyline points="3.5,2.5 6.5,5 3.5,7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  return`<div class="t-card${isAdded?' is-added':''}" data-tid="${t.id}">
-    <div class="t-card-top">
-      <div class="t-stripe stripe-${t.cat}"></div>
-      <div class="t-main">
-        <div class="t-name">
-          <span class="t-name-text">${escapeHtml(t.name)}</span>
-          ${isAdded?'<span class="t-name-check" title="追加済み">✓</span>':''}
+
+  return`<div class="t-card${isAdded?' is-added':''}" data-tid="${t.id}" onclick="openTournamentModal('${t.id}')">
+  <div class="t-card-top">
+    <div class="t-stripe stripe-${t.cat}" style="background:linear-gradient(180deg,${catColor},${catColor}99);"></div>
+    <div class="t-main">
+      <!-- 上段：大会名 -->
+      <div class="t-name">
+        <span class="t-name-text">${escapeHtml(t.name)}</span>
+        ${isAdded?'<span class="t-name-check">✓</span>':''}
+      </div>
+      <!-- 中段：情報グリッド -->
+      <div class="t-info-grid">
+        <div class="t-info-row">
+          <span class="t-info-icon">${svgCal}</span>
+          <span class="t-info-label">開催日</span>
+          <span class="t-info-value">${dateStr}</span>
         </div>
-        <div class="t-meta">${datePart} ｜ ${escapeHtml(t.place)}</div>
-        <div class="badge-row">
-          <span class="badge badge-${t.cat}">${CAT_LABELS[t.cat]||t.cat}</span>
-          <span class="badge badge-status-${status}">${_statusLabel(status)}</span>
-          ${isAdded?'<span class="badge badge-added">✓ 登録済み</span>':''}
+        ${t.entryDeadline?`<div class="t-info-row">
+          <span class="t-info-icon">${svgClock}</span>
+          <span class="t-info-label">締切</span>
+          <span class="t-info-value${dlCls?' '+dlCls:''}">${dlStr}</span>
+        </div>`:''}
+        <div class="t-info-row">
+          <span class="t-info-icon">${svgPin}</span>
+          <span class="t-info-label">会場</span>
+          <span class="t-info-value">${escapeHtml(placeStr)}</span>
         </div>
       </div>
-      <div class="t-action">
-        <button class="t-fav-btn${isFav?' is-fav':''}" onclick="event.stopPropagation();toggleFavTournament('${t.id}')" aria-label="お気に入り">★</button>
-        <button class="add-btn${isAdded?' added':''}" onclick="event.stopPropagation();toggleSearchAdd('${t.id}')">${isAdded?'✓ 追加済み':'＋ 追加'}</button>
+      <!-- 下段：バッジ行 -->
+      <div class="t-badge-row">
+        <span class="t-cat-badge" style="background:${catColor}18;color:${catColor};border:1px solid ${catColor}40;">${catLabel}</span>
+        ${genderLabel?`<span class="t-gender-badge ${t.gender||''}">${genderLabel}</span>`:''}
+        <span class="t-status-badge ${status}">${statusLabel}</span>
+        ${isAdded?'<span class="t-added-badge">✓ 登録済み</span>':''}
       </div>
     </div>
-    <div class="t-remind-row">
-      <button class="t-bell-btn${isRemind?' is-on':''}" id="bell-${t.id}"
-        onclick="event.stopPropagation();_toggleBell('${t.id}')" aria-label="リマインド">
-        ${bellSvgOff}
-      </button>
-      <button class="t-remind-pill${isRemind?' is-set visible':''}"
-        id="pill-${t.id}"
-        onclick="event.stopPropagation();openRemindSheet('${t.id}')"
-        aria-label="通知タイミング">
-        ${pillLabel}${chevSvg}
-      </button>
+    <!-- 右側アクション -->
+    <div class="t-action">
+      <button class="t-fav-btn${isFav?' is-fav':''}" onclick="event.stopPropagation();toggleFavTournament('${t.id}')" aria-label="お気に入り">★</button>
+      <button class="t-detail-btn" onclick="event.stopPropagation();openTournamentModal('${t.id}')">詳細</button>
+      <button class="add-btn${isAdded?' added':''}" onclick="event.stopPropagation();toggleSearchAdd('${t.id}')">${isAdded?'✓ 追加':'＋ 追加'}</button>
     </div>
-  </div>`;
+  </div>
+  <!-- 賞金・エントリー費行 -->
+  ${(t.prize||t.entryFee)?`<div class="t-prize-row">
+    ${t.prize?`<div class="t-prize-item"><div class="t-prize-label">賞金総額</div><div class="t-prize-value money">${escapeHtml(t.prize)}</div></div>`:''}
+    ${t.prize&&t.entryFee?'<div class="t-prize-divider"></div>':''}
+    ${t.entryFee?`<div class="t-prize-item"><div class="t-prize-label">参加費</div><div class="t-prize-value">${escapeHtml(t.entryFee)}</div></div>`:''}
+  </div>`:''}
+  <!-- リマインド行 -->
+  <div class="t-remind-row">
+    <button class="t-bell-btn${isRemind?' is-on':''}" id="bell-${t.id}"
+      onclick="event.stopPropagation();_toggleBell('${t.id}')" aria-label="リマインド">
+      ${svgBell}
+    </button>
+    <button class="t-remind-pill${isRemind?' is-set visible':''}"
+      id="pill-${t.id}"
+      onclick="event.stopPropagation();openRemindSheet('${t.id}')"
+      aria-label="通知タイミング">
+      ${pillLabel}${chevSvg}
+    </button>
+  </div>
+</div>`;
 }
 
 // =====================================================================
@@ -7846,10 +9029,10 @@ function applySearchFilters(){
 
   // カテゴリが一つも追加されていない場合の誘導
   if(userEnabledCategories.length===0){
-    list.innerHTML=`<div class="empty-search" style="text-align:center;padding:32px 24px;">
-      <div style="font-size:36px;margin-bottom:10px;">📂</div>
-      <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">カテゴリを追加してください</div>
-      <div style="font-size:12px;color:var(--text-tertiary);line-height:1.6;">カレンダー画面のメニュー（☰）から<br>「カテゴリを追加」で追加できます</div>
+    list.innerHTML=`<div class="search-empty">
+      <div class="search-empty-icon">📂</div>
+      <div class="search-empty-title">カテゴリを追加してください</div>
+      <div class="search-empty-sub">カレンダー画面のメニュー（☰）から<br>「カテゴリを追加」で追加できます</div>
     </div>`;
     return;
   }
@@ -7921,7 +9104,11 @@ function applySearchFilters(){
   const filterSuffix=filterLabels.length>0?` (${filterLabels.join(' / ')})`:'';
   document.getElementById('result-count').textContent=`${arr.length}件表示中${filterSuffix}`;
   if(!arr.length){
-    list.innerHTML=`<div class="empty-search">該当する大会がありません。<br>条件を広げてみてください</div>`;
+    list.innerHTML=`<div class="search-empty">
+      <div class="search-empty-icon">⛳</div>
+      <div class="search-empty-title">該当する大会が見つかりません</div>
+      <div class="search-empty-sub">条件を変えて再度お試しください</div>
+    </div>`;
     return;
   }
   list.innerHTML=arr.map(_searchCardHTML).join('');
