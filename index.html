@@ -1498,6 +1498,30 @@ button,input,select,textarea{
 .filter-area-rail::-webkit-scrollbar{display:none;}
 :root[data-theme="dark"] .filter-grid{background:var(--card-bg);}
 .filter-grid.is-hidden{display:none;}
+
+/* ★★★ 階層型カテゴリーUI: グループ行 / ツアー行 ★★★ */
+.hcat-group-row{
+  padding: 8px 16px 4px;
+  border-bottom: 1px solid var(--border);
+  gap: 6px;
+}
+.hcat-tour-row{
+  padding: 5px 16px 9px;
+  gap: 6px;
+}
+.hcat-group-chip{
+  font-size: 10.5px !important;
+  height: 26px !important;
+  padding: 0 10px !important;
+  border-radius: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  white-space: nowrap;
+}
+:root[data-theme="dark"] .hcat-group-row,
+:root[data-theme="dark"] .hcat-tour-row{
+  background: var(--card-bg);
+}
 .filter-chip{
   position:relative;
   height:32px;
@@ -6480,6 +6504,177 @@ window.authForgotPassword = function() {
   if (!email.trim()) { alert('メールアドレスを入力してください'); return; }
   alert('パスワードリセットメールを送信しました');
 };// ================================================================
+// ★★★ 階層型カテゴリーシステム v2 ★★★
+//
+// 構造: gender → region → group → tour
+//   gender : 'mens' | 'womens'
+//   region : 'domestic' | 'overseas'
+//   group  : カテゴリグループ（国内ツアー / ミニツアー / オープン大会 / 海外ツアー）
+//   tour   : 個別ツアー名
+//
+// 【大会追加時は tourKey に合わせるだけ】
+//   tournaments[] に 1件追記 → 検索/フィルター/モーダル/カレンダー全自動反映
+//
+// ================================================================
+const tournamentCategories = {
+  mens: {
+    label: '男子',
+    domestic: {
+      label: '国内',
+      groups: {
+        domestic_tour: {
+          label: '国内ツアー',
+          color: '#1AAF7A',
+          tours: {
+            jgto:   { label: 'JGTO',       desc: '男子ツアー',   color: '#1AAF7A', icon: '🏌' },
+            acn:    { label: 'ACNツアー',   desc: 'ACN男子ツアー', color: '#2E8B57', icon: '🏌' },
+            qt:     { label: 'QT',          desc: 'クォリファイングトーナメント', color: '#A0631A', icon: '📋' },
+            qualifier: { label: '予選会',   desc: '各ツアー予選会', color: '#C4841A', icon: '📋' },
+            jpga:   { label: 'JPGA',        desc: 'プロゴルフ協会', color: '#2D7DD2', icon: '🏌' },
+            senior: { label: 'シニアツアー', desc: 'シニア男子ツアー', color: '#6B6B8E', icon: '🏌' },
+          }
+        },
+        mini_tour: {
+          label: 'ミニツアー',
+          color: '#D4771A',
+          tours: {
+            mini:     { label: 'ミニツアー',          desc: '各種ミニツアー（旧互換）', color: '#D4771A', icon: '⛳' },
+            atp_golf: { label: 'ATP GOLF TOUR',        desc: 'ミニツアー', color: '#4A90D9', icon: '⛳' },
+            fj_tour:  { label: 'FJ TOUR',              desc: 'ミニツアー', color: '#E07B39', icon: '⛳' },
+            future:   { label: 'Future Tour',          desc: 'ミニツアー', color: '#5C8A3C', icon: '⛳' },
+            doucus:   { label: 'DOUCUS OPEN',          desc: 'ミニツアー', color: '#8B5CF6', icon: '⛳' },
+            pandc:    { label: 'P&A CUP',              desc: 'ミニツアー', color: '#D4771A', icon: '⛳' },
+            karts:    { label: 'カートルズツアー',      desc: 'ミニツアー', color: '#B85A1A', icon: '⛳' },
+            golf_memo:{ label: 'The Golf Memo TOUR',   desc: 'ミニツアー', color: '#6B8E2E', icon: '⛳' },
+            speeder:  { label: 'スピーダーチャレンジ', desc: 'ミニツアー', color: '#7B4DB5', icon: '⛳' },
+          }
+        },
+        open_tour: {
+          label: 'オープン大会',
+          color: '#7B4DB5',
+          tours: {
+            open:       { label: 'オープン大会',  desc: '各種オープン大会（旧互換）', color: '#7B4DB5', icon: '🏆' },
+            pref_open:  { label: '県オープン',   desc: 'prefecture open', color: '#7B4DB5', icon: '🏆' },
+            famous_open:{ label: '有名オープン', desc: 'famous open',     color: '#5A3BA0', icon: '🏆' },
+            local_open: { label: '地方オープン', desc: 'local open',      color: '#9B6DD5', icon: '🏆' },
+          }
+        },
+      }
+    },
+    overseas: {
+      label: '海外',
+      groups: {
+        overseas_tour: {
+          label: '海外ツアー',
+          color: '#2D7DD2',
+          tours: {
+            pga:     { label: 'PGA TOUR',      desc: '米国男子ツアー', color: '#2D7DD2', icon: '🌎' },
+            korn_ferry:{ label: 'Korn Ferry Tour', desc: '米国下部ツアー', color: '#4A90D9', icon: '🌎' },
+            dp_world:{ label: 'DP World Tour', desc: '欧州ツアー',   color: '#1A5DB0', icon: '🌎' },
+            asian_tour:{ label: 'Asian Tour',  desc: 'アジアツアー', color: '#2E8B8E', icon: '🌎' },
+            liv:     { label: 'LIV GOLF',      desc: 'LIVゴルフ',   color: '#1A7A3C', icon: '🌎' },
+            china_m: { label: '中国ツアー',    desc: 'China Tour 男子', color: '#CC3333', icon: '🌏' },
+            korea_m: { label: '韓国ツアー',    desc: 'KPGA Tour',   color: '#1A4DB5', icon: '🌏' },
+            taiwan_m:{ label: '台湾ツアー',    desc: 'TLPGA Tour',  color: '#20A050', icon: '🌏' },
+            phil_m:  { label: 'フィリピンツアー', desc: 'PHI Tour', color: '#D4881A', icon: '🌏' },
+          }
+        }
+      }
+    }
+  },
+  womens: {
+    label: '女子',
+    domestic: {
+      label: '国内',
+      groups: {
+        domestic_tour: {
+          label: '国内ツアー',
+          color: '#E0567E',
+          tours: {
+            jlpga:      { label: 'JLPGA',            desc: '女子ツアー', color: '#E0567E', icon: '🏌‍♀️' },
+            regular_w:  { label: 'レギュラーツアー',  desc: 'JLPGA レギュラー', color: '#E0567E', icon: '🏌‍♀️' },
+            stepup:     { label: 'ステップ・アップ・ツアー', desc: '女子下部ツアー', color: '#E87FA8', icon: '🏌‍♀️' },
+            qt_w:       { label: 'QT',               desc: '女子QT',    color: '#A0631A', icon: '📋' },
+            qualifier_w:{ label: '予選会',            desc: '女子予選会', color: '#C4841A', icon: '📋' },
+          }
+        },
+        mini_tour_w: {
+          label: 'ミニツアー',
+          color: '#E07B9C',
+          tours: {
+            mynavi_heroine: { label: 'マイナビ ネクストヒロイン', desc: '女子ミニツアー', color: '#C050A0', icon: '⛳' },
+            next_heroine:   { label: 'NEXT HEROINE GOLF TOUR',   desc: '女子ミニツアー', color: '#9C59B5', icon: '⛳' },
+            oneday:         { label: 'One Day Tour',              desc: '女子1日大会', color: '#E69B3A', icon: '⛳' },
+            insta_open:     { label: 'インスタ募集大会',           desc: 'SNS募集大会', color: '#C84A8A', icon: '⛳' },
+            regional_ladies:{ label: 'Regional Ladies Tour',     desc: '地域女子ツアー', color: '#B05070', icon: '⛳' },
+          }
+        },
+        open_tour_w: {
+          label: 'オープン大会',
+          color: '#C84B6E',
+          tours: {
+            women_open:  { label: '女子オープン大会',  desc: '女子オープン（旧互換）', color: '#C84B6E', icon: '🏆' },
+            pref_open_w: { label: '県オープン',       desc: '県女子オープン', color: '#C84B6E', icon: '🏆' },
+            local_open_w:{ label: '地方女子オープン', desc: '地方女子OP',   color: '#A83060', icon: '🏆' },
+          }
+        },
+      }
+    },
+    overseas: {
+      label: '海外',
+      groups: {
+        overseas_tour_w: {
+          label: '海外ツアー',
+          color: '#2D7DD2',
+          tours: {
+            lpga:    { label: 'LPGA TOUR',          desc: '米国女子ツアー', color: '#2D7DD2', icon: '🌎' },
+            china_w: { label: '中国女子ツアー',      desc: 'China Ladies',  color: '#CC3333', icon: '🌏' },
+            klpga:   { label: '韓国女子ツアー（KLPGA）', desc: 'KLPGA',    color: '#E05555', icon: '🌏' },
+            tlpga:   { label: '台湾女子ツアー（TLPGA）', desc: 'TLPGA',    color: '#20A050', icon: '🌏' },
+            phil_w:  { label: 'フィリピン女子ツアー', desc: 'PHI Ladies',  color: '#D4881A', icon: '🌏' },
+          }
+        }
+      }
+    }
+  }
+};
+
+// ================================================================
+// ★ 階層カテゴリから各マスターデータを自動生成
+// ================================================================
+(function buildCategoryMasters(){
+  // 全ツアーフラット配列（gender/region/group情報付き）
+  window._TOUR_MASTER = [];
+  ['mens','womens'].forEach(gender => {
+    ['domestic','overseas'].forEach(region => {
+      const regionDef = tournamentCategories[gender]?.[region];
+      if(!regionDef) return;
+      Object.entries(regionDef.groups||{}).forEach(([groupKey, groupDef]) => {
+        Object.entries(groupDef.tours||{}).forEach(([tourKey, tourDef]) => {
+          window._TOUR_MASTER.push({
+            key: tourKey,
+            label: tourDef.label,
+            desc: tourDef.desc,
+            color: tourDef.color,
+            icon: tourDef.icon,
+            gender,
+            region,
+            groupKey,
+            groupLabel: groupDef.label,
+            groupColor: groupDef.color,
+          });
+        });
+      });
+    });
+  });
+})();
+
+// tourKey → ツアー定義の逆引きマップ
+function _getTourDef(tourKey){
+  return window._TOUR_MASTER.find(t => t.key === tourKey) || null;
+}
+
+// ================================================================
 // ★★★ Phase3: 統合大会データベース ★★★
 //
 // 【追加方法】tournaments配列にオブジェクトを1件追記するだけで
@@ -6488,11 +6683,18 @@ window.authForgotPassword = function() {
 // 【フィールド仕様】
 //   id          : 必須・ユニーク文字列 例:'jgto-2025-001'
 //   title       : 大会名（必須）
-//   category    : カテゴリキー（必須）jgto/jlpga/pga/qualifier/mini/open/
-//                 acn/qt/jpga/senior/fj_tour/future/doucus/pandc/pref_open/
-//                 stepup/qt_w/qualifier_w/next_heroine/oneday/women_open/lpga/klpga
-//   gender      : 'mens' | 'womens' | 'both'
-//   region      : 'domestic' | 'overseas'
+//   category    : ツアーキー（必須）- tournamentCategories のツアーキーと同一
+//                 例: jgto / acn / qt / qualifier / jpga / senior /
+//                     atp_golf / fj_tour / future / doucus / pandc /
+//                     pref_open / famous_open / local_open /
+//                     pga / korn_ferry / dp_world / asian_tour / liv /
+//                     china_m / korea_m / taiwan_m / phil_m /
+//                     jlpga / regular_w / stepup / qt_w / qualifier_w /
+//                     mynavi_heroine / next_heroine / oneday / insta_open /
+//                     regional_ladies / pref_open_w / women_open /
+//                     lpga / china_w / klpga / tlpga / phil_w
+//   gender      : 'mens' | 'womens' | 'both'  ← 自動推定も可
+//   region      : 'domestic' | 'overseas'      ← 自動推定も可
 //   area        : kanto/kansai/chubu/kyushu/hokkaido/overseas
 //   prefecture  : 都道府県キー（例:'tokyo','osaka'）
 //   course      : ゴルフ場名
@@ -6843,38 +7045,29 @@ const DB = (function buildDB(){
   return db;
 })();
 
-// ★ Phase2: カテゴリラベル（拡張）
-const CAT_LABELS={
-  jgto:'JGTO',jlpga:'JLPGA',pga:'PGA TOUR',qualifier:'予選会',mini:'ミニツアー',
-  open:'オープン大会',personal:'個人予定',
-  acn:'ACNツアー',qt:'QT',jpga:'JPGA',senior:'シニアツアー',
-  atp_golf:'ATP GOLF',fj_tour:'FJ TOUR',future:'Future Tour',
-  doucus:'DOUCUS OPEN',pandc:'P&A CUP',pref_open:'県オープン',
-  stepup:'ステップアップ',qt_w:'QT',qualifier_w:'予選会',
-  next_heroine:'NEXT HEROINE',oneday:'One Day Tour',women_open:'女子オープン',
-  lpga:'LPGA',klpga:'KLPGA',
-};
-// ★ Phase2: カテゴリ色（拡張）
-const CAT_COLORS={
-  jgto:'#1AAF7A',jlpga:'#E0567E',pga:'#2D7DD2',qualifier:'#A0631A',mini:'#D4771A',
-  open:'#7B4DB5',personal:'#6B6ED4',acn:'#2E8B57',qt:'#A0631A',jpga:'#2D7DD2',
-  senior:'#6B6B8E',atp_golf:'#4A90D9',fj_tour:'#E07B39',future:'#5C8A3C',
-  doucus:'#8B5CF6',pandc:'#D4771A',pref_open:'#7B4DB5',
-  stepup:'#E87FA8',qt_w:'#A0631A',qualifier_w:'#C4841A',
-  next_heroine:'#9C59B5',oneday:'#E69B3A',women_open:'#C84B6E',
-  lpga:'#2D7DD2',klpga:'#E05555',
-};
-const CATEGORIES=[
-  {key:'jgto',label:'JGTO',desc:'男子ツアー',color:'#1AAF7A'},
-  {key:'jlpga',label:'JLPGA',desc:'女子ツアー',color:'#E0567E'},
-  {key:'pga',label:'PGA TOUR',desc:'米国男子ツアー',color:'#2D7DD2'},
-  {key:'qualifier',label:'予選会',desc:'QT・予選',color:'#A0631A'},
-  {key:'mini',label:'ミニツアー',desc:'ミニツアー',color:'#D4771A'},
-  {key:'open',label:'オープン大会',desc:'オープン',color:'#7B4DB5'},
-  {key:'personal',label:'個人予定',desc:'自由入力',color:'#6B6ED4'},
+// ================================================================
+// ★★★ カテゴリマスター自動生成（tournamentCategories から導出）★★★
+// ================================================================
+
+// CAT_LABELS / CAT_COLORS: tournamentCategories の全ツアーから自動生成
+const CAT_LABELS = { personal:'個人予定' };
+const CAT_COLORS = { personal:'#6B6ED4' };
+window._TOUR_MASTER.forEach(t => {
+  CAT_LABELS[t.key] = t.label;
+  CAT_COLORS[t.key] = t.color;
+});
+
+// CATEGORIES: カレンダーのオプトイン管理用（全ツアー + personal）
+// 後方互換のため配列形式を維持
+const CATEGORIES = [
+  { key:'personal', label:'個人予定', desc:'自由入力', color:'#6B6ED4' },
+  ...window._TOUR_MASTER.map(t => ({
+    key: t.key, label: t.label, desc: t.desc, color: t.color
+  }))
 ];
+
 // ★ ローカルストレージからカテゴリ並び順を復元
-const CAT_ORDER_KEY='pronexax.catOrder.v1';
+const CAT_ORDER_KEY='pronexax.catOrder.v2';
 (function restoreCatOrder(){
   try{
     const raw=localStorage.getItem(CAT_ORDER_KEY);
@@ -6884,7 +7077,6 @@ const CAT_ORDER_KEY='pronexax.catOrder.v1';
     const byKey=Object.fromEntries(CATEGORIES.map(c=>[c.key,c]));
     const ordered=[];
     savedKeys.forEach(k=>{if(byKey[k]){ordered.push(byKey[k]);delete byKey[k];}});
-    // 保存に含まれていない（後から追加された）カテゴリは末尾に追加
     Object.values(byKey).forEach(c=>ordered.push(c));
     if(ordered.length===CATEGORIES.length){
       CATEGORIES.length=0;
@@ -6895,39 +7087,37 @@ const CAT_ORDER_KEY='pronexax.catOrder.v1';
 function saveCatOrder(){
   try{localStorage.setItem(CAT_ORDER_KEY,JSON.stringify(CATEGORIES.map(c=>c.key)));}catch(e){}
 }
-const SEARCH_FILTERS=[{key:'all',label:'すべて'},{key:'jgto',label:'JGTO'},{key:'jlpga',label:'JLPGA'},{key:'pga',label:'PGA'},{key:'qualifier',label:'予選会'},{key:'mini',label:'ミニツアー'},{key:'open',label:'オープン'},{key:'added',label:'✓ 登録済み'}];
 
-// ★ Phase1: 男女別カテゴリ定義
-const TOUR_CATS_MENS = [
-  {key:'all',label:'すべて',special:true},
-  {key:'jgto',label:'JGTO',color:'#1AAF7A'},
-  {key:'acn',label:'ACNツアー',color:'#2E8B57'},
-  {key:'qt',label:'QT',color:'#A0631A'},
-  {key:'qualifier',label:'予選会',color:'#C4841A'},
-  {key:'jpga',label:'JPGA',color:'#2D7DD2'},
-  {key:'senior',label:'シニアツアー',color:'#6B6B8E'},
-  {key:'atp_golf',label:'ATP GOLF',color:'#4A90D9'},
-  {key:'fj_tour',label:'FJ TOUR',color:'#E07B39'},
-  {key:'future',label:'Future Tour',color:'#5C8A3C'},
-  {key:'doucus',label:'DOUCUS OPEN',color:'#8B5CF6'},
-  {key:'pandc',label:'P&A CUP',color:'#D4771A'},
-  {key:'pref_open',label:'県オープン',color:'#7B4DB5'},
-  {key:'overseas',label:'海外ツアー',color:'#3B6FC4'},
-  {key:'added',label:'✓ 登録済み',special:true},
+// SEARCH_FILTERS: 後方互換（旧コードが参照する場合用）
+const SEARCH_FILTERS=[
+  {key:'all',label:'すべて'},
+  ...window._TOUR_MASTER.filter(t=>t.gender==='mens'&&t.region==='domestic').map(t=>({key:t.key,label:t.label})),
+  {key:'added',label:'✓ 登録済み'}
 ];
-const TOUR_CATS_WOMENS = [
-  {key:'all',label:'すべて',special:true},
-  {key:'jlpga',label:'JLPGA',color:'#E0567E'},
-  {key:'stepup',label:'ステップアップ',color:'#E87FA8'},
-  {key:'qt_w',label:'QT',color:'#A0631A'},
-  {key:'qualifier_w',label:'予選会',color:'#C4841A'},
-  {key:'next_heroine',label:'NEXT HEROINE',color:'#9C59B5'},
-  {key:'oneday',label:'One Day Tour',color:'#E69B3A'},
-  {key:'women_open',label:'女子オープン',color:'#C84B6E'},
-  {key:'lpga',label:'LPGA',color:'#2D7DD2'},
-  {key:'klpga',label:'KLPGA',color:'#E05555'},
-  {key:'added',label:'✓ 登録済み',special:true},
-];
+
+// ================================================================
+// ★ 男女別・地域別チップリスト（階層から自動生成）
+// 1段目: グループ選択  2段目: ツアー選択
+// ================================================================
+function _buildTourCatsByGenderRegion(gender, region){
+  const regionDef = tournamentCategories[gender]?.[region];
+  if(!regionDef) return [];
+  const result = [{key:'all',label:'すべて',special:true}];
+  Object.entries(regionDef.groups||{}).forEach(([groupKey, groupDef])=>{
+    Object.entries(groupDef.tours||{}).forEach(([tourKey, tourDef])=>{
+      result.push({ key:tourKey, label:tourDef.label, color:tourDef.color, groupKey, groupLabel:groupDef.label, groupColor:groupDef.color });
+    });
+  });
+  result.push({key:'added',label:'✓ 登録済み',special:true});
+  return result;
+}
+
+// 後方互換: TOUR_CATS_MENS / TOUR_CATS_WOMENS は引き続き参照可能
+const TOUR_CATS_MENS    = _buildTourCatsByGenderRegion('mens', 'domestic');
+const TOUR_CATS_WOMENS  = _buildTourCatsByGenderRegion('womens', 'domestic');
+
+// 現在選択中のグループキー（null = すべて）
+let _searchGroupKey = null;
 
 // ★ Phase1: 性別・地域状態
 let _searchGender = 'mens';   // 'mens' | 'womens'
@@ -8434,21 +8624,70 @@ function renderSearchFilters(){
     return;
   }
 
-  // ★ Phase1: 男女別カテゴリの横スクロールチップ列
-  const cats = _searchGender === 'womens' ? TOUR_CATS_WOMENS : TOUR_CATS_MENS;
+  // ★ 階層型カテゴリーUIレンダリング
+  // 1段目: グループチップ（国内ツアー / ミニツアー / オープン大会）
+  // 2段目: そのグループ内のツアーチップ（グループ未選択時は全ツアー横並び）
+  const regionDef = tournamentCategories[_searchGender]?.[_searchRegion];
+  if(!regionDef){
+    grid.innerHTML = '';
+    return;
+  }
+  const groups = Object.entries(regionDef.groups||{});
 
-  const chipHtml = cats.map(f => {
-    const isActive = searchFilter === f.key;
-    const color = f.color || '';
-    const activeStyle = isActive && color
-      ? `background:${color}18;color:${color};border-color:${color}60;`
-      : '';
-    return `<button class="filter-chip${isActive ? ' active' : ''}" data-key="${f.key}"
+  // ── グループチップ行 ──
+  const groupHtml = groups.map(([gk, gd]) => {
+    const isActive = _searchGroupKey === gk;
+    const activeStyle = isActive ? `background:${gd.color}18;color:${gd.color};border-color:${gd.color}60;` : '';
+    return `<button class="filter-chip hcat-group-chip${isActive?' active':''}" data-groupkey="${gk}"
       style="${activeStyle}"
-      onclick="_setTourCatFilter('${f.key}',this)">${f.label}</button>`;
+      onclick="_setGroupFilter('${gk}',this)">${gd.label}</button>`;
   }).join('');
 
-  grid.innerHTML = `<div class="filter-scroll-rail">${chipHtml}</div>`;
+  // ── ツアーチップ行 ──
+  // グループ選択時: そのグループのツアーのみ  未選択時: 全グループのツアーをすべて
+  let tourChips = [];
+  tourChips.push(`<button class="filter-chip${searchFilter==='all'?' active':''}" data-key="all"
+    onclick="_setTourCatFilter('all',this)">すべて</button>`);
+
+  if(_searchGroupKey){
+    const gd = regionDef.groups[_searchGroupKey];
+    if(gd) Object.entries(gd.tours||{}).forEach(([tk,td])=>{
+      const isActive = searchFilter === tk;
+      const activeStyle = isActive ? `background:${td.color}18;color:${td.color};border-color:${td.color}60;` : '';
+      tourChips.push(`<button class="filter-chip${isActive?' active':''}" data-key="${tk}"
+        style="${activeStyle}"
+        onclick="_setTourCatFilter('${tk}',this)">${td.label}</button>`);
+    });
+  } else {
+    groups.forEach(([gk, gd])=>{
+      Object.entries(gd.tours||{}).forEach(([tk,td])=>{
+        const isActive = searchFilter === tk;
+        const activeStyle = isActive ? `background:${td.color}18;color:${td.color};border-color:${td.color}60;` : '';
+        tourChips.push(`<button class="filter-chip${isActive?' active':''}" data-key="${tk}"
+          style="${activeStyle}"
+          onclick="_setTourCatFilter('${tk}',this)">${td.label}</button>`);
+      });
+    });
+  }
+
+  tourChips.push(`<button class="filter-chip${searchFilter==='added'?' active':''}" data-key="added"
+    onclick="_setTourCatFilter('added',this)">✓ 登録済み</button>`);
+
+  grid.innerHTML =
+    `<div class="filter-scroll-rail hcat-group-row">${groupHtml}</div>` +
+    `<div class="filter-scroll-rail hcat-tour-row">${tourChips.join('')}</div>`;
+}
+
+// ★ グループフィルターセット
+function _setGroupFilter(groupKey, el) {
+  el.style.transform = 'scale(0.90)';
+  setTimeout(() => { el.style.transform = ''; }, 140);
+  // 同じグループを再タップで解除
+  _searchGroupKey = (_searchGroupKey === groupKey) ? null : groupKey;
+  searchFilter = 'all';
+  _invalidateSearchCache();
+  renderSearchFilters();
+  applySearchFilters();
 }
 
 // ★ Phase3: ツアーカテゴリフィルターのセット（キャッシュ無効化付き）
@@ -8467,6 +8706,7 @@ function _setGender(gender, btn) {
     b.classList.toggle('is-active', b.dataset.gender === gender);
   });
   searchFilter = 'all';
+  _searchGroupKey = null;
   _invalidateSearchCache();
   renderSearchFilters();
   applySearchFilters();
@@ -8478,7 +8718,10 @@ function _setRegion(region, btn) {
   document.querySelectorAll('.search-region-tab').forEach(b => {
     b.classList.toggle('is-active', b.dataset.region === region);
   });
+  searchFilter = 'all';
+  _searchGroupKey = null;
   _invalidateSearchCache();
+  renderSearchFilters();
   applySearchFilters();
 }
 
@@ -8940,24 +9183,10 @@ function _buildSuggestMaster(){
       items.push({type:'pref',key:p.key,areaKey,label:p.label,icon:'📍',sub:areaLabel});
     });
   });
-  // カテゴリ
-  const catDefs=[
-    {key:'jgto',label:'JGTO',sub:'男子ツアー',icon:'🏌'},
-    {key:'jlpga',label:'JLPGA',sub:'女子ツアー',icon:'🏌‍♀️'},
-    {key:'pga',label:'PGA TOUR',sub:'米国男子ツアー',icon:'🌎'},
-    {key:'qualifier',label:'予選会',sub:'QT・予選',icon:'📋'},
-    {key:'mini',label:'ミニツアー',sub:'ミニツアー',icon:'⛳'},
-    {key:'open',label:'オープン大会',sub:'オープン',icon:'🏆'},
-    {key:'acn',label:'ACNツアー',sub:'男子ツアー',icon:'🏌'},
-    {key:'jpga',label:'JPGA',sub:'男子プロ',icon:'🏌'},
-    {key:'senior',label:'シニアツアー',sub:'シニア',icon:'🏌'},
-    {key:'fj_tour',label:'FJ TOUR',sub:'男子ツアー',icon:'🏌'},
-    {key:'future',label:'Future Tour',sub:'男子ツアー',icon:'🏌'},
-    {key:'stepup',label:'ステップアップ',sub:'女子ツアー',icon:'🏌‍♀️'},
-    {key:'next_heroine',label:'NEXT HEROINE',sub:'女子ツアー',icon:'🏌‍♀️'},
-    {key:'lpga',label:'LPGA',sub:'米国女子ツアー',icon:'🌎'},
-    {key:'klpga',label:'KLPGA',sub:'韓国女子ツアー',icon:'🌎'},
-  ];
+  // カテゴリ（tournamentCategories から自動生成）
+  const catDefs = window._TOUR_MASTER.map(t => ({
+    key: t.key, label: t.label, sub: t.desc, icon: t.icon || '⛳'
+  }));
   catDefs.forEach(c=>items.push({type:'cat',key:c.key,label:c.label,icon:c.icon,sub:c.sub}));
   return items;
 }
@@ -9447,9 +9676,9 @@ function _debounce(fn, ms){
   };
 }
 
-// ── フィルター用定数（filter内で毎回生成しない）──
-const _MENS_CATS  = new Set(['jgto','acn','qt','qualifier','jpga','senior','atp_golf','fj_tour','future','doucus','pandc','pref_open']);
-const _WOMENS_CATS= new Set(['jlpga','stepup','qt_w','qualifier_w','next_heroine','oneday','women_open']);
+// ── フィルター用定数（tournamentCategories から自動生成）──
+const _MENS_CATS   = new Set(window._TOUR_MASTER.filter(t=>t.gender==='mens').map(t=>t.key));
+const _WOMENS_CATS = new Set(window._TOUR_MASTER.filter(t=>t.gender==='womens').map(t=>t.key));
 
 // ── 前回の結果キャッシュ（同一フィルター条件なら再計算しない）──
 let _lastFilterKey = null;
@@ -9459,6 +9688,7 @@ function _buildFilterKey(){
   return JSON.stringify({
     gender:_searchGender,
     region:_searchRegion,
+    group:_searchGroupKey,
     mode:searchMode,
     filter:searchFilter,
     areaFilter:searchAreaFilter,
@@ -9534,6 +9764,12 @@ function applySearchFilters(){
     // ── 男女フィルター ──
     if(_searchGender==='mens'   && _WOMENS_CATS.has(t.cat)) return false;
     if(_searchGender==='womens' && _MENS_CATS.has(t.cat))   return false;
+
+    // ── グループフィルター（階層型カテゴリー）──
+    if(_searchGroupKey){
+      const tourMeta = window._TOUR_MASTER.find(x=>x.key===t.cat);
+      if(!tourMeta || tourMeta.groupKey !== _searchGroupKey) return false;
+    }
 
     // ── カテゴリ判定 ──
     let mc;
@@ -10286,24 +10522,38 @@ function _renderAddCatSheet(){
   const listEl=document.getElementById('add-cat-list');
   const manageSection=document.getElementById('add-cat-manage-section');
   const manageList=document.getElementById('add-cat-manage-list');
-  // personal以外のカテゴリを表示
-  const cats=CATEGORIES.filter(c=>c.key!=='personal');
-  listEl.innerHTML=cats.map(c=>{
-    const isAdded=userEnabledCategories.includes(c.key);
-    return`<div class="add-cat-row">
-      <div class="add-cat-row-left">
-        <span class="add-cat-color-dot" style="background:${c.color}"></span>
-        <div class="add-cat-row-info">
-          <div class="add-cat-row-label">${c.label}</div>
-          <div class="add-cat-row-desc">${c.desc}</div>
-        </div>
-      </div>
-      ${isAdded
-        ?`<button class="add-cat-action-btn already-added" disabled>追加済み ✓</button>`
-        :`<button class="add-cat-action-btn not-added" onclick="addCatFromSheet('${c.key}')">追加</button>`
-      }
-    </div>`;
-  }).join('');
+
+  // 階層型表示: 性別 → グループ → ツアー
+  let html = '';
+  ['mens','womens'].forEach(gender => {
+    const genderLabel = gender === 'mens' ? '男子' : '女子';
+    const genderColor = gender === 'mens' ? '#1AAF7A' : '#E0567E';
+    html += `<div class="add-cat-gender-head" style="padding:10px 16px 4px;font-size:11px;font-weight:700;color:${genderColor};letter-spacing:.5px;">${genderLabel}</div>`;
+    ['domestic','overseas'].forEach(region => {
+      const regionDef = tournamentCategories[gender]?.[region];
+      if(!regionDef) return;
+      Object.entries(regionDef.groups||{}).forEach(([gk, gd]) => {
+        html += `<div class="add-cat-group-head" style="padding:6px 16px 2px;font-size:10px;font-weight:600;color:#7A9E94;letter-spacing:.4px;">${gd.label}</div>`;
+        Object.entries(gd.tours||{}).forEach(([tk, td]) => {
+          const isAdded = userEnabledCategories.includes(tk);
+          html += `<div class="add-cat-row">
+            <div class="add-cat-row-left">
+              <span class="add-cat-color-dot" style="background:${td.color}"></span>
+              <div class="add-cat-row-info">
+                <div class="add-cat-row-label">${td.label}</div>
+                <div class="add-cat-row-desc">${td.desc}</div>
+              </div>
+            </div>
+            ${isAdded
+              ?`<button class="add-cat-action-btn already-added" disabled>追加済み ✓</button>`
+              :`<button class="add-cat-action-btn not-added" onclick="addCatFromSheet('${tk}')">追加</button>`
+            }
+          </div>`;
+        });
+      });
+    });
+  });
+  listEl.innerHTML = html;
 
   // 追加済みカテゴリの管理セクション
   const enabled=CATEGORIES.filter(c=>c.key!=='personal'&&userEnabledCategories.includes(c.key));
