@@ -2949,12 +2949,9 @@ button,input,select,textarea{
    ================================================================ */
 
 /* オーバーレイ */
-/* ================================================================
-   TDM (Tournament Detail Modal) — 大会詳細モーダル
-   ================================================================ */
 .tdm-overlay{
   position:fixed;inset:0;
-  background:rgba(0,0,0,.5);
+  background:rgba(0,0,0,.45);
   z-index:500;
   opacity:0;pointer-events:none;
   transition:opacity .28s ease;
@@ -2962,232 +2959,167 @@ button,input,select,textarea{
   backdrop-filter:blur(2px);
 }
 .tdm-overlay.show{opacity:1;pointer-events:auto;}
+
+/* シート本体 */
 .tdm-sheet{
-  position:fixed;left:0;right:0;bottom:0;
-  background:var(--card-bg,#fff);
-  border-radius:22px 22px 0 0;
+  position:fixed;
+  left:0;right:0;bottom:0;
+  background:#fff;
+  border-radius:20px 20px 0 0;
   z-index:501;
-  max-height:92dvh;
   display:flex;flex-direction:column;
   transform:translateY(100%);
   transition:transform .38s cubic-bezier(.32,.72,0,1);
-  box-shadow:0 -4px 40px rgba(0,0,0,.18);
-  overflow:hidden;
+  max-height:92vh;
+  box-shadow:0 -6px 40px rgba(0,0,0,.18),0 -1px 0 rgba(0,0,0,.06);
+  will-change:transform;
+  /* safe area */
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 .tdm-sheet.show{transform:translateY(0);}
 .tdm-sheet.is-dragging{transition:none;}
 :root[data-theme="dark"] .tdm-sheet{
   background:#1C1C1E;
-  box-shadow:0 -4px 40px rgba(0,0,0,.5);
+  box-shadow:0 -6px 40px rgba(0,0,0,.5);
 }
 
-/* ── グラバー ── */
+/* グラバーバー */
 .tdm-grabber{
   width:44px;height:5px;
   background:#D1D1D6;border-radius:999px;
-  margin:8px auto 0;
+  margin:8px auto 10px;
   flex-shrink:0;
-  cursor:grab;
   display:block;
+  cursor:grab;
 }
 :root[data-theme="dark"] .tdm-grabber{background:#48484A !important;}
 
-/* ── ヒーロー ── */
-.tdm-hero{
+/* シートヘッダー */
+.tdm-header{
+  padding:10px 16px 12px;
   flex-shrink:0;
-  padding:12px 14px 14px;
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:10px;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:12px;
   border-bottom:1px solid rgba(0,0,0,.06);
-  transition:background .2s;
 }
-:root[data-theme="dark"] .tdm-hero{border-bottom-color:rgba(255,255,255,.06);}
-.tdm-hero-inner{flex:1;min-width:0;}
+:root[data-theme="dark"] .tdm-header{border-bottom-color:rgba(255,255,255,.06);}
+.tdm-header-left{flex:1;min-width:0;}
 .tdm-cat-row{
-  display:flex;align-items:center;flex-wrap:wrap;gap:5px;
-  margin-bottom:8px;
-}
-.tdm-cat-pill,.tdm-gender-pill,.tdm-status-pill{
-  font-size:10px;font-weight:700;
-  padding:3px 9px;border-radius:20px;
-  letter-spacing:.03em;
-  display:inline-flex;align-items:center;gap:4px;
-  border:1px solid transparent;
-}
-.tdm-gender-pill{
-  background:rgba(0,0,0,.05);
-  color:var(--text-secondary);
-  border-color:rgba(0,0,0,.08);
-}
-.tdm-status-dot{
-  width:5px;height:5px;border-radius:50%;flex-shrink:0;
-}
-.tdm-title{
-  font-size:19px;font-weight:800;
-  color:var(--text-primary);
-  line-height:1.25;
-  letter-spacing:-.5px;
+  display:flex;align-items:center;gap:6px;
   margin-bottom:5px;
 }
-.tdm-date-sub{
-  font-size:12px;font-weight:500;
-  color:var(--text-secondary);
-  letter-spacing:.02em;
+.tdm-title{
+  font-size:18px;font-weight:800;
+  color:var(--text-primary);
+  line-height:1.3;
+  letter-spacing:-.4px;
 }
 .tdm-close-btn{
   width:30px;height:30px;border-radius:50%;
-  background:rgba(0,0,0,.06);border:none;
+  background:#F0F2F4;border:none;
   display:flex;align-items:center;justify-content:center;
-  font-size:13px;color:var(--text-secondary);
-  cursor:pointer;flex-shrink:0;
-  font-family:inherit;
-  -webkit-tap-highlight-color:transparent;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  flex-shrink:0;
+  transition:background .12s,transform .12s;
+  color:#606068;
+  font-size:15px;
+  font-weight:600;
+  /* ★ 修正: 最前面保証 */
+  position:relative;
+  z-index:10;
   touch-action:manipulation;
-  transition:transform .12s,background .12s;
+  -webkit-user-select:none;
+  user-select:none;
 }
-.tdm-close-btn:active{transform:scale(.88);background:rgba(0,0,0,.12);}
-:root[data-theme="dark"] .tdm-close-btn{background:rgba(255,255,255,.1);color:#E0E4E8;}
+.tdm-close-btn:active{transform:scale(.88);background:#E0E4E8;}
+:root[data-theme="dark"] .tdm-close-btn{background:#2C2C2E;color:#E0E4E8;}
 
-/* ── 会場バナー ── */
-.tdm-venue-banner{
-  flex-shrink:0;
-  border-bottom:1px solid rgba(0,0,0,.06);
-}
-.tdm-venue-link{
-  display:flex;align-items:center;gap:10px;
-  padding:11px 16px;
-  text-decoration:none;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  transition:background .12s;
-  background:transparent;
-}
-.tdm-venue-link:active{background:rgba(0,0,0,.04);}
-.tdm-venue-icon{
-  width:32px;height:32px;border-radius:10px;
-  background:rgba(0,0,0,.05);
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
-}
-.tdm-venue-text{flex:1;min-width:0;}
-.tdm-venue-name{
-  font-size:13px;font-weight:600;
-  color:var(--text-primary);
-  display:block;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.tdm-venue-pref{
-  font-size:11px;color:var(--text-secondary);
-  display:block;margin-top:1px;
-}
-.tdm-venue-map-badge{
-  font-size:10px;font-weight:700;
-  color:var(--text-secondary);
-  display:flex;align-items:center;gap:2px;
-  white-space:nowrap;
-  flex-shrink:0;
-}
-:root[data-theme="dark"] .tdm-venue-link:active{background:rgba(255,255,255,.04);}
-:root[data-theme="dark"] .tdm-venue-icon{background:rgba(255,255,255,.08);}
-
-/* ── アクションボタン ── */
+/* アクションボタン行 */
 .tdm-actions{
-  display:flex;align-items:flex-start;
-  padding:12px 14px 10px;
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px 12px;
   flex-shrink:0;
   border-bottom:1px solid rgba(0,0,0,.05);
-  gap:4px;
-  overflow-x:auto;
+  overflow-x:auto;scrollbar-width:none;
   -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
 }
 .tdm-actions::-webkit-scrollbar{display:none;}
 :root[data-theme="dark"] .tdm-actions{border-bottom-color:rgba(255,255,255,.05);}
+
+/* 各アクションボタン：アイコン＋ラベルの縦並び */
 .tdm-action-btn{
-  display:flex;flex-direction:column;align-items:center;gap:5px;
-  min-width:62px;max-width:72px;
-  cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  text-decoration:none;
-  border:none;background:none;
-  padding:0;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  min-width:60px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
   transition:transform .12s;
+  border:none;background:none;padding:0;
 }
 .tdm-action-btn:active{transform:scale(.9);}
 .tdm-action-icon{
-  width:46px;height:46px;border-radius:14px;
+  width:44px;height:44px;border-radius:14px;
   display:flex;align-items:center;justify-content:center;
-  transition:background .15s,transform .12s;
+  transition:background .12s;
 }
-.tdm-action-icon.cal   { background:#E8F7F1; }
-.tdm-action-icon.cal.added { background:linear-gradient(135deg,#1AAF7A,#0E8A5F); }
-.tdm-action-icon.fav   { background:#FFF0F2; }
-.tdm-action-icon.fav.saved { background:linear-gradient(135deg,#E5526A,#C03050); }
-.tdm-action-icon.bell  { background:#F0ECF8; }
-.tdm-action-icon.entry { background:linear-gradient(135deg,#1AAF7A,#0E8A5F); }
-.tdm-action-icon.web   { background:#EEEEF8; }
-:root[data-theme="dark"] .tdm-action-icon.cal   { background:#1A3025; }
-:root[data-theme="dark"] .tdm-action-icon.fav   { background:#3A1820; }
-:root[data-theme="dark"] .tdm-action-icon.bell  { background:#28203A; }
-:root[data-theme="dark"] .tdm-action-icon.web   { background:#1E1E2A; }
+.tdm-action-icon.cal{background:#E8F5EE;}
+.tdm-action-icon.detail{background:#EAF0FB;}
+.tdm-action-icon.entry{background:linear-gradient(135deg,var(--green-main),var(--green-dark));}
+.tdm-action-icon.fav{background:#FFF4E0;}
+.tdm-action-icon.web{background:#F0F0F8;}
 .tdm-action-label{
-  font-size:10px;font-weight:600;
-  color:var(--text-secondary);
-  letter-spacing:.05px;
-  white-space:nowrap;
-  text-align:center;
-  line-height:1;
+  font-size:10px;font-weight:600;color:var(--text-secondary);
+  letter-spacing:.1px;white-space:nowrap;
 }
+:root[data-theme="dark"] .tdm-action-icon.cal{background:#1A3025;}
+:root[data-theme="dark"] .tdm-action-icon.detail{background:#1A2535;}
+:root[data-theme="dark"] .tdm-action-icon.fav{background:#3A2A10;}
+:root[data-theme="dark"] .tdm-action-icon.web{background:#1E1E2A;}
 
-/* ── スクロールエリア ── */
+/* スクロールエリア */
 .tdm-scroll{
   flex:1;overflow-y:auto;
   -webkit-overflow-scrolling:touch;
   overscroll-behavior:contain;
-  touch-action:pan-y;
 }
 .tdm-scroll::-webkit-scrollbar{display:none;}
 
-/* ── セクション ── */
+/* セクション */
 .tdm-section{
-  padding:18px 16px 4px;
+  padding:16px 16px 4px;
 }
 .tdm-section-title{
-  font-size:10px;font-weight:700;
+  font-size:10.5px;font-weight:700;
   color:var(--text-tertiary);
-  letter-spacing:.8px;text-transform:uppercase;
-  display:flex;align-items:center;gap:8px;
-  margin-bottom:2px;
+  letter-spacing:.6px;text-transform:uppercase;
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;
 }
 .tdm-section-title::after{
   content:'';flex:1;height:1px;
-  background:rgba(0,0,0,.07);
+  background:rgba(0,0,0,.06);
 }
-:root[data-theme="dark"] .tdm-section-title::after{background:rgba(255,255,255,.07);}
+:root[data-theme="dark"] .tdm-section-title::after{background:rgba(255,255,255,.06);}
 
-/* ── 情報行 ── */
+/* 情報行 */
 .tdm-row{
   display:flex;align-items:flex-start;
-  padding:10px 0;
+  padding:9px 0;
   border-bottom:1px solid rgba(0,0,0,.04);
-  gap:10px;
+  gap:12px;
 }
 .tdm-row:last-child{border-bottom:none;}
 :root[data-theme="dark"] .tdm-row{border-bottom-color:rgba(255,255,255,.04);}
 .tdm-row-icon{
-  width:20px;height:22px;
+  width:20px;height:20px;
   display:flex;align-items:center;justify-content:center;
   flex-shrink:0;margin-top:1px;
 }
-.tdm-row-icon svg{width:15px;height:15px;color:var(--text-tertiary);}
+.tdm-row-icon svg{width:16px;height:16px;color:var(--text-tertiary);}
 .tdm-row-label{
   font-size:11px;font-weight:600;
   color:var(--text-tertiary);
-  width:74px;flex-shrink:0;
-  line-height:1.5;padding-top:1px;
+  width:72px;flex-shrink:0;
+  line-height:1.5;
+  letter-spacing:.1px;
 }
 .tdm-row-value{
   flex:1;
@@ -3197,64 +3129,56 @@ button,input,select,textarea{
   letter-spacing:-.1px;
 }
 .tdm-row-value.money{
-  font-size:15px;font-weight:800;
-  color:#7A5800;letter-spacing:-.3px;
+  font-size:14px;font-weight:700;
+  color:#7A5800;letter-spacing:-.2px;
 }
 :root[data-theme="dark"] .tdm-row-value.money{color:#C4A040;}
-.tdm-row-value.deadline-near {color:#B07520;font-weight:700;}
-.tdm-row-value.deadline-today{color:#C03030;font-weight:800;animation:tdmPulse 1.2s ease-in-out infinite;}
-.tdm-row-value .empty{color:var(--text-tertiary);font-style:italic;font-weight:400;font-size:12px;}
-@keyframes tdmPulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+.tdm-row-value.deadline-near{color:#B07520;font-weight:700;}
+.tdm-row-value.deadline-today{color:#C03030;font-weight:700;}
+.tdm-row-value.empty{color:var(--text-tertiary);font-weight:400;font-style:italic;}
 
-/* ── リンクグリッド ── */
+/* リンク行 */
 .tdm-link-grid{
-  display:flex;flex-direction:column;
-  gap:0;
-  margin:0 16px 8px;
-  border-radius:14px;
-  overflow:hidden;
-  border:1px solid rgba(0,0,0,.07);
-  background:var(--card-bg,#fff);
-}
-:root[data-theme="dark"] .tdm-link-grid{
-  border-color:rgba(255,255,255,.07);
-  background:#2C2C2E;
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:8px;
+  padding:4px 16px 16px;
 }
 .tdm-link-btn{
-  display:flex;align-items:center;gap:10px;
-  padding:13px 14px;
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background .12s,transform .1s;
   text-decoration:none;
-  border-bottom:1px solid rgba(0,0,0,.05);
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  transition:background .12s;
 }
-.tdm-link-btn:last-child{border-bottom:none;}
-.tdm-link-btn:active{background:rgba(0,0,0,.04);}
-:root[data-theme="dark"] .tdm-link-btn{border-bottom-color:rgba(255,255,255,.05);}
-:root[data-theme="dark"] .tdm-link-btn:active{background:rgba(255,255,255,.06);}
-.tdm-link-emoji{
-  font-size:18px;width:28px;text-align:center;flex-shrink:0;
+.tdm-link-btn:active{transform:scale(.96);}
+.tdm-link-btn.has-url{
+  background:var(--green-chip);
+  border-color:rgba(26,175,122,.25);
+}
+.tdm-link-icon{
+  width:22px;height:22px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:12px;
 }
 .tdm-link-label{
-  font-size:13px;font-weight:500;
+  font-size:11px;font-weight:600;
   color:var(--text-secondary);
-  flex:1;
+  flex:1;line-height:1.3;
 }
-.tdm-link-btn.has-url .tdm-link-label{
-  color:var(--text-primary);font-weight:600;
-}
-.tdm-link-arrow{flex-shrink:0;opacity:.5;}
-.tdm-link-btn.has-url .tdm-link-arrow{opacity:1;}
-.tdm-link-btn:not(.has-url){opacity:.4;}
+.tdm-link-btn.has-url .tdm-link-label{color:var(--green-dark);}
+:root[data-theme="dark"] .tdm-link-btn{background:var(--card-bg);border-color:rgba(255,255,255,.08);}
+:root[data-theme="dark"] .tdm-link-btn.has-url{background:#1A3025;border-color:rgba(26,175,122,.3);}
 
-/* ── フッターCTA ── */
+/* モーダルフッター（主要CTA） */
 .tdm-footer{
   flex-shrink:0;
-  padding:10px 14px max(env(safe-area-inset-bottom,16px),16px);
-  border-top:1px solid rgba(0,0,0,.07);
+  padding:10px 16px 16px;
+  border-top:1px solid rgba(0,0,0,.06);
   display:flex;gap:8px;
-  background:var(--card-bg,#fff);
+  background:#fff;
 }
 :root[data-theme="dark"] .tdm-footer{
   background:#1C1C1E;
@@ -3263,48 +3187,1803 @@ button,input,select,textarea{
 .tdm-footer-cal{
   flex:1;
   display:flex;align-items:center;justify-content:center;gap:6px;
-  background:var(--green-chip,#E8F7F1);
-  color:var(--green-dark,#1A8A5A);
-  border:1px solid rgba(26,175,122,.2);
-  border-radius:14px;height:48px;
-  font-size:13px;font-weight:700;
-  cursor:pointer;font-family:inherit;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  transition:opacity .12s,transform .12s;
+  background:var(--green-chip);
+  border:1.5px solid rgba(26,175,122,.3);
+  border-radius:14px;padding:12px 16px;
+  font-size:13px;font-weight:700;color:var(--green-dark);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background .12s,opacity .12s;
+  letter-spacing:.1px;
 }
-.tdm-footer-cal.added{
-  background:var(--green-chip,#E8F7F1);
-  color:var(--green-main);
-}
-.tdm-footer-cal:active{opacity:.75;transform:scale(.97);}
+.tdm-footer-cal:active{opacity:.8;}
 .tdm-footer-entry{
-  flex:1.4;
+  flex:1.2;
   display:flex;align-items:center;justify-content:center;gap:6px;
-  background:linear-gradient(135deg,#1AAF7A 0%,#0E8A5F 100%);
-  color:#fff;
-  border:none;border-radius:14px;height:48px;
-  font-size:13px;font-weight:700;
-  cursor:pointer;font-family:inherit;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  box-shadow:0 4px 14px rgba(26,175,122,.35);
-  transition:opacity .12s,transform .12s,box-shadow .12s;
+  background:linear-gradient(135deg,var(--green-main),var(--green-dark));
+  border:none;border-radius:14px;padding:12px 16px;
+  font-size:13px;font-weight:700;color:#fff;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:opacity .12s,box-shadow .12s;
+  box-shadow:0 4px 14px rgba(26,175,122,.38);
+  letter-spacing:.1px;
 }
-.tdm-footer-entry:active{opacity:.85;transform:scale(.97);box-shadow:0 2px 6px rgba(26,175,122,.2);}
+.tdm-footer-entry:active{opacity:.85;box-shadow:0 2px 6px rgba(26,175,122,.2);}
 .tdm-footer-entry.no-url{
-  background:#E8ECEB;color:#9AABA6;
+  background:#E0E6E2;color:#8A9A94;
   box-shadow:none;
 }
-/* ドラッグ・モーダル制御 */
+
+/* ドラッグダウン対応 */
 .tdm-sheet.drag-close{
   transform:translateY(100%) !important;
   transition:transform .25s cubic-bezier(.4,0,1,1) !important;
 }
-.tdm-sheet { will-change:transform; }
-.tdm-sheet.is-dragging * { pointer-events:none;user-select:none; }
-.tdm-sheet.is-dragging .tdm-close-btn { pointer-events:auto !important; }
-.tdm-overlay:not(.show) { pointer-events:none !important; }
+.badge-added{background:var(--green-chip);color:var(--green-dark);}
+.badge-status-live{
+  background:#E5F4EC;color:#0F8A5C;border:1px solid #B8E0CC;
+  position:relative;padding-left:14px;
+}
+.badge-status-live::before{
+  content:'';position:absolute;left:6px;top:50%;transform:translateY(-50%);
+  width:5px;height:5px;border-radius:50%;background:#0F8A5C;
+  animation:pulseLive 1.6s ease-out infinite;
+}
+@keyframes pulseLive{
+  0%{box-shadow:0 0 0 0 rgba(15,138,92,.5);}
+  70%{box-shadow:0 0 0 6px rgba(15,138,92,0);}
+  100%{box-shadow:0 0 0 0 rgba(15,138,92,0);}
+}
+.badge-status-upcoming{background:#EEF3FA;color:#3B6FB0;border:1px solid #C8D8EC;}
+.badge-status-ended{background:#F0F2F4;color:#7A8088;border:1px solid #DDE2E6;}
+:root[data-theme="dark"] .badge-status-live{background:#143A2A;color:#7DD8B0;border-color:#1E5040;}
+:root[data-theme="dark"] .badge-status-upcoming{background:#172638;color:#A8C5E6;border-color:#22405E;}
+:root[data-theme="dark"] .badge-status-ended{background:#212528;color:#A0A6AC;border-color:#34393E;}
+
+.t-action{
+  padding:8px 10px 8px 0;
+  display:flex;flex-direction:column;align-items:flex-end;
+  justify-content:center;gap:5px;
+}
+.t-fav-btn{
+  width:26px;height:26px;
+  background:transparent;border:none;
+  font-size:14px;color:#C5D9D3;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:color .15s,background .15s,transform .12s;
+  padding:0;line-height:1;
+}
+.t-fav-btn:active{transform:scale(.85);}
+.t-fav-btn.is-fav{color:#E5A41A;}
+.add-btn{
+  border:1px solid var(--border);border-radius:8px;
+  padding:5px 10px;font-size:10.5px;color:var(--text-secondary);
+  background:var(--bg);cursor:pointer;
+  white-space:nowrap;font-weight:600;
+  -webkit-tap-highlight-color:transparent;
+}
+.add-btn.added{
+  background:var(--green-chip);border-color:var(--green-main);
+  color:var(--green-dark);
+}
+.empty-search{text-align:center;padding:32px 14px;color:var(--text-tertiary);font-size:11px;font-weight:500;}
+/* BottomSheet 初期状態: 完全非表示（Safari PWA対応） */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(5,20,14,.5);
+  z-index:100;
+  display:none;          /* Safari PWA対策：初期はdisplay:none */
+  align-items:flex-end;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .25s;
+}
+.modal-overlay.show{
+  display:flex;          /* 表示時のみflexに */
+  opacity:1;
+  visibility:visible;
+  pointer-events:all;
+}
+/* BottomSheet本体 初期状態 */
+.modal-sheet{
+  background:#fff;
+  border-radius:20px 20px 0 0;
+  width:100%;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(110%);  /* 画面外に完全退避 */
+  transition:transform .38s cubic-bezier(.32,.72,0,1), opacity .3s ease, visibility .3s ease;
+  max-height:88%;
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 -4px 24px rgba(0,0,0,.12);
+  position:relative;
+}
+/* 表示時のみアニメーションで出現 */
+.modal-overlay.show .modal-sheet{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0);
+}
+.modal-handle{width:44px;height:5px;background:#D1D1D6;border-radius:999px;margin:8px auto 10px;flex-shrink:0;display:block;}
+.modal-title{font-size:14px;font-weight:700;color:var(--text-primary);padding:0 16px 9px;border-bottom:1px solid #EEF5F2;flex-shrink:0;}
+.modal-title.edit-mode{background:linear-gradient(90deg,var(--green-chip) 0%,transparent 100%);border-left:3px solid var(--green-main);padding-left:13px;}
+.modal-scroll{flex:1;overflow-y:auto;padding:12px 16px 0;}
+.modal-scroll::-webkit-scrollbar{display:none;}
+.modal-footer{padding:8px 16px 12px;flex-shrink:0;border-top:1px solid #EEF5F2;}
+.form-label{font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.5px;}
+.mstep{display:none;}.mstep.active{display:block;}
+.step-indicator{display:flex;gap:6px;justify-content:center;margin-bottom:12px;}
+.step-dot{width:6px;height:6px;border-radius:50%;background:#DDE8E4;transition:all .2s;}
+.step-dot.active{background:var(--green-main);width:18px;border-radius:3px;}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+.cat-item{border:1.5px solid var(--border);border-radius:12px;padding:10px;cursor:pointer;display:flex;align-items:center;gap:8px;position:relative;overflow:hidden;transition:all .15s;background:var(--bg);}
+.cat-item.tapping{transform:scale(0.96);}
+.cat-item.sel{border-width:2px;box-shadow:var(--shadow-sm);}
+
+/* ★★★ カテゴリ並び替えモード ★★★ */
+.cat-reorder-toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:-2px;margin-bottom:6px;
+}
+.cat-reorder-btn{
+  font-size:10px;font-weight:600;
+  color:var(--green-main);
+  background:none;border:1px solid var(--border);
+  border-radius:14px;padding:3px 10px;
+  cursor:pointer;
+  display:inline-flex;align-items:center;gap:4px;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.cat-reorder-btn:active{transform:scale(.95);}
+.cat-reorder-btn.active{
+  background:var(--green-main);
+  border-color:var(--green-main);
+  color:#fff;
+  box-shadow:0 2px 6px rgba(26,175,122,.3);
+}
+.cat-reorder-hint{
+  font-size:10px;color:var(--green-dark);
+  background:var(--green-chip);
+  border-radius:8px;padding:5px 10px;
+  margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+.cat-reorder-hint-icon{font-size:12px;}
+
+/* 並び替えモード中はクリック無効、長押し→ドラッグの導線を強調 */
+.cat-grid.reorder-mode .cat-item{
+  cursor:grab;
+  animation:catWiggle 1.4s ease-in-out infinite;
+}
+.cat-grid.reorder-mode .cat-item:nth-child(2n){animation-delay:-.7s;}
+@keyframes catWiggle{
+  0%,100%{transform:rotate(-.4deg);}
+  50%{transform:rotate(.4deg);}
+}
+/* ドラッグ中の元要素：プレースホルダー */
+.cat-item.cat-placeholder{
+  background:repeating-linear-gradient(45deg,#F0F7F4,#F0F7F4 4px,#E4EDEB 4px,#E4EDEB 8px) !important;
+  border:1.5px dashed #C5D9D3 !important;
+  animation:none !important;
+}
+.cat-item.cat-placeholder>*{visibility:hidden;}
+
+/* ドロップ予定先のハイライト */
+.cat-item.cat-drop-target{
+  border-color:var(--green-main) !important;
+  box-shadow:0 0 0 2px rgba(26,175,122,.25);
+  animation:none !important;
+}
+
+/* フロートカード（ドラッグ中の浮遊要素） */
+.cat-drag-clone{
+  position:fixed;
+  pointer-events:none;
+  z-index:9999;
+  border-radius:12px;
+  background:#fff;
+  box-shadow:var(--shadow-drag);
+  transform:translate(-50%,-50%) scale(1.06) rotate(-1.5deg);
+  opacity:.97;
+  transition:none;
+  border:1.5px solid var(--green-main);
+}
+.cat-ripple{position:absolute;border-radius:50%;transform:scale(0);animation:ripple-anim .45s ease-out forwards;pointer-events:none;opacity:.2;}
+@keyframes ripple-anim{to{transform:scale(4);opacity:0;}}
+.cat-color-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+.cat-name{font-size:12px;font-weight:600;color:var(--text-primary);}
+.cat-desc{font-size:9px;color:var(--text-tertiary);margin-top:1px;}
+.cat-check{position:absolute;top:7px;right:9px;font-size:12px;opacity:0;transition:opacity .15s;}
+.cat-item.sel .cat-check{opacity:1;}
+/* ★ 追加済みカテゴリバッジは廃止：万一マークアップが残っても何も表示しない */
+.cat-enabled-badge{display:none !important;}
+/* ★ 追加済みカテゴリ：Apple純正カレンダー風に枠線を少しだけ濃く（カラーは inline で指定） */
+.cat-item.is-enabled:not(.sel){
+  border-width:1.5px;
+}
+.tour-hint{font-size:10px;color:var(--text-tertiary);text-align:center;padding:4px 0 8px;}
+.tour-list{display:flex;flex-direction:column;gap:5px;margin-bottom:4px;}
+.tour-item{border:1.5px solid var(--border);border-radius:10px;padding:9px 11px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;background:var(--bg);box-shadow:var(--shadow-sm);}
+.tour-item.sel{border-width:2px;background:#F4FDF9;box-shadow:var(--shadow-md);}
+.tour-item.flash{animation:tourFlash .22s ease forwards;}
+@keyframes tourFlash{0%{transform:scale(1)}40%{transform:scale(0.97);background:#C8F5E2}100%{transform:scale(1)}}
+.tour-item-name{font-size:12px;font-weight:600;color:var(--text-primary);line-height:1.4;}
+.tour-item-meta{font-size:10px;color:var(--text-secondary);margin-top:2px;}
+.tour-item-badge{display:inline-block;font-size:8.5px;color:var(--green-dark);background:var(--green-chip);border-radius:6px;padding:2px 7px;margin-top:4px;font-weight:600;}
+.tour-search{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--text-primary);outline:none;margin-bottom:10px;background:var(--bg);}
+.tour-search:focus{border-color:var(--green-main);box-shadow:0 0 0 3px rgba(26,175,122,.1);}
+.form-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--text-primary);outline:none;margin-bottom:11px;background:var(--bg);}
+.form-input:focus{border-color:var(--green-main);box-shadow:0 0 0 3px rgba(26,175,122,.1);}
+/* ★ メモ用 textarea：複数行対応 */
+.form-textarea{
+  width:100%;border:1.5px solid var(--border);border-radius:10px;
+  padding:10px 12px;font-size:13px;color:var(--text-primary);
+  outline:none;margin-bottom:11px;background:var(--bg);
+  resize:vertical;min-height:72px;max-height:160px;
+  line-height:1.5;font-family:inherit;
+}
+.form-textarea:focus{border-color:var(--green-main);box-shadow:0 0 0 3px rgba(26,175,122,.1);}
+.form-textarea::placeholder{color:var(--text-tertiary);font-size:12px;line-height:1.55;}
+/* ★ 予定カード内のメモ表示：1行省略 */
+.event-memo{
+  font-size:10px;color:var(--text-secondary);
+  margin-top:3px;padding-left:12px;
+  position:relative;line-height:1.4;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:100%;
+}
+.event-memo::before{
+  content:'';
+  position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:8px;height:8px;
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2 2h7l1.5 1.5V10H2V2z' fill='none' stroke='%231AAF7A' stroke-width='1.2'/><line x1='3.5' y1='5' x2='8.5' y2='5' stroke='%231AAF7A' stroke-width='1' stroke-linecap='round'/><line x1='3.5' y1='7' x2='7' y2='7' stroke='%231AAF7A' stroke-width='1' stroke-linecap='round'/></svg>") center/contain no-repeat;
+}
+.date-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.date-hint{display:flex;justify-content:space-between;font-size:9px;color:var(--text-tertiary);margin:2px 2px 11px;padding:0 2px;}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--green-light),var(--green-main));color:#fff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(26,175,122,.35);}
+.btn-primary:disabled{background:#C8D8D0;box-shadow:none;cursor:not-allowed;}
+.btn-secondary{width:100%;background:none;border:none;color:var(--text-tertiary);font-size:13px;padding:8px;cursor:pointer;margin-top:2px;}
+.btn-back{background:none;border:none;color:var(--green-main);font-size:12px;font-weight:600;cursor:pointer;padding:0;margin-bottom:10px;display:flex;align-items:center;gap:4px;}
+.sel-preview{background:linear-gradient(135deg,var(--green-chip),#F0FDF8);border-radius:11px;padding:10px 12px;margin-bottom:11px;border-left:4px solid var(--green-main);box-shadow:var(--shadow-sm);}
+.sel-preview-name{font-size:12px;font-weight:600;color:var(--text-primary);}
+.sel-preview-meta{font-size:10px;color:var(--text-secondary);margin-top:2px;}
+.footer-hidden{display:none!important;}
+.edit-banner{background:linear-gradient(135deg,var(--green-chip),#F0FDF8);border-radius:10px;padding:8px 11px;margin-bottom:11px;display:flex;align-items:center;gap:8px;border-left:3px solid var(--green-main);}
+.edit-banner-text{font-size:11px;color:var(--green-dark);font-weight:600;}
+.day-event-item{display:flex;align-items:stretch;background:#fff;border-radius:10px;border:1px solid var(--border);margin-bottom:7px;overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;}
+.day-event-stripe{width:4px;flex-shrink:0;}
+.day-event-body{flex:1;padding:8px 10px 8px 8px;}
+.day-event-name{font-size:12px;font-weight:600;color:var(--text-primary);line-height:1.4;}
+.day-event-meta{font-size:12px;color:var(--text-secondary);margin-top:2px;}
+.day-event-del{font-size:11px;border:1px solid #FFD5D5;border-radius:6px;padding:2px 6px;background:#FFF5F5;color:#C84444;cursor:pointer;align-self:center;margin-right:8px;flex-shrink:0;}
+.longpress-ring{position:absolute;border-radius:50%;border:2px solid var(--green-main);pointer-events:none;z-index:50;opacity:0;transform:scale(0);transition:none;}
+.longpress-ring.animating{opacity:1;transform:scale(1);transition:transform .5s ease-out,opacity .5s ease-out;}
+.bottom-nav{background:#fff;border-top:none;box-shadow:none;display:flex;padding:4px 0 max(env(safe-area-inset-bottom,4px),4px);flex-shrink:0;}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:12px;transition:background .08s ease-out,transform .1s;-webkit-tap-highlight-color:transparent;}
+.bnav-btn:active{background:rgba(26,175,122,0.12);transform:scale(.92);}
+.bnav-label{font-size:11px;color:var(--text-tertiary);line-height:1;font-weight:400;transition:color .15s;}
+.bnav-btn.active{background:none;}
+.bnav-btn.active .bnav-label{color:var(--green-main);font-weight:600;}
+.home-bar{height:3px;width:68px;background:#DDE8E4;border-radius:2px;margin:2px auto 1px;}
+.toast{position:fixed;bottom:calc(max(env(safe-area-inset-bottom,0px),0px) + 68px);left:14px;right:14px;background:linear-gradient(135deg,var(--green-main),var(--green-dark));color:#fff;font-size:11px;font-weight:600;padding:8px 14px;border-radius:11px;text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;z-index:30;box-shadow:0 4px 16px rgba(10,107,71,.3);}
+.toast.show{opacity:1;}
+
+/* ================================================================ */
+/* ★★★ Day View（1日表示） ★★★                                     */
+/* ================================================================ */
+.cal-day-view{
+  display:flex;flex-direction:column;width:100%;height:100%;
+  background:var(--bg);overflow:hidden;
+}
+/* ───── 日付ヘッダー ───── */
+.dv-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;background:#fff;border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.dv-header-date{
+  display:flex;flex-direction:column;align-items:center;flex:1;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  position:relative;padding:2px 0;
+}
+.dv-header-date::after{
+  content:'';position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);width:44px;height:44px;
+}
+.dv-header-date-main{
+  font-size:14px;font-weight:700;color:var(--text-primary);
+  letter-spacing:.3px;line-height:1.2;
+}
+.dv-header-date-main.is-today{color:var(--green-dark);}
+.dv-header-date-main.is-sun{color:#D04A4A;}
+.dv-header-date-main.is-sat{color:#3A7AC8;}
+.dv-header-date-sub{
+  font-size:9.5px;color:var(--text-secondary);margin-top:1px;
+}
+.dv-header-date.is-today .dv-header-date-sub{
+  color:var(--green-dark);font-weight:600;
+}
+.dv-arrow{
+  width:36px;height:36px;border-radius:10px;border:none;
+  background:transparent;color:var(--text-secondary);
+  font-size:18px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;flex-shrink:0;
+  transition:background .15s;position:relative;
+}
+.dv-arrow::after{
+  content:'';position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);width:44px;height:44px;
+}
+.dv-arrow:active{background:var(--green-chip);color:var(--green-dark);}
+
+/* ───── 終日（All-day）セクション ───── */
+.dv-allday{
+  flex-shrink:0;background:#FAFCFB;
+  border-bottom:1px solid var(--border);
+  max-height:74px;overflow:hidden;
+  display:flex;align-items:flex-start;
+  padding:6px 8px 6px 44px;position:relative;min-height:28px;
+}
+.dv-allday.is-empty{display:none;}
+.dv-allday-label{
+  position:absolute;left:8px;top:8px;
+  font-size:9px;font-weight:600;color:var(--text-tertiary);
+  letter-spacing:.5px;
+}
+.dv-allday-list{
+  display:flex;flex-wrap:wrap;gap:4px;flex:1;
+  max-height:60px;overflow:hidden;
+}
+.dv-allday-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 7px;border-radius:6px;
+  background:#fff;border:1px solid var(--border);
+  border-left:3px solid var(--green-main);
+  font-size:10px;font-weight:600;color:var(--text-primary);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  max-width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.dv-allday-chip:active{background:var(--green-chip);}
+.dv-allday-more{
+  display:inline-flex;align-items:center;
+  padding:3px 6px;border-radius:6px;background:transparent;
+  font-size:9.5px;font-weight:600;color:var(--text-secondary);
+}
+
+/* ───── タイムライン ───── */
+.dv-timeline{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  position:relative;background:#fff;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.dv-timeline-inner{
+  position:relative;width:100%;
+  /* 24h × 64px = 1536px */
+  height:1536px;
+  /* 時間ラベル列 + イベント列 */
+}
+/* 時間ラベル列（左端） */
+.dv-time-col{
+  position:absolute;left:0;top:0;width:44px;
+  height:100%;pointer-events:none;
+}
+.dv-time-label{
+  position:absolute;left:0;width:42px;
+  font-size:9.5px;font-weight:600;color:var(--text-tertiary);
+  text-align:right;padding-right:6px;
+  transform:translateY(-50%);
+  /* 1時間ごとのラベルを上端に揃えるため、上端では translateY しない */
+}
+.dv-time-label.is-top{transform:translateY(0);}
+/* 30分の罫線（1時間ごとの実線 + 30分の点線） */
+.dv-grid-line{
+  position:absolute;left:44px;right:0;
+  height:0;border-top:1px solid var(--border);
+  pointer-events:none;
+}
+.dv-grid-line.is-half{
+  border-top:1px dashed rgba(160,184,174,.45);
+}
+/* イベント配置エリア */
+.dv-events-area{
+  position:absolute;left:44px;right:8px;top:0;bottom:0;
+}
+/* タップ用の空き時間レイヤー（30分単位） */
+.dv-slot{
+  position:absolute;left:0;right:0;height:32px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  z-index:1;
+}
+.dv-slot:active{background:rgba(26,175,122,.06);}
+
+/* ───── イベントカード ───── */
+.dv-event{
+  position:absolute;
+  background:#fff;
+  border:1px solid var(--border);
+  border-left:3px solid var(--green-main);
+  border-radius:8px;
+  box-shadow:0 1px 3px rgba(10,107,71,.08),0 1px 2px rgba(10,107,71,.04);
+  padding:4px 7px 4px 8px;
+  overflow:hidden;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  z-index:2;
+  transition:box-shadow .15s,transform .15s;
+  min-height:16px;
+}
+.dv-event:active{
+  box-shadow:0 4px 12px rgba(10,107,71,.18);
+  transform:scale(0.98);
+}
+.dv-event-title{
+  font-size:11px;font-weight:700;color:var(--text-primary);
+  line-height:1.25;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;text-overflow:ellipsis;
+  word-break:break-all;
+}
+.dv-event-time{
+  font-size:9px;font-weight:600;color:var(--text-secondary);
+  margin-top:1px;line-height:1.1;
+}
+.dv-event.is-tiny .dv-event-time{display:none;}
+.dv-event.is-tiny .dv-event-title{
+  -webkit-line-clamp:1;font-size:10px;
+}
+
+/* ───── 現在時刻ライン ───── */
+.dv-now-line{
+  position:absolute;left:34px;right:0;
+  height:0;border-top:2px solid #E54A4A;
+  pointer-events:none;z-index:5;
+  box-shadow:0 0 6px rgba(229,74,74,.35);
+}
+.dv-now-line::before{
+  content:'';position:absolute;left:0;top:50%;
+  transform:translate(-50%,-50%);
+  width:8px;height:8px;border-radius:50%;
+  background:#E54A4A;box-shadow:0 0 0 2px rgba(229,74,74,.2);
+}
+.dv-now-line.is-hidden{display:none;}
+
+/* ───── 空状態 ───── */
+.dv-empty-overlay{
+  position:absolute;left:50%;top:120px;transform:translateX(-50%);
+  font-size:11px;color:var(--text-tertiary);
+  text-align:center;pointer-events:none;
+  background:rgba(255,255,255,.85);padding:6px 14px;
+  border-radius:14px;border:1px dashed var(--border);
+  font-weight:500;
+}
+
+/* ───── スワイプアニメ用 ───── */
+.cal-day-view.is-swiping .dv-timeline{transition:none;}
+
+/* ================================================================ */
+/* ★★★ デザイン設定パネル ★★★                                       */
+/* ================================================================ */
+.settings-overlay{
+  position:absolute;inset:0;background:rgba(10,30,22,.55);
+  opacity:0;pointer-events:none;transition:opacity .25s;
+  z-index:55;backdrop-filter:blur(2px);
+}
+.settings-overlay.show{opacity:1;pointer-events:auto;}
+.settings-panel{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--card-bg);
+  border-radius:18px 18px 0 0;
+  transform:translateY(100%);
+  transition:transform .32s cubic-bezier(.32,.72,0,1);
+  z-index:56;
+  max-height:92%;
+  display:flex;flex-direction:column;
+  box-shadow:0 -6px 28px rgba(0,0,0,.18);
+}
+.settings-panel.show{transform:translateY(0);}
+.settings-grip{
+  width:36px;height:4px;background:var(--border);
+  border-radius:3px;margin:8px auto 4px;flex-shrink:0;
+}
+.settings-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 16px 10px;border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.settings-title{
+  font-size:14px;font-weight:800;color:var(--text-primary);
+  letter-spacing:.3px;
+}
+.settings-close{
+  border:none;background:transparent;color:var(--text-secondary);
+  font-size:20px;cursor:pointer;width:32px;height:32px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:8px;-webkit-tap-highlight-color:transparent;
+  position:relative;
+}
+.settings-close::after{
+  content:'';position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);width:44px;height:44px;
+}
+.settings-close:active{background:var(--green-chip);}
+.settings-scroll{
+  flex:1;overflow-y:auto;padding:10px 14px 18px;
+  -webkit-overflow-scrolling:touch;
+}
+.settings-section{margin-bottom:14px;}
+.settings-section-title{
+  font-size:10px;font-weight:700;color:var(--text-tertiary);
+  letter-spacing:.8px;text-transform:uppercase;
+  margin:0 0 7px 2px;
+  display:flex;align-items:center;gap:5px;
+}
+.settings-section-title::before{
+  content:'';width:3px;height:10px;border-radius:2px;
+  background:var(--green-main);
+}
+
+/* テーマ切替（ライト/ダーク/システム） */
+.theme-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.theme-card{
+  background:var(--bg);border:1.5px solid var(--border);
+  border-radius:11px;padding:9px 6px 8px;cursor:pointer;
+  text-align:center;-webkit-tap-highlight-color:transparent;
+  transition:border-color .15s,background .15s,transform .12s;
+  position:relative;
+}
+.theme-card:active{transform:scale(.97);}
+.theme-card.is-active{
+  border-color:var(--green-main);background:var(--green-chip);
+}
+.theme-card.is-active::after{
+  content:'✓';position:absolute;top:4px;right:6px;
+  font-size:10px;color:var(--green-dark);font-weight:800;
+}
+.theme-card-icon{font-size:18px;line-height:1;margin-bottom:4px;}
+.theme-card-label{font-size:10px;font-weight:600;color:var(--text-primary);}
+
+/* カラーテーマ（プリセット） */
+.color-row{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px 6px;
+  row-gap:10px;
+}
+.color-card{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  padding:4px 2px;border-radius:9px;
+  transition:background .15s;
+}
+.color-card:active{background:var(--green-chip);}
+.color-swatch{
+  width:34px;height:34px;border-radius:50%;
+  border:2px solid #fff;
+  box-shadow:0 0 0 1.5px var(--border),0 2px 6px rgba(0,0,0,.08);
+  transition:box-shadow .18s,transform .12s;
+  position:relative;
+}
+:root[data-theme="dark"] .color-swatch{border-color:#2A3833;}
+.color-card.is-active .color-swatch{
+  box-shadow:0 0 0 2.5px var(--green-main),0 2px 8px rgba(0,0,0,.15);
+  transform:scale(1.05);
+}
+.color-card.is-active .color-swatch::after{
+  content:'✓';position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);
+  color:#fff;font-size:14px;font-weight:800;
+  text-shadow:0 1px 2px rgba(0,0,0,.4);
+}
+.color-card-label{
+  font-size:9.5px;font-weight:600;color:var(--text-secondary);
+  text-align:center;line-height:1.1;
+}
+.color-card.is-active .color-card-label{color:var(--text-primary);}
+.swatch-green{background:linear-gradient(135deg,#25C08A,#0F8A5C);}
+.swatch-blue{background:linear-gradient(135deg,#4DA8E8,#1A5DB0);}
+.swatch-black{background:linear-gradient(135deg,#5A5F66,#16181C);}
+.swatch-gold{background:linear-gradient(135deg,#E0B340,#8A6510);}
+.swatch-mono{background:linear-gradient(135deg,#A8AEB6,#4D5360);}
+/* パステル */
+.swatch-sakura{background:linear-gradient(135deg,#FDECEF,#F7B7C3 50%,#E08CA0);}
+.swatch-lavender{background:linear-gradient(135deg,#F3ECFA,#BFA2DB 50%,#9C7FC4);}
+.swatch-mint{background:linear-gradient(135deg,#F0FBF7,#A8E6CF 50%,#6FD6AE);}
+.swatch-peach{background:linear-gradient(135deg,#FFF3EC,#FFC9A9 50%,#F5A77F);}
+
+/* カテゴリカラー設定 */
+.cat-color-list{display:flex;flex-direction:column;gap:6px;}
+.cat-color-row{
+  display:flex;align-items:center;gap:10px;
+  padding:7px 9px;background:var(--bg);
+  border:1px solid var(--border);border-radius:10px;
+}
+.cat-color-name{
+  flex:1;font-size:11.5px;font-weight:600;color:var(--text-primary);
+}
+.cat-color-picker-wrap{
+  position:relative;width:32px;height:32px;
+  border-radius:50%;box-shadow:0 0 0 1.5px var(--border);
+  overflow:hidden;cursor:pointer;flex-shrink:0;
+}
+.cat-color-picker-wrap input[type="color"]{
+  position:absolute;inset:-4px;
+  width:calc(100% + 8px);height:calc(100% + 8px);
+  border:none;padding:0;cursor:pointer;background:transparent;
+}
+.cat-color-hex{
+  font-size:9.5px;font-weight:600;color:var(--text-tertiary);
+  font-family:'SF Mono',Menlo,monospace;width:60px;text-align:right;
+}
+
+/* 表示スタイル */
+.style-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.style-card{
+  background:var(--bg);border:1.5px solid var(--border);
+  border-radius:11px;padding:10px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:border-color .15s,background .15s;
+  position:relative;
+}
+.style-card.is-active{border-color:var(--green-main);background:var(--green-chip);}
+.style-card.is-active::after{
+  content:'✓';position:absolute;top:5px;right:7px;
+  font-size:11px;color:var(--green-dark);font-weight:800;
+}
+.style-card-label{
+  font-size:11px;font-weight:700;color:var(--text-primary);margin-bottom:5px;
+}
+.style-preview{
+  height:30px;background:#fff;border-radius:7px;
+  border:1px solid var(--border);
+  display:flex;align-items:center;gap:5px;padding:0 6px;
+}
+:root[data-theme="dark"] .style-preview{background:#0E1814;}
+.style-preview.is-card{box-shadow:0 2px 6px rgba(0,0,0,.10);}
+.style-preview-bar{
+  width:3px;height:18px;border-radius:2px;background:var(--green-main);
+}
+.style-preview-text{
+  flex:1;height:5px;background:var(--border);border-radius:2px;
+}
+
+/* 履歴（最近使った色） */
+.recent-colors{
+  display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;
+  padding:6px 7px;background:var(--bg);border-radius:8px;
+  min-height:32px;align-items:center;border:1px solid var(--border);
+}
+.recent-colors-empty{font-size:10px;color:var(--text-tertiary);}
+.recent-color-chip{
+  width:20px;height:20px;border-radius:50%;cursor:pointer;
+  box-shadow:0 0 0 1px var(--border);
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .12s;flex-shrink:0;
+  position:relative;
+}
+.recent-color-chip::after{
+  content:'';position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);width:36px;height:36px;
+}
+.recent-color-chip:active{transform:scale(.85);}
+
+/* リセットボタン */
+.settings-reset{
+  width:100%;padding:10px;border:1px solid var(--border);
+  background:var(--bg);color:var(--text-secondary);
+  border-radius:11px;font-size:11px;font-weight:600;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  margin-top:6px;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.settings-reset:active{
+  background:#FFF0F0;border-color:#E8B0B0;color:#C84444;
+}
+:root[data-theme="dark"] .settings-reset:active{
+  background:#3A1A1A;border-color:#5A2828;color:#FF8888;
+}
+
+/* ================================================================ */
+/* ★★★ 収支ページ：Coming Soon（再設計準備中）★★★                   */
+/* 既存テーマカラー（--green-*）に自動追従する最小スタイル           */
+/* ================================================================ */
+.fin-coming-header{
+  background:#ffffff;
+  padding:env(safe-area-inset-top,0px) 16px 16px;
+  flex-shrink:0;
+  box-shadow:0 1px 0 rgba(0,0,0,.06);
+  border-bottom:1.5px solid #39C892;
+  display:flex;align-items:center;gap:10px;
+  color:#1d1d1f;
+}
+.fin-coming-logo{font-size:22px;line-height:1;}
+.fin-coming-title{font-size:17px;font-weight:700;letter-spacing:.3px;color:#1d1d1f;}
+.fin-coming-body{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 24px;
+  gap:12px;
+  background:var(--bg);
+}
+.fin-coming-icon{font-size:56px;line-height:1;margin-bottom:4px;}
+.fin-coming-heading{
+  font-size:22px;font-weight:800;
+  color:var(--text-primary);letter-spacing:.5px;
+}
+.fin-coming-desc{
+  font-size:14px;color:var(--text-secondary);
+  text-align:center;line-height:1.7;
+}
+/* ================================================================ */
+/* ★ 収支機能 再設計メモ（ここに新CSSを追加していく）              */
+/* ================================================================ */
+
+/* ================================================================ */
+/* ★★★ Day View 時間ドラッグ選択 ★★★                                 */
+/* ================================================================ */
+.dv-drag-select{
+  position:absolute;left:0;right:0;
+  background:linear-gradient(135deg,
+    color-mix(in srgb,var(--green-main) 75%,transparent) 0%,
+    color-mix(in srgb,var(--green-dark) 75%,transparent) 100%);
+  border:2px solid var(--green-deep);
+  border-radius:9px;
+  z-index:6;pointer-events:none;
+  box-shadow:0 4px 16px rgba(10,107,71,.28),0 0 0 4px rgba(26,175,122,.18);
+  display:flex;flex-direction:column;
+  padding:5px 8px;color:#fff;
+  font-weight:800;
+  /* 滑らかな高さ変化 */
+  transition:none;
+  animation:dvDragSelectIn .14s ease-out;
+}
+@keyframes dvDragSelectIn{
+  from{transform:scaleY(.85);opacity:.6;}
+  to{transform:scaleY(1);opacity:1;}
+}
+.dv-drag-select-time{
+  font-size:11px;letter-spacing:.2px;line-height:1.2;
+  text-shadow:0 1px 2px rgba(0,0,0,.25);
+}
+.dv-drag-select-duration{
+  font-size:9.5px;font-weight:700;opacity:.92;
+  margin-top:2px;letter-spacing:.4px;
+  text-shadow:0 1px 2px rgba(0,0,0,.25);
+}
+.dv-drag-select-hint{
+  font-size:9px;font-weight:600;opacity:.85;
+  margin-top:auto;align-self:flex-end;
+  text-shadow:0 1px 2px rgba(0,0,0,.25);
+}
+/* タイムライン上に重ねるラベル（指の上にバッジ的に表示） */
+.dv-drag-tip{
+  position:absolute;left:50px;
+  background:var(--green-deep);color:#fff;
+  font-size:10px;font-weight:800;font-feature-settings:"tnum";
+  padding:4px 8px;border-radius:8px;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+  z-index:7;pointer-events:none;
+  transform:translateY(-50%);white-space:nowrap;
+  letter-spacing:.3px;
+}
+/* イベント領域：選択中はテキスト選択を抑止 */
+.dv-events-area.is-dragging{
+  user-select:none;-webkit-user-select:none;
+}
+/* iOS の callout を抑止 */
+.dv-events-area{
+  -webkit-touch-callout:none;
+  -webkit-user-select:none;
+}
+
+/* 時間入力フィールド（モーダル内） */
+.time-mode-toggle{
+  display:flex;gap:6px;margin-bottom:8px;
+  background:var(--bg);border-radius:9px;padding:3px;
+  border:1px solid var(--border);
+}
+.time-mode-btn{
+  flex:1;background:transparent;border:none;
+  font-size:10.5px;font-weight:600;color:var(--text-secondary);
+  padding:6px 4px;border-radius:7px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .15s,color .15s;
+}
+.time-mode-btn.is-active{
+  background:#fff;color:var(--green-deep);
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+:root[data-theme="dark"] .time-mode-btn.is-active{
+  background:var(--card-bg);
+}
+.time-row{
+  display:grid;grid-template-columns:1fr 12px 1fr;
+  gap:8px;align-items:center;margin-bottom:6px;
+}
+.time-row.hidden{display:none;}
+.time-input{
+  width:100%;border:1px solid var(--border);
+  background:var(--card-bg);border-radius:9px;
+  padding:8px 10px;font-size:13px;font-weight:600;
+  color:var(--text-primary);font-family:inherit;
+  outline:none;transition:border-color .15s;
+  font-feature-settings:"tnum";
+  -webkit-appearance:none;
+}
+.time-input:focus{border-color:var(--green-main);}
+.time-row-sep{
+  text-align:center;color:var(--text-tertiary);
+  font-weight:700;font-size:13px;
+}
+.time-hint{
+  display:flex;justify-content:space-between;
+  font-size:9px;color:var(--text-tertiary);
+  margin-bottom:8px;letter-spacing:.3px;
+  padding:0 2px;
+}
+
+/* =====================================================================
+   ★★★ iOSホイールピッカー
+   ===================================================================== */
+
+/* ── オーバーレイ ── */
+/* ================================================================
+   ★★★ iOSホイールピッカー v2 — Apple純正カレンダー風
+   ================================================================ */
+
+/* ── オーバーレイ ── */
+.wp-overlay{
+  position:absolute;inset:0;
+  background:rgba(0,0,0,.48);
+  z-index:200;
+  display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;
+  transition:opacity .28s ease;
+  border-radius:34px;overflow:hidden;
+}
+.wp-overlay.show{opacity:1;pointer-events:all;}
+
+/* ── シート本体 ── */
+.wp-sheet{
+  width:100%;
+  background:#F2F2F7;
+  border-radius:22px 22px 0 0;
+  transform:translateY(100%);
+  transition:transform .38s cubic-bezier(.32,.72,0,1);
+  box-shadow:0 -4px 40px rgba(0,0,0,.18);
+  overflow:hidden;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.wp-overlay.show .wp-sheet{transform:translateY(0);}
+:root[data-theme="dark"] .wp-sheet{background:#1C1C1E;}
+
+/* ── グリップバー ── */
+.wp-handle-bar{
+  width:36px;height:4px;border-radius:2px;
+  background:rgba(0,0,0,.18);
+  margin:10px auto 0;
+}
+:root[data-theme="dark"] .wp-handle-bar{background:rgba(255,255,255,.2);}
+
+/* ── ヘッダー ── */
+.wp-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 20px 8px;
+}
+.wp-cancel-btn,.wp-done-btn{
+  font-size:16px;font-weight:500;
+  background:none;border:none;cursor:pointer;
+  padding:6px 0;-webkit-tap-highlight-color:transparent;
+  font-family:inherit;
+}
+.wp-cancel-btn{color:#8E8E93;}
+.wp-done-btn{color:var(--green-main);font-weight:600;}
+.wp-title{
+  font-size:14px;font-weight:700;
+  color:#1C1C1E;letter-spacing:.1px;
+}
+:root[data-theme="dark"] .wp-cancel-btn{color:#636366;}
+:root[data-theme="dark"] .wp-title{color:#EBEBF5;}
+:root[data-theme="dark"] .wp-done-btn{color:var(--green-light);}
+
+/* ── タブ（開始/終了） ── */
+.wp-tabs{
+  display:flex;gap:8px;
+  padding:0 14px 6px;
+}
+.wp-tab{
+  flex:1;
+  background:#fff;
+  border:none;border-radius:14px;
+  padding:10px 12px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+  transition:background .16s,box-shadow .16s;
+}
+.wp-tab.active{
+  background:var(--green-main);
+  box-shadow:0 2px 12px rgba(26,175,122,.3);
+}
+:root[data-theme="dark"] .wp-tab{background:#2C2C2E;}
+:root[data-theme="dark"] .wp-tab.active{background:var(--green-dark);}
+.wp-tab-label{
+  font-size:10px;font-weight:600;letter-spacing:.4px;
+  color:rgba(0,0,0,.45);text-transform:uppercase;
+}
+.wp-tab.active .wp-tab-label{color:rgba(255,255,255,.75);}
+:root[data-theme="dark"] .wp-tab-label{color:#636366;}
+:root[data-theme="dark"] .wp-tab.active .wp-tab-label{color:rgba(255,255,255,.6);}
+.wp-tab-val{
+  font-size:13px;font-weight:600;color:#1C1C1E;
+  font-feature-settings:"tnum";white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
+.wp-tab.active .wp-tab-val{color:#fff;}
+:root[data-theme="dark"] .wp-tab-val{color:#EBEBF5;}
+
+/* ── 終日トグル ── */
+.wp-allday-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px 8px;
+  background:#fff;
+  margin:0 14px 8px;
+  border-radius:14px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+:root[data-theme="dark"] .wp-allday-row{background:#2C2C2E;}
+.wp-allday-label{
+  font-size:15px;font-weight:500;color:#1C1C1E;
+}
+:root[data-theme="dark"] .wp-allday-label{color:#EBEBF5;}
+/* iOS風スイッチ */
+.wp-allday-toggle{
+  width:50px;height:30px;border-radius:15px;
+  background:#D1D1D6;
+  position:relative;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .22s cubic-bezier(.4,0,.2,1);
+}
+.wp-allday-toggle.is-on{background:var(--green-main);}
+.wp-allday-knob{
+  position:absolute;top:2px;left:2px;
+  width:26px;height:26px;border-radius:50%;
+  background:#fff;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);
+  transition:transform .22s cubic-bezier(.4,0,.2,1);
+}
+.wp-allday-toggle.is-on .wp-allday-knob{transform:translateX(20px);}
+
+/* ── ピッカーラッパー（統合ホイール） ── */
+.wp-picker-wrap{
+  position:relative;
+  height:220px;
+  display:flex;
+  margin:0 14px;
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);
+}
+:root[data-theme="dark"] .wp-picker-wrap{background:#2C2C2E;}
+
+/* 中央選択ライン */
+.wp-selector-line{
+  position:absolute;
+  top:50%;transform:translateY(-50%);
+  left:0;right:0;
+  height:44px;
+  background:rgba(0,0,0,.065);
+  pointer-events:none;z-index:3;
+  border-radius:0;
+}
+:root[data-theme="dark"] .wp-selector-line{background:rgba(255,255,255,.1);}
+
+/* 上下フェード */
+.wp-fade-top,.wp-fade-bot{
+  position:absolute;left:0;right:0;
+  height:38%;pointer-events:none;z-index:4;
+}
+.wp-fade-top{
+  top:0;
+  background:linear-gradient(to bottom, #fff 0%, rgba(255,255,255,0) 100%);
+}
+.wp-fade-bot{
+  bottom:0;
+  background:linear-gradient(to top, #fff 0%, rgba(255,255,255,0) 100%);
+}
+:root[data-theme="dark"] .wp-fade-top{
+  background:linear-gradient(to bottom,#2C2C2E 0%,rgba(44,44,46,0) 100%);
+}
+:root[data-theme="dark"] .wp-fade-bot{
+  background:linear-gradient(to top,#2C2C2E 0%,rgba(44,44,46,0) 100%);
+}
+
+/* 各カラム */
+.wp-col{
+  flex:1;position:relative;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.wp-col-date{flex:2.8;}
+.wp-col-hour,.wp-col-min{flex:1;}
+/* 時間・分の左ボーダー */
+.wp-col-hour{border-left:1px solid rgba(0,0,0,.08);}
+:root[data-theme="dark"] .wp-col-hour{border-left-color:rgba(255,255,255,.08);}
+
+/* スクロールコンテナ（慣性スクロール） */
+.wp-scroll{
+  flex:1;
+  overflow-y:scroll;
+  overflow-x:hidden;
+  scroll-snap-type:y mandatory;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  width:100%;
+  /* 慣性: iOS Safari はネイティブ対応 */
+}
+.wp-scroll::-webkit-scrollbar{display:none;}
+
+/* 各アイテム */
+.wp-item{
+  height:44px;
+  display:flex;align-items:center;justify-content:center;
+  scroll-snap-align:center;
+  font-size:17px;font-weight:400;
+  color:rgba(0,0,0,.3);
+  user-select:none;-webkit-user-select:none;
+  white-space:nowrap;
+  font-feature-settings:"tnum";
+  letter-spacing:-.3px;
+  transition:color .1s,font-weight .1s,font-size .1s,transform .1s;
+}
+.wp-item.selected{
+  color:#1C1C1E;
+  font-weight:600;
+  font-size:20px;
+}
+:root[data-theme="dark"] .wp-item{color:rgba(255,255,255,.3);}
+:root[data-theme="dark"] .wp-item.selected{color:#EBEBF5;}
+
+/* スペーサー（高さ = (220-44)/2 = 88px） */
+.wp-spacer{height:88px;flex-shrink:0;}
+
+/* ── 分インターバル選択 ── */
+.wp-interval-row{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 20px 4px;
+}
+.wp-interval-label{
+  font-size:11px;font-weight:600;color:#8E8E93;
+  flex-shrink:0;letter-spacing:.2px;
+}
+.wp-interval-btns{display:flex;gap:5px;flex:1;}
+.wp-interval-btn{
+  flex:1;height:28px;border-radius:8px;
+  background:rgba(0,0,0,.06);border:none;
+  font-size:12px;font-weight:600;color:#555;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  font-family:inherit;transition:background .15s,color .15s;
+}
+.wp-interval-btn.is-active{
+  background:var(--green-main);color:#fff;
+}
+:root[data-theme="dark"] .wp-interval-btn{background:rgba(255,255,255,.08);color:#aaa;}
+:root[data-theme="dark"] .wp-interval-btn.is-active{background:var(--green-dark);color:#fff;}
+
+/* ── リマインドセクション ── */
+.wp-remind{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 20px 12px;
+  border-top:1px solid rgba(0,0,0,.06);
+  margin-top:6px;
+}
+:root[data-theme="dark"] .wp-remind{border-top-color:rgba(255,255,255,.07);}
+.wp-bell-btn{
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(0,0,0,.05);border:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  flex-shrink:0;transition:background .15s,transform .12s;
+}
+.wp-bell-btn:active{transform:scale(.86);}
+.wp-bell-btn.is-on{background:rgba(26,175,122,.12);}
+.wp-bell-btn .bell-svg{width:16px;height:16px;color:#8E8E93;transition:color .2s;}
+.wp-bell-btn.is-on .bell-svg{color:var(--green-main);}
+@keyframes wpBellRing{
+  0%{transform:rotate(0);}15%{transform:rotate(-18deg);}
+  30%{transform:rotate(15deg);}50%{transform:rotate(-10deg);}
+  70%{transform:rotate(7deg);}85%{transform:rotate(-3deg);}100%{transform:rotate(0);}
+}
+.wp-bell-btn.ring .bell-svg{animation:wpBellRing .5s ease;}
+.wp-remind-info{flex:1;display:flex;flex-direction:column;gap:2px;}
+.wp-remind-label{font-size:11px;font-weight:600;color:var(--text-secondary);}
+.wp-remind-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(0,0,0,.05);
+  border:none;border-radius:20px;padding:4px 10px;
+  font-size:11px;font-weight:600;color:var(--text-secondary);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background .15s,color .15s;width:fit-content;
+}
+.wp-remind-pill:active{opacity:.7;}
+.wp-remind-pill.is-on{background:rgba(26,175,122,.12);color:var(--green-deep);}
+:root[data-theme="dark"] .wp-bell-btn{background:rgba(255,255,255,.08);}
+:root[data-theme="dark"] .wp-remind-pill{background:rgba(255,255,255,.08);color:#EBEBF5;}
+:root[data-theme="dark"] .wp-remind-pill.is-on{background:rgba(26,175,122,.18);color:var(--green-light);}
+
+/* ── 日付フィールド（ピッカー起動ボタン） ── */
+.wp-trigger-row{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;margin-bottom:4px;
+}
+.wp-trigger{
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;flex-direction:column;gap:2px;
+  transition:border-color .15s,box-shadow .15s;
+}
+.wp-trigger:active{transform:scale(.97);}
+.wp-trigger.is-set{border-color:var(--green-light);}
+.wp-trigger-lbl{
+  font-size:9px;font-weight:700;letter-spacing:.5px;
+  color:var(--text-tertiary);text-transform:uppercase;
+}
+.wp-trigger-val{
+  font-size:13px;font-weight:600;
+  color:var(--text-primary);
+  font-feature-settings:"tnum";
+}
+.wp-trigger-val.empty{color:var(--text-tertiary);}
+:root[data-theme="dark"] .wp-trigger{background:var(--card-bg);border-color:var(--border);}
+
+/* 時間帯表示ピル（allday/timed） */
+.wp-time-trigger{
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg);border:1.5px solid var(--border);
+  border-radius:12px;padding:10px;
+  margin-bottom:8px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  font-size:12px;font-weight:600;color:var(--text-secondary);
+  gap:6px;transition:border-color .15s;
+}
+.wp-time-trigger.is-timed{border-color:var(--green-light);color:var(--green-deep);}
+:root[data-theme="dark"] .wp-time-trigger{background:var(--card-bg);border-color:var(--border);}
+
+
+/* ================================================================
+   PWA + RESPONSIVE OVERRIDES
+   スマホ実機では phone-wrap/phone/phone-inner を解除、画面全体使用
+   ================================================================ */
+
+/* ---- PC プレビュー時のみ擬似スマホフレームを有効化 ---- */
+@media (min-width: 600px) {
+  /* デスクトップ：モックフレーム表示 */
+  html, body { height:auto; overflow:auto; background:#1A2E27; }
+  body { display:flex; justify-content:center; align-items:flex-start; min-height:100vh; padding:24px 0 32px; }
+  .phone-wrap { display:flex; justify-content:center; }
+  .phone { width:320px !important; background:#0D1F18 !important; border-radius:44px !important; padding:12px !important; box-shadow:0 0 0 1px #1a3028,0 28px 60px rgba(0,0,0,.4) !important; }
+  .app-frame { border-radius:34px !important; width:296px !important; height:660px !important; position:relative !important; overflow:hidden !important; background:transparent !important; }
+  .phone-inner { border-radius:0 !important; width:100% !important; height:100% !important; position:absolute !important; overflow:hidden !important; background:var(--bg) !important; }
+  .notch { display:block !important; }
+  .status-bar { display:flex !important; }
+}
+
+/* ── スマホ実機：追加調整（基本レイアウトは常時フルスクリーン） ── */
+@media (max-width: 599px) {
+  /* カレンダーグリッド均等 */
+  .cal-week-labels {
+    display:grid !important;
+    grid-template-columns:repeat(7,1fr) !important;
+    width:100% !important;
+  }
+  .cal-week-labels span, .cal-cell {
+    min-width:0 !important;
+    flex:1 1 0 !important;
+  }
+  .cal-cell { min-height:68px !important; }
+  .cal-panel { width:100% !important; }
+  .cal-swipe-wrap, .cal-slide-container, .cal-panel {
+    max-width:100% !important;
+    overflow-x:hidden !important;
+  }
+  /* ev-chip クランプ */
+  .ev-chip {
+    font-size:clamp(10px,2.5vw,12px) !important;
+    max-width:100% !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+}
+
+/* ================================================================
+   ネイティブアプリらしいタップフィードバック
+   ================================================================ */
+.filter-chip, .cat-card, .filter-grid .filter-chip,
+.search-card, .event-card,
+.bnav-btn, .section-add-btn, .modal-next-btn,
+.drawer-item, .drawer-cat-item, .tour-item,
+.fbs-apply-btn, .search-mode-tab {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.12s ease, opacity 0.1s ease !important;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* タップ時の浮き上がり・縮小効果 */
+.filter-chip:active, .search-mode-tab:active {
+  transform: scale(0.94) !important;
+  opacity: 0.85 !important;
+}
+.cat-card:active {
+  transform: scale(0.92) translateY(1px) !important;
+  box-shadow: 0 2px 8px rgba(10,107,71,.18) !important;
+}
+.search-card:active, .event-card:active {
+  transform: scale(0.975) !important;
+  box-shadow: 0 1px 4px rgba(10,107,71,.08) !important;
+}
+.section-add-btn:active, .modal-next-btn:active, .fbs-apply-btn:active {
+  transform: scale(0.96) !important;
+  filter: brightness(0.92) !important;
+}
+.bnav-btn:active {
+  transform: scale(0.85) !important;
+}
+/* フィルターチップ：選択時の色変化アニメーション */
+.filter-chip.is-active {
+  transform: none !important;
+}
+
+/* カテゴリ選択アニメーション */
+@keyframes chipSelect {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.9); }
+  70% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.cat-card.just-selected {
+  animation: chipSelect 0.25s ease forwards;
+}
+
+/* 検索チップのリップル風 */
+@keyframes rippleFade {
+  0% { box-shadow: 0 0 0 0 rgba(26,175,122,.4); }
+  100% { box-shadow: 0 0 0 8px rgba(26,175,122,0); }
+}
+.filter-chip.is-active {
+  animation: rippleFade 0.35s ease forwards;
+}
+
+/* ================================================================
+   Capacitor対応：フルスクリーン環境での追加調整
+   ================================================================ */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .app-header, .search-header, .fin-coming-header {
+    padding-top: max(env(safe-area-inset-top, 0px), 10px) !important;
+  }
+  .app-header {
+    padding-bottom: 14px !important;
+  }
+  .bottom-nav {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px) !important;
+    /* PWA時：ホームバー領域をボトムナビ内に含める */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6px) !important;
+  }
+  /* PWA時：app-frameをSafariのツールバーなし画面高さに合わせる */
+  .app-frame {
+    height: 100% !important;
+    height: -webkit-fill-available !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+  }
+  .phone-inner {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    height: 100% !important;
+  }
+  body { background: #ffffff; height: 100%; height: -webkit-fill-available; }
+  html { height: 100%; height: -webkit-fill-available; background: #ffffff; }
+}
+
+/* ================================================================
+   Firebase Auth - ログイン画面 v2 (ProNexaX Redesign)
+   ================================================================ */
+#auth-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* カード上角が切れないよう overflow は hidden にしない */
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+}
+#auth-screen.hidden { display: none !important; }
+
+/* ── 背景：Apple風 ミントグリーン グラデーション ── */
+.auth-bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    180deg,
+    #DFF8EE 0%,
+    #BFEFD9 45%,
+    #9EE7C8 100%
+  );
+  z-index: 0;
+}
+
+/* ── サブルな装飾ブロブ（淡く） ── */
+.auth-blob {
+  position: absolute; border-radius: 50%;
+  filter: blur(70px); pointer-events: none; z-index: 0;
+}
+.auth-blob-1 {
+  width: 320px; height: 320px;
+  background: rgba(255,255,255,0.6);
+  top: -60px; left: -60px; opacity: .7;
+}
+.auth-blob-2 {
+  width: 260px; height: 260px;
+  background: rgba(158,231,200,0.5);
+  top: -30px; right: -40px; opacity: .5;
+}
+
+/* ── 下部の芝草装飾（色を背景に合わせ薄く） ── */
+.auth-grass {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 100px; z-index: 1; pointer-events: none;
+}
+.auth-grass svg { width: 100%; height: 100%; }
+
+/* ── スクロール可能なラッパー ── */
+.auth-wrap {
+  position: relative; z-index: 10;
+  width: 100%; max-width: 390px;
+  /* Safe Area + 上下の余白を均等に確保してカード角が見切れない */
+  padding:
+    max(env(safe-area-inset-top, 44px), 44px)
+    22px
+    max(env(safe-area-inset-bottom, 28px), 28px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  animation: authFadeUp .68s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes authFadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── カード本体：ガラス感 + iOS風シャドウ ── */
+.auth-card {
+  width: 100%;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  /* 上下すべて均一な角丸 */
+  border-radius: 26px !important;
+  border-top-left-radius: 26px !important;
+  border-top-right-radius: 26px !important;
+  border-bottom-left-radius: 26px !important;
+  border-bottom-right-radius: 26px !important;
+  overflow: hidden;
+  padding: 32px 26px 28px;
+  border: 1px solid rgba(255,255,255,0.75);
+  box-shadow:
+    0 2px 4px rgba(0,0,0,.03),
+    0 6px 20px rgba(0,0,0,.07),
+    0 16px 48px rgba(10,80,50,.10);
+}
+@keyframes authFloat {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+.auth-logo-area { margin-bottom: 22px; }
+.auth-logo-row  { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; }
+.auth-logo-icon { width: 46px; height: 46px; flex-shrink: 0; }
+.auth-logo {
+  font-size: 31px; font-weight: 700;
+  letter-spacing: -.5px; color: #0F1E18; line-height: 1;
+}
+.auth-logo span { color: #1AAF7A; }
+.auth-tagline { font-size: 13px; color: #5A7A6E; margin-top: 3px; font-weight: 500; }
+.auth-tab-row {
+  display: flex; background: rgba(0,0,0,.06); border-radius: 12px;
+  padding: 4px; gap: 3px; margin-bottom: 18px;
+}
+.auth-tab {
+  flex: 1; padding: 10px; border-radius: 9px; border: none;
+  font-size: 13.5px; font-weight: 600; cursor: pointer;
+  background: transparent; color: #999;
+  transition: background .2s, color .2s, box-shadow .2s;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+}
+.auth-tab.is-active {
+  background: #fff; color: #111;
+  box-shadow: 0 1px 6px rgba(0,0,0,.1);
+}
+.auth-input-wrap { margin-bottom: 13px; position: relative; }
+.auth-input-label { display: none; }
+.auth-input-icon {
+  position: absolute; left: 17px; top: 50%; transform: translateY(-50%);
+  width: 17px; height: 17px; color: #ccc; pointer-events: none;
+}
+.auth-input {
+  width: 100%; height: 54px;
+  background: #F5F6F7;
+  border: 1.5px solid transparent;
+  border-radius: 13px;
+  padding: 0 16px 0 44px;
+  font-size: 15.5px; font-family: inherit; color: #111;
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+}
+.auth-input:focus {
+  background: #fff;
+  border-color: #1AAF7A;
+  box-shadow: 0 0 0 4px rgba(26,175,122,.12);
+}
+.auth-input::placeholder { color: #ccc; }
+.auth-eye-btn {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; padding: 4px; cursor: pointer;
+  color: #ccc; line-height: 0; transition: color .2s;
+}
+.auth-eye-btn:hover { color: #888; }
+.auth-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 4px 0 22px;
+}
+.auth-remember { display: flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; }
+.auth-remember input { accent-color: #1AAF7A; width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+.auth-remember span { font-size: 13.5px; color: #555; }
+.auth-forgot-btn {
+  font-size: 13.5px; color: #1AAF7A; font-weight: 500;
+  background: none; border: none; cursor: pointer; padding: 0;
+  font-family: inherit; transition: opacity .15s;
+}
+.auth-forgot-btn:hover { opacity: .7; }
+.auth-submit-btn {
+  width: 100%; height: 54px;
+  background: linear-gradient(135deg, #22c88b 0%, #1AAF7A 50%, #149962 100%);
+  border: none; border-radius: 15px;
+  color: #fff; font-size: 16px; font-weight: 600; font-family: inherit; letter-spacing: .3px;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s, filter .18s;
+  box-shadow: 0 2px 8px rgba(26,175,122,.3), 0 8px 24px rgba(26,175,122,.2);
+  -webkit-tap-highlight-color: transparent;
+}
+.auth-submit-btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.18) 0%, transparent 55%);
+  pointer-events: none;
+}
+.auth-submit-btn:hover {
+  transform: translateY(-1px) scale(1.005);
+  box-shadow: 0 4px 16px rgba(26,175,122,.35), 0 12px 32px rgba(26,175,122,.22);
+  filter: brightness(1.05);
+}
+.auth-submit-btn:active { transform: scale(.98); filter: brightness(.97); }
+.auth-submit-btn:disabled { opacity: .65; cursor: not-allowed; transform: none !important; filter: none !important; }
+.auth-divider {
+  display: flex; align-items: center; gap: 11px; margin: 16px 0;
+}
+.auth-divider::before,.auth-divider::after { content: ''; flex: 1; height: 1px; background: #eee; }
+.auth-divider span { font-size: 12.5px; color: #ccc; }
+.auth-sns-row { display: flex; justify-content: center; gap: 16px; margin-bottom: 16px; }
+.auth-sns-btn {
+  width: 54px; height: 54px; border-radius: 50%;
+  border: 1.5px solid #EBEBEB; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s;
+  box-shadow: 0 2px 6px rgba(0,0,0,.05);
+  -webkit-tap-highlight-color: transparent;
+}
+.auth-sns-btn:hover { transform: translateY(-2px) scale(1.07); box-shadow: 0 6px 18px rgba(0,0,0,.1); }
+.auth-sns-btn:active { transform: scale(.93); }
+.auth-signup-row { text-align: center; font-size: 13.5px; color: #aaa; }
+.auth-signup-row a { color: #1AAF7A; font-weight: 600; text-decoration: none; margin-left: 3px; }
+.auth-error {
+  font-size: 12.5px; color: #D03030; text-align: center;
+  margin-top: 10px; min-height: 0;
+  border-radius: 9px; padding: 0;
+  display: none;
+}
+.auth-error:not(:empty) {
+  display: block;
+  background: #FFF0F0; border: 1px solid #FFD0D0;
+  padding: 8px 12px;
+}
+.auth-loader {
+  width: 20px; height: 20px; border: 2.5px solid rgba(26,175,122,.3);
+  border-top-color: #1AAF7A; border-radius: 50%;
+  animation: spin .7s linear infinite;
+  margin: 12px auto 0; display: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ログアウトボタン（ドロワー内） */
+.drawer-logout-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 18px; color: #E05555;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  background: transparent; border: none; width: 100%;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .12s;
+}
+.drawer-logout-btn:active { background: #FFF0F0; }
+
+/* 未ログイン時：予定追加ボタン無効化 */
+
+/* ユーザーアバター：メールのイニシャル表示 */
+.app-avatar { overflow: hidden; font-size: 9px; }
+
+/* ================================================================
+   ★ モバイル最適化：フルスクリーンネイティブUI追加スタイル
+   ================================================================ */
+
+/* 横スクロール完全禁止 */
+* { box-sizing:border-box; }
+html, body { width:100%; max-width:100%; overflow-x:hidden; }
+
+/* スクロールバー非表示 */
+::-webkit-scrollbar { display:none; }
+* { scrollbar-width:none; }
+
+/* カレンダー日付 最低12px */
+.cal-num { font-size:12px !important; font-weight:600 !important; }
+
+/* 曜日ラベル */
+.cal-week-labels span { font-size:11.5px !important; padding:7px 0 6px !important; }
+
+/* カレンダーヒントバー */
+.hint-bar { padding:2px 8px !important; }
+.hint-item { font-size:10px !important; }
+
+/* セクション見出し */
+.section-label { font-size:13px !important; font-weight:700 !important; }
+.section-add-btn {
+  font-size:13px !important;
+  padding:6px 14px !important;
+  border-radius:14px !important;
+  min-height:34px !important;
+  display:flex !important;
+  align-items:center !important;
+}
+
+/* イベントカード */
+.event-name { font-size:13px !important; line-height:1.4 !important; }
+.event-meta { font-size:11px !important; }
+.event-del-btn { font-size:11px !important; padding:4px 8px !important; min-height:28px !important; }
+.day-event-del { font-size:11px !important; padding:4px 8px !important; min-height:28px !important; }
+
+/* ボトムナビゲーション */
+.bottom-nav {
+  flex-shrink:0;
+  background:var(--card-bg,#fff);
+  border-top:1px solid var(--border,#E4EDEB);
+  padding:6px 0 max(env(safe-area-inset-bottom,6px),6px) !important;
+}
+.bnav-btn {
+  min-height:44px !important;
+  padding:6px 4px !important;
+}
+.bnav-btn svg { width:22px !important; height:22px !important; }
+.bnav-label { font-size:11px !important; margin-top:2px !important; }
+
+/* アプリヘッダー */
+.app-header {
+  padding-top: max(env(safe-area-inset-top,0px), 8px) !important;
+  padding-bottom:10px !important;
+}
+.search-header {
+  padding-top: max(env(safe-area-inset-top,0px), 10px) !important;
+  padding-bottom:8px !important;
+}
+.fin-coming-header {
+  padding-top: max(env(safe-area-inset-top,0px), 10px) !important;
+}
+
+/* ドロワー */
+.drawer-overlay { position:fixed !important; border-radius:0 !important; }
+.drawer { position:fixed !important; }
+
+/* モーダル */
+.modal-overlay { border-radius:0 !important; }
+.modal-sheet { border-radius:20px 20px 0 0 !important; }
+
+/* Toast */
+.toast {
+  position:fixed !important;
+  left:16px !important; right:16px !important;
+  bottom:calc(max(env(safe-area-inset-bottom,0px),0px) + 72px) !important;
+  font-size:13px !important;
+  padding:10px 16px !important;
+  z-index:9999 !important;
+}
+
+/* 検索画面 */
+.search-card-name { font-size:13px !important; }
+.filter-chip { font-size:11px !important; padding:5px 12px !important; }
+
+/* Day View */
+.dv-header-date-main { font-size:15px !important; }
+.dv-hour-label { font-size:10px !important; }
+.dv-event-title { font-size:12px !important; }
+.dv-allday-chip { font-size:11px !important; }
+
+/* 設定画面 */
+.theme-card-label { font-size:11px !important; }
+
+/* no-events placeholder */
+.no-events { font-size:13px !important; padding:12px 16px !important; }
+
+/* モーダル入力フォーム */
+.form-input { font-size:15px !important; }
+.modal-step-title { font-size:16px !important; }
+.modal-next-btn { font-size:15px !important; padding:13px !important; }
+
+/* dragカード */
+.drag-card { border-radius:12px !important; }
+.drag-card-name { font-size:13px !important; }
+.drag-card-meta { font-size:11px !important; }
+
+/* ev-chip（カレンダー内イベントチップ） */
+.ev-chip {
+  font-size:10.5px !important;
+  padding:0 4px !important;
+  height:14px !important;
+  line-height:14px !important;
+  border-radius:4px !important;
+  flex-shrink:0 !important;
+}
+.chip-more {
+  font-size:10px !important;
+  padding:0 4px !important;
+  height:14px !important;
+  line-height:14px !important;
+  flex-shrink:0 !important;
+}
+
+/* アバター */
+.app-avatar { font-size:12px !important; width:30px !important; height:30px !important; }
+
+/* ページスクロール領域 */
+.cal-scroll, .search-scroll {
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior:contain !important;
+}
+
+/* ================================================================
+   ★★★ Phase3: パフォーマンス最適化CSS ★★★
+   ================================================================ */
+
+/* スクロール要素：GPU加速・Jank削減 */
+.search-scroll, .tdm-scroll, .cal-scroll, .drawer-scroll, .fbs-scroll {
+  will-change: scroll-position;
+  transform: translateZ(0);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* カード：GPU合成レイヤー（containはSafariで親height計算に干渉するため除去） */
+.t-card {
+  will-change: transform;
+  /* contain: layout style; ← Safari bug: 親のflex height計算を壊すため使用禁止 */
+}
+
+/* モーダルシート：合成レイヤー（modal-sheetはtransformで開閉するため translateZ除外） */
+.fbs-sheet, .remind-sheet {
+  will-change: transform;
+  transform: translateZ(0);
+}
+.modal-sheet {
+  will-change: transform, opacity;
+  /* translateZ(0) は適用しない（translateY(110%)初期値を保護） */
+}
+/* tdm-sheetは translateY(100%) 初期値を保護するため will-change のみ */
+.tdm-sheet {
+  will-change: transform;
+}
+
+/* オーバーレイ：GPUへオフロード */
+.tdm-overlay, .fbs-overlay, .drawer-overlay, .modal-overlay {
+  will-change: opacity;
+}
+
+/* タップ時のハイライト完全ゼロ（Safari） */
+button, a, [onclick], .filter-chip, .t-card, .drawer-item,
+.tdm-action-btn, .tdm-link-btn, .add-btn, .t-fav-btn {
+  -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* タップ反応速度ゼロ（UIインタラクション要素） */
+button, .filter-chip, .t-cat-badge, .search-gender-btn,
+.search-region-tab, .search-mode-tab, .bnav-btn {
+  touch-action: manipulation !important;
+}
+
+/* カード入れ替え時のアニメーション */
+@keyframes cardFadeIn {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.t-card {
+  animation: cardFadeIn .18s ease both;
+}
+
+/* フィルターチップ切り替えアニメーション */
+@keyframes chipPop {
+  0%   { transform:scale(1); }
+  40%  { transform:scale(.88); }
+  70%  { transform:scale(1.06); }
+  100% { transform:scale(1); }
+}
+.filter-chip.active {
+  animation: chipPop .22s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* スクロール慣性の滑らかさ向上 */
+.search-scroll {
+  scroll-behavior: auto; /* smooth はiOSで重い */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 縦向き固定（横向き時でもUI崩れ防止） */
+@media (orientation: landscape) and (max-height: 500px) {
+  .app-frame {
+    height: 100dvh !important;
+  }
+  .bottom-nav {
+    display: none !important;
+  }
+}
+
+/* iOS Safari アドレスバー伸縮対応（svhは一部Safariで不安定なためdvhのみ使用） */
+/* @supports (height: 100svh) は削除 → dvh + -webkit-fill-available で対応済み */
+
+/* フィルターグリッドのチップ切り替え時ちらつき防止 */
+.filter-scroll-rail {
+  contain: layout;
+  transform: translateZ(0);
+}
+
+/* 大会詳細モーダル：ドラッグ時のちらつき防止 */
+.tdm-sheet.is-dragging * {
+  pointer-events: none;
+  user-select: none;
+}
+/* ✕ボタンはドラッグ中でも必ずタップ受付 */
+.tdm-sheet.is-dragging .tdm-close-btn {
+  pointer-events: auto !important;
+}
 
 /* split handle タッチ領域拡張 */
 .split-handle { min-height:20px !important; }
@@ -5185,18 +6864,14 @@ body.is-admin .admin-card-actions.admin-only {
     <!-- グラバーバー -->
     <div class="tdm-grabber" id="tdm-grabber"></div>
 
-    <!-- ヒーローバナー：カテゴリカラー帯 + 大会名 -->
-    <div class="tdm-hero" id="tdm-hero">
-      <div class="tdm-hero-inner">
+    <!-- ヘッダー：大会名＋カテゴリ -->
+    <div class="tdm-header">
+      <div class="tdm-header-left">
         <div class="tdm-cat-row" id="tdm-cat-row"></div>
         <div class="tdm-title" id="tdm-title">大会名</div>
-        <div class="tdm-date-sub" id="tdm-date-sub"></div>
       </div>
       <button class="tdm-close-btn" id="tdm-close-btn" onclick="closeTournamentModal()" aria-label="閉じる">✕</button>
     </div>
-
-    <!-- 会場バナー（地図リンク） -->
-    <div class="tdm-venue-banner" id="tdm-venue-banner"></div>
 
     <!-- アクションボタン群 -->
     <div class="tdm-actions" id="tdm-actions"></div>
@@ -5209,7 +6884,7 @@ body.is-admin .admin-card-actions.admin-only {
         <div id="tdm-basic-rows"></div>
       </div>
 
-      <!-- 賞金・費用 -->
+      <!-- 金額情報 -->
       <div class="tdm-section">
         <div class="tdm-section-title">賞金・費用</div>
         <div id="tdm-money-rows"></div>
@@ -5217,17 +6892,17 @@ body.is-admin .admin-card-actions.admin-only {
 
       <!-- エントリー情報 -->
       <div class="tdm-section">
-        <div class="tdm-section-title">エントリー情報</div>
+        <div class="tdm-section-title">エントリー</div>
         <div id="tdm-entry-rows"></div>
       </div>
 
       <!-- リンク -->
       <div class="tdm-section">
-        <div class="tdm-section-title">関連リンク</div>
+        <div class="tdm-section-title">リンク</div>
       </div>
       <div class="tdm-link-grid" id="tdm-link-grid"></div>
 
-      <div style="height:16px;"></div>
+      <div style="height:8px;"></div>
     </div>
 
     <!-- フッター：主要CTA -->
@@ -8298,114 +9973,53 @@ function closeTournamentModal(){
 
 // モーダル内容を描画
 function _renderTdm(t){
-  const catColor   = CAT_COLORS[t.cat] || '#8090A0';
-  const catLabel   = CAT_LABELS[t.cat]  || t.cat || '';
-  const genderLabel= t.gender==='womens'?'女子':t.gender==='both'?'男女':t.gender==='mens'?'男子':'';
-
-  // ── ステータス（5段階 + 色） ──
-  const status = _tdmCalcStatus(t);
-  const STATUS_CFG = {
-    open:         { label:'募集中',   color:'#1AAF7A', bg:'#E8F7F1' },
-    closing_soon: { label:'締切間近', color:'#E07020', bg:'#FFF3E8' },
-    closed:       { label:'締切済み', color:'#999',    bg:'#F0F0F0' },
-    ongoing:      { label:'開催中',   color:'#2060D0', bg:'#E8F0FB' },
-    ended:        { label:'終了',     color:'#AAA',    bg:'#F4F4F4' },
-    tbd:          { label:'日程未定', color:'#AAA',    bg:'#F4F4F4' },
-  };
-  const sc  = STATUS_CFG[status] || STATUS_CFG.tbd;
+  const catColor = CAT_COLORS[t.cat] || '#8090A0';
+  const catLabel = CAT_LABELS[t.cat] || t.cat;
+  const genderLabel = t.gender==='womens'?'女子':t.gender==='both'?'男女':t.gender==='mens'?'男子':'';
+  const status = _searchStatus(t);
+  const statusLabel = {live:'開催中',upcoming:'予定',ended:'終了'}[status];
   const isAdded = addedIds.has(t.id);
-  const isFav   = favTournaments.has(t.id);
+  const isFav = favTournaments.has(t.id);
 
-  // ── ヒーローバナー（カテゴリカラー帯 + 大会名） ──
-  document.getElementById('tdm-hero').style.background =
-    `linear-gradient(135deg, ${catColor}22 0%, ${catColor}08 100%)`;
-  document.getElementById('tdm-hero').style.borderBottom = `3px solid ${catColor}60`;
-
+  // ヘッダー
+  document.getElementById('tdm-title').textContent = t.name;
   document.getElementById('tdm-cat-row').innerHTML = `
-    <span class="tdm-cat-pill" style="background:${catColor}1A;color:${catColor};border:1px solid ${catColor}40;">
-      ${catLabel}
-    </span>
-    ${genderLabel ? `<span class="tdm-gender-pill">${genderLabel}</span>` : ''}
-    <span class="tdm-status-pill" style="background:${sc.bg};color:${sc.color};border:1px solid ${sc.color}30;">
-      <span class="tdm-status-dot" style="background:${sc.color};"></span>${sc.label}
-    </span>
+    <span class="t-cat-badge" style="background:${catColor}18;color:${catColor};border:1px solid ${catColor}40;font-size:10px;padding:3px 9px;">${catLabel}</span>
+    ${genderLabel?`<span class="t-gender-badge ${t.gender||''}" style="font-size:10px;">${genderLabel}</span>`:''}
+    <span class="t-status-badge ${status}" style="font-size:10px;">${statusLabel}</span>
   `;
-  document.getElementById('tdm-title').textContent = t.name || '大会名未設定';
 
-  // 開催期間サブタイトル（ヒーロー内）
-  const dateRange = (t.start && t.end)
-    ? `${_fmtDate(t.start)} 〜 ${_fmtDate(t.end)}`
-    : t.start ? _fmtDate(t.start) : '';
-  document.getElementById('tdm-date-sub').textContent = dateRange;
-
-  // ── 会場バナー（地図リンク付き） ──
-  const courseName = t.courseName || t.course || '';
-  const placeName  = t.place || '';
-  const venueText  = courseName || placeName || '';
-  const venueEl    = document.getElementById('tdm-venue-banner');
-  if (venueText) {
-    const mapsQuery = encodeURIComponent(venueText + (placeName && courseName ? ' ' + placeName : ''));
-    const isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const mapsUrl   = isIOS
-      ? `maps://maps.apple.com/?q=${mapsQuery}`
-      : `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
-    venueEl.innerHTML = `
-      <a class="tdm-venue-link" href="${mapsUrl}" target="_blank" rel="noopener">
-        <span class="tdm-venue-icon">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${catColor}" stroke-width="2" stroke-linecap="round">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-            <circle cx="12" cy="9" r="2.5" stroke="${catColor}"/>
-          </svg>
-        </span>
-        <span class="tdm-venue-text">
-          <span class="tdm-venue-name">${courseName || placeName}</span>
-          ${courseName && placeName ? `<span class="tdm-venue-pref">${placeName}</span>` : ''}
-        </span>
-        <span class="tdm-venue-map-badge">
-          ${isIOS ? 'Apple Maps' : 'Google Maps'}
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <polyline points="3.5,2.5 6.5,5 3.5,7.5" stroke="${catColor}" stroke-width="1.3" stroke-linecap="round"/>
-          </svg>
-        </span>
-      </a>`;
-    venueEl.style.display = '';
-  } else {
-    venueEl.style.display = 'none';
-  }
-
-  // ── アクションボタン ──
-  document.getElementById('tdm-actions').innerHTML = `
-    <button class="tdm-action-btn" onclick="_tdmAddToCalendar()" aria-label="カレンダーに追加">
-      <div class="tdm-action-icon cal${isAdded?' added':''}">
+  // アクションボタン群
+  const actionsEl = document.getElementById('tdm-actions');
+  actionsEl.innerHTML = `
+    <button class="tdm-action-btn" onclick="_tdmAddToCalendar()">
+      <div class="tdm-action-icon cal">
         <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-          <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="${isAdded?'#fff':'#1AAF7A'}" stroke-width="1.7"/>
-          <line x1="7" y1="2" x2="7" y2="6" stroke="${isAdded?'#fff':'#1AAF7A'}" stroke-width="1.7" stroke-linecap="round"/>
-          <line x1="15" y1="2" x2="15" y2="6" stroke="${isAdded?'#fff':'#1AAF7A'}" stroke-width="1.7" stroke-linecap="round"/>
-          <line x1="3" y1="9" x2="19" y2="9" stroke="${isAdded?'#fff':'#1AAF7A'}" stroke-width="1.7"/>
-          ${isAdded?'<path d="M7 13l2.5 2.5L15 10" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>':''}
+          <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#1AAF7A" stroke-width="1.7"/>
+          <line x1="7" y1="2" x2="7" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>
+          <line x1="15" y1="2" x2="15" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>
+          <line x1="3" y1="9" x2="19" y2="9" stroke="#1AAF7A" stroke-width="1.7"/>
         </svg>
       </div>
       <span class="tdm-action-label">${isAdded?'追加済み':'カレンダー'}</span>
     </button>
-    <button class="tdm-action-btn" onclick="_tdmToggleFav()" aria-label="お気に入り">
-      <div class="tdm-action-icon fav${isFav?' saved':''}">
-        ${isFav
-          ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="#E5526A" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`
-          : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E5526A" stroke-width="1.8"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`
-        }
-      </div>
-      <span class="tdm-action-label">${isFav?'保存済み':'保存'}</span>
-    </button>
-    <button class="tdm-action-btn" onclick="_tdmOpenBell()" aria-label="リマインド">
-      <div class="tdm-action-icon bell">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8060C0" stroke-width="1.8" stroke-linecap="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    <button class="tdm-action-btn" onclick="_tdmToggleFav()">
+      <div class="tdm-action-icon fav">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="${isFav?'#E5A41A':'none'}" stroke="${isFav?'#E5A41A':'#B8901A'}" stroke-width="1.8">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
         </svg>
       </div>
-      <span class="tdm-action-label">通知</span>
+      <span class="tdm-action-label">${isFav?'お気に入り済':'お気に入り'}</span>
     </button>
-    ${t.entryUrl ? `<a class="tdm-action-btn" href="${t.entryUrl}" target="_blank" rel="noopener" aria-label="エントリー">
+    ${t.officialUrl?`<a class="tdm-action-btn" href="${t.officialUrl}" target="_blank" rel="noopener">
+      <div class="tdm-action-icon web">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5060A0" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
+        </svg>
+      </div>
+      <span class="tdm-action-label">公式サイト</span>
+    </a>`:''}
+    ${t.entryUrl?`<a class="tdm-action-btn" href="${t.entryUrl}" target="_blank" rel="noopener">
       <div class="tdm-action-icon entry">
         <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
           <path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
@@ -8414,149 +10028,89 @@ function _renderTdm(t){
         </svg>
       </div>
       <span class="tdm-action-label">エントリー</span>
-    </a>` : ''}
-    ${t.officialUrl ? `<a class="tdm-action-btn" href="${t.officialUrl}" target="_blank" rel="noopener" aria-label="公式サイト">
-      <div class="tdm-action-icon web">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5060A0" stroke-width="1.8" stroke-linecap="round">
-          <circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
+    </a>`:''}
+    ${t.igUrl?`<a class="tdm-action-btn" href="${t.igUrl}" target="_blank" rel="noopener">
+      <div class="tdm-action-icon" style="background:#FFF0F6;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C060A0" stroke-width="1.8">
+          <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".5" fill="#C060A0"/>
         </svg>
       </div>
-      <span class="tdm-action-label">公式HP</span>
-    </a>` : ''}
+      <span class="tdm-action-label">Instagram</span>
+    </a>`:''}
   `;
 
   // ── 基本情報 ──
   const rows = [
-    { icon:'cal',      label:'開催日',     value: dateRange },
-    { icon:'deadline', label:'締切日',     value: t.entryDeadline ? `${_fmtDate(t.entryDeadline)}${_deadlineSuffix(t.entryDeadline)}` : '', cls: _deadlineClass(t.entryDeadline) },
-    { icon:'org',      label:'主催',       value: t.organizer },
-    { icon:'num',      label:'定員',       value: t.capacity },
+    {icon:'cal', label:'開催日', value:t.start&&t.end?`${t.start} 〜 ${t.end}`:'-'},
+    {icon:'pin', label:'都道府県', value:t.place||'-'},
+    {icon:'golf', label:'ゴルフ場', value:t.courseName||'-'},
+    {icon:'org', label:'主催', value:t.organizer||'-'},
+    {icon:'deadline', label:'締切日', value:t.entryDeadline||'-', cls:t.entryDeadline?_deadlineClass(t.entryDeadline):''},
   ];
-  document.getElementById('tdm-basic-rows').innerHTML = rows.map(r => `
+  document.getElementById('tdm-basic-rows').innerHTML = rows.map(r=>`
     <div class="tdm-row">
       <div class="tdm-row-icon">${_tdmIcon(r.icon)}</div>
       <div class="tdm-row-label">${r.label}</div>
-      <div class="tdm-row-value${r.cls ? ' ' + r.cls : ''}">${r.value || '<span class="empty">未設定</span>'}</div>
-    </div>`).join('');
+      <div class="tdm-row-value${r.cls?' '+r.cls:''}">${r.value||'<span class=\'empty\'>未設定</span>'}</div>
+    </div>
+  `).join('');
 
-  // ── 賞金・費用 ──
+  // ── 金額情報 ──
   const moneyRows = [
-    { icon:'trophy', label:'賞金総額',   value: t.prize,            money: true },
-    { icon:'trophy', label:'優勝賞金',   value: t.prizeWinner,      money: true },
-    { icon:'money',  label:'参加費',     value: t.entryFee },
-    { icon:'money',  label:'練習ラウンド', value: t.practiceRoundFee },
+    {icon:'trophy', label:'賞金総額', value:t.prize, money:true},
+    {icon:'trophy', label:'優勝賞金', value:t.prizeWinner, money:true},
+    {icon:'money', label:'参加費', value:t.entryFee},
+    {icon:'money', label:'練習ラウンド', value:t.practiceRoundFee},
   ];
-  document.getElementById('tdm-money-rows').innerHTML = moneyRows.map(r => `
+  document.getElementById('tdm-money-rows').innerHTML = moneyRows.map(r=>`
     <div class="tdm-row">
       <div class="tdm-row-icon">${_tdmIcon(r.icon)}</div>
       <div class="tdm-row-label">${r.label}</div>
-      <div class="tdm-row-value${r.money ? ' money' : ''}">${r.value || '<span class="empty">未設定</span>'}</div>
-    </div>`).join('');
+      <div class="tdm-row-value${r.money?' money':''}">${r.value||'<span class="empty">未設定</span>'}</div>
+    </div>
+  `).join('');
 
   // ── エントリー情報 ──
   const entryRows = [
-    { icon:'method', label:'申請方法',   value: t.entryMethod },
-    { icon:'user',   label:'出場資格',   value: t.qualification },
-    { icon:'cancel', label:'キャンセル', value: t.cancelDeadline ? _fmtDate(t.cancelDeadline) : '' },
+    {icon:'method', label:'申請方法', value:t.entryMethod},
+    {icon:'user', label:'出場資格', value:t.qualification},
+    {icon:'num', label:'定員', value:t.capacity},
+    {icon:'cancel', label:'キャンセル', value:t.cancelDeadline},
   ];
-  document.getElementById('tdm-entry-rows').innerHTML = entryRows.map(r => `
+  document.getElementById('tdm-entry-rows').innerHTML = entryRows.map(r=>`
     <div class="tdm-row">
       <div class="tdm-row-icon">${_tdmIcon(r.icon)}</div>
       <div class="tdm-row-label">${r.label}</div>
-      <div class="tdm-row-value">${r.value || '<span class="empty">未設定</span>'}</div>
-    </div>`).join('');
+      <div class="tdm-row-value">${r.value||'<span class="empty">未設定</span>'}</div>
+    </div>
+  `).join('');
 
-  // ── リンク（2列グリッド） ──
+  // ── リンク ──
   const links = [
-    { label:'公式サイト',       url: t.officialUrl, icon:'🌐', color:'#5060A0' },
-    { label:'Instagram',        url: t.igUrl,        icon:'📸', color:'#C060A0' },
-    { label:'エントリー',       url: t.entryUrl,     icon:'📋', color:'#1AAF7A' },
-    { label:'組み合わせ',       url: t.pairUrl,      icon:'📑', color:'#6080B0' },
-    { label:'結果・速報',       url: t.resultUrl,    icon:'🏆', color:'#C08030' },
+    {label:'公式HP', url:t.officialUrl, icon:'🌐'},
+    {label:'Instagram', url:t.igUrl, icon:'📸'},
+    {label:'エントリーフォーム', url:t.entryUrl, icon:'📋'},
+    {label:'組み合わせ', url:t.pairUrl, icon:'📑'},
+    {label:'結果速報', url:t.resultUrl, icon:'🏆'},
   ];
-  document.getElementById('tdm-link-grid').innerHTML = links.map(l => `
-    <a class="tdm-link-btn${l.url ? ' has-url' : ''}"
-       href="${l.url || '#'}" ${l.url ? 'target="_blank" rel="noopener"' : 'onclick="return false"'}>
-      <span class="tdm-link-emoji">${l.icon}</span>
-      <span class="tdm-link-label">${l.label}</span>
-      ${l.url ? `<svg class="tdm-link-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none">
-        <polyline points="3.5,2.5 6.5,5 3.5,7.5" stroke="${l.color}" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>` : ''}
-    </a>`).join('');
+  document.getElementById('tdm-link-grid').innerHTML = links.map(l=>`
+    <a class="tdm-link-btn${l.url?' has-url':''}"
+      href="${l.url||'#'}" ${l.url?'target="_blank" rel="noopener"':'onclick="return false;"'}>
+      <div class="tdm-link-icon">${l.icon}</div>
+      <div class="tdm-link-label">${l.label}</div>
+      ${l.url?'<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><polyline points="3.5,2.5 6.5,5 3.5,7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>':''}
+    </a>
+  `).join('');
 
-  // ── フッターCTA ──
+  // フッターCTA
   const entryBtn = document.getElementById('tdm-footer-entry');
-  const calBtn   = document.getElementById('tdm-footer-cal');
-  if (t.entryUrl) {
+  if(t.entryUrl){
     entryBtn.classList.remove('no-url');
-    entryBtn.onclick = () => { window.open(t.entryUrl, '_blank'); };
-    entryBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 22 22" fill="none">
-      <path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
-      <path d="M9 11l2 2 4-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="8" y="1" width="6" height="4" rx="1" stroke="#fff" stroke-width="1.7"/>
-    </svg> エントリーへ`;
+    entryBtn.onclick = ()=>{ window.open(t.entryUrl,'_blank'); };
   } else {
     entryBtn.classList.add('no-url');
-    entryBtn.onclick = () => { showToast('エントリーURLは未設定です'); };
-    entryBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 22 22" fill="none">
-      <path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="#aaa" stroke-width="1.7" stroke-linecap="round"/>
-      <path d="M9 11l2 2 4-4" stroke="#aaa" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="8" y="1" width="6" height="4" rx="1" stroke="#aaa" stroke-width="1.7"/>
-    </svg> エントリー未設定`;
+    entryBtn.onclick = ()=>{ showToast('エントリーURLは未設定です'); };
   }
-  // カレンダーCTAボタン
-  if (calBtn) {
-    calBtn.classList.toggle('added', isAdded);
-    calBtn.innerHTML = isAdded
-      ? `<svg width="15" height="15" viewBox="0 0 22 22" fill="none">
-          <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/>
-          <path d="M7 12l3 3 5-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg> 追加済み`
-      : `<svg width="15" height="15" viewBox="0 0 22 22" fill="none">
-          <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/>
-          <line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          <line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          <line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/>
-        </svg> カレンダーに追加`;
-  }
-}
-
-// ── ステータス計算（拡張版） ──
-function _tdmCalcStatus(t) {
-  if (t.status && t.status !== 'tbd') return t.status;
-  const today = typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0,10);
-  const st = t.startDate || t.start;
-  const en = t.endDate   || t.end;
-  const dl = t.entryDeadline;
-  if (!st) return 'tbd';
-  if (today > (en || st)) return 'ended';
-  if (today >= st)        return 'ongoing';
-  if (dl && today > dl)   return 'closed';
-  if (dl) {
-    const diff = (new Date(dl) - new Date(today)) / 86400000;
-    if (diff <= 7) return 'closing_soon';
-  }
-  return 'open';
-}
-
-// ── 日付フォーマット（YYYY-MM-DD → M月D日） ──
-function _fmtDate(ds) {
-  if (!ds) return '';
-  const m = ds.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!m) return ds;
-  return `${parseInt(m[2])}月${parseInt(m[3])}日`;
-}
-
-// ── 締切サフィックス ──
-function _deadlineSuffix(ds) {
-  if (!ds) return '';
-  const today = typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0,10);
-  if (ds < today) return ' (締切済)';
-  const diff = Math.floor((new Date(ds) - new Date(today)) / 86400000);
-  if (diff === 0) return ' (本日締切)';
-  if (diff <= 3)  return ` (残${diff}日)`;
-  if (diff <= 7)  return ` (残${diff}日)`;
-  return '';
 }
 
 // アイコン生成ヘルパー
@@ -8578,34 +10132,19 @@ function _tdmIcon(type){
 }
 
 // カレンダーに追加
-function _tdmOpenBell(){
-  if(!_tdmCurrentId) return;
-  if(typeof openRemindSheet === 'function') {
-    openRemindSheet(_tdmCurrentId);
-  } else if(typeof _toggleBell === 'function') {
-    const t = TOURNAMENTS_FLAT.find(x => x.id === _tdmCurrentId);
-    if(t) _toggleBell(_tdmCurrentId, t.start, t.name);
-  } else {
-    showToast('リマインドは大会カードの🔔から設定できます');
-  }
-}
-
 function _tdmAddToCalendar(){
   if(!_tdmCurrentId) return;
   toggleSearchAdd(_tdmCurrentId);
   const isAdded = addedIds.has(_tdmCurrentId);
-  showToast(isAdded ? '📅 カレンダーに追加しました' : 'カレンダーから削除しました');
-  // CTAとアクションアイコンを即時更新
-  const t = TOURNAMENTS_FLAT.find(x => x.id === _tdmCurrentId);
-  if(t) setTimeout(() => _renderTdm(t), 60);
+  showToast(isAdded?'カレンダーに追加しました':'カレンダーから削除しました');
 }
 
 // お気に入りトグル
 function _tdmToggleFav(){
   if(!_tdmCurrentId) return;
   toggleFavTournament(_tdmCurrentId);
-  const t = TOURNAMENTS_FLAT.find(x => x.id === _tdmCurrentId);
-  if(t) setTimeout(() => _renderTdm(t), 80);  // Firestore 楽観的更新待ち
+  const t = TOURNAMENTS_FLAT.find(x=>x.id===_tdmCurrentId);
+  if(t) _renderTdm(t);
 }
 
 // エントリーURLを開く
@@ -17262,6 +18801,1132 @@ console.info(
   '%c[TDM v2]%c 大会詳細モーダル 強化版 適用済み',
   'background:#39C892;color:#fff;padding:1px 6px;border-radius:3px;font-weight:700;',
   'color:#1A6640;font-weight:600;'
+);
+
+})();
+</script>
+
+<!-- ================================================================
+  ProNexaX — 大会詳細モーダル 強化 v3
+  ・Skeleton / Error Toast / Loading状態
+  ・マップ選択シート（Google Maps / Apple Maps）
+  ・ステータスバッジ強化（5状態＋キャンセル）
+  ・賞金・費用・エントリー・リンク完全表示
+  ・Firestore links/status/prize/course完全同期
+  ・Apple純正風 高品質UI
+  ================================================================ -->
+<style id="tdm-v3-css">
+
+/* ================================================================
+   TDM v3 — 追加スタイル（v2を上書き・拡張）
+   ================================================================ */
+
+/* ── エラートースト ── */
+.tdmv3-toast {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 90px);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(30,30,30,.92);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 24px;
+  white-space: nowrap;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity .22s, transform .22s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  max-width: 88vw;
+  text-align: center;
+  box-shadow: 0 4px 24px rgba(0,0,0,.28);
+}
+.tdmv3-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.tdmv3-toast.error { background: rgba(180,30,30,.92); }
+.tdmv3-toast.success { background: rgba(15,100,60,.92); }
+
+/* ── スケルトンローディング（v2より精細） ── */
+.tdmv3-skeleton-wrap {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tdmv3-skel-badge {
+  width: 80px;
+  height: 24px;
+  border-radius: 12px;
+  background: linear-gradient(90deg,#f0f0f5 25%,#e4e4ec 50%,#f0f0f5 75%);
+  background-size: 300% 100%;
+  animation: tdmv3-shimmer 1.6s ease-in-out infinite;
+}
+.tdmv3-skel-prize {
+  display: flex;
+  gap: 8px;
+  height: 76px;
+}
+.tdmv3-skel-prize-box {
+  flex: 1;
+  border-radius: 14px;
+  background: linear-gradient(90deg,#f8f4e8 25%,#ede9d8 50%,#f8f4e8 75%);
+  background-size: 300% 100%;
+  animation: tdmv3-shimmer 1.6s ease-in-out infinite;
+}
+.tdmv3-skel-card {
+  border-radius: 14px;
+  overflow: hidden;
+  border: .5px solid rgba(0,0,0,.06);
+}
+.tdmv3-skel-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: .5px solid rgba(0,0,0,.04);
+}
+.tdmv3-skel-row:last-child { border-bottom: none; }
+.tdmv3-skel-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(90deg,#e8f5ee 25%,#d8ece2 50%,#e8f5ee 75%);
+  background-size: 300% 100%;
+  animation: tdmv3-shimmer 1.6s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.tdmv3-skel-line {
+  height: 13px;
+  border-radius: 6px;
+  background: linear-gradient(90deg,#f0f0f5 25%,#e4e4ec 50%,#f0f0f5 75%);
+  background-size: 300% 100%;
+  animation: tdmv3-shimmer 1.6s ease-in-out infinite;
+}
+.tdmv3-skel-link-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px 14px 14px;
+}
+.tdmv3-skel-link-btn {
+  height: 58px;
+  border-radius: 13px;
+  background: linear-gradient(90deg,#f0f0f5 25%,#e4e4ec 50%,#f0f0f5 75%);
+  background-size: 300% 100%;
+  animation: tdmv3-shimmer 1.6s ease-in-out infinite .1s;
+}
+@keyframes tdmv3-shimmer {
+  0%   { background-position: 300% 0 }
+  100% { background-position: -300% 0 }
+}
+
+/* ── マップ選択シート ── */
+.tdmv3-mapsheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.42);
+  z-index: 8000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.tdmv3-mapsheet-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.tdmv3-mapsheet {
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 540px;
+  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 12px);
+  transform: translateY(100%);
+  transition: transform .32s cubic-bezier(.32,1,.25,1);
+  overflow: hidden;
+}
+.tdmv3-mapsheet-overlay.show .tdmv3-mapsheet {
+  transform: translateY(0);
+}
+:root[data-theme="dark"] .tdmv3-mapsheet { background: #1C1C1E; }
+
+.tdmv3-mapsheet-handle {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 4px;
+}
+.tdmv3-mapsheet-pip {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0,0,0,.14);
+}
+:root[data-theme="dark"] .tdmv3-mapsheet-pip { background: rgba(255,255,255,.2); }
+
+.tdmv3-mapsheet-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary, #7A9E94);
+  text-align: center;
+  padding: 2px 16px 12px;
+  letter-spacing: .3px;
+}
+.tdmv3-mapsheet-loc {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary, #0F1E18);
+  text-align: center;
+  padding: 0 16px 14px;
+  border-bottom: .5px solid rgba(0,0,0,.07);
+  line-height: 1.4;
+}
+:root[data-theme="dark"] .tdmv3-mapsheet-loc { color: #E8F0EC; border-bottom-color: rgba(255,255,255,.07); }
+
+.tdmv3-mapsheet-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 20px;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background .1s;
+  font-family: inherit;
+}
+.tdmv3-mapsheet-btn:active { background: rgba(0,0,0,.05); }
+:root[data-theme="dark"] .tdmv3-mapsheet-btn:active { background: rgba(255,255,255,.06); }
+.tdmv3-mapsheet-btn + .tdmv3-mapsheet-btn {
+  border-top: .5px solid rgba(0,0,0,.06);
+}
+:root[data-theme="dark"] .tdmv3-mapsheet-btn + .tdmv3-mapsheet-btn { border-top-color: rgba(255,255,255,.06); }
+
+.tdmv3-mapsheet-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 22px;
+}
+.tdmv3-mapsheet-text { flex: 1; min-width: 0; }
+.tdmv3-mapsheet-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #0F1E18);
+  display: block;
+  margin-bottom: 2px;
+}
+:root[data-theme="dark"] .tdmv3-mapsheet-name { color: #E8F0EC; }
+.tdmv3-mapsheet-sub {
+  font-size: 12px;
+  color: var(--text-tertiary, #7A9E94);
+  display: block;
+}
+.tdmv3-mapsheet-chev {
+  color: var(--text-tertiary, #7A9E94);
+  flex-shrink: 0;
+}
+
+.tdmv3-mapsheet-cancel {
+  display: block;
+  width: calc(100% - 28px);
+  margin: 10px 14px 0;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  background: rgba(0,0,0,.05);
+  color: var(--text-primary, #0F1E18);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background .1s;
+}
+.tdmv3-mapsheet-cancel:active { background: rgba(0,0,0,.09); }
+:root[data-theme="dark"] .tdmv3-mapsheet-cancel { background: rgba(255,255,255,.07); color: #E8F0EC; }
+
+/* ── ステータスバッジ強化（v2を上書き） ── */
+.tdmv2-st-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px 5px 8px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .05px;
+  flex-shrink: 0;
+}
+.tdmv2-st-open         { background: #D8F5E8; color: #0A6E3A; border: 1px solid rgba(10,110,58,.15); }
+.tdmv2-st-closing_soon { background: #FFF0D0; color: #9A5000; border: 1px solid rgba(154,80,0,.15); }
+.tdmv2-st-closed       { background: #ECEEF2; color: #6A7A8A; border: 1px solid rgba(106,122,138,.12); }
+.tdmv2-st-ongoing      { background: #DCF0FF; color: #1A4E90; border: 1px solid rgba(26,78,144,.15); }
+.tdmv2-st-ended        { background: #F2F2F5; color: #7A7A8A; border: 1px solid rgba(122,122,138,.10); }
+.tdmv2-st-tbd          { background: #F0F0F5; color: #7A7A8A; border: 1px solid rgba(122,122,138,.10); }
+.tdmv2-st-cancelled    { background: #FFE8E8; color: #C02828; border: 1px solid rgba(192,40,40,.14); }
+
+:root[data-theme="dark"] .tdmv2-st-open         { background: #0E3A24; color: #4ADB8A; border-color: rgba(74,219,138,.2); }
+:root[data-theme="dark"] .tdmv2-st-closing_soon { background: #3A2600; color: #FFC044; border-color: rgba(255,192,68,.2); }
+:root[data-theme="dark"] .tdmv2-st-closed       { background: #222428; color: #8898A8; border-color: rgba(136,152,168,.12); }
+:root[data-theme="dark"] .tdmv2-st-ongoing      { background: #0A1E38; color: #60A0E8; border-color: rgba(96,160,232,.2); }
+:root[data-theme="dark"] .tdmv2-st-ended        { background: #1E1E22; color: #7878A8; border-color: rgba(120,120,168,.1); }
+:root[data-theme="dark"] .tdmv2-st-cancelled    { background: #3A0A0A; color: #FF6060; border-color: rgba(255,96,96,.2); }
+
+/* ── 詳細ヘッダーの大会名エリア強化 ── */
+.tdmv3-hero-header {
+  padding: 0 16px 12px;
+  border-bottom: .5px solid rgba(0,0,0,.07);
+  flex-shrink: 0;
+}
+:root[data-theme="dark"] .tdmv3-hero-header { border-bottom-color: rgba(255,255,255,.07); }
+
+.tdmv3-hero-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary, #0F1E18);
+  line-height: 1.3;
+  letter-spacing: -.4px;
+  margin-bottom: 6px;
+}
+:root[data-theme="dark"] .tdmv3-hero-name { color: #E8F0EC; }
+.tdmv3-hero-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ── 費用カード：特別スタイル ── */
+.tdmv3-cost-row {
+  display: flex;
+  align-items: center;
+  padding: 11px 14px;
+  gap: 12px;
+  border-bottom: .5px solid rgba(0,0,0,.04);
+}
+.tdmv3-cost-row:last-child { border-bottom: none; }
+:root[data-theme="dark"] .tdmv3-cost-row { border-bottom-color: rgba(255,255,255,.04); }
+.tdmv3-cost-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary, #3A5C52);
+}
+.tdmv3-cost-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #3A3A3A;
+  letter-spacing: -.2px;
+}
+:root[data-theme="dark"] .tdmv3-cost-value { color: #D8D8D8; }
+.tdmv3-cost-value.highlight {
+  color: var(--green-dark, #22A874);
+}
+
+/* ── マップ行タップターゲット強化 ── */
+.tdmv3-map-tap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--green-chip, #E0F8EE);
+  border: 1px solid rgba(57,200,146,.3);
+  border-radius: 10px;
+  padding: 5px 10px 5px 8px;
+  color: var(--green-dark, #22A874);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: opacity .12s, transform .1s;
+  text-decoration: none;
+  max-width: 100%;
+  word-break: break-all;
+}
+.tdmv3-map-tap:active { opacity: .75; transform: scale(.97); }
+:root[data-theme="dark"] .tdmv3-map-tap {
+  background: rgba(57,200,146,.12);
+  border-color: rgba(57,200,146,.25);
+  color: #39C892;
+}
+
+/* ── リンクグリッド2.0（ステータス付き、アイコン大きめ） ── */
+.tdmv3-link-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 14px;
+  padding: 12px 13px;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .12s, transform .1s, box-shadow .1s;
+  touch-action: manipulation;
+  position: relative;
+  overflow: hidden;
+}
+.tdmv3-link-btn:active { transform: scale(.96); box-shadow: none; }
+.tdmv3-link-btn.active {
+  border-color: transparent;
+  box-shadow: 0 2px 10px rgba(0,0,0,.09), 0 0 0 1.5px rgba(57,200,146,.25);
+}
+.tdmv3-link-btn.inactive {
+  background: rgba(0,0,0,.02);
+  border-color: rgba(0,0,0,.05);
+  opacity: .55;
+  pointer-events: none;
+}
+:root[data-theme="dark"] .tdmv3-link-btn {
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.09);
+}
+:root[data-theme="dark"] .tdmv3-link-btn.active {
+  box-shadow: 0 2px 10px rgba(0,0,0,.3), 0 0 0 1.5px rgba(57,200,146,.3);
+}
+.tdmv3-link-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+.tdmv3-link-text { flex: 1; min-width: 0; }
+.tdmv3-link-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary, #0F1E18);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:root[data-theme="dark"] .tdmv3-link-name { color: #D8E8E0; }
+.tdmv3-link-sub {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-tertiary, #7A9E94);
+  display: block;
+  margin-top: 1px;
+}
+.tdmv3-link-btn.active .tdmv3-link-sub { color: var(--green-main, #39C892); }
+.tdmv3-link-arrow {
+  color: var(--text-tertiary, #7A9E94);
+  flex-shrink: 0;
+  opacity: .6;
+}
+
+/* ── 賞金ヒーローカード v3 ── */
+.tdmv3-prize-wrap {
+  margin: 0 14px 10px;
+  background: linear-gradient(135deg, #FFFBF0 0%, #FFF6D8 50%, #FDF0B8 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(184,136,26,.2);
+  overflow: hidden;
+  position: relative;
+}
+:root[data-theme="dark"] .tdmv3-prize-wrap {
+  background: linear-gradient(135deg, #2A2210 0%, #1E1A08 50%, #181400 100%);
+  border-color: rgba(184,136,26,.25);
+}
+.tdmv3-prize-header {
+  padding: 10px 14px 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tdmv3-prize-header-icon {
+  font-size: 14px;
+}
+.tdmv3-prize-header-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8A6800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+:root[data-theme="dark"] .tdmv3-prize-header-label { color: #C4A040; }
+.tdmv3-prize-grid {
+  display: flex;
+  gap: 1px;
+  border-top: .5px solid rgba(184,136,26,.15);
+}
+.tdmv3-prize-cell {
+  flex: 1;
+  padding: 10px 14px 12px;
+  position: relative;
+}
+.tdmv3-prize-cell + .tdmv3-prize-cell {
+  border-left: .5px solid rgba(184,136,26,.15);
+}
+.tdmv3-prize-cell-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8A6000;
+  letter-spacing: .2px;
+  margin-bottom: 3px;
+}
+:root[data-theme="dark"] .tdmv3-prize-cell-label { color: #B08020; }
+.tdmv3-prize-cell-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #4A3200;
+  letter-spacing: -.4px;
+  line-height: 1.2;
+}
+:root[data-theme="dark"] .tdmv3-prize-cell-value { color: #E8C858; }
+
+/* ── セクションヘッダー v3（v2上書き） ── */
+.tdmv2-section-hdr {
+  padding: 16px 16px 7px;
+}
+.tdmv2-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary, #7A9E94);
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tdmv2-section-label::after {
+  content: '';
+  flex: 1;
+  height: .5px;
+  background: rgba(0,0,0,.08);
+}
+:root[data-theme="dark"] .tdmv2-section-label::after { background: rgba(255,255,255,.09); }
+
+/* ── カードv3 ── */
+.tdmv2-card {
+  background: var(--card-bg, #fff);
+  border-radius: 16px;
+  margin: 0 14px 4px;
+  overflow: hidden;
+  border: .5px solid rgba(0,0,0,.07);
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+:root[data-theme="dark"] .tdmv2-card {
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.08);
+  box-shadow: none;
+}
+
+/* ── 情報行 v3 ── */
+.tdmv2-row {
+  padding: 11px 14px;
+  gap: 11px;
+}
+.tdmv2-row-label {
+  width: 72px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-tertiary, #7A9E94);
+  letter-spacing: .02px;
+}
+.tdmv2-row-value {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary, #0F1E18);
+  letter-spacing: -.12px;
+}
+:root[data-theme="dark"] .tdmv2-row-value { color: #D8E8E0; }
+
+/* ── ノーツ v3 ── */
+.tdmv2-notes {
+  margin: 6px 14px 10px;
+  padding: 13px 14px;
+  background: rgba(57,200,146,.07);
+  border-radius: 14px;
+  border-left: 3px solid var(--green-main, #39C892);
+  font-size: 12.5px;
+  color: var(--text-secondary, #3A5C52);
+  line-height: 1.65;
+}
+
+/* ── フッター v3 強化 ── */
+#tdm-footer {
+  flex-shrink: 0;
+  background: #fff;
+  border-top: .5px solid rgba(0,0,0,.08);
+  padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 10px);
+}
+:root[data-theme="dark"] #tdm-footer {
+  background: #1C1C1E;
+  border-top-color: rgba(255,255,255,.08);
+}
+
+/* ── シェアボタン ── */
+.tdmv3-share-btn {
+  width: 52px;
+  height: 52px;
+  background: rgba(0,0,0,.05);
+  border: none;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  flex-shrink: 0;
+  transition: background .12s;
+  color: var(--text-secondary, #3A5C52);
+}
+.tdmv3-share-btn:active { background: rgba(0,0,0,.10); }
+:root[data-theme="dark"] .tdmv3-share-btn { background: rgba(255,255,255,.08); color: #D8E8E0; }
+
+</style>
+
+<!-- マップ選択シート DOM -->
+<div class="tdmv3-mapsheet-overlay" id="tdmv3-mapsheet-overlay" onclick="tdmv3CloseMapSheet(event)">
+  <div class="tdmv3-mapsheet" id="tdmv3-mapsheet">
+    <div class="tdmv3-mapsheet-handle"><div class="tdmv3-mapsheet-pip"></div></div>
+    <div class="tdmv3-mapsheet-title">地図アプリを選択</div>
+    <div class="tdmv3-mapsheet-loc" id="tdmv3-mapsheet-loc"></div>
+    <button class="tdmv3-mapsheet-btn" id="tdmv3-btn-gmap">
+      <div class="tdmv3-mapsheet-icon" style="background:#E8F5E9;">🗺️</div>
+      <div class="tdmv3-mapsheet-text">
+        <span class="tdmv3-mapsheet-name">Google マップ</span>
+        <span class="tdmv3-mapsheet-sub">ブラウザで開く</span>
+      </div>
+      <svg class="tdmv3-mapsheet-chev" width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M9 6l5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="tdmv3-mapsheet-btn" id="tdmv3-btn-amap">
+      <div class="tdmv3-mapsheet-icon" style="background:#FFF3E0;">🍎</div>
+      <div class="tdmv3-mapsheet-text">
+        <span class="tdmv3-mapsheet-name">Apple マップ</span>
+        <span class="tdmv3-mapsheet-sub">マップアプリで開く</span>
+      </div>
+      <svg class="tdmv3-mapsheet-chev" width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M9 6l5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="tdmv3-mapsheet-cancel" onclick="tdmv3CloseMapSheet()">キャンセル</button>
+  </div>
+</div>
+
+<!-- エラートースト DOM -->
+<div class="tdmv3-toast" id="tdmv3-toast"></div>
+
+<script>
+/* ================================================================
+  ProNexaX — TDM v3 強化スクリプト
+  ・_renderTdm を v3 完全版に再上書き
+  ・マップ選択シート
+  ・Skeleton / Toast
+  ・Firestore全フィールド対応
+  ================================================================ */
+(function(){
+'use strict';
+
+/* ────── ユーティリティ ────── */
+const _e = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+function _fmt(ds){
+  if(!ds) return null;
+  try{
+    const d=new Date(ds+'T00:00:00');
+    const w=['日','月','火','水','木','金','土'][d.getDay()];
+    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${w}）`;
+  }catch(e){ return ds; }
+}
+
+function _fmtShort(ds){
+  if(!ds) return null;
+  try{
+    const d=new Date(ds+'T00:00:00');
+    const w=['日','月','火','水','木','金','土'][d.getDay()];
+    return `${d.getMonth()+1}月${d.getDate()}日（${w}）`;
+  }catch(e){ return ds; }
+}
+
+function _tdmStatusV3(t){
+  if(typeof calcTournamentStatus==='function') return calcTournamentStatus(t);
+  const today=new Date().toISOString().slice(0,10);
+  const raw=t._raw||t;
+  const s=t.start||t.startDate||raw.startDate;
+  const en=t.end||t.endDate||raw.endDate;
+  const dl=t.entryDeadline||raw.entryDeadline;
+  const st=t.status||raw.status||'';
+  if(st==='cancelled'||st==='canceled') return 'cancelled';
+  if(!s) return 'tbd';
+  if(today>(en||s)) return 'ended';
+  if(today>=s) return 'ongoing';
+  if(dl&&today>dl) return 'closed';
+  if(dl){ const diff=(new Date(dl)-new Date(today))/86400000; if(diff<=7) return 'closing_soon'; }
+  return 'open';
+}
+
+const ST3 = {
+  open:         {label:'募集中',     cls:'tdmv2-st-open',         dot:true,  emoji:'🟢'},
+  closing_soon: {label:'締切間近',   cls:'tdmv2-st-closing_soon', dot:true,  emoji:'🟡'},
+  closed:       {label:'締切済み',   cls:'tdmv2-st-closed',       dot:false, emoji:'⛔'},
+  ongoing:      {label:'開催中',     cls:'tdmv2-st-ongoing',      dot:false, emoji:'🏌️'},
+  ended:        {label:'終了',       cls:'tdmv2-st-ended',        dot:false, emoji:'✅'},
+  tbd:          {label:'日程未定',   cls:'tdmv2-st-tbd',          dot:false, emoji:'📅'},
+  cancelled:    {label:'中止',       cls:'tdmv2-st-cancelled',    dot:false, emoji:'❌'},
+};
+
+function _dlBadge(ds){
+  if(!ds) return '';
+  const diff=Math.round((new Date(ds)-new Date(new Date().toISOString().slice(0,10)))/86400000);
+  if(diff<0) return '';
+  if(diff===0) return `<span style="display:inline-block;margin-left:6px;background:#C03030;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;">今日締切</span>`;
+  if(diff<=3)  return `<span style="display:inline-block;margin-left:6px;background:#D06000;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;">${diff}日後</span>`;
+  if(diff<=7)  return `<span style="display:inline-block;margin-left:6px;background:#F0B020;color:#4A2800;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;">${diff}日後</span>`;
+  if(diff<=14) return `<span style="display:inline-block;margin-left:6px;color:var(--text-tertiary);font-size:11px;font-weight:600;">${diff}日後</span>`;
+  return '';
+}
+
+/* ────── トースト ────── */
+let _toastTimer=null;
+window.tdmv3Toast = function(msg, type=''){
+  const el=document.getElementById('tdmv3-toast');
+  if(!el) return;
+  el.textContent=msg;
+  el.className='tdmv3-toast'+(type?' '+type:'');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>{ el.classList.remove('show'); }, 2600);
+};
+
+/* ────── スケルトン表示 ────── */
+function _showSkeleton(scrollEl){
+  if(!scrollEl) return;
+  scrollEl.innerHTML = `
+    <div class="tdmv3-skeleton-wrap">
+      <div style="display:flex;gap:8px;margin-bottom:4px;">
+        <div class="tdmv3-skel-badge"></div>
+        <div class="tdmv3-skel-badge" style="width:60px;"></div>
+      </div>
+      <div class="tdmv3-skel-prize">
+        <div class="tdmv3-skel-prize-box"></div>
+        <div class="tdmv3-skel-prize-box"></div>
+      </div>
+      <div class="tdmv2-section-hdr"><div class="tdmv2-section-label">開催情報</div></div>
+      <div class="tdmv2-card tdmv3-skel-card">
+        ${[80,65,90,55,70].map(w=>`<div class="tdmv3-skel-row"><div class="tdmv3-skel-icon"></div><div style="flex:1;display:flex;gap:8px;align-items:center;"><div class="tdmv3-skel-line" style="width:60px;height:11px;"></div><div class="tdmv3-skel-line" style="width:${w}%;"></div></div></div>`).join('')}
+      </div>
+      <div class="tdmv2-section-hdr"><div class="tdmv2-section-label">リンク</div></div>
+      <div class="tdmv3-skel-link-grid">
+        ${[1,2,3,4].map(()=>`<div class="tdmv3-skel-link-btn"></div>`).join('')}
+      </div>
+    </div>`;
+}
+
+/* ────── マップシート ────── */
+let _mapQuery='', _mapName='';
+window.tdmv3OpenMapSheet = function(courseName, place, country){
+  _mapName = courseName || place || '';
+  _mapQuery = encodeURIComponent([courseName, place, country].filter(Boolean).join(' '));
+  const locEl = document.getElementById('tdmv3-mapsheet-loc');
+  if(locEl) locEl.textContent = _mapName;
+
+  const gmBtn = document.getElementById('tdmv3-btn-gmap');
+  const amBtn = document.getElementById('tdmv3-btn-amap');
+  if(gmBtn) gmBtn.onclick = ()=>{ window.open(`https://www.google.com/maps/search/?api=1&query=${_mapQuery}`,'_blank','noopener'); tdmv3CloseMapSheet(); };
+  if(amBtn) amBtn.onclick = ()=>{ window.open(`maps://?q=${_mapQuery}`,'_blank','noopener'); tdmv3CloseMapSheet(); };
+
+  const ov = document.getElementById('tdmv3-mapsheet-overlay');
+  if(ov){ ov.style.display='flex'; void ov.offsetWidth; ov.classList.add('show'); }
+};
+window.tdmv3CloseMapSheet = function(e){
+  if(e && e.target!==e.currentTarget) return;
+  const ov = document.getElementById('tdmv3-mapsheet-overlay');
+  if(!ov) return;
+  ov.classList.remove('show');
+  setTimeout(()=>{ ov.style.display='none'; }, 320);
+};
+
+/* ────── リンクボタン v3 ────── */
+const SVG3 = {
+  globe: `<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M2 11h18M11 2a13.5 13.5 0 010 18M11 2a13.5 13.5 0 000 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  ig:    `<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="16" height="16" rx="4.5" stroke="currentColor" stroke-width="1.7"/><circle cx="11" cy="11" r="3.5" stroke="currentColor" stroke-width="1.5"/><circle cx="15.5" cy="6.5" r=".9" fill="currentColor"/></svg>`,
+  entry: `<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M9 11l2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="1" width="6" height="4" rx="1" stroke="currentColor" stroke-width="1.7"/></svg>`,
+  doc:   `<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><rect x="4" y="3" width="14" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/><line x1="7" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="12" x2="15" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="16" x2="11" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  trophy:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M6 3h10v8a5 5 0 01-10 0V3z" stroke="currentColor" stroke-width="1.7"/><path d="M6 5H3v2a3 3 0 003 3M16 5h3v2a3 3 0 01-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="11" y1="16" x2="11" y2="19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="7" y1="19" x2="15" y2="19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+  ext:   `<svg width="11" height="11" viewBox="0 0 22 22" fill="none"><path d="M9 4H4a1 1 0 00-1 1v13a1 1 0 001 1h13a1 1 0 001-1v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 3h5m0 0v5m0-5L10 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  share: `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M15 8l3-3-3-3M18 5H9a5 5 0 000 10h1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 14l3 3-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  cal:   `<svg width="15" height="15" viewBox="0 0 22 22" fill="none"><rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/></svg>`,
+  map:   `<svg width="15" height="15" viewBox="0 0 22 22" fill="none"><path d="M11 3.5a5 5 0 015 5c0 4-5 10-5 10S6 12.5 6 8.5a5 5 0 015-5z" stroke="currentColor" stroke-width="1.7"/><circle cx="11" cy="8.5" r="2" stroke="currentColor" stroke-width="1.5"/></svg>`,
+};
+
+function _linkBtn3(url, label, iconSvg, iconBg, iconColor, subLabel){
+  const active = url ? ' active' : ' inactive';
+  const href = url
+    ? ` href="${_e(url)}" target="_blank" rel="noopener noreferrer"`
+    : '';
+  const sub = url ? (subLabel||'タップして開く') : '未設定';
+  const svgInner = (SVG3[iconSvg]||SVG3.globe).replace(/^<svg[^>]*/,'').replace(/<\/svg>$/,'');
+  return `<a class="tdmv3-link-btn${active}"${href}>
+    <div class="tdmv3-link-icon" style="background:${iconBg};">
+      <svg width="16" height="16" viewBox="0 0 22 22" fill="none" style="color:${iconColor};">${SVG3[iconSvg]?.match(/<svg[^>]*>([\s\S]*)<\/svg>/)?.[1]||''}</svg>
+    </div>
+    <div class="tdmv3-link-text">
+      <span class="tdmv3-link-name">${label}</span>
+      <span class="tdmv3-link-sub">${url?subLabel||'タップして開く':'未設定'}</span>
+    </div>
+    ${url?`<span class="tdmv3-link-arrow">${SVG3.ext}</span>`:''}
+  </a>`;
+}
+
+/* ────── アイコン行 v3 ────── */
+const IC3 = {
+  cal:    {bg:'#EAF7F1', color:'#0A6E3A'},
+  clock:  {bg:'#FFF4E0', color:'#9A5000'},
+  pin:    {bg:'#EAF2FB', color:'#2A72C8'},
+  golf:   {bg:'#EAF7F1', color:'#0A6E3A'},
+  org:    {bg:'#F5F0FA', color:'#7040B0'},
+  trophy: {bg:'#FFF8E0', color:'#8A6000'},
+  money:  {bg:'#FFF8E0', color:'#8A6000'},
+  doc:    {bg:'#EAF2FB', color:'#2A72C8'},
+  user:   {bg:'#F0F7F4', color:'#3A9A78'},
+  num:    {bg:'#EAF2FB', color:'#2A72C8'},
+  cancel: {bg:'#FFF0F0', color:'#C02828'},
+  flag:   {bg:'#FFF0E8', color:'#D06000'},
+  star:   {bg:'#FFF8D8', color:'#9A7800'},
+};
+
+const SVG_IC = {
+  cal:    `<rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/>`,
+  clock:  `<circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M11 7v4.5l3 1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
+  pin:    `<path d="M11 3.5a5 5 0 015 5c0 4-5 10-5 10S6 12.5 6 8.5a5 5 0 015-5z" stroke="currentColor" stroke-width="1.7"/><circle cx="11" cy="8.5" r="1.8" fill="currentColor"/>`,
+  golf:   `<path d="M11 3v10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M11 3l5 2.5-5 2.5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><ellipse cx="11" cy="17" rx="4" ry="1.5" stroke="currentColor" stroke-width="1.5"/>`,
+  org:    `<path d="M3 19c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="11" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/>`,
+  trophy: `<path d="M6 3h10v8a5 5 0 01-10 0V3z" stroke="currentColor" stroke-width="1.7"/><path d="M6 5H3v2a3 3 0 003 3M16 5h3v2a3 3 0 01-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="11" y1="16" x2="11" y2="19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="7" y1="19" x2="15" y2="19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
+  money:  `<circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M11 7v1m0 6v1m-3-4h4a1.5 1.5 0 010 3H9m0-3h2a1.5 1.5 0 000-3H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  doc:    `<rect x="4" y="3" width="14" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/><line x1="7" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="12" x2="15" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="16" x2="11" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  user:   `<circle cx="11" cy="8" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
+  num:    `<path d="M5 8h12M5 12h12M5 16h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
+  cancel: `<circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 8l6 6M14 8l-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
+  flag:   `<path d="M5 3v18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 3h12l-3 5h3l-3 5H5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>`,
+  star:   `<path d="M11 3l2.4 5.2 5.6.8-4 4 .9 5.6-5-2.7-5 2.7.9-5.6-4-4 5.6-.8L11 3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>`,
+};
+
+function _row3(iconType, label, value, extra){
+  const ic = IC3[iconType] || {bg:'#F0F5F2', color:'#6A8E84'};
+  const svgIn = SVG_IC[iconType] || '';
+  const iconHtml = `<div class="tdmv2-row-icon" style="background:${ic.bg};">
+    <svg width="15" height="15" viewBox="0 0 22 22" fill="none" style="color:${ic.color};">${svgIn}</svg>
+  </div>`;
+  const valHtml = value
+    ? `<div class="tdmv2-row-value${extra?' '+extra:''}">${value}</div>`
+    : `<div class="tdmv2-row-value empty" style="color:var(--text-tertiary);font-style:italic;font-weight:400;">未設定</div>`;
+  return `<div class="tdmv2-row">${iconHtml}<div class="tdmv2-row-label">${label}</div>${valHtml}</div>`;
+}
+
+/* ────── _renderTdm v3 完全版 ────── */
+window._renderTdm = function(t){
+  if(!t) return;
+
+  const scrollEl = document.getElementById('tdm-scroll');
+  if(!scrollEl) return;
+
+  // スケルトンを即表示
+  scrollEl.scrollTop = 0;
+  _showSkeleton(scrollEl);
+
+  // 非同期にレンダリング（体感速度向上）
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
+    _doRenderTdmV3(t, scrollEl);
+  }); });
+};
+
+function _doRenderTdmV3(t, scrollEl){
+  /* ── フィールド正規化 ── */
+  const raw = t._raw || t;
+
+  const id           = t.id || raw.id || '';
+  const name         = t.name || raw.title || raw.name || '';
+  const cat          = t.cat || raw.category || '';
+  const catColor     = (typeof CAT_COLORS!=='undefined'?CAT_COLORS[cat]:null) || '#8090A0';
+  const catLabel     = (typeof CAT_LABELS!=='undefined'?CAT_LABELS[cat]:null) || cat;
+  const genderRaw    = t.gender || raw.gender || '';
+  const genderLabel  = ({womens:'女子',both:'男女',mens:'男子',amateur:'アマ'})[genderRaw] || '';
+
+  const status       = _tdmStatusV3(t);
+  const stDef        = ST3[status] || ST3.tbd;
+
+  // 日程
+  const startDate    = t.start || t.startDate || raw.startDate || '';
+  const endDate      = t.end   || t.endDate   || raw.endDate   || '';
+  const deadline     = t.entryDeadline || raw.entryDeadline || '';
+  const cancelDl     = t.cancelDeadline || raw.cancelDeadline || '';
+
+  // 会場・地域
+  const courseName   = t.courseName || raw.course || raw.courseName || '';
+  const prefRaw      = raw.prefecture || t.prefecture || '';
+  const place        = t.place || (typeof _PREF_MAP!=='undefined'?_PREF_MAP[prefRaw]||prefRaw:prefRaw) || '';
+  const country      = raw.country || t.country || '';
+  const organizer    = t.organizer || raw.organizer || '';
+
+  // 賞金・費用
+  const prize        = t.prize        || raw.prize        || '';
+  const prizeWinner  = t.prizeWinner  || raw.prizeWinner  || raw.winnerPrize || '';
+  const entryFee     = t.entryFee     || raw.entryFee     || '';
+  const pracFee      = t.practiceRoundFee || raw.practiceRoundFee || raw.practiceFee || '';
+  const capacity     = t.capacity     || raw.capacity     || '';
+
+  // エントリー詳細
+  const entryMethod  = t.entryMethod  || raw.entryMethod  || '';
+  const qualification= t.qualification|| raw.qualification|| '';
+
+  // URL（links{}対応）
+  const links        = raw.links || {};
+  const officialUrl  = t.officialUrl  || links.website || links.official || '';
+  const igUrl        = t.igUrl        || links.instagram || '';
+  const entryUrl     = t.entryUrl     || links.entry || '';
+  const pairUrl      = t.pairUrl      || links.pairing || links.pairs || '';
+  const resultUrl    = t.resultUrl    || links.result || links.results || '';
+
+  const notes        = raw.notes || t.notes || '';
+
+  // お気に入り・カレンダー
+  const isFav  = (typeof FavoritesDB!=='undefined'?FavoritesDB.has(id):false)
+              || (typeof favTournaments!=='undefined'&&favTournaments.has(id));
+  const isAdded= typeof addedIds!=='undefined' && addedIds.has(id);
+
+  /* ── ヘッダー更新 ── */
+  const titleEl = document.getElementById('tdm-title');
+  if(titleEl) titleEl.textContent = name;
+
+  const catRowEl = document.getElementById('tdm-cat-row');
+  if(catRowEl) catRowEl.innerHTML = `
+    <span class="t-cat-badge" style="background:${catColor}1A;color:${catColor};border:1px solid ${catColor}30;font-size:10px;padding:3px 9px;">${_e(catLabel)}</span>
+    ${genderLabel?`<span class="t-gender-badge ${genderRaw}" style="font-size:10px;">${genderLabel}</span>`:''}
+  `;
+
+  const actEl = document.getElementById('tdm-actions');
+  if(actEl) actEl.innerHTML = '';
+
+  /* ── ステータスバー ── */
+  const stBar = `
+    <div class="tdmv2-status-bar" style="padding:10px 14px 12px;gap:7px;flex-wrap:wrap;">
+      <span class="tdmv2-st-badge ${stDef.cls}">
+        ${stDef.dot?'<span class="tdmv2-st-dot"></span>':''}
+        ${stDef.label}
+      </span>
+      ${genderLabel?`<span style="font-size:11.5px;font-weight:600;color:var(--text-tertiary);">${genderLabel}</span>`:''}
+      ${catLabel?`<span style="font-size:11px;color:var(--text-tertiary);">／ ${_e(catLabel)}</span>`:''}
+    </div>`;
+
+  /* ── 賞金ヒーロー v3 ── */
+  let prizeSection = '';
+  if(prize || prizeWinner){
+    prizeSection = `
+      <div class="tdmv3-prize-wrap">
+        <div class="tdmv3-prize-header">
+          <span class="tdmv3-prize-header-icon">🏆</span>
+          <span class="tdmv3-prize-header-label">Prize Money</span>
+        </div>
+        <div class="tdmv3-prize-grid">
+          ${prize?`<div class="tdmv3-prize-cell">
+            <div class="tdmv3-prize-cell-label">賞金総額</div>
+            <div class="tdmv3-prize-cell-value">${_e(prize)}</div>
+          </div>`:''}
+          ${prizeWinner?`<div class="tdmv3-prize-cell">
+            <div class="tdmv3-prize-cell-label">優勝賞金</div>
+            <div class="tdmv3-prize-cell-value">${_e(prizeWinner)}</div>
+          </div>`:''}
+        </div>
+      </div>`;
+  }
+
+  /* ── 日付文字列 ── */
+  let dateVal = null;
+  if(startDate){
+    const s = _fmt(startDate)||startDate;
+    const e = endDate&&endDate!==startDate ? (_fmt(endDate)||endDate) : null;
+    dateVal = e ? `${s}<br><span style="font-size:11px;color:var(--text-tertiary);"> 〜 </span>${e}` : s;
+  }
+
+  /* ── 締切表示（残日数バッジ付き） ── */
+  let dlValue = null;
+  if(deadline){
+    dlValue = (_fmt(deadline)||deadline) + _dlBadge(deadline);
+  }
+
+  /* ── 会場（マップ選択シート） ── */
+  let courseVal = null;
+  if(courseName){
+    const onTap = `event.preventDefault();tdmv3OpenMapSheet(${JSON.stringify(courseName)},${JSON.stringify(place)},${JSON.stringify(country)})`;
+    courseVal = `<button class="tdmv3-map-tap" onclick="${onTap}" type="button">
+      <svg width="13" height="13" viewBox="0 0 22 22" fill="none" style="flex-shrink:0;">${SVG_IC.pin}</svg>
+      ${_e(courseName)}
+    </button>`;
+  }
+
+  /* ── 開催情報カード ── */
+  const basicCard = `
+    <div class="tdmv2-section-hdr"><div class="tdmv2-section-label">開催情報</div></div>
+    <div class="tdmv2-card">
+      ${_row3('cal',   '開催日',        dateVal,                 '')}
+      ${_row3('clock', 'エントリー<br>締切', dlValue,            '')}
+      ${cancelDl?_row3('cancel','キャンセル<br>締切',_fmt(cancelDl)||cancelDl,''):''}
+      ${courseVal
+        ? `<div class="tdmv2-row"><div class="tdmv2-row-icon" style="background:${IC3.golf.bg};"><svg width="15" height="15" viewBox="0 0 22 22" fill="none" style="color:${IC3.golf.color};">${SVG_IC.golf}</svg></div><div class="tdmv2-row-label">ゴルフ場</div><div class="tdmv2-row-value">${courseVal}</div></div>`
+        : _row3('golf', 'ゴルフ場', null, '')}
+      ${place?_row3('pin', '開催地', `${_e(place)}${country&&country!=='japan'?`<span style="color:var(--text-tertiary);font-size:12px;"> / ${_e(country)}</span>`:''}`, ''):''}
+      ${organizer?_row3('org','主催',_e(organizer),''):''}
+    </div>`;
+
+  /* ── 費用カード ── */
+  let costCard = '';
+  if(entryFee || pracFee || capacity){
+    const rows = [];
+    if(entryFee)  rows.push(`<div class="tdmv3-cost-row"><span class="tdmv3-cost-label">参加費</span><span class="tdmv3-cost-value">${_e(entryFee)}</span></div>`);
+    if(pracFee)   rows.push(`<div class="tdmv3-cost-row"><span class="tdmv3-cost-label">練習ラウンド費</span><span class="tdmv3-cost-value">${_e(pracFee)}</span></div>`);
+    if(capacity)  rows.push(`<div class="tdmv3-cost-row"><span class="tdmv3-cost-label">定員</span><span class="tdmv3-cost-value highlight">${_e(capacity)}</span></div>`);
+    costCard = `
+      <div class="tdmv2-section-hdr"><div class="tdmv2-section-label">費用・定員</div></div>
+      <div class="tdmv2-card">${rows.join('')}</div>`;
+  }
+
+  /* ── エントリー情報カード ── */
+  let entryCard = '';
+  if(entryMethod || qualification){
+    entryCard = `
+      <div class="tdmv2-section-hdr"><div class="tdmv2-section-label">エントリー情報</div></div>
+      <div class="tdmv2-card">
+        ${entryMethod   ? _row3('doc',  'エントリー<br>方法',  _e(entryMethod),   '') : ''}
+        ${qualification ? _row3('user', '出場資格',            _e(qualification), '') : ''}
+      </div>`;
+  }
+
+  /* ── リンクグリッド v3 ── */
+  const hasAnyLink = officialUrl || igUrl || entryUrl || pairUrl || resultUrl;
+  const linkSection = `
+    <div class="tdmv2-section-hdr"><div class="tdmv2-section-label">リンク</div></div>
+    <div class="tdmv2-link-grid" style="grid-template-columns:1fr 1fr;gap:9px;padding:4px 14px 14px;">
+      ${_linkBtn3(officialUrl, '公式サイト', 'globe', '#EEF0FA', '#5060A0', '公式サイトへ')}
+      ${_linkBtn3(igUrl,       'Instagram',  'ig',    '#FFF0F6', '#C060A0', 'Instagramへ')}
+      ${_linkBtn3(entryUrl,    'エントリー', 'entry', '#E6F7EE', '#0A6E3A', 'エントリーへ')}
+      ${_linkBtn3(pairUrl,     '組み合わせ', 'doc',   '#E6F0FB', '#2A72C8', '組み合わせへ')}
+      ${_linkBtn3(resultUrl,   '結果速報',   'trophy','#FFF8E0', '#8A6000', '結果ページへ')}
+    </div>`;
+
+  /* ── メモ ── */
+  const notesHtml = notes
+    ? `<div class="tdmv2-notes">📝 ${_e(notes)}</div>` : '';
+
+  /* ── 全体組み立て ── */
+  try {
+    scrollEl.innerHTML = `
+      ${stBar}
+      <div style="height:8px;"></div>
+      ${prizeSection}
+      ${basicCard}
+      ${costCard}
+      ${entryCard}
+      ${linkSection}
+      ${notesHtml}
+      <div class="tdmv2-bottom-pad"></div>`;
+  } catch(err){
+    tdmv3Toast('⚠️ 表示エラーが発生しました', 'error');
+    scrollEl.innerHTML = `<div style="padding:32px 16px;text-align:center;color:var(--text-tertiary);">
+      <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+      <div style="font-size:14px;font-weight:600;">データの読み込みに失敗しました</div>
+      <div style="font-size:12px;margin-top:8px;">もう一度お試しください</div>
+    </div>`;
+    return;
+  }
+
+  /* ── フッター更新 ── */
+  _renderFooterV3(t, {isFav, isAdded, entryUrl, id, officialUrl, name});
+}
+
+/* ── フッター v3 ── */
+function _renderFooterV3(t, {isFav, isAdded, entryUrl, id, officialUrl, name}){
+  const footerEl = document.getElementById('tdm-footer');
+  if(!footerEl) return;
+
+  footerEl.innerHTML = `
+    <div class="tdmv2-footer-row" style="gap:8px;">
+      <button class="tdmv2-btn-cal${isAdded?' added':''}" id="tdmv2-btn-cal" onclick="_tdmV3Cal()">
+        ${SVG3.cal}
+        <span>${isAdded?'追加済み':'カレンダー'}</span>
+      </button>
+      ${entryUrl
+        ? `<a class="tdmv2-btn-entry" href="${_e(entryUrl)}" target="_blank" rel="noopener noreferrer">
+            ${SVG3.entry}
+            エントリーへ
+          </a>`
+        : (officialUrl
+          ? `<a class="tdmv2-btn-entry" href="${_e(officialUrl)}" target="_blank" rel="noopener noreferrer" style="background:linear-gradient(135deg,#5060A0,#3040A0);">
+              ${SVG3.globe}
+              公式サイト
+            </a>`
+          : `<button class="tdmv2-btn-entry disabled" onclick="tdmv3Toast('エントリーURLは未設定です')">
+              未設定
+            </button>`)
+      }
+      <button class="tdmv2-btn-fav${isFav?' faved':''}" id="tdmv2-btn-fav" onclick="_tdmV3Fav()" aria-label="お気に入り">
+        ${isFav?'★':'☆'}
+      </button>
+    </div>`;
+
+  footerEl.style.padding = '';
+  footerEl.style.border  = '';
+}
+
+/* ── フッターアクション ── */
+window._tdmV3Cal = function(){
+  if(!window._tdmCurrentId) return;
+  if(typeof toggleSearchAdd==='function') toggleSearchAdd(window._tdmCurrentId);
+  const added = typeof addedIds!=='undefined' && addedIds.has(window._tdmCurrentId);
+  const btn = document.getElementById('tdmv2-btn-cal');
+  if(btn){
+    btn.querySelector('span').textContent = added?'追加済み':'カレンダー';
+    btn.classList.toggle('added', added);
+  }
+  tdmv3Toast(added?'✅ カレンダーに追加しました':'カレンダーから削除しました', added?'success':'');
+};
+
+window._tdmV3Fav = async function(){
+  if(!window._tdmCurrentId) return;
+  if(typeof toggleFavTournament==='function') await toggleFavTournament(window._tdmCurrentId);
+  const isFav = (typeof FavoritesDB!=='undefined'?FavoritesDB.has(window._tdmCurrentId):false)
+             || (typeof favTournaments!=='undefined'&&favTournaments.has(window._tdmCurrentId));
+  const btn = document.getElementById('tdmv2-btn-fav');
+  if(btn){ btn.textContent=isFav?'★':'☆'; btn.classList.toggle('faved',isFav); }
+  tdmv3Toast(isFav?'⭐ お気に入りに追加':'お気に入りから削除', isFav?'success':'');
+};
+
+/* ── v2との後方互換 ── */
+window._tdmV2Cal = window._tdmV3Cal;
+window._tdmV2Fav = window._tdmV3Fav;
+window._tdmToggleFav = window._tdmV3Fav;
+
+/* ── Firebaseリスナーエラー時トースト ── */
+if(typeof window.addEventListener==='function'){
+  window.addEventListener('tdm:loadError', ()=>{
+    tdmv3Toast('⚠️ データの読み込みに失敗しました', 'error');
+  });
+}
+
+console.info(
+  '%c[TDM v3]%c 大会詳細 プラットフォーム強化版 適用済み',
+  'background:#39C892;color:#fff;padding:2px 8px;border-radius:4px;font-weight:800;font-size:11px;',
+  'color:#1A6640;font-weight:700;'
 );
 
 })();
