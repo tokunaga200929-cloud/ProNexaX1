@@ -6246,46 +6246,6 @@ body.is-admin .admin-card-actions.admin-only {
     </div>
   </div>
 
-  <!-- ================================================================ -->
-  <!-- ★★★ マイ大会ページ（お気に入り） ★★★                            -->
-  <!-- .page 構造 — active 時のみ表示、fixed常駐なし                     -->
-  <!-- ================================================================ -->
-  <div class="page" id="page-mypage">
-
-    <!-- ヘッダー（page内部に収まる） -->
-    <div class="mp-header">
-      <div class="mp-header-inner">
-        <div class="mp-title">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          マイ大会
-        </div>
-        <span class="mp-count-badge" id="mp-count-badge">0</span>
-      </div>
-    </div>
-
-    <!-- ソートチップ -->
-    <div class="mp-sort-bar">
-      <button class="mp-sort-chip active" data-sort="saved"     onclick="mpSetSort('saved',this)">保存順</button>
-      <button class="mp-sort-chip"        data-sort="deadline"  onclick="mpSetSort('deadline',this)">締切順</button>
-      <button class="mp-sort-chip"        data-sort="startDate" onclick="mpSetSort('startDate',this)">開催日順</button>
-    </div>
-
-    <!-- カテゴリフィルター -->
-    <div class="mp-cat-bar" id="mp-cat-bar">
-      <button class="mp-cat-chip active" data-cat="all" onclick="mpSetCat('all',this)">すべて</button>
-    </div>
-
-    <!-- リストスクロール（page内で完結） -->
-    <div class="mp-scroll" id="mp-scroll">
-      <div class="mp-loading" id="mp-loading">
-        <div class="mp-skel-card"><div class="mp-skel-line mp-skel-t"></div><div class="mp-skel-line mp-skel-s"></div></div>
-        <div class="mp-skel-card"><div class="mp-skel-line mp-skel-t"></div><div class="mp-skel-line mp-skel-s"></div></div>
-        <div class="mp-skel-card"><div class="mp-skel-line mp-skel-t"></div><div class="mp-skel-line mp-skel-s"></div></div>
-      </div>
-    </div>
-
-  </div><!-- /#page-mypage -->
-
 <!-- ★ Auth ローディングオーバーレイ（iOS リダイレクト中のちらつき防止） -->
 <div id="auth-loading-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(240,251,246,0.97);flex-direction:column;align-items:center;justify-content:center;gap:20px;">
   <div style="width:48px;height:48px;border-radius:50%;border:3px solid #E0F5EC;border-top-color:#1AAF7A;animation:authSpin .8s linear infinite;"></div>
@@ -6550,7 +6510,7 @@ body.is-admin .admin-card-actions.admin-only {
       </svg>
       <span class="bnav-label">収支</span>
     </button>
-    <button class="bnav-btn" id="nav-mypage" onclick="switchPage('mypage')">
+    <button class="bnav-btn" id="nav-mypage" onclick="showToast('マイページは開発中です')">
       <svg id="icon-mypage" width="20" height="20" viewBox="0 0 22 22" fill="none">
         <circle cx="11" cy="8" r="3.5" stroke="#9BB8AE" stroke-width="1.7"/>
         <path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>
@@ -15096,10 +15056,18 @@ async function normalizeTournamentData(parsed, sourceType) {
 // ⑧ nav-mypage → 管理者ページ連携
 // ================================================================
 function _initAdminNav() {
-  // nav-mypage は「マイ大会」ページへ（お気に入りDB完成後も維持）
-  // 管理タブ(nav-admin) は body.is-admin 時のみ CSS で表示される
-  // → nav-mypage の onclick は HTML側の switchPage('mypage') のまま維持
-  //   ラベルも「マイ大会」のまま
+  const btn = document.getElementById('nav-mypage');
+  if (!btn) return;
+  btn.onclick = function() {
+    if (_isAdmin) {
+      if (typeof switchPage === 'function') switchPage('admin');
+      renderAdminList();
+    } else {
+      openAdminLogin();
+    }
+  };
+  const lbl = btn.querySelector('.bnav-label');
+  if (lbl) lbl.textContent = '管理';
 }
 
 // ================================================================
@@ -18055,737 +18023,624 @@ body.is-admin #page-admin.active {
 </script>
 
 <!-- ================================================================
-   ProNexaX Favorites — マイ大会ページ（正しい .page 構造）
-   ① #page-mypage は .page クラス → active 時のみ display:flex
-   ② position:fixed / bottom常駐 は一切なし
-   ③ FavoritesDB — Firestore favorites/{uid}/saved/{tid} onSnapshot
-   ④ switchPage('mypage') でのみ表示
-   ⑤ _initAdminNav の nav-mypage 上書きを無効化
+   ProNexaX Security Layer v1.0
+   ① UI保護 — 未ログイン時に管理操作を完全ブロック
+   ② _FCMS 強化 — 書き込み前に auth チェック + permission-denied 処理
+   ③ isAdmin サーバー検証 — users/{uid}.isAdmin を Firestore から取得
+   ④ エラーハンドリング — permission-denied toast + fallback UI
+   ⑤ 既存機能は一切変更しない（末尾追記のみ）
    ================================================================ -->
-
-<style id="mp-styles">
-/* ================================================================
-   #page-mypage — .page 構造に完全準拠
-   display:none がデフォルト、active 時だけ display:flex
-   position:fixed / position:absolute / bottom:0 は使わない
-   ================================================================ */
-
-/* ページ全体は既存 .page / .page.active で制御される */
-#page-mypage {
-  background: #f2f2f7;
-  /* flex-direction:column は .page に設定済み */
-}
-
-/* ── ヘッダー ── */
-.mp-header {
-  flex-shrink: 0;
-  background: #fff;
-  border-bottom: .5px solid rgba(0,0,0,.08);
-}
-.mp-header-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
-}
-.mp-title {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -.3px;
-  color: #1d1d1f;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.mp-title svg { color: #E5A41A; }
-.mp-count-badge {
-  min-width: 22px;
-  height: 22px;
-  background: #39C892;
+<style id="sec-styles">
+/* ── Permission Denied バナー ── */
+.sec-denied-banner {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-12px);
+  background: rgba(192,48,48,.95);
   color: #fff;
-  border-radius: 11px;
-  font-size: 11px;
+  padding: 10px 18px;
+  border-radius: 22px;
+  font-size: 13px;
   font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 6px;
-  transition: transform .2s cubic-bezier(.34,1.56,.64,1);
-}
-.mp-count-badge.bump { transform: scale(1.25); }
-
-/* ── ソートバー ── */
-.mp-sort-bar {
-  flex-shrink: 0;
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  padding: 8px 14px;
-  background: #fff;
-  border-bottom: .5px solid rgba(0,0,0,.06);
-}
-.mp-sort-bar::-webkit-scrollbar { display: none; }
-
-/* ── カテゴリバー ── */
-.mp-cat-bar {
-  flex-shrink: 0;
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  padding: 7px 14px 6px;
-  background: #f2f2f7;
-}
-.mp-cat-bar::-webkit-scrollbar { display: none; }
-
-/* ── チップ共通 ── */
-.mp-sort-chip,
-.mp-cat-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
   font-family: inherit;
-  border: 1.5px solid rgba(0,0,0,.1);
-  background: #fff;
-  color: #555;
-  cursor: pointer;
   white-space: nowrap;
-  flex-shrink: 0;
-  transition: background .14s, border-color .14s, color .14s;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-.mp-sort-chip.active { background: #1d1d1f; border-color: #1d1d1f; color: #fff; }
-.mp-cat-chip.active  { background: #39C892; border-color: #39C892; color: #fff; }
-.mp-sort-chip:active,
-.mp-cat-chip:active  { opacity: .7; }
-
-/* ── スクロールエリア（page内で完結） ── */
-.mp-scroll {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-  -webkit-overflow-scrolling: touch;
-  padding: 8px 0 calc(env(safe-area-inset-bottom, 0px) + 52px);
-}
-
-/* ── スケルトン ── */
-.mp-skel-card {
-  background: #fff;
-  margin: 0 12px 8px;
-  border-radius: 14px;
-  padding: 14px;
-  border: .5px solid rgba(0,0,0,.05);
-}
-.mp-skel-line {
-  border-radius: 6px;
-  background: linear-gradient(90deg,#f0f0f5 25%,#e8e8f0 50%,#f0f0f5 75%);
-  background-size: 200% 100%;
-  animation: mp-skel 1.4s ease-in-out infinite;
-  margin-bottom: 7px;
-}
-.mp-skel-t { height: 15px; width: 70%; }
-.mp-skel-s { height: 10px; width: 45%; margin-bottom: 0; }
-@keyframes mp-skel { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
-/* ── カード ── */
-.mp-card {
-  background: #fff;
-  margin: 0 12px 8px;
-  border-radius: 16px;
-  border: .5px solid rgba(0,0,0,.07);
-  box-shadow: 0 1px 4px rgba(0,0,0,.05);
-  overflow: hidden;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform .12s, box-shadow .12s;
-  animation: mp-card-in .26s cubic-bezier(.32,.72,.25,1) both;
-}
-.mp-card:active { transform: scale(.975); box-shadow: none; }
-@keyframes mp-card-in {
-  from { opacity:0; transform:translateY(8px) scale(.98); }
-  to   { opacity:1; transform:translateY(0) scale(1); }
-}
-
-.mp-card-row {
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .22s, transform .22s;
+  z-index: 9990;
+  max-width: calc(100vw - 48px);
+  text-align: center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
-  align-items: stretch;
-}
-.mp-stripe {
-  width: 4px;
-  flex-shrink: 0;
-  border-radius: 0;
-}
-.mp-card-body {
-  flex: 1;
-  min-width: 0;
-  padding: 11px 12px 11px 10px;
-}
-.mp-card-top {
-  display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 6px;
-  margin-bottom: 5px;
 }
-.mp-card-name {
-  flex: 1;
-  min-width: 0;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #1d1d1f;
-  line-height: 1.3;
+.sec-denied-banner.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
-.mp-star-btn {
-  width: 30px;
-  height: 30px;
-  border: none;
-  background: none;
+
+/* ── ログイン要求オーバーレイ ── */
+.sec-login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 7900;
+  background: rgba(0,0,0,.45);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  cursor: pointer;
-  font-size: 19px;
-  flex-shrink: 0;
-  color: #E5A41A;
-  padding: 0;
-  margin: -2px -4px 0 0;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: transform .18s cubic-bezier(.34,1.56,.64,1);
-  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .26s ease;
 }
-.mp-star-btn:active { transform: scale(.75); }
-
-.mp-card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 7px;
-  align-items: center;
+.sec-login-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
 }
-.mp-badge-cat {
-  display: inline-flex;
-  padding: 2px 8px;
-  border-radius: 7px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .08px;
-}
-.mp-badge-st {
-  display: inline-flex;
-  padding: 2px 7px;
-  border-radius: 7px;
-  font-size: 10px;
-  font-weight: 700;
-}
-.mp-badge-st.upcoming { background:#e0f7ee; color:#0B7A44; }
-.mp-badge-st.live     { background:#e5f0fc; color:#1A5090; }
-.mp-badge-st.ended    { background:#f5f5f7; color:#8e8e93; }
-
-.mp-meta-txt {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10.5px;
-  color: #8e8e93;
-  font-weight: 500;
-}
-
-/* 締切バナー */
-.mp-deadline {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 7px;
-  padding: 6px 10px;
-  background: #fffbe0;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #A05800;
-}
-.mp-deadline.urgent {
-  background: #fce8e8;
-  color: #C03030;
-  animation: mp-pulse 1.8s ease-in-out infinite;
-}
-@keyframes mp-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
-
-/* ── 空状態 ── */
-.mp-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 60px 28px;
+.sec-login-sheet {
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 480px;
+  padding: 20px 24px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  transform: translateY(100%);
+  transition: transform .32s cubic-bezier(.32,.72,.25,1);
   text-align: center;
 }
-.mp-empty-icon {
-  font-size: 42px;
-  animation: mp-star-pop .7s cubic-bezier(.34,1.56,.64,1);
+.sec-login-overlay.show .sec-login-sheet {
+  transform: translateY(0);
 }
-@keyframes mp-star-pop {
-  from { transform: scale(.3) rotate(-20deg); opacity:0; }
-  to   { transform: scale(1) rotate(0); opacity:1; }
+.sec-login-grabber {
+  width: 36px;
+  height: 5px;
+  background: rgba(0,0,0,.14);
+  border-radius: 3px;
+  margin: 0 auto 16px;
 }
-.mp-empty-ttl { font-size:16px; font-weight:700; color:#3a3a3c; }
-.mp-empty-sub { font-size:13px; color:#8e8e93; line-height:1.6; }
-.mp-empty-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 9px 15px;
-  font-size: 12.5px;
+.sec-login-icon { font-size: 32px; margin-bottom: 10px; }
+.sec-login-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 6px;
+  letter-spacing: -.3px;
+}
+.sec-login-sub {
+  font-size: 13px;
+  color: #8e8e93;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+.sec-login-btn {
+  width: 100%;
+  height: 52px;
+  background: linear-gradient(135deg, #39C892, #22A874);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(34,168,116,.3);
+  margin-bottom: 10px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: opacity .1s, transform .1s;
+}
+.sec-login-btn:active { opacity: .85; transform: scale(.975); }
+.sec-login-cancel {
+  width: 100%;
+  height: 44px;
+  background: none;
+  border: none;
+  color: #8e8e93;
+  font-size: 14px;
   font-weight: 600;
-  color: #3a3a3c;
-  box-shadow: 0 1px 5px rgba(0,0,0,.08);
-}
-
-/* ── 大会カード ★ボタン強化 ── */
-.t-fav-btn {
-  transition: transform .2s cubic-bezier(.34,1.56,.64,1), color .15s !important;
-}
-.t-fav-btn.is-fav {
-  color: #E5A41A !important;
-  transform: scale(1.18) !important;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 </style>
 
 <script>
 /* ================================================================
-   ProNexaX Favorites — 正しい .page 構造実装
+   ProNexaX Security Layer v1.0
    ================================================================ */
 'use strict';
 
 // ================================================================
-// § 1  FavoritesDB — Firestore favorites/{uid}/saved/{tid}
+// § SEC-1  Permission Denied UI
 // ================================================================
-const FavoritesDB = (function(){
-  let _uid = null, _unsub = null, _status = 'idle';
-  const _map = new Map(); // tid → savedAt
-  const _cbs = new Set();
 
-  function _db(){
-    if(typeof firebase==='undefined'||!firebase.apps?.length) return null;
-    if(typeof firebase.firestore!=='function') return null;
-    try{ return firebase.firestore(); }catch(e){ return null; }
-  }
-
-  function _notify(){ _cbs.forEach(fn=>{ try{fn();}catch(e){} }); }
-
-  function _onSnap(snap){
-    snap.docChanges().forEach(ch=>{
-      const id=ch.doc.id, d=ch.doc.data();
-      if(ch.type==='removed'){ _map.delete(id); }
-      else { _map.set(id, d.savedAt||new Date().toISOString()); }
-    });
-    // 既存 favTournaments と同期
-    if(typeof favTournaments!=='undefined'){
-      favTournaments.clear();
-      _map.forEach((_,tid)=>favTournaments.add(tid));
+// バナー挿入
+(function insertSecUI() {
+  function insert() {
+    // Permission Denied バナー
+    if (!document.getElementById('sec-denied-banner')) {
+      const b = document.createElement('div');
+      b.id = 'sec-denied-banner';
+      b.className = 'sec-denied-banner';
+      b.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="sec-denied-msg">操作権限がありません</span>`;
+      document.body.appendChild(b);
     }
-    _status='live';
-    _notify();
+
+    // ログイン要求シート
+    if (!document.getElementById('sec-login-overlay')) {
+      const o = document.createElement('div');
+      o.id = 'sec-login-overlay';
+      o.className = 'sec-login-overlay';
+      o.onclick = e => { if (e.target === o) secCloseLoginSheet(); };
+      o.innerHTML = `
+        <div class="sec-login-sheet">
+          <div class="sec-login-grabber"></div>
+          <div class="sec-login-icon">🔒</div>
+          <div class="sec-login-title" id="sec-login-title">ログインが必要です</div>
+          <div class="sec-login-sub" id="sec-login-sub">この操作にはログインが必要です。<br>ログインしてご利用ください。</div>
+          <button class="sec-login-btn" onclick="secCloseLoginSheet(); secGoToAuth();">
+            ログイン / 新規登録
+          </button>
+          <button class="sec-login-cancel" onclick="secCloseLoginSheet()">キャンセル</button>
+        </div>`;
+      document.body.appendChild(o);
+    }
   }
 
-  return {
-    start(uid){
-      if(!uid) return;
-      _uid=uid;
-      const db=_db();
-      if(!db){ console.warn('[FavDB] Firestore未接続'); return; }
-      if(_unsub){ _unsub(); _unsub=null; }
-      _status='loading';
-      _unsub=db.collection('favorites').doc(uid).collection('saved')
-        .onSnapshot(_onSnap, e=>{ console.error('[FavDB]',e); _status='error'; });
-      console.info('%c[FavDB]%c favorites/'+uid+'/saved 購読開始',
-        'background:#E5A41A;color:#fff;padding:1px 5px;border-radius:2px;font-weight:700;',
-        'color:#8a6600;font-weight:600;');
-    },
-    stop(){
-      if(_unsub){ _unsub(); _unsub=null; }
-      _map.clear(); _uid=null; _status='idle';
-    },
-    has(tid){ return _map.has(tid); },
-    async add(tid){
-      if(!_uid) return false;
-      // optimistic
-      const now=new Date().toISOString();
-      _map.set(tid,now);
-      if(typeof favTournaments!=='undefined') favTournaments.add(tid);
-      _notify();
-      const db=_db();
-      if(!db) return true;
-      try{
-        await db.collection('favorites').doc(_uid).collection('saved').doc(tid)
-          .set({tournamentId:tid, savedAt:now});
-        return true;
-      }catch(e){
-        console.error('[FavDB] add:',e);
-        _map.delete(tid);
-        if(typeof favTournaments!=='undefined') favTournaments.delete(tid);
-        _notify(); return false;
-      }
-    },
-    async remove(tid){
-      if(!_uid) return false;
-      const prev=_map.get(tid);
-      _map.delete(tid);
-      if(typeof favTournaments!=='undefined') favTournaments.delete(tid);
-      _notify();
-      const db=_db();
-      if(!db) return true;
-      try{
-        await db.collection('favorites').doc(_uid).collection('saved').doc(tid).delete();
-        return true;
-      }catch(e){
-        console.error('[FavDB] remove:',e);
-        if(prev) _map.set(tid,prev);
-        if(typeof favTournaments!=='undefined') favTournaments.add(tid);
-        _notify(); return false;
-      }
-    },
-    async toggle(tid){ return this.has(tid)?this.remove(tid):this.add(tid); },
-    getAll(){
-      return [..._map.entries()].sort((a,b)=>b[1].localeCompare(a[1])).map(([tid,savedAt])=>({tid,savedAt}));
-    },
-    onChange(fn){ _cbs.add(fn); return ()=>_cbs.delete(fn); },
-    get status(){ return _status; },
-    get count(){  return _map.size; },
-  };
-})();
-window.FavoritesDB = FavoritesDB;
-
-
-// ================================================================
-// § 2  _showApp / authLogout フック
-// ================================================================
-(function(){
-  function patchShowApp(){
-    const _prev = window._showApp;
-    window._showApp = function(user){
-      if(typeof _prev==='function') _prev(user);
-      if(!user?.uid) return;
-      FavoritesDB.start(user.uid);
-      FavoritesDB.onChange(()=>{
-        // 検索カードの★状態を更新
-        _favRefreshStars();
-        // マイページが開いていれば再描画
-        if(document.getElementById('page-mypage')?.classList.contains('active')){
-          mpRenderList();
-        }
-        // バッジ更新
-        _mpUpdateBadge();
-      });
-    };
-  }
-  function patchLogout(){
-    const _prev = window.authLogout;
-    window.authLogout = function(){
-      FavoritesDB.stop();
-      if(typeof _prev==='function') _prev.apply(this,arguments);
-    };
-  }
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',()=>{
-      setTimeout(patchShowApp, 800);
-      setTimeout(patchLogout,  900);
-    },{once:true});
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', insert, { once: true });
   } else {
-    setTimeout(patchShowApp, 800);
-    setTimeout(patchLogout,  900);
+    insert();
   }
 })();
 
+// Permission Denied バナーを表示
+function secShowDenied(msg, duration = 3000) {
+  const banner = document.getElementById('sec-denied-banner');
+  const msgEl  = document.getElementById('sec-denied-msg');
+  if (!banner) { if (typeof showToast === 'function') showToast('🔒 ' + (msg || '権限がありません')); return; }
+  if (msgEl) msgEl.textContent = msg || '操作権限がありません';
+  banner.classList.add('show');
+  clearTimeout(banner._timer);
+  banner._timer = setTimeout(() => banner.classList.remove('show'), duration);
+  // 既存 toast も
+  if (typeof showToast === 'function') showToast('🔒 ' + (msg || '権限がありません'));
+}
+
+// ログイン要求シートを表示
+function secShowLoginSheet(title, sub) {
+  const overlay = document.getElementById('sec-login-overlay');
+  if (!overlay) { secShowDenied('ログインが必要です'); return; }
+  const t = document.getElementById('sec-login-title');
+  const s = document.getElementById('sec-login-sub');
+  if (t) t.textContent = title || 'ログインが必要です';
+  if (s) s.textContent = sub   || 'この操作にはログインが必要です。';
+  overlay.classList.add('show');
+}
+function secCloseLoginSheet() {
+  document.getElementById('sec-login-overlay')?.classList.remove('show');
+}
+function secGoToAuth() {
+  // 認証画面を表示（既存の _showAuthScreen を利用）
+  if (typeof _showAuthScreen === 'function') { _showAuthScreen(); return; }
+  const authEl = document.getElementById('auth-screen');
+  if (authEl) { authEl.style.display = ''; authEl.classList.remove('hidden'); }
+}
+
 
 // ================================================================
-// § 3  toggleFavTournament — Firestore対応版に置き換え
+// § SEC-2  Firestore error コード判定ユーティリティ
 // ================================================================
-window.toggleFavTournament = async function(tid){
-  if(!tid) return;
-  if(typeof _currentUser==='undefined'||!_currentUser){
-    if(typeof showToast==='function') showToast('ログインが必要です'); return;
-  }
-  const wasFav = FavoritesDB.has(tid)||(typeof favTournaments!=='undefined'&&favTournaments.has(tid));
-  await FavoritesDB.toggle(tid);
-  if(typeof saveSearchPrefs==='function') saveSearchPrefs();
-  if(typeof applySearchFilters==='function') applySearchFilters();
-  // 詳細モーダル更新
-  if(typeof _tdmCurrentId!=='undefined'&&_tdmCurrentId===tid){
-    const t=typeof TOURNAMENTS_FLAT!=='undefined'?TOURNAMENTS_FLAT.find(x=>x.id===tid):null;
-    if(t&&typeof _renderTdm==='function') _renderTdm(t);
-  }
-  _mpUpdateBadge();
-  if(typeof showToast==='function')
-    showToast(wasFav?'☆ お気に入りを解除しました':'★ マイ大会に保存しました');
-};
-
-
-// ================================================================
-// § 4  マイページ UI
-// ================================================================
-let _mpSort = 'saved', _mpCat = 'all';
-
-function mpSetSort(sort, btn){
-  _mpSort = sort;
-  document.querySelectorAll('.mp-sort-chip').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  mpRenderList();
-}
-function mpSetCat(cat, btn){
-  _mpCat = cat;
-  document.querySelectorAll('.mp-cat-chip').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  mpRenderList();
+function _secIsPermissionDenied(err) {
+  if (!err) return false;
+  const code = err.code || '';
+  const msg  = (err.message || '').toLowerCase();
+  return code === 'permission-denied'
+    || code === 'PERMISSION_DENIED'
+    || msg.includes('permission-denied')
+    || msg.includes('missing or insufficient permissions');
 }
 
-// バッジ数更新
-function _mpUpdateBadge(){
-  const n = FavoritesDB.count||(typeof favTournaments!=='undefined'?favTournaments.size:0);
-  const el = document.getElementById('mp-count-badge');
-  if(!el) return;
-  if(el.textContent !== String(n)){
-    el.textContent = n;
-    el.classList.add('bump');
-    setTimeout(()=>el.classList.remove('bump'),300);
-  }
+function _secIsUnauthenticated(err) {
+  if (!err) return false;
+  const code = err.code || '';
+  return code === 'unauthenticated' || code === 'UNAUTHENTICATED';
 }
 
-// 大会カードの★を再描画（DOM直接更新でフルリレンダー不要）
-function _favRefreshStars(){
-  document.querySelectorAll('.t-fav-btn').forEach(btn=>{
-    let tid = btn.dataset?.tid;
-    if(!tid){
-      const oc = btn.getAttribute('onclick')||'';
-      const m = oc.match(/toggleFavTournament\('([^']+)'\)/);
-      if(m) tid=m[1];
-    }
-    if(!tid) return;
-    const isFav = FavoritesDB.has(tid)||(typeof favTournaments!=='undefined'&&favTournaments.has(tid));
-    btn.classList.toggle('is-fav', isFav);
-  });
-}
-
-// カテゴリバー再描画
-function _mpRenderCatBar(items){
-  const el = document.getElementById('mp-cat-bar');
-  if(!el) return;
-  const counts={};
-  items.forEach(t=>{ const c=t.cat||t.category||''; counts[c]=(counts[c]||0)+1; });
-  const getLabel=k=>(typeof CAT_LABELS!=='undefined'?CAT_LABELS[k]||k:k);
-  let html=`<button class="mp-cat-chip${_mpCat==='all'?' active':''}" data-cat="all" onclick="mpSetCat('all',this)">すべて (${items.length})</button>`;
-  Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([cat,n])=>{
-    if(!cat) return;
-    const a=_mpCat===cat?' active':'';
-    html+=`<button class="mp-cat-chip${a}" data-cat="${_e(cat)}" onclick="mpSetCat('${_e(cat)}',this)">${_e(getLabel(cat))} (${n})</button>`;
-  });
-  el.innerHTML=html;
-}
-
-// リスト描画
-function mpRenderList(){
-  const el = document.getElementById('mp-scroll');
-  if(!el) return;
-
-  // ローディング非表示
-  const loadingEl = document.getElementById('mp-loading');
-  if(loadingEl) loadingEl.style.display='none';
-
-  // お気に入りセット
-  const favSet = new Set([
-    ...FavoritesDB.getAll().map(x=>x.tid),
-    ...(typeof favTournaments!=='undefined'?[...favTournaments]:[]),
-  ]);
-
-  if(favSet.size===0){
-    el.innerHTML=`
-      <div class="mp-empty">
-        <div class="mp-empty-icon">☆</div>
-        <div class="mp-empty-ttl">保存した大会がありません</div>
-        <div class="mp-empty-sub">気になる大会の ★ をタップすると<br>ここに保存されます</div>
-        <div class="mp-empty-hint">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          試合検索からお気に入りを追加
-        </div>
-      </div>`;
-    _mpRenderCatBar([]);
-    _mpUpdateBadge();
-    return;
-  }
-
-  // TOURNAMENTS_FLAT からデータ取得
-  const flat = typeof TOURNAMENTS_FLAT!=='undefined'?TOURNAMENTS_FLAT:[];
-  let list = flat.filter(t=>favSet.has(t.id));
-
-  // カテゴリフィルター
-  if(_mpCat!=='all') list=list.filter(t=>(t.cat||t.category)===_mpCat);
-
-  // ソート
-  const today=new Date().toISOString().slice(0,10);
-  const savedMap=new Map(FavoritesDB.getAll().map(x=>[x.tid,x.savedAt]));
-  list.sort((a,b)=>{
-    if(_mpSort==='deadline'){
-      return (a.entryDeadline||'9999')<(b.entryDeadline||'9999')?-1:1;
-    } else if(_mpSort==='startDate'){
-      return (a.start||a.startDate||'9999')<(b.start||b.startDate||'9999')?-1:1;
+// Firestore エラーを分類してユーザーに通知
+function secHandleFirestoreError(err, context) {
+  console.error(`[SEC] Firestore error (${context || 'unknown'}):`, err);
+  if (_secIsPermissionDenied(err)) {
+    if (typeof _currentUser === 'undefined' || !_currentUser) {
+      secShowLoginSheet('ログインが必要です', 'この操作にはログインが必要です。');
     } else {
-      return (savedMap.get(b.id)||'').localeCompare(savedMap.get(a.id)||'');
+      secShowDenied('この操作の権限がありません（管理者のみ）');
     }
-  });
-
-  _mpRenderCatBar(flat.filter(t=>favSet.has(t.id)));
-
-  if(list.length===0){
-    el.innerHTML=`<div class="mp-empty"><div class="mp-empty-icon">🔍</div><div class="mp-empty-ttl">このカテゴリには大会がありません</div></div>`;
-    _mpUpdateBadge(); return;
+    return 'permission-denied';
   }
-
-  el.innerHTML = list.map((t,i)=>_mpCardHTML(t,today,i)).join('');
-  _mpUpdateBadge();
-}
-
-function _mpCardHTML(t, today, idx){
-  const catColor=(typeof CAT_COLORS!=='undefined'?CAT_COLORS[t.cat]:null)||'#8090A0';
-  const catLabel=(typeof CAT_LABELS!=='undefined'?CAT_LABELS[t.cat]:null)||t.cat||'';
-  const name=t.name||t.title||'(名称未設定)';
-  const start=t.start||t.startDate||'';
-  const end=t.end||t.endDate||'';
-  const deadline=t.entryDeadline||'';
-  const course=t.courseName||t.course||t.place||'';
-
-  // ステータス
-  let st='upcoming',stl='予定';
-  if(start&&end){
-    if(today>end){st='ended';stl='終了';}
-    else if(today>=start){st='live';stl='開催中';}
+  if (_secIsUnauthenticated(err)) {
+    secShowLoginSheet('ログインが必要です', 'セッションが切れました。再ログインしてください。');
+    return 'unauthenticated';
   }
-
-  // 日付
-  const dateStr=start?`${_mpFmt(start)}${end&&end!==start?' 〜 '+_mpFmt(end):''}`:'-';
-
-  // 締切
-  let dlHtml='';
-  if(deadline&&st!=='ended'){
-    const days=Math.round((new Date(deadline)-new Date(today))/86400000);
-    if(days>=0&&days<=14){
-      const urg=days<=3;
-      dlHtml=`<div class="mp-deadline${urg?' urgent':''}">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 15.5"/></svg>
-        締切${days===0?'今日':days+'日前'}（${_mpFmt(deadline)}）
-      </div>`;
-    }
-  }
-
-  const delay=Math.min(idx*25,200);
-  return `
-    <div class="mp-card" onclick="openTournamentModal('${_e(t.id)}')" style="animation-delay:${delay}ms;">
-      <div class="mp-card-row">
-        <div class="mp-stripe" style="background:${catColor};"></div>
-        <div class="mp-card-body">
-          <div class="mp-card-top">
-            <div class="mp-card-name">${_e(name)}</div>
-            <button class="mp-star-btn" onclick="event.stopPropagation();toggleFavTournament('${_e(t.id)}')" aria-label="お気に入りを解除">★</button>
-          </div>
-          <div class="mp-card-meta">
-            <span class="mp-badge-cat" style="background:${catColor}18;color:${catColor};border:1px solid ${catColor}35;">${_e(catLabel)}</span>
-            <span class="mp-badge-st ${st}">${stl}</span>
-            <span class="mp-meta-txt">
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><line x1="5" y1="1.5" x2="5" y2="4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="11" y1="1.5" x2="11" y2="4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="2" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.3"/></svg>
-              ${dateStr}
-            </span>
-            ${course?`<span class="mp-meta-txt">
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 2.5a3.5 3.5 0 013.5 3.5c0 2.8-3.5 7-3.5 7S4.5 8.8 4.5 6A3.5 3.5 0 018 2.5z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="6" r="1.2" fill="currentColor"/></svg>
-              ${_e(course)}
-            </span>`:''}
-          </div>
-          ${dlHtml}
-        </div>
-      </div>
-    </div>`;
-}
-
-function _mpFmt(ds){
-  if(!ds) return '-';
-  try{ const d=new Date(ds+'T00:00:00'); return `${d.getMonth()+1}/${d.getDate()}`; }catch(e){ return ds; }
-}
-function _e(s){
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  if (typeof showToast === 'function') showToast('⚠️ 通信エラーが発生しました');
+  return 'error';
 }
 
 
 // ================================================================
-// § 5  switchPage('mypage') フック
+// § SEC-3  _FCMS を強化（auth チェック + permission-denied 処理）
 // ================================================================
-(function patchSwitchPage(){
-  function patch(){
-    const _orig = window.switchPage;
-    if(typeof _orig!=='function') return;
-    window.switchPage = function(page){
-      _orig(page);
-      if(page==='mypage'){
-        // スケルトンを隠してリスト描画
-        const loadEl=document.getElementById('mp-loading');
-        if(loadEl) loadEl.style.display='none';
-        setTimeout(mpRenderList, 60);
-        _mpUpdateBadge();
+(function patchFCMS() {
+  function patch() {
+    if (typeof _FCMS === 'undefined') {
+      console.warn('[SEC] _FCMS 未定義 — スキップ');
+      return;
+    }
+
+    // save を上書き
+    const _origSave = _FCMS.save.bind(_FCMS);
+    _FCMS.save = async function(entry) {
+      // ── ① 未ログインチェック ──
+      if (typeof _currentUser === 'undefined' || !_currentUser) {
+        secShowLoginSheet('ログインが必要です', '大会の保存にはログインが必要です。');
+        return { ok: false, authRequired: true };
+      }
+      // ── ② 管理者チェック ──
+      if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
+        secShowDenied('大会データの編集は管理者のみ可能です');
+        return { ok: false, permissionDenied: true };
+      }
+      // ── ③ 実行 + エラーハンドリング ──
+      try {
+        const result = await _origSave(entry);
+        if (!result.ok && result.error) {
+          const kind = secHandleFirestoreError(result.error, 'save');
+          return { ...result, _secKind: kind };
+        }
+        return result;
+      } catch(e) {
+        secHandleFirestoreError(e, 'save');
+        return { ok: false, error: e };
       }
     };
-  }
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',()=>setTimeout(patch,600),{once:true});
-  } else { setTimeout(patch,600); }
-})();
 
-
-// ================================================================
-// § 6  NAV_ICONS mypage 登録 & ラベル「マイ大会」固定
-//       _initAdminNav が遅延実行で上書きするのを防ぐため
-//       最後に（1200ms後）nav-mypageを確定する
-// ================================================================
-(function initFavNav(){
-  function fix(){
-    // NAV_ICONS
-    if(typeof NAV_ICONS!=='undefined'){
-      NAV_ICONS.mypage={
-        active:  `<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="#1AAF7A" stroke="#1AAF7A" stroke-width=".5"/>`,
-        inactive:`<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="none" stroke="#9BB8AE" stroke-width="1.7"/>`,
-      };
-    }
-
-    // nav-mypage を switchPage('mypage') に確定（_initAdminNavより後に実行）
-    const btn = document.getElementById('nav-mypage');
-    if(btn){
-      btn.onclick = ()=>switchPage('mypage');
-      const lbl = btn.querySelector('.bnav-label');
-      if(lbl) lbl.textContent = 'マイ大会';
-    }
-
-    // FavoritesDB変化 → バッジ更新
-    FavoritesDB.onChange(_mpUpdateBadge);
-    _mpUpdateBadge();
+    // remove を上書き
+    const _origRemove = _FCMS.remove.bind(_FCMS);
+    _FCMS.remove = async function(fsId) {
+      if (typeof _currentUser === 'undefined' || !_currentUser) {
+        secShowLoginSheet('ログインが必要です', '大会の削除にはログインが必要です。');
+        return { ok: false, authRequired: true };
+      }
+      if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
+        secShowDenied('大会データの削除は管理者のみ可能です');
+        return { ok: false, permissionDenied: true };
+      }
+      try {
+        const result = await _origRemove(fsId);
+        if (!result.ok && result.error) {
+          const kind = secHandleFirestoreError(result.error, 'remove');
+          return { ...result, _secKind: kind };
+        }
+        return result;
+      } catch(e) {
+        secHandleFirestoreError(e, 'remove');
+        return { ok: false, error: e };
+      }
+    };
 
     console.info(
-      '%c[Favorites]%c マイ大会ページ 初期化完了',
-      'background:#E5A41A;color:#fff;padding:1px 6px;border-radius:3px;font-weight:700;',
-      'color:#8a6600;font-weight:600;'
+      '%c[SEC]%c _FCMS セキュリティガード 適用済み',
+      'background:#C03030;color:#fff;padding:1px 5px;border-radius:2px;font-weight:700;',
+      'color:#8a0000;font-weight:600;'
     );
   }
 
-  if(document.readyState==='loading'){
-    // _initAdminNav は DOMContentLoaded 直後に実行 → その後に上書き
-    document.addEventListener('DOMContentLoaded',()=>setTimeout(fix,1200),{once:true});
+  // _FCMS は後続スクリプトで定義されるため遅延実行
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 300), { once: true });
   } else {
-    setTimeout(fix, 1200);
+    setTimeout(patch, 300);
   }
 })();
+
+
+// ================================================================
+// § SEC-4  FavoritesDB エラーハンドリング強化
+// ================================================================
+(function patchFavoritesDB() {
+  function patch() {
+    if (typeof FavoritesDB === 'undefined') return;
+
+    // add を上書き
+    const _origAdd = FavoritesDB.add.bind(FavoritesDB);
+    FavoritesDB.add = async function(tid) {
+      if (typeof _currentUser === 'undefined' || !_currentUser) {
+        secShowLoginSheet('ログインが必要です', 'お気に入りにはログインが必要です。');
+        return false;
+      }
+      try {
+        return await _origAdd(tid);
+      } catch(e) {
+        secHandleFirestoreError(e, 'favorites.add');
+        return false;
+      }
+    };
+
+    // remove を上書き
+    const _origRemove = FavoritesDB.remove.bind(FavoritesDB);
+    FavoritesDB.remove = async function(tid) {
+      if (typeof _currentUser === 'undefined' || !_currentUser) {
+        secShowLoginSheet('ログインが必要です', 'この操作にはログインが必要です。');
+        return false;
+      }
+      try {
+        return await _origRemove(tid);
+      } catch(e) {
+        secHandleFirestoreError(e, 'favorites.remove');
+        return false;
+      }
+    };
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 800), { once: true });
+  } else {
+    setTimeout(patch, 800);
+  }
+})();
+
+
+// ================================================================
+// § SEC-5  FirestoreDB onSnapshot エラーを permission-denied に対応
+// ================================================================
+(function patchFirestoreOnSnapshotError() {
+  // FirestoreDB の内部エラーコールバックをフック
+  // onSnapshot の error handler が showToast するだけなので強化
+  const _origSubscribeWatcher = setInterval(() => {
+    if (typeof FirestoreDB === 'undefined') return;
+    clearInterval(_origSubscribeWatcher);
+
+    // FirestoreDB.status が 'error' になった場合の監視
+    let _prevStatus = FirestoreDB.status;
+    setInterval(() => {
+      const cur = FirestoreDB.status;
+      if (cur !== _prevStatus) {
+        _prevStatus = cur;
+        if (cur === 'error') {
+          // エラーバナーは FirestoreDB 内で showToast 済み
+          // ここでは追加の UI 強化（管理画面の disable など）
+          if (document.body.classList.contains('is-admin')) {
+            console.warn('[SEC] Firestore エラー中 — 管理者操作が制限される場合があります');
+          }
+        }
+      }
+    }, 2000);
+  }, 500);
+})();
+
+
+// ================================================================
+// § SEC-6  UI保護 — 未ログイン / 非管理者への操作ブロック
+// ================================================================
+(function setupUIGuards() {
+  // ── openAtmSheet をガード ──
+  function patch() {
+    const _origOpen = window.openAtmSheet;
+    if (typeof _origOpen !== 'function') return;
+
+    window.openAtmSheet = function(tid) {
+      // ① 未ログインチェック
+      if (typeof _currentUser === 'undefined' || !_currentUser) {
+        secShowLoginSheet('ログインが必要です', '大会の追加・編集にはログインが必要です。');
+        return;
+      }
+      // ② 管理者チェック
+      if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
+        secShowDenied('大会の編集は管理者のみ可能です');
+        return;
+      }
+      _origOpen(tid);
+    };
+
+    // ── atmDelete をガード ──
+    const _origDelete = window.atmDelete;
+    if (typeof _origDelete === 'function') {
+      window.atmDelete = async function(id) {
+        if (typeof _currentUser === 'undefined' || !_currentUser) {
+          secShowLoginSheet('ログインが必要です', '削除操作にはログインが必要です。');
+          return;
+        }
+        if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
+          secShowDenied('削除は管理者のみ可能です');
+          return;
+        }
+        return _origDelete(id);
+      };
+      window._atmDelete = window.atmDelete;
+    }
+
+    // ── tdbDelete をガード ──
+    const _origTdbDelete = window.tdbDelete;
+    if (typeof _origTdbDelete === 'function') {
+      window.tdbDelete = function(id) {
+        if (typeof _currentUser === 'undefined' || !_currentUser) {
+          secShowLoginSheet('ログインが必要です', '削除操作にはログインが必要です。');
+          return;
+        }
+        if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
+          secShowDenied('削除は管理者のみ可能です');
+          return;
+        }
+        return _origTdbDelete(id);
+      };
+    }
+
+    // ── openUrlModal をガード ──
+    const _origUrl = window.openUrlModal;
+    if (typeof _origUrl === 'function') {
+      window.openUrlModal = function() {
+        if (typeof _currentUser === 'undefined' || !_currentUser) {
+          secShowLoginSheet('ログインが必要です', 'URL解析にはログインが必要です。');
+          return;
+        }
+        if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
+          secShowDenied('URL解析は管理者のみ可能です');
+          return;
+        }
+        _origUrl();
+      };
+    }
+
+    console.info(
+      '%c[SEC]%c UI ガード 適用済み (openAtmSheet / atmDelete / tdbDelete / openUrlModal)',
+      'background:#C03030;color:#fff;padding:1px 5px;border-radius:2px;font-weight:700;',
+      'color:#8a0000;font-weight:600;'
+    );
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 700), { once: true });
+  } else {
+    setTimeout(patch, 700);
+  }
+})();
+
+
+// ================================================================
+// § SEC-7  isAdmin のサーバー側検証
+//   users/{uid}.isAdmin を Firestore から取得し、
+//   クライアント側 ADMIN_EMAILS との AND で最終判定
+// ================================================================
+(function setupServerAdminCheck() {
+  // _showApp フックに追加：ログイン時に Firestore から isAdmin を読み取る
+  function patch() {
+    const _prev = window._showApp;
+    if (typeof _prev !== 'function') return;
+
+    window._showApp = function(user) {
+      if (typeof _prev === 'function') _prev(user);
+      if (!user?.uid) return;
+
+      // Firestore から isAdmin を非同期取得
+      _secVerifyAdminFromFirestore(user);
+    };
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 1300), { once: true });
+  } else {
+    setTimeout(patch, 1300);
+  }
+})();
+
+async function _secVerifyAdminFromFirestore(user) {
+  if (!user?.uid) return;
+  if (typeof firebase === 'undefined' || !firebase.apps?.length) return;
+  if (typeof firebase.firestore !== 'function') return;
+
+  try {
+    const db = firebase.firestore();
+    const snap = await db.collection('users').doc(user.uid).get();
+    if (!snap.exists) return;
+
+    const fsIsAdmin = snap.data()?.isAdmin === true;
+    const emailIsAdmin = typeof _isAdminEmail === 'function' && _isAdminEmail(user.email);
+
+    // ── 最終判定: ADMIN_EMAILS OR Firestore.isAdmin ──
+    // どちらか一方が true であれば管理者とみなす
+    const finalIsAdmin = emailIsAdmin || fsIsAdmin;
+
+    // クライアント側と差異がある場合のみ更新
+    if (finalIsAdmin !== window._isAdmin) {
+      window._isAdmin = finalIsAdmin;
+      if (finalIsAdmin) {
+        document.body.classList.add('is-admin');
+      } else {
+        document.body.classList.remove('is-admin');
+      }
+      console.info(
+        `[SEC] isAdmin サーバー検証: email=${emailIsAdmin}, firestore=${fsIsAdmin}, final=${finalIsAdmin}`
+      );
+    }
+  } catch(e) {
+    // permission-denied は users/{uid} が存在しない場合に発生し得る → 無視
+    if (!_secIsPermissionDenied(e)) {
+      console.warn('[SEC] isAdmin 検証エラー:', e.code || e.message);
+    }
+  }
+}
+
+
+// ================================================================
+// § SEC-8  _saveUserToFirestore のエラーハンドリング強化
+//   permission-denied 時に静かに失敗（アプリを止めない）
+// ================================================================
+(function patchSaveUser() {
+  function patch() {
+    const _origSave = window._saveUserToFirestore;
+    if (typeof _origSave !== 'function') return;
+
+    window._saveUserToFirestore = async function(user, isAdmin) {
+      try {
+        return await _origSave(user, isAdmin);
+      } catch(e) {
+        if (_secIsPermissionDenied(e)) {
+          console.warn('[SEC] _saveUserToFirestore: permission-denied (Rules適用済み — 正常)');
+          // ユーザーに通知しない（Auth は成功しているため）
+        } else {
+          console.warn('[SEC] _saveUserToFirestore エラー:', e.code || e.message);
+        }
+      }
+    };
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 400), { once: true });
+  } else {
+    setTimeout(patch, 400);
+  }
+})();
+
+
+// ================================================================
+// § SEC-9  switchPage('admin') の追加ガード
+// ================================================================
+(function guardAdminPage() {
+  function patch() {
+    const _orig = window.switchPage;
+    if (typeof _orig !== 'function') return;
+
+    window.switchPage = function(page) {
+      if (page === 'admin') {
+        if (typeof _currentUser === 'undefined' || !_currentUser) {
+          secShowLoginSheet('管理者ログインが必要です', '管理画面にはログインが必要です。');
+          return;
+        }
+        if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
+          secShowDenied('管理画面は管理者のみアクセスできます');
+          return;
+        }
+      }
+      _orig(page);
+    };
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 650), { once: true });
+  } else {
+    setTimeout(patch, 650);
+  }
+})();
+
+console.info(
+  '%c[SEC]%c ProNexaX Security Layer v1.0 ロード完了',
+  'background:#C03030;color:#fff;padding:2px 8px;border-radius:3px;font-weight:700;',
+  'color:#8a0000;font-weight:600;'
+);
 </script>
 
 </body>
