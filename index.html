@@ -8051,8 +8051,11 @@ function switchPage(page){
 
   // ── ページ別処理 ──
   if(page==='search'){
-    applySearchFilters();
-    // 検索画面切替時：モーダルを確実に閉じてstateリセット
+    // ★ FIX: 検索画面に来た時は確実に再描画
+    if (typeof _invalidateSearchCache === 'function') _invalidateSearchCache();
+    if (typeof renderSearchFilters === 'function') renderSearchFilters();
+    if (typeof applySearchFilters === 'function') applySearchFilters();
+    // モーダルを確実に閉じてstateリセット
     const _s = document.getElementById('tdm-sheet');
     const _o = document.getElementById('tdm-overlay');
     if(_s){ _s.classList.remove('show','is-dragging'); _s.style.transform=''; _s.style.transition=''; }
@@ -9482,15 +9485,33 @@ function renderSearchFilters(){
 }
 
 // ★ グループフィルターセット
+// ================================================================
+// ★★★ FIX: カテゴリ選択の統一実行関数 ★★★
+// 全カテゴリボタンハンドラーがこれを経由することで
+// 「state更新→cache無効化→UI更新→結果再描画」の順序を保証する
+// ================================================================
+function _applyCategoryChange() {
+  // ★ デバッグログ（検索画面カテゴリ切替の状態確認）
+  console.log('[Search] category change →',
+    'gender:', _searchGender,
+    'region:', _searchRegion,
+    'group:', _searchGroupKey,
+    'filter:', searchFilter
+  );
+  // 1. キャッシュを確実にクリア（二重キャッシュを防ぐ）
+  if (typeof _invalidateSearchCache === 'function') _invalidateSearchCache();
+  // 2. フィルターUI（グループチップ・ドロップダウン）を同期更新
+  if (typeof renderSearchFilters === 'function') renderSearchFilters();
+  // 3. 検索結果リストを即時更新
+  if (typeof applySearchFilters === 'function') applySearchFilters();
+}
+
 function _setGroupFilter(groupKey, el) {
   el.style.transform = 'scale(0.90)';
   setTimeout(() => { el.style.transform = ''; }, 140);
-  // 同じグループを再タップで解除
   _searchGroupKey = (_searchGroupKey === groupKey) ? null : groupKey;
   searchFilter = 'all';
-  _invalidateSearchCache();
-  renderSearchFilters();
-  applySearchFilters();
+  _applyCategoryChange();
 }
 
 // ★★★ iOS風セレクトUI制御 ★★★
@@ -9530,16 +9551,12 @@ function _hcatOutsideTap(e) {
 
 // ドロップダウン行タップ → ツアー選択
 function _hcatSelectTour(tourKey, groupKey, el) {
-  // ハプティクス風バウンス
   el.style.transform = 'scale(.96)';
   setTimeout(() => { el.style.transform = ''; }, 120);
-
   if (groupKey) _searchGroupKey = groupKey;
   searchFilter = tourKey;
-  _invalidateSearchCache();
   _hcatCloseDropdown();
-  renderSearchFilters();
-  applySearchFilters();
+  _applyCategoryChange();
 }
 
 // ★ Phase3: ツアーカテゴリフィルターのセット（キャッシュ無効化付き）
@@ -9547,8 +9564,7 @@ function _setTourCatFilter(key, el) {
   el.style.transform = 'scale(0.90)';
   setTimeout(() => { el.style.transform = ''; }, 140);
   searchFilter = key;
-  _invalidateSearchCache();
-  applySearchFilters();
+  _applyCategoryChange();
 }
 
 // ★ Phase3: 男女切替（キャッシュ無効化付き）
@@ -9559,9 +9575,7 @@ function _setGender(gender, btn) {
   });
   searchFilter = 'all';
   _searchGroupKey = null;
-  _invalidateSearchCache();
-  renderSearchFilters();
-  applySearchFilters();
+  _applyCategoryChange();
 }
 
 // ★ Phase3: 国内/海外切替（キャッシュ無効化付き）
@@ -9572,9 +9586,7 @@ function _setRegion(region, btn) {
   });
   searchFilter = 'all';
   _searchGroupKey = null;
-  _invalidateSearchCache();
-  renderSearchFilters();
-  applySearchFilters();
+  _applyCategoryChange();
 }
 
 // ★ Phase3: タブ同期（すべて/お気に入り）
@@ -10508,6 +10520,8 @@ function _buildFilterKey(){
     tokens:sqTokens.map(t=>t.type+'|'+t.key).sort(),
     input:(document.getElementById('search-input')||{value:''}).value.trim().toLowerCase(),
     sort:sortByPrize,
+    sortMode:typeof _sortMode!=='undefined'?_sortMode:'date',
+    sortAsc:typeof _sortAsc!=='undefined'?_sortAsc:true,
   });
 }
 
@@ -10538,15 +10552,9 @@ function applySearchFilters(){
   filterGrid.classList.remove('is-hidden');
   resultMeta.classList.remove('is-hidden');
 
-  // カテゴリが一つも追加されていない場合の誘導
-  if(userEnabledCategories.length===0){
-    list.innerHTML=`<div class="search-empty">
-      <div class="search-empty-icon">📂</div>
-      <div class="search-empty-title">カテゴリを追加してください</div>
-      <div class="search-empty-sub">カレンダー画面のメニュー（☰）から<br>「カテゴリを追加」で追加できます</div>
-    </div>`;
-    return;
-  }
+  // ★ FIX: カテゴリ未追加でも検索結果を表示する
+  // （カレンダーのオプトイン設定と検索は独立させる）
+  // if(userEnabledCategories.length===0){ ... return; }  ← 削除
 
   // ── キャッシュチェック ──
   const filterKey = _buildFilterKey();
@@ -10564,8 +10572,11 @@ function applySearchFilters(){
   if(rawInput) allTexts.push(rawInput);
 
   let arr=TOURNAMENTS_FLAT.filter(t=>{
-    // ── 有効カテゴリのみ表示（オプトイン型） ──
-    if(!isCatVisible(t.cat))return false;
+    // ── 有効カテゴリ表示チェック ──
+    // ★ FIX: 検索画面では全カテゴリを表示対象にする
+    // （カレンダーのオプトイン設定は検索に影響させない）
+    // userEnabledCategoriesが空でも検索結果を表示する
+    // if(!isCatVisible(t.cat))return false;  ← 削除
 
     // ── 国内/海外フィルター ──
     if(_searchRegion==='domestic' && t.area==='overseas') return false;
@@ -10617,8 +10628,20 @@ function applySearchFilters(){
     return true;
   });
 
-  if(sortByPrize)arr.sort((a,b)=>(b.prize||'').localeCompare(a.prize||''));
-  else arr.sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+  // ★ FIX: _sortMode/_sortAsc (p5SetSort) + sortByPrize を統合
+  if(sortByPrize || _sortMode === 'prize'){
+    arr.sort((a,b)=>(b.prize||'').localeCompare(a.prize||''));
+  } else if(_sortMode === 'deadline'){
+    arr.sort((a,b)=>{
+      const ad = a.entryDeadline||'9999', bd = b.entryDeadline||'9999';
+      return _sortAsc ? ad.localeCompare(bd) : bd.localeCompare(ad);
+    });
+  } else if(_sortMode === 'area'){
+    arr.sort((a,b)=>_sortAsc ? (a.area||'').localeCompare(b.area||'') : (b.area||'').localeCompare(a.area||''));
+  } else {
+    // デフォルト: 日付順
+    arr.sort((a,b)=>_sortAsc ? (a.start||'').localeCompare(b.start||'') : (b.start||'').localeCompare(a.start||''));
+  }
 
   _lastResultArr = arr;
   _updateResultCount(arr);
@@ -15350,28 +15373,10 @@ function _memoize(fn, keyFn) {
   };
 }
 
-/** キャッシュ付きフィルター適用（search画面の重複render防止）*/
-let _filterCache = null;
-let _filterCacheKey = '';
-
-function _buildFilterKey() {
-  return JSON.stringify([
-    typeof _searchGender   !== 'undefined' ? _searchGender   : '',
-    typeof _searchRegion   !== 'undefined' ? _searchRegion   : '',
-    typeof searchFilter    !== 'undefined' ? searchFilter    : '',
-    typeof _searchGroupKey !== 'undefined' ? _searchGroupKey : '',
-    typeof fbsCats         !== 'undefined' ? [...fbsCats].sort().join(',')  : '',
-    typeof fbsAreas        !== 'undefined' ? [...fbsAreas].sort().join(',') : '',
-    typeof fbsPrefs        !== 'undefined' ? [...fbsPrefs].sort().join(',') : '',
-    (document.getElementById('search-input') || {value:''}).value,
-    typeof _sortMode !== 'undefined' ? _sortMode : 'date',
-    typeof _sortAsc  !== 'undefined' ? _sortAsc  : true,
-  ]);
-}
+/* _filterCache: 元の _lastFilterKey/_lastFilterResult に統一 */
 
 function _invalidateFilterCache() {
-  _filterCache = null;
-  _filterCacheKey = '';
+  /* _filterCache削除済み: 元の _invalidateSearchCache に委譲 */
   if (typeof _invalidateSearchCache === 'function') _invalidateSearchCache();
 }
 
@@ -15484,39 +15489,10 @@ window.ProNexaX = Object.assign(window.ProNexaX || {}, {
     };
   }
 
-  // ─ applySearchFilters に debounce + キャッシュを適用
+  // patchApplySearchFilters: Phase8の二重キャッシュバグのため削除。
+  // 元の applySearchFilters + _buildFilterKey + _lastFilterKey が正しく機能する。
   function patchApplySearchFilters() {
-    if (typeof applySearchFilters !== 'function') return;
-    const _orig = window.applySearchFilters;
-    const DEBOUNCE_MS = 120;
-
-    const _debouncedApply = _debounce(function() {
-      const key = _buildFilterKey();
-      // ハードキャッシュではなくフィルターキー変化時のみ_origを実行
-      if (key === _filterCacheKey && _filterCache) return;
-      _filterCacheKey = key;
-      _filterCache = true;
-      _orig();
-      // appState に件数を同期
-      setTimeout(() => {
-        const meta = document.getElementById('result-meta');
-        if (meta) {
-          const m = meta.textContent.match(/\d+/);
-          if (m) appState.set('tournaments.filteredCount', parseInt(m[0]));
-        }
-      }, 50);
-    }, DEBOUNCE_MS);
-
-    window.applySearchFilters = _debouncedApply;
-
-    // _invalidateSearchCache もフック
-    if (typeof _invalidateSearchCache === 'function') {
-      const _origInv = window._invalidateSearchCache;
-      window._invalidateSearchCache = function() {
-        _invalidateFilterCache();
-        if (typeof _origInv === 'function') _origInv();
-      };
-    }
+    /* no-op: 元の実装を使用 */
   }
 
   // ─ 管理者ログイン後に appState を同期
