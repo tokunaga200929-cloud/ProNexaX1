@@ -1038,6 +1038,7 @@ button,input,select,textarea{
 .split-handle{
   flex-shrink:0;
   height:14px;
+  max-height:14px; /* ★ Fix: 高さ上限を明示（touch領域の溢れを防ぐ） */
   background:linear-gradient(180deg,#fff 0%,#F4FAF8 100%);
   border-top:1px solid var(--border);
   border-bottom:1px solid var(--border);
@@ -1048,6 +1049,7 @@ button,input,select,textarea{
   position:relative;
   transition:background .15s;
   z-index:5;
+  overflow:hidden; /* ★ Fix: 子要素のはみ出し防止 */
 }
 .split-handle:active,.split-handle.dragging{
   background:linear-gradient(180deg,var(--green-chip) 0%,#D8F2E5 100%);
@@ -1118,7 +1120,10 @@ button,input,select,textarea{
   flex-shrink:0;
 }
 
-.cal-scroll{flex:1 1 0;min-height:0;overflow-y:auto;background:var(--bg);}
+.cal-scroll{flex:1 1 0;min-height:0;overflow-y:auto;background:var(--bg);
+  /* ★ Fix: overflowがbottom-navに溢れないよう明示制限 */
+  overflow-x:hidden;
+}
 .cal-scroll::-webkit-scrollbar{display:none;}
 .section-header{padding:6px 14px 3px;display:flex;align-items:center;justify-content:space-between;}
 .section-label{font-size:13px;font-weight:600;color:var(--text-primary);}
@@ -1622,7 +1627,7 @@ button,input,select,textarea{
 
 
 
-.search-scroll{flex:1;overflow-y:auto;background:var(--bg);min-height:0;}
+.search-scroll{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg);min-height:0;}
 .search-scroll::-webkit-scrollbar{display:none;}
 
 /* =====================================================================
@@ -2378,8 +2383,22 @@ button,input,select,textarea{
 .day-event-del{font-size:11px;border:1px solid #FFD5D5;border-radius:6px;padding:2px 6px;background:#FFF5F5;color:#C84444;cursor:pointer;align-self:center;margin-right:8px;flex-shrink:0;}
 .longpress-ring{position:absolute;border-radius:50%;border:2px solid var(--green-main);pointer-events:none;z-index:50;opacity:0;transform:scale(0);transition:none;}
 .longpress-ring.animating{opacity:1;transform:scale(1);transition:transform .5s ease-out,opacity .5s ease-out;}
-.bottom-nav{background:#fff;border-top:none;box-shadow:none;display:flex;padding:4px 0 max(env(safe-area-inset-bottom,4px),4px);flex-shrink:0;}
-.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:12px;transition:background .08s ease-out,transform .1s;-webkit-tap-highlight-color:transparent;}
+.bottom-nav{background:#fff;border-top:none;box-shadow:none;display:flex;padding:4px 0 max(env(safe-area-inset-bottom,4px),4px);flex-shrink:0;
+  /* ★ Fix: タップ保証 - 最前面固定 */
+  position:relative;
+  z-index:9999;
+  pointer-events:auto !important;
+  -webkit-transform:translateZ(0);
+  transform:translateZ(0);
+  isolation:isolate;
+}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:12px;transition:background .08s ease-out,transform .1s;-webkit-tap-highlight-color:transparent;
+  /* ★ Fix: タップ確実化 */
+  pointer-events:auto !important;
+  position:relative;
+  z-index:9999;
+  touch-action:manipulation;
+}
 .bnav-btn:active{background:rgba(26,175,122,0.12);transform:scale(.92);}
 .bnav-label{font-size:11px;color:var(--text-tertiary);line-height:1;font-weight:400;transition:color .15s;}
 .bnav-btn.active{background:none;}
@@ -3794,8 +3813,9 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
   overscroll-behavior:contain !important;
 }
 
-/* split handle タッチ領域拡張 */
-.split-handle { min-height:20px !important; }
+/* split handle: min-heightはmax-heightに揃える（タッチ領域の溢れ防止） */
+/* ★ Fix: min-height:20px は廃止 → height:14px, max-height:14px で固定 */
+.split-handle { min-height:14px !important; max-height:14px !important; }
 
 /* ================================================================
    iPhone Safari レイアウト修正
@@ -5340,11 +5360,19 @@ body{
   background: rgba(0,0,0,0);
   z-index: 500;
   pointer-events: none;
-  transition: background 0.32s cubic-bezier(.32,.72,0,1);
+  touch-action: none; /* ★ Fix: 非表示時もtouch-action:noneで透過保証 */
+  /* ★ Fix: visibility:hiddenでSafari タップバグを確実に防止 */
+  visibility: hidden;
+  transition: background 0.32s cubic-bezier(.32,.72,0,1),
+              visibility 0s linear 0.32s; /* 閉じアニメ後にhidden */
 }
 .tdm-overlay.show {
   background: rgba(0,0,0,0.38);
   pointer-events: auto;
+  touch-action: auto;
+  visibility: visible;
+  transition: background 0.32s cubic-bezier(.32,.72,0,1),
+              visibility 0s linear 0s; /* 開くときは即visible */
 }
 
 /* ボトムシート本体 */
@@ -13822,33 +13850,36 @@ function _p3UnlockBodyScroll() {
   will-change: transform;
 }
 
-/* tdm-overlay: backdrop-filter で高級感 */
+/* tdm-overlay: backdrop-filter - 非表示時は無効化（Safari タップバグ回避） */
+/* ★ Fix: blur(0px) でも stacking context が生成されるため
+   非表示状態では backdrop-filter を一切適用しない */
 .tdm-overlay {
-  backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px);
-  transition: backdrop-filter 0.3s ease, opacity 0.28s ease;
+  /* backdrop-filter: none; ← 明示しなくても初期値はnone */
 }
 .tdm-overlay.show {
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  /* 表示時のみ blur 適用（ごく薄く、パフォーマンス配慮） */
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
 }
 
 /* Phase3: iOS PWA高さ変数対応 */
+/* ★ Fix: phone-innerはoverflow:hiddenのため padding-bottom 禁止
+   padding-bottom を付けると bottom-nav が clipping されタップ不能になる */
 @supports (height: env(safe-area-inset-bottom)) {
-  .phone-inner {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
+  /* phone-inner への padding-bottom は削除 */
   .bottom-nav {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
   }
 }
 
-/* ヘッダー: ガラスモーフィズム効果（PWA時） */
+/* ヘッダー: ガラスモーフィズム効果（PWA時）
+   ★ Fix: backdrop-filter は Safari で stacking context を生成するため
+   bottom-nav より z-index が高い要素に付けると干渉する可能性あり
+   → app-header は flex内の通常要素なので問題ないが念のため無効化 */
 @media (display-mode: standalone) {
   .app-header {
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    background: rgba(255,255,255,0.95) !important;
+    /* backdrop-filter: blur(20px); ← Safari タップバグ予防のため無効化 */
+    background: rgba(255,255,255,0.98) !important;
   }
 }
 
@@ -13958,6 +13989,77 @@ document.addEventListener('DOMContentLoaded', _p3Init);
 // ★ Fix: Phase3 debounceパッチは _sqOnInput内で統合済みのため削除
 // （二重のdebounceを防ぐ）
 // _p3PatchSearchDebounce -> _sqOnInputのdebounce化で対応済み
+
+// ================================================================
+// ★★★ Fix: bottom-nav タップ問題デバッグ + 自動修復 ★★★
+// ================================================================
+(function _fixBottomNavTap() {
+  // DOMロード後に実行
+  function _applyNavFix() {
+    const nav = document.querySelector('.bottom-nav');
+    if (!nav) return;
+    // z-index / pointer-events を JS からも強制適用
+    nav.style.position   = 'relative';
+    nav.style.zIndex     = '99999';
+    nav.style.pointerEvents = 'auto';
+    nav.style.webkitTransform = 'translateZ(0)';
+    nav.style.transform  = 'translateZ(0)';
+    nav.style.isolation  = 'isolate';
+
+    // 各ボタンにも明示
+    nav.querySelectorAll('.bnav-btn').forEach(btn => {
+      btn.style.pointerEvents  = 'auto';
+      btn.style.position       = 'relative';
+      btn.style.zIndex         = '99999';
+      btn.style.touchAction    = 'manipulation';
+      btn.style.webkitTapHighlightColor = 'transparent';
+    });
+
+    // elementFromPoint で何が乗っているか診断
+    setTimeout(function() {
+      try {
+        const searchBtn = document.getElementById('nav-search');
+        if (!searchBtn) return;
+        const r = searchBtn.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top  + r.height / 2;
+        const topEl = document.elementFromPoint(cx, cy);
+        if (topEl && topEl !== searchBtn && !searchBtn.contains(topEl)) {
+          console.warn('[PNX Fix] nav-search がブロックされています。上にある要素:', topEl, 
+            '| tagName:', topEl.tagName, '| id:', topEl.id, 
+            '| class:', topEl.className,
+            '| z-index:', getComputedStyle(topEl).zIndex,
+            '| pointer-events:', getComputedStyle(topEl).pointerEvents);
+          // 自動修復: blocking要素に pointer-events:none を適用（overlayクラスのみ）
+          const blockStyle = getComputedStyle(topEl);
+          const isOverlay = topEl.classList.contains('tdm-overlay') ||
+                            topEl.classList.contains('modal-overlay') ||
+                            topEl.classList.contains('add-cat-overlay') ||
+                            topEl.classList.contains('drawer-overlay') ||
+                            topEl.classList.contains('month-picker-overlay');
+          if (isOverlay && blockStyle.pointerEvents !== 'none') {
+            console.warn('[PNX Fix] overlayのpointer-eventsを強制none化:', topEl.id || topEl.className);
+            topEl.style.pointerEvents = 'none';
+          }
+        } else if (topEl) {
+          console.log('[PNX Fix] nav-search hit test OK. topEl:', topEl.tagName, topEl.id || topEl.className);
+        }
+      } catch(e) { /* 無視 */ }
+    }, 500);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _applyNavFix);
+  } else {
+    _applyNavFix();
+  }
+  // switchPage時にも再適用
+  const _prevSwitch = window.switchPage;
+  window.switchPage = function(page) {
+    if (typeof _prevSwitch === 'function') _prevSwitch(page);
+    requestAnimationFrame(_applyNavFix);
+  };
+})();
 
 console.log('[ProNexaX Phase3] ✅ 実運用基盤 初期化完了');
 console.log('[ProNexaX Phase3] 📋 大会データ:', TDB_TOURNAMENTS.length, '件');
