@@ -65,11 +65,11 @@
     flex-direction: column;
     align-items: center;
     opacity: 0;
-    transform: scale(0.93);
+    transform: scale(0.93) translateY(-24px);
     animation: pnx-reveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
   }
   @keyframes pnx-reveal {
-    to { opacity: 1; transform: scale(1); }
+    to { opacity: 1; transform: scale(1) translateY(-24px); }
   }
   .pnx-lines {
     display: flex;
@@ -85,16 +85,16 @@
     flex-shrink: 0;
   }
   .pnx-logo-wrap {
-    width: 80px;
-    height: 80px;
+    width: 132px;
+    height: 132px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 22px;
+    margin-bottom: 28px;
   }
   .pnx-logo-wrap img {
-    width: 80px;
-    height: 80px;
+    width: 132px;
+    height: 132px;
     object-fit: contain;
   }
   .pnx-name {
@@ -119,13 +119,14 @@
   }
   .pnx-bottom {
     position: absolute;
-    bottom: calc(env(safe-area-inset-bottom) + 48px);
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom) + 52px);
+    left: 0;
+    right: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    gap: 12px;
     opacity: 0;
     animation: pnx-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
   }
@@ -177,7 +178,7 @@
       </div>
       <div class="pnx-line"></div>
     </div>
-    <div class="pnx-name">ProNex<span class="pnx-x">X</span></div>
+    <div class="pnx-name">ProNexa<span class="pnx-x">X</span></div>
     <div class="pnx-tagline">Tournament &amp; Career Management</div>
   </div>
   <div class="pnx-bottom">
