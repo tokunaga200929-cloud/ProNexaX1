@@ -5879,6 +5879,12 @@ body.is-admin #page-admin.active {
 body.is-admin .admin-only {
   display: initial !important;
 }
+/* flex コンテナの admin-only */
+body.is-admin .admin-only[style*="display"],
+body.is-admin div.admin-only,
+body.is-admin .admin-card-actions.admin-only {
+  display: flex !important;
+}
 
 /* auth-screen の hidden クラス */
 #auth-screen.hidden {
@@ -6204,7 +6210,7 @@ body.is-admin .admin-only {
     <div class="admin-header">
       <div class="admin-header-top">
         <span class="admin-title">⚙️ 大会管理</span>
-        <div class="admin-header-actions">
+        <div class="admin-header-actions admin-only">
           <button class="admin-url-btn" onclick="openUrlModal()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
             URL解析
@@ -6512,7 +6518,7 @@ body.is-admin .admin-only {
       <span class="bnav-label">マイページ</span>
     </button>
     <!-- ★ 管理タブ：管理者のみ表示（body.is-admin が付いた時に display:flex） -->
-    <button class="bnav-btn admin-nav-btn" id="nav-admin" onclick="switchPage('admin')" style="display:none">
+    <button class="bnav-btn admin-nav-btn" id="nav-admin" onclick="switchPage('admin')">
       <svg id="icon-admin" width="20" height="20" viewBox="0 0 22 22" fill="none">
         <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#9BB8AE" stroke-width="1.7"/>
         <rect x="12" y="3" width="7" height="7" rx="1.5" stroke="#9BB8AE" stroke-width="1.7"/>
@@ -15889,6 +15895,407 @@ window.ProNexaX = Object.assign(window.ProNexaX || {}, {
 
 <script>
 /* ================================================================
+   ★★★ Firebase Auth 完全統合 + 管理者分離 ★★★
+
+   修正内容:
+   ① ADMIN_EMAILS 設定（ここにメールを追加）
+   ② authSubmit のゲスト判定を修正（Firebase 本接続を優先）
+   ③ users/{uid} コレクションへの初回保存
+   ④ _showApp の admin 判定を強化
+   ⑤ admin-only クラスを全管理UI要素に適用
+   ⑥ auth ちらつき防止の最終修正
+   ⑦ ログイン永続化の確認
+   ================================================================ */
+'use strict';
+
+// ================================================================
+// ① ADMIN_EMAILS — ここに管理者メールを追加
+// ================================================================
+// すでに定義済みの ADMIN_EMAILS を上書き（空配列から実際のメールへ）
+// ★★★ 以下に管理者の Gmail を追加してください ★★★
+(function _setAdminEmails() {
+  if (typeof ADMIN_EMAILS !== 'undefined') {
+    // 既存配列をクリアして再設定
+    ADMIN_EMAILS.length = 0;
+    // ↓ここに管理者メールを追加↓
+    // ADMIN_EMAILS.push("your-name@gmail.com");
+  }
+})();
+
+// ================================================================
+// ② users コレクション保存
+// ================================================================
+async function _saveUserToFirestore(user, isAdmin) {
+  if (typeof firebase === 'undefined' || !firebase.apps?.length) return;
+  if (typeof firebase.firestore !== 'function') return;
+
+  try {
+    const db = firebase.firestore();
+    const ref = db.collection('users').doc(user.uid);
+    const snap = await ref.get();
+
+    if (!snap.exists) {
+      // 初回ログイン: ドキュメントを新規作成
+      await ref.set({
+        uid:         user.uid,
+        email:       user.email || '',
+        displayName: user.displayName || user.email?.split('@')[0] || '',
+        photoURL:    user.photoURL || null,
+        provider:    user.providerData?.[0]?.providerId || 'password',
+        isAdmin:     isAdmin,
+        createdAt:   new Date().toISOString(),
+        lastLoginAt: new Date().toISOString(),
+      });
+      console.info('[Auth] users コレクション: 新規ユーザー登録', user.email);
+    } else {
+      // 再ログイン: lastLoginAt と isAdmin だけ更新
+      await ref.update({
+        lastLoginAt: new Date().toISOString(),
+        isAdmin:     isAdmin,
+        // displayName/photoURL は更新しておく（Google 側で変更された場合）
+        displayName: user.displayName || snap.data().displayName,
+        photoURL:    user.photoURL    || snap.data().photoURL || null,
+      });
+    }
+  } catch(e) {
+    // Firestore 書き込み失敗はサイレントに（認証自体は成功させる）
+    console.warn('[Auth] users 保存エラー:', e.code || e.message);
+  }
+}
+
+// ================================================================
+// ③ _showApp を完全版に置き換え
+// ================================================================
+(function _patchShowApp() {
+  // 既存の _showApp をラップ
+  const _origShowApp = window._showApp || function(){};
+
+  window._showApp = function(user) {
+    if (!user) { _showAuthScreen(); return; }
+
+    _currentUser = user;
+
+    // ── auth-screen を非表示 ──
+    const authEl = document.getElementById('auth-screen');
+    if (authEl) { authEl.style.display = 'none'; authEl.classList.add('hidden'); }
+    _hideAuthLoading();
+    document.body.classList.remove('auth-guest');
+
+    // ── 管理者判定 ──
+    const isAdmin = typeof _isAdminEmail === 'function' && _isAdminEmail(user.email);
+    _isAdmin = isAdmin;
+
+    // body クラス制御
+    if (isAdmin) {
+      document.body.classList.add('is-admin');
+    } else {
+      document.body.classList.remove('is-admin');
+    }
+
+    // 管理タブ表示切替
+    const adminNavBtn = document.getElementById('nav-admin');
+    if (adminNavBtn) {
+      adminNavBtn.style.display = isAdmin ? '' : 'none';
+      // CSS も直接上書き（!important を回避）
+      adminNavBtn.style.setProperty('display', isAdmin ? 'flex' : 'none', 'important');
+    }
+
+    // ── UI 更新 ──
+    const displayName = user.displayName || user.email?.split('@')[0] || 'ユーザー';
+    const initial     = displayName.charAt(0).toUpperCase();
+
+    // アバター（ヘッダー）
+    document.querySelectorAll('.app-avatar').forEach(el => { el.textContent = initial; });
+
+    // ドロワー
+    const nameEl = document.querySelector('.drawer-user-name');
+    const subEl  = document.querySelector('.drawer-user-sub');
+    if (nameEl) nameEl.textContent = displayName;
+    if (subEl)  subEl.textContent  = user.email || '';
+
+    // ドロワーアバター（Google 写真対応）
+    const avatarEl = document.querySelector('.drawer-user-avatar');
+    if (avatarEl) {
+      if (user.photoURL) {
+        avatarEl.innerHTML = `<img src="${user.photoURL}" alt="${initial}"
+          style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;" />`;
+      } else {
+        avatarEl.innerHTML = '';
+        avatarEl.textContent = initial;
+      }
+    }
+
+    // appState 同期
+    if (typeof appState !== 'undefined') {
+      appState.set('admin.isAdmin', isAdmin);
+      appState.set('admin.mode', isAdmin ? 'admin' : 'user');
+    }
+
+    // ── データロード ──
+    if (typeof _loadUserEvents === 'function') _loadUserEvents();
+    if (isAdmin && typeof renderAdminList === 'function') {
+      setTimeout(renderAdminList, 200);
+    }
+
+    // ── Firestore users コレクションに保存（非同期・ノンブロッキング）──
+    _saveUserToFirestore(user, isAdmin);
+
+    console.info(
+      `%c[Auth]%c ${user.email} | ${isAdmin ? '👑 管理者' : '👤 一般ユーザー'}`,
+      'background:#39C892;color:#fff;padding:1px 5px;border-radius:2px;font-weight:700;',
+      'color:#3A5C52;font-weight:600;'
+    );
+  };
+})();
+
+// ================================================================
+// ④ _showAuthScreen を完全版に置き換え
+// ================================================================
+(function _patchShowAuthScreen() {
+  window._showAuthScreen = function() {
+    // 管理者状態を完全リセット
+    _isAdmin = false;
+    document.body.classList.remove('is-admin');
+    document.body.classList.add('auth-guest');
+    const adminNavBtn = document.getElementById('nav-admin');
+    if (adminNavBtn) {
+      adminNavBtn.style.removeProperty('display');
+      adminNavBtn.style.display = 'none';
+    }
+    if (typeof appState !== 'undefined') {
+      appState.set('admin.isAdmin', false);
+      appState.set('admin.mode', 'user');
+    }
+
+    // auth-screen 表示
+    const authEl = document.getElementById('auth-screen');
+    if (authEl) {
+      authEl.style.display = '';   // inline style 解除
+      authEl.style.removeProperty('display');
+      authEl.classList.remove('hidden');
+    }
+    _hideAuthLoading();
+  };
+})();
+
+// ================================================================
+// ⑤ authSubmit — Firebase 本接続を優先し、guest fallback を最小化
+// ================================================================
+(function _patchAuthSubmit() {
+  const _origSubmit = window.authSubmit;
+
+  window.authSubmit = async function() {
+    const emailEl = document.getElementById('auth-email');
+    const passEl  = document.getElementById('auth-password');
+    const email   = emailEl?.value?.trim();
+    const pass    = passEl?.value;
+    const errEl   = document.getElementById('auth-error');
+    const loader  = document.getElementById('auth-loader');
+    const btn     = document.getElementById('auth-submit-btn');
+    const isReg   = document.querySelector('.auth-tab.is-active')?.dataset.tab === 'register';
+
+    if (!email || !pass) { if(errEl) errEl.textContent = 'メールアドレスとパスワードを入力してください'; return; }
+    if (pass.length < 6) { if(errEl) errEl.textContent = 'パスワードは6文字以上で入力してください'; return; }
+    if (errEl) errEl.textContent = '';
+    if (loader) loader.style.display = 'block';
+    if (btn)    btn.disabled = true;
+
+    // ── Firebase SDK がロード済みかチェック ──
+    const fbReady = typeof firebase !== 'undefined' &&
+                    firebase.apps?.length > 0 &&
+                    typeof firebase.auth === 'function';
+
+    if (!fbReady) {
+      // Firebase SDK ロード待ち（最大 5 秒）
+      let waited = 0;
+      while (waited < 5000) {
+        await new Promise(r => setTimeout(r, 200));
+        waited += 200;
+        if (typeof firebase !== 'undefined' && firebase.apps?.length > 0) break;
+      }
+    }
+
+    // 再チェック
+    const fbReadyNow = typeof firebase !== 'undefined' &&
+                       firebase.apps?.length > 0 &&
+                       typeof firebase.auth === 'function';
+
+    if (!fbReadyNow) {
+      // 完全フォールバック（SDK 未ロード）
+      if (loader) loader.style.display = 'none';
+      if (btn)    btn.disabled = false;
+      if (errEl)  errEl.textContent = 'Firebase接続中... しばらく待ってから再試行してください';
+      return;
+    }
+
+    // ── Firebase Auth でログイン ──
+    try {
+      const auth = firebase.auth();
+      if (isReg) {
+        await auth.createUserWithEmailAndPassword(email, pass);
+      } else {
+        await auth.signInWithEmailAndPassword(email, pass);
+      }
+      // onAuthStateChanged が _showApp を呼ぶ
+      if (loader) loader.style.display = 'none';
+      if (btn)    btn.disabled = false;
+    } catch(err) {
+      if (loader) loader.style.display = 'none';
+      if (btn)    btn.disabled = false;
+      const msgs = {
+        'auth/user-not-found':          'メールアドレスが登録されていません',
+        'auth/wrong-password':          'パスワードが違います',
+        'auth/email-already-in-use':    'このメールアドレスは既に使われています',
+        'auth/invalid-email':           'メールアドレスの形式が正しくありません',
+        'auth/weak-password':           'パスワードが弱すぎます（6文字以上）',
+        'auth/network-request-failed':  'ネットワークエラーです',
+        'auth/invalid-credential':      'メールアドレスまたはパスワードが正しくありません',
+        'auth/too-many-requests':       'ログイン試行が多すぎます。しばらく待ってください',
+        'auth/api-key-not-valid':       'Firebase設定エラー。管理者にお問い合わせください',
+      };
+      if (errEl) errEl.textContent = msgs[err.code] || err.message || 'エラーが発生しました';
+    }
+  };
+})();
+
+// ================================================================
+// ⑥ authLogout — 完全版（admin 状態リセット含む）
+// ================================================================
+window.authLogout = function() {
+  if (!confirm('ログアウトしますか？')) return;
+
+  // 状態リセット
+  _currentUser = null;
+  _isAdmin = false;
+  localStorage.removeItem('pronexax.guestUser');
+
+  // Firebase Sign Out
+  if (typeof firebase !== 'undefined' && firebase.apps?.length) {
+    firebase.auth().signOut().then(() => {
+      console.info('[Auth] Firebase サインアウト完了');
+    }).catch(e => console.warn('[Auth] signOut error:', e));
+  }
+
+  // UI リセット
+  document.body.classList.remove('is-admin');
+  document.body.classList.add('auth-guest');
+  const adminNavBtn = document.getElementById('nav-admin');
+  if (adminNavBtn) adminNavBtn.style.display = 'none';
+  if (typeof appState !== 'undefined') {
+    appState.set('admin.isAdmin', false);
+    appState.set('admin.mode', 'user');
+  }
+
+  _showAuthScreen();
+  if (typeof closeDrawer === 'function') closeDrawer();
+  if (typeof showToast === 'function') showToast('ログアウトしました');
+};
+
+// ================================================================
+// ⑦ admin-only クラスの自動適用
+// ================================================================
+(function _applyAdminOnlyClasses() {
+  function apply() {
+    // 管理専用ボタンに admin-only クラスを付与
+    const adminSelectors = [
+      '.admin-url-btn',        // URL解析ボタン
+      '.admin-add-btn',        // 大会追加ボタン
+      '.admin-edit-btn',       // 編集ボタン
+      '.admin-delete-btn',     // 削除ボタン
+      '#atm-overlay',          // 大会追加モーダル（オーバーレイ）
+      '#url-modal-overlay',    // URL解析モーダル
+      '#admin-login-overlay',  // 管理者パスコードログイン
+    ];
+
+    adminSelectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => {
+        // #から始まる（ID指定）のオーバーレイはスキップ（モーダル自体はそのまま）
+        if (sel.startsWith('#overlay') || sel === '#atm-overlay' || sel === '#url-modal-overlay') return;
+        if (!el.classList.contains('admin-only')) {
+          el.classList.add('admin-only');
+        }
+      });
+    });
+
+    // admin-card の edit/delete ボタン
+    document.querySelectorAll('.admin-card-actions').forEach(el => {
+      el.classList.add('admin-only');
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(apply, 100), { once: true });
+  } else {
+    setTimeout(apply, 100);
+  }
+
+  // renderAdminList 後にも再適用
+  const _origRender = window.renderAdminList;
+  if (typeof _origRender === 'function') {
+    window.renderAdminList = function() {
+      if (typeof _origRender === 'function') _origRender();
+      setTimeout(apply, 50);
+    };
+  }
+})();
+
+// ================================================================
+// ⑧ auth ちらつき防止の最終調整
+// ================================================================
+(function _antiFlicker() {
+  // onAuthStateChanged が解決するまで app-frame を透明に保つ
+  // （すでに auth-screen は display:none で始まっているため、
+  //   onAuthStateChanged が来るまで白画面になる可能性を防ぐ）
+  // app-frame は class="app-frame" で定義
+  const appFrame = document.querySelector('.app-frame') ||
+                   document.getElementById('app-frame');
+  if (appFrame) {
+    appFrame.style.opacity = '0';
+    appFrame.style.transition = 'opacity .25s ease';
+  }
+
+  // onAuthStateChanged が来たら表示（最大 3 秒でフォールバック）
+  let revealed = false;
+  function _revealApp() {
+    if (revealed) return;
+    revealed = true;
+    if (appFrame) {
+      appFrame.style.opacity = '1';
+    }
+  }
+
+  // Firebase SDK ロード後に onAuthStateChanged が来る（最大 3 秒待つ）
+  const _fallbackReveal = setTimeout(_revealApp, 3000);
+
+  // _showApp / _showAuthScreen が呼ばれたら reveal
+  const _origShowAppGlobal = window._showApp;
+  window._showApp = function(user) {
+    clearTimeout(_fallbackReveal);
+    _revealApp();
+    if (typeof _origShowAppGlobal === 'function') _origShowAppGlobal(user);
+  };
+  const _origShowAuth = window._showAuthScreen;
+  window._showAuthScreen = function() {
+    clearTimeout(_fallbackReveal);
+    _revealApp();
+    if (typeof _origShowAuth === 'function') _origShowAuth();
+  };
+})();
+
+// ================================================================
+// ⑨ 初期化確認ログ
+// ================================================================
+console.info(
+  '%c[Auth Full]%c 管理者分離システム 初期化完了\n' +
+  '  ADMIN_EMAILS: %d件登録済み',
+  'background:#E05555;color:#fff;padding:1px 5px;border-radius:2px;font-weight:700;',
+  'color:#C04040;font-weight:600;',
+  typeof ADMIN_EMAILS !== 'undefined' ? ADMIN_EMAILS.length : 0
+);
+
+</script>
+<script>
+/* ================================================================
    ★★★ Firestore CMS 層 — 管理画面 CRUD ★★★
 
    既存構造を壊さず以下を追加:
@@ -17355,6 +17762,61 @@ function _applyIOSHandle(containerEl) {
 .fbs-sheet.ios-dismissing,
 .add-cat-sheet.ios-dismissing {
   transform: translateY(110vh) !important;
+}
+
+/* ================================================================
+   ★★★ Auth 管理者分離 最終CSS ★★★
+   ================================================================ */
+
+/* admin-only: デフォルト非表示 */
+.admin-only {
+  display: none !important;
+}
+/* 管理者: admin-only 要素を表示 */
+body.is-admin .admin-only {
+  display: revert !important;
+}
+/* flex を使う管理者要素 */
+body.is-admin .admin-header-actions.admin-only,
+body.is-admin .admin-card-actions.admin-only {
+  display: flex !important;
+}
+/* button の admin-only */
+body.is-admin button.admin-only,
+body.is-admin .admin-url-btn,
+body.is-admin .admin-add-btn {
+  display: inline-flex !important;
+}
+
+/* admin-nav-btn: CSS で制御（JS の style= より優先させる） */
+.admin-nav-btn {
+  display: none !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+body.is-admin .admin-nav-btn {
+  display: flex !important;
+}
+
+/* page-admin: 管理者のみ */
+#page-admin {
+  display: none !important;
+}
+body.is-admin #page-admin.active {
+  display: flex !important;
+}
+
+/* auth-screen.hidden */
+#auth-screen.hidden,
+#auth-screen[style*="display: none"],
+#auth-screen[style*="display:none"] {
+  display: none !important;
+}
+
+/* app-frame のフェードイン */
+.app-frame {
+  transition: opacity .3s ease;
 }
 `;
   document.head.appendChild(style);
