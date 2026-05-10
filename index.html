@@ -5841,11 +5841,77 @@ body.is-admin .admin-badge{display:block;}
   z-index: 100;
 }
 
+
+/* ================================================================
+   ★★★ Google Auth / Admin 表示制御 CSS ★★★
+   ================================================================ */
+
+/* 管理タブ: デフォルト非表示。body.is-admin 時に表示 */
+.admin-nav-btn {
+  display: none !important;
+}
+body.is-admin .admin-nav-btn {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 管理ページ: 非管理者には非表示 */
+#page-admin {
+  display: none;
+}
+body.is-admin #page-admin {
+  display: flex;
+}
+/* active クラスが付いた時だけ可視 */
+#page-admin.active {
+  display: none;
+}
+body.is-admin #page-admin.active {
+  display: flex;
+}
+
+/* 管理専用 UI（大会追加ボタン等）*/
+.admin-only {
+  display: none !important;
+}
+body.is-admin .admin-only {
+  display: initial !important;
+}
+
+/* auth-screen の hidden クラス */
+#auth-screen.hidden {
+  display: none !important;
+}
+
+/* Google ログインボタン hover */
+.auth-sns-btn:hover {
+  background: #F8F8F8;
+  border-color: #D0D0D0;
+}
+.auth-sns-btn:active {
+  transform: scale(0.94);
+  opacity: 0.8;
+}
+
+/* ドロワーのユーザーアバター（Google 写真対応）*/
+.drawer-user-avatar {
+  overflow: hidden;
+}
+.drawer-user-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
 </style>
 
 
 <!-- ★★★ Firebase Auth ログイン画面 ★★★ -->
-<div id="auth-screen">
+<div id="auth-screen" style="display:none;">
   <div class="auth-bg"></div>
   <div class="auth-blob auth-blob-1"></div>
   <div class="auth-blob auth-blob-2"></div>
@@ -5930,7 +5996,7 @@ body.is-admin .admin-badge{display:block;}
       <div class="auth-divider"><span>または</span></div>
 
       <div class="auth-sns-row">
-        <button class="auth-sns-btn" aria-label="Googleでログイン" type="button">
+        <button class="auth-sns-btn" aria-label="Googleでログイン" type="button" onclick="authGoogleSignIn()">
           <svg width="22" height="22" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -6174,15 +6240,31 @@ body.is-admin .admin-badge{display:block;}
     </div>
   </div>
 
+<!-- ★ Auth ローディングオーバーレイ（iOS リダイレクト中のちらつき防止） -->
+<div id="auth-loading-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(240,251,246,0.97);flex-direction:column;align-items:center;justify-content:center;gap:20px;">
+  <div style="width:48px;height:48px;border-radius:50%;border:3px solid #E0F5EC;border-top-color:#1AAF7A;animation:authSpin .8s linear infinite;"></div>
+  <p class="auth-loading-text" style="font-size:14px;font-weight:600;color:#3A5C52;letter-spacing:.02em;">読み込み中…</p>
+  <style>@keyframes authSpin{to{transform:rotate(360deg)}}</style>
+</div>
+
   <!-- ★★★ ハンバーガードロワー ★★★ -->
   <div class="drawer-overlay" id="drawer-overlay"></div>
   <aside class="drawer" id="drawer" aria-hidden="true">
     <div class="drawer-scroll">
       <div class="drawer-user">
-        <div class="drawer-user-avatar">山田</div>
-        <div>
-          <div class="drawer-user-name">山田 太郎</div>
-          <div class="drawer-user-sub">ProNexaX ユーザー</div>
+        <div class="drawer-user-avatar">G</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="drawer-user-name">ユーザー</div>
+            <!-- 管理者バッジ（管理者のみ表示） -->
+            <span class="admin-only" style="
+              font-size:9px;font-weight:700;letter-spacing:.04em;
+              background:#1AAF7A;color:#fff;
+              padding:1px 6px;border-radius:20px;
+              flex-shrink:0;
+            ">ADMIN</span>
+          </div>
+          <div class="drawer-user-sub">ログイン中</div>
         </div>
       </div>
       <div class="drawer-section">
@@ -6428,6 +6510,16 @@ body.is-admin .admin-badge{display:block;}
         <path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>
       </svg>
       <span class="bnav-label">マイページ</span>
+    </button>
+    <!-- ★ 管理タブ：管理者のみ表示（body.is-admin が付いた時に display:flex） -->
+    <button class="bnav-btn admin-nav-btn" id="nav-admin" onclick="switchPage('admin')" style="display:none">
+      <svg id="icon-admin" width="20" height="20" viewBox="0 0 22 22" fill="none">
+        <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#9BB8AE" stroke-width="1.7"/>
+        <rect x="12" y="3" width="7" height="7" rx="1.5" stroke="#9BB8AE" stroke-width="1.7"/>
+        <rect x="3" y="12" width="7" height="7" rx="1.5" stroke="#9BB8AE" stroke-width="1.7"/>
+        <rect x="12" y="12" width="7" height="7" rx="1.5" stroke="#9BB8AE" stroke-width="1.7"/>
+      </svg>
+      <span class="bnav-label">管理</span>
     </button>
   </div>
   <div class="home-bar"></div>
@@ -6906,6 +6998,19 @@ const FIREBASE_CONFIG = {
 // ★ 実際の Firebase 設定が入っているため、プレースホルダー判定は常に false
 const _FIREBASE_IS_PLACEHOLDER = false;
 
+// ================================================================
+// ★★★ 管理者メールアドレスリスト ★★★
+// ここに管理者の Gmail を追加してください
+// ================================================================
+const ADMIN_EMAILS = [
+  // "your-email@gmail.com",  // ← 実際のメールアドレスに書き換えてください
+];
+// 管理者判定
+function _isAdminEmail(email) {
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email.toLowerCase().trim());
+}
+
 let _fbAuthReady = false;
 let _currentUser = null;
 
@@ -6953,8 +7058,11 @@ function _initFirebaseAuth() {
             auth.onAuthStateChanged(user => {
               _currentUser = user;
               _fbAuthReady  = true;
+              _hideAuthLoading();           // ローディングオーバーレイを解除
               _onAuthStateChanged(user);
             });
+            // iOS リダイレクトログインの結果を処理
+            _handleRedirectResult();
             // Firestore — 認証状態に関係なく即時起動
             _initFirestore();
           } catch(e) {
@@ -7015,27 +7123,72 @@ function _onAuthStateChanged(user) {
 }
 
 function _showAuthScreen() {
-  document.getElementById('auth-screen')?.classList.remove('hidden');
+  const authEl = document.getElementById('auth-screen');
+  if (authEl) {
+    authEl.style.display = '';  // inline style を解除
+    authEl.classList.remove('hidden');
+  }
   document.getElementById('auth-loading')?.classList.add('hidden');
   document.body.classList.add('auth-guest');
+  // 管理者状態もリセット
+  _isAdmin = false;
+  document.body.classList.remove('is-admin');
+  const adminBtn = document.getElementById('nav-admin');
+  if (adminBtn) adminBtn.style.display = 'none';
 }
 
 function _showApp(user) {
   _currentUser = user;
   document.getElementById('auth-screen')?.classList.add('hidden');
   document.body.classList.remove('auth-guest');
+
+  // ★ 管理者メール判定
+  const isAdmin = _isAdminEmail(user.email);
+  _isAdmin = isAdmin;
+  if (isAdmin) {
+    document.body.classList.add('is-admin');
+  } else {
+    document.body.classList.remove('is-admin');
+  }
+
+  // ★ 管理タブの表示/非表示
+  const adminNavBtn = document.getElementById('nav-admin');
+  if (adminNavBtn) adminNavBtn.style.display = isAdmin ? '' : 'none';
+
   // アバターにイニシャル表示
-  const initial = (user.displayName || user.email || '?').charAt(0).toUpperCase();
+  const displayName = user.displayName || user.email || '?';
+  const initial = displayName.charAt(0).toUpperCase();
   document.querySelectorAll('.app-avatar').forEach(el => el.textContent = initial);
+
   // ドロワーのユーザー情報更新
   const nameEl = document.querySelector('.drawer-user-name');
-  const subEl = document.querySelector('.drawer-user-sub');
-  if (nameEl) nameEl.textContent = user.displayName || user.email;
-  if (subEl) subEl.textContent = user.email || '';
+  const subEl  = document.querySelector('.drawer-user-sub');
+  if (nameEl) nameEl.textContent = displayName;
+  if (subEl)  subEl.textContent  = user.email || '';
+
+  // アバター（ドロワー）
   const avatarEl = document.querySelector('.drawer-user-avatar');
-  if (avatarEl) avatarEl.textContent = initial;
+  if (avatarEl) {
+    if (user.photoURL) {
+      // Google ログイン時はプロフィール画像を使用
+      avatarEl.innerHTML = `<img src="${user.photoURL}" alt="${initial}"
+        style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />`;
+    } else {
+      avatarEl.textContent = initial;
+    }
+  }
+
   // ユーザー固有ストレージキーでデータ読み込み
   _loadUserEvents();
+
+  // 管理者ログイン後に管理リストを更新
+  if (isAdmin && typeof renderAdminList === 'function') {
+    setTimeout(renderAdminList, 300);
+  }
+
+  console.info(
+    `[Auth] ログイン: ${user.email} | 管理者: ${isAdmin ? '✅' : '❌'}`
+  );
 }
 
 // ユーザー固有のイベントデータ読み込み
@@ -7083,6 +7236,15 @@ function _requireAuth(callback) {
 window.authLogout = function() {
   if (!confirm('ログアウトしますか？')) return;
   localStorage.removeItem('pronexax.guestUser');
+  // 管理者状態をリセット
+  _isAdmin = false;
+  document.body.classList.remove('is-admin');
+  const adminNavBtn = document.getElementById('nav-admin');
+  if (adminNavBtn) adminNavBtn.style.display = 'none';
+  if (typeof appState !== 'undefined') {
+    appState.set('admin.isAdmin', false);
+    appState.set('admin.mode', 'user');
+  }
   if (typeof firebase !== 'undefined' && firebase.apps?.length) {
     firebase.auth().signOut().catch(()=>{});
   }
@@ -7091,6 +7253,84 @@ window.authLogout = function() {
   _showAuthScreen();
   if (typeof closeDrawer === 'function') closeDrawer();
 };
+
+// ── Google ログイン ──
+window.authGoogleSignIn = async function() {
+  const errEl  = document.getElementById('auth-error');
+  const loader = document.getElementById('auth-loader');
+  const btn    = document.querySelector('.auth-sns-btn[aria-label="Googleでログイン"]');
+
+  if (errEl)  errEl.textContent = '';
+  if (loader) loader.style.display = 'block';
+  if (btn)    { btn.disabled = true; btn.style.opacity = '0.6'; }
+
+  // Firestore 未ロードまたはデモモード
+  if (_FIREBASE_IS_PLACEHOLDER || typeof firebase === 'undefined' || !firebase.apps?.length) {
+    await new Promise(r => setTimeout(r, 600));
+    if (loader) loader.style.display = 'none';
+    if (btn)    { btn.disabled = false; btn.style.opacity = ''; }
+    if (errEl)  errEl.textContent = 'Firebase未接続のためGoogleログインはご利用いただけません';
+    return;
+  }
+
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    // スコープ追加
+    provider.addScope('profile');
+    provider.addScope('email');
+    // iPhone Safari では signInWithPopup より signInWithRedirect が安定
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      // リダイレクト前にローディング画面を表示
+      _showAuthLoading('Googleアカウントへ移動中…');
+      await firebase.auth().signInWithRedirect(provider);
+      // ← このコード以降はリダイレクト後に実行されない
+    } else {
+      const result = await firebase.auth().signInWithPopup(provider);
+      // _onAuthStateChanged が _showApp を呼ぶ
+    }
+  } catch(err) {
+    if (loader) loader.style.display = 'none';
+    if (btn)    { btn.disabled = false; btn.style.opacity = ''; }
+    const msgs = {
+      'auth/popup-closed-by-user':       'ログインがキャンセルされました',
+      'auth/popup-blocked':              'ポップアップがブロックされました',
+      'auth/cancelled-popup-request':    'ログインがキャンセルされました',
+      'auth/network-request-failed':     'ネットワークエラーです',
+      'auth/account-exists-with-different-credential': 'このメールは別の方法で登録されています',
+    };
+    if (errEl) errEl.textContent = msgs[err.code] || err.message || 'Googleログインに失敗しました';
+  }
+};
+
+// ── リダイレクト結果の処理（iOS Safari 用）──
+function _handleRedirectResult() {
+  if (typeof firebase === 'undefined' || !firebase.apps?.length) return;
+  firebase.auth().getRedirectResult().then(result => {
+    if (result && result.user) {
+      // _onAuthStateChanged が呼ばれるので特に何もしなくてよい
+      console.info('[Auth] Google リダイレクトログイン成功:', result.user.email);
+    }
+  }).catch(err => {
+    if (err.code !== 'auth/no-auth-event') {
+      console.error('[Auth] getRedirectResult error:', err);
+    }
+  });
+}
+
+// ── Auth ローディング中表示（ちらつき防止）──
+function _showAuthLoading(msg) {
+  const overlay = document.getElementById('auth-loading-overlay');
+  if (overlay) {
+    const txt = overlay.querySelector('.auth-loading-text');
+    if (txt) txt.textContent = msg || '読み込み中…';
+    overlay.style.display = 'flex';
+  }
+}
+function _hideAuthLoading() {
+  const overlay = document.getElementById('auth-loading-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
 
 // ================================================================
 // 認証UIのイベントハンドラ
@@ -7184,7 +7424,11 @@ const NAV_ICONS={
   search:{active:`<circle cx="10" cy="10" r="6" stroke="#1AAF7A" stroke-width="1.7"/><line x1="14.5" y1="14.5" x2="19" y2="19" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>`,inactive:`<circle cx="10" cy="10" r="6" stroke="#9BB8AE" stroke-width="1.7"/><line x1="14.5" y1="14.5" x2="19" y2="19" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>`},
   finance:{active:`<rect x="3" y="5" width="16" height="12" rx="2" stroke="#1AAF7A" stroke-width="1.7"/><line x1="7" y1="11" x2="15" y2="11" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/><line x1="11" y1="8" x2="11" y2="14" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>`,inactive:`<rect x="3" y="5" width="16" height="12" rx="2" stroke="#9BB8AE" stroke-width="1.7"/><line x1="7" y1="11" x2="15" y2="11" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/><line x1="11" y1="8" x2="11" y2="14" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>`},
   mypage:{active:`<circle cx="11" cy="8" r="3.5" stroke="#1AAF7A" stroke-width="1.7"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>`,inactive:`<circle cx="11" cy="8" r="3.5" stroke="#9BB8AE" stroke-width="1.7"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>`}
-};
+,
+  admin:{
+    active:`<rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#1AAF7A" stroke-width="1.7"/><rect x="12" y="3" width="7" height="7" rx="1.5" stroke="#1AAF7A" stroke-width="1.7"/><rect x="3" y="12" width="7" height="7" rx="1.5" stroke="#1AAF7A" stroke-width="1.7"/><rect x="12" y="12" width="7" height="7" rx="1.5" stroke="#1AAF7A" stroke-width="1.7"/>`,
+    inactive:`<rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#9BB8AE" stroke-width="1.7"/><rect x="12" y="3" width="7" height="7" rx="1.5" stroke="#9BB8AE" stroke-width="1.7"/><rect x="3" y="12" width="7" height="7" rx="1.5" stroke="#9BB8AE" stroke-width="1.7"/><rect x="12" y="12" width="7" height="7" rx="1.5" stroke="#9BB8AE" stroke-width="1.7"/>`,
+  }};
 
 
 // ── 新デザイン用追加関数 ─────────────────────────────────────────
@@ -8043,6 +8287,11 @@ const CELL_DRAG_THRESHOLD=8;
 
 function switchPage(page){
   // ── ページ切替の基本処理 ──
+  // 管理ページは管理者のみアクセス可
+  if (page === 'admin' && !_isAdmin) {
+    showToast('管理者のみアクセスできます');
+    return;
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
 
@@ -8062,7 +8311,7 @@ function switchPage(page){
   }
 
   // ── ナビゲーションボタン状態更新 ──
-  ['calendar','search','finance','mypage'].forEach(key=>{
+  ['calendar','search','finance','mypage','admin'].forEach(key=>{
     const btn=document.getElementById('nav-'+key),icon=document.getElementById('icon-'+key);
     const lbl=btn.querySelector('.bnav-label');btn.classList.remove('active');
     lbl.style.color='';lbl.style.fontWeight='';
