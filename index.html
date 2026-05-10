@@ -9972,216 +9972,442 @@ function closeTournamentModal(){
 }
 
 // モーダル内容を描画
+/* ============================================================
+   ProNexaX — 大会詳細モーダル PLATFORM v3
+   プロゴルフ大会情報プラットフォーム完全版
+   ============================================================ */
+
+/* ---------- ユーティリティ ---------- */
+function _pxEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function _pxFmtDate(ds){
+  if(!ds)return null;
+  try{
+    const d=new Date(ds+'T00:00:00');
+    const w=['日','月','火','水','木','金','土'][d.getDay()];
+    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${w}）`;
+  }catch(e){return ds;}
+}
+
+function _pxDayDiff(ds){
+  if(!ds)return null;
+  try{
+    const today=new Date(new Date().toISOString().slice(0,10)+'T00:00:00');
+    return Math.round((new Date(ds+'T00:00:00')-today)/86400000);
+  }catch(e){return null;}
+}
+
+function _pxStatus(t){
+  // calcTournamentStatusがあれば使用
+  if(typeof calcTournamentStatus==='function'){
+    const raw=t._raw||t;
+    return calcTournamentStatus({
+      status:t.status||raw.status,
+      startDate:t.start||raw.startDate,
+      endDate:t.end||raw.endDate,
+      entryDeadline:t.entryDeadline||raw.entryDeadline,
+    });
+  }
+  const today=new Date().toISOString().slice(0,10);
+  const s=t.start,en=t.end,dl=t.entryDeadline,st=t.status;
+  if(st&&st!=='tbd')return st;
+  if(!s)return'tbd';
+  if(today>(en||s))return'ended';
+  if(today>=s)return'ongoing';
+  if(dl&&today>dl)return'closed';
+  if(dl){const d=(new Date(dl)-new Date(today))/86400000;if(d<=7)return'closing_soon';}
+  return'open';
+}
+
+/* ---------- Toast ---------- */
+let _pxToastTimer=null;
+function _pxToast(msg,type){
+  let el=document.getElementById('px-toast');
+  if(!el){
+    el=document.createElement('div');el.id='px-toast';
+    el.style.cssText='position:fixed;bottom:calc(env(safe-area-inset-bottom,0px)+88px);left:50%;transform:translateX(-50%) translateY(16px);background:rgba(20,20,22,.92);color:#fff;font-size:13px;font-weight:600;padding:10px 20px;border-radius:24px;white-space:nowrap;z-index:9999;opacity:0;transition:opacity .22s,transform .22s cubic-bezier(.34,1.56,.64,1);pointer-events:none;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);max-width:86vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.28);';
+    document.body.appendChild(el);
+  }
+  if(type==='error')el.style.background='rgba(176,28,28,.94)';
+  else if(type==='success')el.style.background='rgba(10,100,58,.94)';
+  else el.style.background='rgba(20,20,22,.92)';
+  el.textContent=msg;
+  void el.offsetWidth;
+  el.style.opacity='1';el.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(_pxToastTimer);
+  _pxToastTimer=setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(-50%) translateY(16px)';},2600);
+}
+
+/* ---------- Map Sheet ---------- */
+function _pxOpenMapSheet(courseName,place,country){
+  let ov=document.getElementById('px-map-overlay');
+  if(!ov){
+    ov=document.createElement('div');ov.id='px-map-overlay';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.44);z-index:8000;display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .22s ease;';
+    ov.innerHTML=`<div id="px-map-sheet" style="background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:560px;padding:0 0 calc(env(safe-area-inset-bottom,0px)+8px);transform:translateY(100%);transition:transform .32s cubic-bezier(.32,1,.25,1);overflow:hidden;">
+      <div style="display:flex;justify-content:center;padding:10px 0 2px;"><div style="width:38px;height:4px;border-radius:2px;background:rgba(0,0,0,.13);"></div></div>
+      <div id="px-map-title" style="font-size:13px;font-weight:700;color:#8e8e93;text-align:center;padding:4px 16px 10px;letter-spacing:.2px;"></div>
+      <div id="px-map-name" style="font-size:16px;font-weight:800;color:#1d1d1f;text-align:center;padding:0 16px 14px;border-bottom:.5px solid rgba(0,0,0,.08);letter-spacing:-.3px;line-height:1.35;"></div>
+      <button id="px-gmap-btn" style="display:flex;align-items:center;gap:14px;padding:15px 22px;border:none;background:none;width:100%;cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit;text-align:left;">
+        <div style="width:46px;height:46px;border-radius:12px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🗺️</div>
+        <div><div style="font-size:15px;font-weight:700;color:#1d1d1f;margin-bottom:2px;">Google マップ</div><div style="font-size:12px;color:#8e8e93;">ブラウザで開く</div></div>
+        <svg style="margin-left:auto;color:#c7c7cc;" width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M9 6l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="px-amap-btn" style="display:flex;align-items:center;gap:14px;padding:15px 22px;border:none;border-top:.5px solid rgba(0,0,0,.07);background:none;width:100%;cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit;text-align:left;">
+        <div style="width:46px;height:46px;border-radius:12px;background:#FFF3E0;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🍎</div>
+        <div><div style="font-size:15px;font-weight:700;color:#1d1d1f;margin-bottom:2px;">Apple マップ</div><div style="font-size:12px;color:#8e8e93;">マップアプリで開く</div></div>
+        <svg style="margin-left:auto;color:#c7c7cc;" width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M9 6l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="px-map-cancel" style="display:block;width:calc(100% - 28px);margin:10px 14px 0;padding:15px;border:none;border-radius:14px;background:rgba(0,0,0,.05);color:#1d1d1f;font-size:15px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit;">キャンセル</button>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click',e=>{if(e.target===ov)_pxCloseMapSheet();});
+    document.getElementById('px-map-cancel').addEventListener('click',_pxCloseMapSheet);
+  }
+  const q=encodeURIComponent([courseName,place,country==='japan'?'':country].filter(Boolean).join(' '));
+  document.getElementById('px-map-title').textContent='地図アプリを選択';
+  document.getElementById('px-map-name').textContent=courseName||(place||'');
+  document.getElementById('px-gmap-btn').onclick=()=>{window.open(`https://www.google.com/maps/search/?api=1&query=${q}`,'_blank','noopener');_pxCloseMapSheet();};
+  document.getElementById('px-amap-btn').onclick=()=>{window.open(`maps://?q=${q}`,'_blank','noopener');_pxCloseMapSheet();};
+  // ダークモード対応
+  const isDark=document.documentElement.dataset.theme==='dark';
+  const sheet=document.getElementById('px-map-sheet');
+  sheet.style.background=isDark?'#1C1C1E':'#fff';
+  ov.style.display='flex';
+  requestAnimationFrame(()=>{
+    ov.style.opacity='1';
+    sheet.style.transform='translateY(0)';
+  });
+}
+function _pxCloseMapSheet(){
+  const ov=document.getElementById('px-map-overlay');
+  const sheet=document.getElementById('px-map-sheet');
+  if(!ov)return;
+  ov.style.opacity='0';
+  sheet.style.transform='translateY(100%)';
+  setTimeout(()=>{ov.style.display='none';},320);
+}
+
+/* ---------- Skeleton ---------- */
+function _pxSkeleton(){
+  const bg1='linear-gradient(90deg,#f0f0f5 25%,#e6e6ee 50%,#f0f0f5 75%)';
+  const bg2='linear-gradient(90deg,#f8f4e8 25%,#ede9d8 50%,#f8f4e8 75%)';
+  const anim='background-size:300% 100%;animation:pxShimmer 1.5s ease-in-out infinite;';
+  return `<style>@keyframes pxShimmer{0%{background-position:300% 0}100%{background-position:-300% 0}}</style>
+  <div style="padding:12px 14px;display:flex;flex-direction:column;gap:14px;">
+    <!-- status badge -->
+    <div style="display:flex;gap:8px;">
+      <div style="width:72px;height:24px;border-radius:12px;background:${bg1};${anim}"></div>
+      <div style="width:52px;height:24px;border-radius:12px;background:${bg1};${anim}animation-delay:.1s;"></div>
+    </div>
+    <!-- prize hero -->
+    <div style="display:flex;gap:8px;height:82px;">
+      <div style="flex:1;border-radius:16px;background:${bg2};${anim}animation-delay:.05s;"></div>
+      <div style="flex:1;border-radius:16px;background:${bg2};${anim}animation-delay:.15s;"></div>
+    </div>
+    <!-- section label -->
+    <div style="width:80px;height:11px;border-radius:5px;background:${bg1};${anim}animation-delay:.08s;"></div>
+    <!-- card rows -->
+    <div style="border-radius:16px;overflow:hidden;border:.5px solid rgba(0,0,0,.06);">
+      ${[1,2,3,4,5].map((i)=>`<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:.5px solid rgba(0,0,0,.04);">
+        <div style="width:28px;height:28px;border-radius:8px;background:${bg1};${anim}animation-delay:${i*0.06}s;flex-shrink:0;"></div>
+        <div style="width:60px;height:11px;border-radius:5px;background:${bg1};${anim}animation-delay:${i*0.06+0.05}s;flex-shrink:0;"></div>
+        <div style="flex:1;height:13px;border-radius:5px;background:${bg1};${anim}animation-delay:${i*0.06+0.1}s;"></div>
+      </div>`).join('')}
+    </div>
+    <!-- section label -->
+    <div style="width:60px;height:11px;border-radius:5px;background:${bg1};${anim}animation-delay:.2s;"></div>
+    <!-- link grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      ${[1,2,3,4].map(i=>`<div style="height:60px;border-radius:14px;background:${bg1};${anim}animation-delay:${i*0.08}s;"></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ---------- SVG icons ---------- */
+const _PX_IC={
+  cal:`<rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/>`,
+  clock:`<circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M11 7v4.5l3 1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
+  pin:`<path d="M11 3.5a5 5 0 015 5c0 4-5 10-5 10S6 12.5 6 8.5a5 5 0 015-5z" stroke="currentColor" stroke-width="1.7"/><circle cx="11" cy="8.5" r="1.8" fill="currentColor"/>`,
+  golf:`<path d="M11 3v10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M11 3l5 2.5-5 2.5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><ellipse cx="11" cy="17" rx="4" ry="1.5" stroke="currentColor" stroke-width="1.5"/>`,
+  org:`<path d="M3 19c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="11" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/>`,
+  trophy:`<path d="M6 3h10v8a5 5 0 01-10 0V3z" stroke="currentColor" stroke-width="1.7"/><path d="M6 5H3v2a3 3 0 003 3M16 5h3v2a3 3 0 01-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="11" y1="16" x2="11" y2="19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="7" y1="19" x2="15" y2="19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
+  money:`<circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M11 7v1m0 6v1m-2.5-4.5h3a1.5 1.5 0 010 3H9m0-3h2a1.5 1.5 0 000-3H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  doc:`<rect x="4" y="3" width="14" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/><line x1="7" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="12" x2="15" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="16" x2="11" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  user:`<circle cx="11" cy="8" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
+  num:`<path d="M5 8h12M5 12h12M5 16h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
+  cancel:`<circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 8l6 6M14 8l-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
+  globe:`<circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M2 11h18M11 2a13.5 13.5 0 010 18M11 2a13.5 13.5 0 000 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  ig:`<rect x="3" y="3" width="16" height="16" rx="4.5" stroke="currentColor" stroke-width="1.7"/><circle cx="11" cy="11" r="3.5" stroke="currentColor" stroke-width="1.5"/><circle cx="15.5" cy="6.5" r=".85" fill="currentColor"/>`,
+  entry:`<path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M9 11l2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="1" width="6" height="4" rx="1" stroke="currentColor" stroke-width="1.7"/>`,
+  ext:`<path d="M9 4H4a1 1 0 00-1 1v13a1 1 0 001 1h13a1 1 0 001-1v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 3h5m0 0v5m0-5L10 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+  flag:`<path d="M5 3v16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 3h12l-3 4.5h3l-3 4.5H5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>`,
+};
+
+function _pxIcon(type,size=15){return`<svg width="${size}" height="${size}" viewBox="0 0 22 22" fill="none">${_PX_IC[type]||''}</svg>`;}
+
+function _pxRow(iconType,iconBg,iconColor,label,valueHtml,extra=''){
+  if(!valueHtml)valueHtml=`<span style="color:var(--text-tertiary);font-style:italic;font-weight:400;font-size:12px;">未設定</span>`;
+  return`<div class="tdm-row" style="padding:11px 14px;gap:12px;display:flex;align-items:flex-start;">
+    <div style="width:30px;height:30px;border-radius:9px;background:${iconBg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="15" height="15" viewBox="0 0 22 22" fill="none" style="color:${iconColor};">${_PX_IC[iconType]||''}</svg>
+    </div>
+    <div style="width:68px;flex-shrink:0;font-size:11px;font-weight:600;color:var(--text-tertiary);line-height:1.5;padding-top:3px;letter-spacing:.05px;">${label}</div>
+    <div style="flex:1;min-width:0;font-size:13.5px;font-weight:500;color:var(--text-primary);line-height:1.6;letter-spacing:-.1px;word-break:break-all;${extra}">${valueHtml}</div>
+  </div>`;
+}
+
+/* ============================================================
+   メイン描画関数
+   ============================================================ */
 function _renderTdm(t){
   const catColor = CAT_COLORS[t.cat] || '#8090A0';
+  /* ── フィールド正規化（flat / _raw 両対応） ── */
+  const raw = t._raw || t;
   const catLabel = CAT_LABELS[t.cat] || t.cat;
   const genderLabel = t.gender==='womens'?'女子':t.gender==='both'?'男女':t.gender==='mens'?'男子':'';
-  const status = _searchStatus(t);
-  const statusLabel = {live:'開催中',upcoming:'予定',ended:'終了'}[status];
+  const status = _pxStatus(t);
   const isAdded = addedIds.has(t.id);
-  const isFav = favTournaments.has(t.id);
+  const isFav   = favTournaments.has(t.id);
 
-  // ヘッダー
+  /* ── 日程 ── */
+  const startDate = t.start   || raw.startDate || '';
+  const endDate   = t.end     || raw.endDate   || '';
+  const deadline  = t.entryDeadline  || raw.entryDeadline  || '';
+  const cancelDl  = t.cancelDeadline || raw.cancelDeadline || '';
+
+  /* ── 会場・地域 ── */
+  const courseName = t.courseName || raw.course || raw.courseName || '';
+  const place      = t.place || raw.place || '';
+  const country    = t.country || raw.country || 'japan';
+  const organizer  = t.organizer || raw.organizer || '';
+
+  /* ── 賞金・費用 ── */
+  const prize         = t.prize            || raw.prize            || '';
+  const prizeWinner   = t.prizeWinner      || raw.prizeWinner      || '';
+  const entryFee      = t.entryFee         || raw.entryFee         || '';
+  const pracFee       = t.practiceRoundFee || raw.practiceRoundFee || '';
+  const capacity      = t.capacity         || raw.capacity         || '';
+  const entryMethod   = t.entryMethod      || raw.entryMethod      || '';
+  const qualification = t.qualification    || raw.qualification    || '';
+  const notes         = t.notes            || raw.notes            || '';
+
+  /* ── URL（links{} 対応） ── */
+  const lk = raw.links || {};
+  const officialUrl = t.officialUrl || lk.official || lk.website || '';
+  const igUrl       = t.igUrl       || lk.instagram || '';
+  const entryUrl    = t.entryUrl    || lk.entry || '';
+  const pairUrl     = t.pairUrl     || lk.pairs || lk.pairing || '';
+  const resultUrl   = t.resultUrl   || lk.result || '';
+
+  /* ① ヘッダー */
   document.getElementById('tdm-title').textContent = t.name;
-  document.getElementById('tdm-cat-row').innerHTML = `
-    <span class="t-cat-badge" style="background:${catColor}18;color:${catColor};border:1px solid ${catColor}40;font-size:10px;padding:3px 9px;">${catLabel}</span>
-    ${genderLabel?`<span class="t-gender-badge ${t.gender||''}" style="font-size:10px;">${genderLabel}</span>`:''}
-    <span class="t-status-badge ${status}" style="font-size:10px;">${statusLabel}</span>
+  const catRowEl = document.getElementById('tdm-cat-row');
+  if(catRowEl){
+    catRowEl.innerHTML = '<span class="t-cat-badge" style="background:'+catColor+'1A;color:'+catColor+';border:1px solid '+catColor+'35;font-size:10px;padding:3px 9px;">'+_pxEsc(catLabel)+'</span>'+(genderLabel?'<span class="t-gender-badge '+(t.gender||'')+'" style="font-size:10px;">'+genderLabel+'</span>':'');
+  }
+
+  /* ② アクション行 */
+  const actEl = document.getElementById('tdm-actions');
+  if(actEl){
+    const SICON = isFav ? '#E5A41A' : 'none';
+    const SSTR  = isFav ? '#E5A41A' : '#B8901A';
+    actEl.innerHTML = `
+      <button class="tdm-action-btn" onclick="_tdmAddToCalendar()">
+        <div class="tdm-action-icon cal">
+          <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#1AAF7A" stroke-width="1.7"/><line x1="7" y1="2" x2="7" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="#1AAF7A" stroke-width="1.7"/></svg>
+        </div>
+        <span class="tdm-action-label">${isAdded?'追加済み':'カレンダー'}</span>
+      </button>
+      <button class="tdm-action-btn" onclick="_tdmToggleFav()">
+        <div class="tdm-action-icon fav">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="${SICON}" stroke="${SSTR}" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <span class="tdm-action-label">${isFav?'★済み':'お気に入り'}</span>
+      </button>
+      ${officialUrl?`<a class="tdm-action-btn" href="${_pxEsc(officialUrl)}" target="_blank" rel="noopener"><div class="tdm-action-icon web"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5060A0" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg></div><span class="tdm-action-label">公式サイト</span></a>`:''}
+      ${igUrl?`<a class="tdm-action-btn" href="${_pxEsc(igUrl)}" target="_blank" rel="noopener"><div class="tdm-action-icon" style="background:#FFF0F6;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C060A0" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".5" fill="#C060A0"/></svg></div><span class="tdm-action-label">Instagram</span></a>`:''}
+      ${entryUrl?`<a class="tdm-action-btn" href="${_pxEsc(entryUrl)}" target="_blank" rel="noopener"><div class="tdm-action-icon entry"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M9 11l2 2 4-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="1" width="6" height="4" rx="1" stroke="#fff" stroke-width="1.7"/></svg></div><span class="tdm-action-label">エントリー</span></a>`:''}
+    `;
+  }
+
+  /* ③ スクロールエリア完全書き換え */
+  const scrollEl = document.getElementById('tdm-scroll');
+  if(!scrollEl)return;
+  scrollEl.scrollTop = 0;
+  scrollEl.innerHTML = _pxSkeleton();
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+
+  const ST_MAP = {
+    open:         {label:'募集中',   bg:'#D6F5E6', color:'#0A6A38', dot:true},
+    closing_soon: {label:'締切間近', bg:'#FFF0D0', color:'#9A5000', dot:true},
+    closed:       {label:'締切済み', bg:'#ECEEF2', color:'#6A7A8A', dot:false},
+    ongoing:      {label:'開催中',   bg:'#DCF0FF', color:'#1A4E90', dot:false},
+    ended:        {label:'終了',     bg:'#F2F2F5', color:'#7A7A8A', dot:false},
+    tbd:          {label:'日程未定', bg:'#F0F0F5', color:'#7A7A8A', dot:false},
+    cancelled:    {label:'中止',     bg:'#FFE8E8', color:'#C02828', dot:false},
+  };
+
+  function _stBadge(st){
+    const d=ST_MAP[st]||ST_MAP.tbd;
+    return '<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px 5px 8px;border-radius:20px;font-size:11.5px;font-weight:700;letter-spacing:.05px;background:'+d.bg+';color:'+d.color+';flex-shrink:0;">'+(d.dot?'<span style="width:6px;height:6px;border-radius:50%;background:'+d.color+';animation:pxPulse '+(st==='closing_soon'?'1s':'2s')+' ease-in-out infinite;flex-shrink:0;"></span>':'')+d.label+'</span>';
+  }
+
+  function _dlBadge(ds){
+    if(!ds)return'';
+    const diff=_pxDayDiff(ds);
+    if(diff===null||diff<0)return'';
+    if(diff===0)return'<span style="margin-left:7px;background:#C03030;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;display:inline-block;">今日締切</span>';
+    if(diff<=3) return'<span style="margin-left:7px;background:#D05800;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;display:inline-block;">'+diff+'日後</span>';
+    if(diff<=7) return'<span style="margin-left:7px;background:#F0B020;color:#4A3000;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;display:inline-block;">'+diff+'日後</span>';
+    if(diff<=14)return'<span style="margin-left:6px;color:var(--text-tertiary);font-size:11px;font-weight:600;display:inline-block;">'+diff+'日後</span>';
+    return'';
+  }
+
+  function _sec(label){
+    return'<div style="padding:16px 14px 8px;"><div style="font-size:11px;font-weight:700;color:var(--text-tertiary);letter-spacing:.65px;text-transform:uppercase;display:flex;align-items:center;gap:8px;">'+label+'<div style="flex:1;height:.5px;background:rgba(0,0,0,.07);"></div></div></div>';
+  }
+
+  function _card(content){
+    return'<div style="margin:0 12px 4px;border-radius:16px;overflow:hidden;background:var(--card-bg,#fff);border:.5px solid rgba(0,0,0,.07);box-shadow:0 1px 4px rgba(0,0,0,.04);">'+content+'</div>';
+  }
+
+  let dateHtml=null;
+  if(startDate){
+    const s=_pxFmtDate(startDate)||startDate;
+    const e=endDate&&endDate!==startDate?(_pxFmtDate(endDate)||endDate):null;
+    dateHtml=e?s+'<br><span style="font-size:12px;color:var(--text-tertiary);"> 〜 </span>'+e:s;
+  }
+
+  const dlHtml=deadline?'<span style="font-size:13.5px;">'+(_pxFmtDate(deadline)||deadline)+'</span>'+_dlBadge(deadline):null;
+
+  let courseHtml=null;
+  if(courseName){
+    const cn=courseName.replace(/'/g,"\\'");
+    const pl=place.replace(/'/g,"\\'");
+    const ct=country.replace(/'/g,"\\'");
+    courseHtml='<button style="display:inline-flex;align-items:center;gap:5px;background:var(--green-chip,#E0F8EE);border:1px solid rgba(57,200,146,.3);border-radius:10px;padding:5px 11px 5px 8px;color:var(--green-dark,#22A874);font-weight:700;font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:inherit;" onclick="event.preventDefault();_pxOpenMapSheet(\''+cn+'\',\''+pl+'\',\''+ct+'\')" type="button"><svg width="12" height="12" viewBox="0 0 22 22" fill="none" style="color:var(--green-dark,#22A874);flex-shrink:0;"><path d=\"M11 3.5a5 5 0 015 5c0 4-5 10-5 10S6 12.5 6 8.5a5 5 0 015-5z\" stroke=\"currentColor\" stroke-width=\"1.7\"/><circle cx=\"11\" cy=\"8.5\" r=\"1.8\" fill=\"currentColor\"/></svg>'+_pxEsc(courseName)+'<svg width="11" height="11" viewBox="0 0 22 22" fill="none" style="color:var(--text-tertiary);opacity:.7;flex-shrink:0;"><path d=\"M9 4H4a1 1 0 00-1 1v13a1 1 0 001 1h13a1 1 0 001-1v-5\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><path d=\"M14 3h5m0 0v5m0-5L10 12\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button>';
+  }
+
+  const placeHtml=place?_pxEsc(place)+(country&&country!=='japan'?'<span style="color:var(--text-tertiary);font-size:12px;"> / '+_pxEsc(country)+'</span>':''):null;
+
+  function _lBtn(url,label,emoji,bg,color,sub){
+    const act=!!url;
+    const href=url?'href="'+_pxEsc(url)+'" target="_blank" rel="noopener noreferrer"':'onclick="return false;"';
+    return'<a style="display:flex;align-items:center;gap:10px;background:'+(act?'var(--card-bg,#fff)':'rgba(0,0,0,.025)')+';border:1px solid '+(act?'rgba(0,0,0,.08)':'rgba(0,0,0,.05)')+';border-radius:14px;padding:12px 13px;text-decoration:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;'+(act?'':'opacity:.5;pointer-events:none;')+'" '+href+'><div style="width:36px;height:36px;border-radius:10px;background:'+bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;">'+emoji+'</div><div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:'+(act?'var(--text-primary,#0F1E18)':'var(--text-tertiary)')+';display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+label+'</div><div style="font-size:10px;font-weight:500;color:'+(act?color:'var(--text-tertiary)')+';display:block;margin-top:1px;">'+(act?(sub||'タップして開く'):'未設定')+'</div></div>'+(act?'<svg width="11" height="11" viewBox="0 0 22 22" fill="none" style="color:var(--text-tertiary);opacity:.6;flex-shrink:0;"><path d=\"M9 4H4a1 1 0 00-1 1v13a1 1 0 001 1h13a1 1 0 001-1v-5\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><path d=\"M14 3h5m0 0v5m0-5L10 12\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>':'')+'</a>';
+  }
+
+  function _costRow(label,value,hl){
+    return'<div style="display:flex;align-items:center;padding:12px 14px;border-bottom:.5px solid rgba(0,0,0,.04);"><span style="flex:1;font-size:13px;font-weight:500;color:var(--text-secondary);">'+label+'</span><span style="font-size:15px;font-weight:700;color:'+(hl?'var(--green-dark,#22A874)':'var(--text-primary,#0F1E18)')+';">'+_pxEsc(value)+'</span></div>';
+  }
+
+  let prizeSection='';
+  if(prize||prizeWinner){
+    prizeSection='<div style="margin:0 12px 4px;background:linear-gradient(135deg,#FFFBF0,#FFF5D0,#FDF0B0);border-radius:18px;border:1px solid rgba(184,136,26,.18);overflow:hidden;"><div style="padding:11px 14px 8px;display:flex;align-items:center;gap:7px;border-bottom:.5px solid rgba(184,136,26,.14);"><span style="font-size:15px;">🏆</span><span style="font-size:10px;font-weight:700;color:#8A6800;letter-spacing:.5px;text-transform:uppercase;">Prize Money</span></div><div style="display:flex;">'+(prize?'<div style="flex:1;padding:12px 14px 14px;'+(prizeWinner?'border-right:.5px solid rgba(184,136,26,.14);':'')+'"><div style="font-size:10px;font-weight:700;color:#8A6000;letter-spacing:.2px;margin-bottom:4px;">賞金総額</div><div style="font-size:17px;font-weight:800;color:#4A3200;letter-spacing:-.4px;line-height:1.2;">'+_pxEsc(prize)+'</div></div>':'')+(prizeWinner?'<div style="flex:1;padding:12px 14px 14px;"><div style="font-size:10px;font-weight:700;color:#8A6000;letter-spacing:.2px;margin-bottom:4px;">優勝賞金</div><div style="font-size:17px;font-weight:800;color:#4A3200;letter-spacing:-.4px;line-height:1.2;">'+_pxEsc(prizeWinner)+'</div></div>':'')+'</div></div>';
+  }
+
+  const hasCost=!!(entryFee||pracFee||capacity);
+  const hasEntry=!!(entryMethod||qualification);
+
+  scrollEl.innerHTML = `
+    <style>@keyframes pxPulse{0%,100%{opacity:1}50%{opacity:.3}}@keyframes pxShimmer{0%{background-position:300% 0}100%{background-position:-300% 0}}</style>
+    <div style="padding:10px 14px 12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;border-bottom:.5px solid rgba(0,0,0,.06);">
+      ${_stBadge(status)}
+      ${genderLabel?'<span style="font-size:11.5px;font-weight:600;color:var(--text-tertiary);">'+genderLabel+'</span>':''}
+      ${catLabel?'<span style="font-size:11px;color:var(--text-tertiary);">／ '+_pxEsc(catLabel)+'</span>':''}
+    </div>
+    <div style="height:10px;"></div>
+    ${prizeSection}
+    ${_sec('開催情報')}
+    ${_card(
+      _pxRow('cal',  '#EAF7F1','#0A6A38','開催日', dateHtml)+
+      _pxRow('clock','#FFF4E0','#9A5000','締切日', dlHtml)+
+      (cancelDl?_pxRow('cancel','#FFF0F0','#C02828','キャンセル<br>締切',(_pxFmtDate(cancelDl)||cancelDl)):'')+
+      (courseHtml
+        ?'<div class="tdm-row" style="padding:11px 14px;gap:12px;display:flex;align-items:center;"><div style="width:30px;height:30px;border-radius:9px;background:#EAF7F1;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="15" height="15" viewBox="0 0 22 22" fill="none" style="color:#0A6A38;"><path d=\"M11 3v10\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"/><path d=\"M11 3l5 2.5-5 2.5\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linejoin=\"round\"/><ellipse cx=\"11\" cy=\"17\" rx=\"4\" ry=\"1.5\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg></div><div style="width:68px;flex-shrink:0;font-size:11px;font-weight:600;color:var(--text-tertiary);padding-top:2px;">ゴルフ場</div><div style="flex:1;min-width:0;">'+courseHtml+'</div></div>'
+        :_pxRow('golf','#EAF7F1','#0A6A38','ゴルフ場',null))+
+      _pxRow('pin',  '#EAF2FB','#2A72C8','開催地', placeHtml)+
+      _pxRow('org',  '#F5F0FA','#7040B0','主催',   organizer?_pxEsc(organizer):null)
+    )}
+    ${hasCost?_sec('費用・定員')+'<div style="margin:0 12px 4px;border-radius:16px;overflow:hidden;background:var(--card-bg,#fff);border:.5px solid rgba(0,0,0,.07);box-shadow:0 1px 4px rgba(0,0,0,.04);">'+(entryFee?_costRow('参加費',entryFee,false):'')+(pracFee?_costRow('練習ラウンド費',pracFee,false):'')+(capacity?_costRow('定員',capacity,true):'')+'</div>':''}
+    ${hasEntry?_sec('エントリー')+_card((entryMethod?_pxRow('doc','#EAF2FB','#2A72C8','申請方法',_pxEsc(entryMethod)):'')+  (qualification?_pxRow('user','#F0F7F4','#3A9A78','出場資格',_pxEsc(qualification)):'')):''}
+    ${_sec('リンク')}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:2px 12px 14px;">
+      ${_lBtn(officialUrl,'公式サイト','🌐','#EEF0FA','#5060A0','公式サイトへ')}
+      ${_lBtn(igUrl,'Instagram','📸','#FFF0F6','#C060A0','Instagramへ')}
+      ${_lBtn(entryUrl,'エントリー','📋','#E6F7EE','#0A6A38','エントリーへ')}
+      ${_lBtn(pairUrl,'組み合わせ','📑','#E6F0FB','#2A72C8','組み合わせへ')}
+      ${_lBtn(resultUrl,'結果速報','🏆','#FFF8E0','#8A6000','結果ページへ')}
+    </div>
+    ${notes?'<div style="margin:0 12px 12px;padding:13px 14px;background:rgba(57,200,146,.07);border-radius:14px;border-left:3px solid var(--green-main,#39C892);font-size:12.5px;color:var(--text-secondary);line-height:1.65;">📝 '+_pxEsc(notes)+'</div>':''}
+    <div style="height:20px;"></div>
   `;
 
-  // アクションボタン群
-  const actionsEl = document.getElementById('tdm-actions');
-  actionsEl.innerHTML = `
-    <button class="tdm-action-btn" onclick="_tdmAddToCalendar()">
-      <div class="tdm-action-icon cal">
-        <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-          <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#1AAF7A" stroke-width="1.7"/>
-          <line x1="7" y1="2" x2="7" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>
-          <line x1="15" y1="2" x2="15" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>
-          <line x1="3" y1="9" x2="19" y2="9" stroke="#1AAF7A" stroke-width="1.7"/>
-        </svg>
-      </div>
-      <span class="tdm-action-label">${isAdded?'追加済み':'カレンダー'}</span>
-    </button>
-    <button class="tdm-action-btn" onclick="_tdmToggleFav()">
-      <div class="tdm-action-icon fav">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="${isFav?'#E5A41A':'none'}" stroke="${isFav?'#E5A41A':'#B8901A'}" stroke-width="1.8">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-        </svg>
-      </div>
-      <span class="tdm-action-label">${isFav?'お気に入り済':'お気に入り'}</span>
-    </button>
-    ${t.officialUrl?`<a class="tdm-action-btn" href="${t.officialUrl}" target="_blank" rel="noopener">
-      <div class="tdm-action-icon web">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5060A0" stroke-width="1.8" stroke-linecap="round">
-          <circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
-        </svg>
-      </div>
-      <span class="tdm-action-label">公式サイト</span>
-    </a>`:''}
-    ${t.entryUrl?`<a class="tdm-action-btn" href="${t.entryUrl}" target="_blank" rel="noopener">
-      <div class="tdm-action-icon entry">
-        <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-          <path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
-          <path d="M9 11l2 2 4-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-          <rect x="8" y="1" width="6" height="4" rx="1" stroke="#fff" stroke-width="1.7"/>
-        </svg>
-      </div>
-      <span class="tdm-action-label">エントリー</span>
-    </a>`:''}
-    ${t.igUrl?`<a class="tdm-action-btn" href="${t.igUrl}" target="_blank" rel="noopener">
-      <div class="tdm-action-icon" style="background:#FFF0F6;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C060A0" stroke-width="1.8">
-          <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".5" fill="#C060A0"/>
-        </svg>
-      </div>
-      <span class="tdm-action-label">Instagram</span>
-    </a>`:''}
-  `;
+  /* ④ フッター */
+  const calBtn=document.getElementById('tdm-footer-cal');
+  if(calBtn){
+    calBtn.innerHTML='<svg width="15" height="15" viewBox="0 0 22 22" fill="none"><rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/></svg>'+(isAdded?'追加済み':'カレンダーへ');
+    calBtn.style.background=isAdded?'var(--green-main,#39C892)':'';
+    calBtn.style.color=isAdded?'#fff':'';
+  }
+  const entryBtn=document.getElementById('tdm-footer-entry');
+  if(entryBtn){
+    if(entryUrl){
+      entryBtn.classList.remove('no-url');
+      entryBtn.onclick=()=>window.open(entryUrl,'_blank','noopener');
+      entryBtn.innerHTML='<svg width="14" height="14" viewBox="0 0 22 22" fill="none"><path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M9 11l2 2 4-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="1" width="6" height="4" rx="1" stroke="#fff" stroke-width="1.7"/></svg>エントリーへ';
+    } else if(officialUrl){
+      entryBtn.classList.remove('no-url');
+      entryBtn.style.background='linear-gradient(135deg,#5060A0,#3040A0)';
+      entryBtn.onclick=()=>window.open(officialUrl,'_blank','noopener');
+      entryBtn.innerHTML='<svg width="14" height="14" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#fff" stroke-width="1.7"/><path d="M2 11h18M11 2a13.5 13.5 0 010 18M11 2a13.5 13.5 0 000 18" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>公式サイトへ';
+    } else {
+      entryBtn.classList.add('no-url');
+      entryBtn.onclick=()=>showToast('エントリーURLは未設定です');
+    }
+  }
 
-  // ── 基本情報 ──
-  const rows = [
-    {icon:'cal', label:'開催日', value:t.start&&t.end?`${t.start} 〜 ${t.end}`:'-'},
-    {icon:'pin', label:'都道府県', value:t.place||'-'},
-    {icon:'golf', label:'ゴルフ場', value:t.courseName||'-'},
-    {icon:'org', label:'主催', value:t.organizer||'-'},
-    {icon:'deadline', label:'締切日', value:t.entryDeadline||'-', cls:t.entryDeadline?_deadlineClass(t.entryDeadline):''},
-  ];
-  document.getElementById('tdm-basic-rows').innerHTML = rows.map(r=>`
-    <div class="tdm-row">
-      <div class="tdm-row-icon">${_tdmIcon(r.icon)}</div>
-      <div class="tdm-row-label">${r.label}</div>
-      <div class="tdm-row-value${r.cls?' '+r.cls:''}">${r.value||'<span class=\'empty\'>未設定</span>'}</div>
-    </div>
-  `).join('');
+  })); // end rAF
+}
 
-  // ── 金額情報 ──
-  const moneyRows = [
-    {icon:'trophy', label:'賞金総額', value:t.prize, money:true},
-    {icon:'trophy', label:'優勝賞金', value:t.prizeWinner, money:true},
-    {icon:'money', label:'参加費', value:t.entryFee},
-    {icon:'money', label:'練習ラウンド', value:t.practiceRoundFee},
-  ];
-  document.getElementById('tdm-money-rows').innerHTML = moneyRows.map(r=>`
-    <div class="tdm-row">
-      <div class="tdm-row-icon">${_tdmIcon(r.icon)}</div>
-      <div class="tdm-row-label">${r.label}</div>
-      <div class="tdm-row-value${r.money?' money':''}">${r.value||'<span class="empty">未設定</span>'}</div>
-    </div>
-  `).join('');
-
-  // ── エントリー情報 ──
-  const entryRows = [
-    {icon:'method', label:'申請方法', value:t.entryMethod},
-    {icon:'user', label:'出場資格', value:t.qualification},
-    {icon:'num', label:'定員', value:t.capacity},
-    {icon:'cancel', label:'キャンセル', value:t.cancelDeadline},
-  ];
-  document.getElementById('tdm-entry-rows').innerHTML = entryRows.map(r=>`
-    <div class="tdm-row">
-      <div class="tdm-row-icon">${_tdmIcon(r.icon)}</div>
-      <div class="tdm-row-label">${r.label}</div>
-      <div class="tdm-row-value">${r.value||'<span class="empty">未設定</span>'}</div>
-    </div>
-  `).join('');
-
-  // ── リンク ──
-  const links = [
-    {label:'公式HP', url:t.officialUrl, icon:'🌐'},
-    {label:'Instagram', url:t.igUrl, icon:'📸'},
-    {label:'エントリーフォーム', url:t.entryUrl, icon:'📋'},
-    {label:'組み合わせ', url:t.pairUrl, icon:'📑'},
-    {label:'結果速報', url:t.resultUrl, icon:'🏆'},
-  ];
-  document.getElementById('tdm-link-grid').innerHTML = links.map(l=>`
-    <a class="tdm-link-btn${l.url?' has-url':''}"
-      href="${l.url||'#'}" ${l.url?'target="_blank" rel="noopener"':'onclick="return false;"'}>
-      <div class="tdm-link-icon">${l.icon}</div>
-      <div class="tdm-link-label">${l.label}</div>
-      ${l.url?'<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><polyline points="3.5,2.5 6.5,5 3.5,7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>':''}
-    </a>
-  `).join('');
-
-  // フッターCTA
-  const entryBtn = document.getElementById('tdm-footer-entry');
-  if(t.entryUrl){
-    entryBtn.classList.remove('no-url');
-    entryBtn.onclick = ()=>{ window.open(t.entryUrl,'_blank'); };
-  } else {
-    entryBtn.classList.add('no-url');
-    entryBtn.onclick = ()=>{ showToast('エントリーURLは未設定です'); };
+/* ────────────────────────────────────────────────────
+   既存互換ヘルパー群
+   ──────────────────────────────────────────────────── */
+function _tdmAddToCalendar(){
+  if(!_tdmCurrentId)return;
+  toggleSearchAdd(_tdmCurrentId);
+  const isAdded=addedIds.has(_tdmCurrentId);
+  showToast(isAdded?'✅ カレンダーに追加しました':'カレンダーから削除しました');
+  const calBtn=document.getElementById('tdm-footer-cal');
+  if(calBtn){
+    calBtn.innerHTML='<svg width="15" height="15" viewBox="0 0 22 22" fill="none"><rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/></svg>'+(isAdded?'追加済み':'カレンダーへ');
+    calBtn.style.background=isAdded?'var(--green-main,#39C892)':'';
+    calBtn.style.color=isAdded?'#fff':'';
   }
 }
-
-// アイコン生成ヘルパー
-function _tdmIcon(type){
-  const icons = {
-    cal:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#9BB8AE" stroke-width="1.6"/><line x1="7" y1="2" x2="7" y2="6" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="#9BB8AE" stroke-width="1.6"/></svg>`,
-    pin:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M11 3.5a5 5 0 015 5c0 4-5 10-5 10S6 12.5 6 8.5a5 5 0 015-5z" stroke="#9BB8AE" stroke-width="1.6"/><circle cx="11" cy="8.5" r="1.8" fill="#9BB8AE"/></svg>`,
-    golf:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M11 3v10" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/><path d="M11 3l5 2.5-5 2.5" stroke="#9BB8AE" stroke-width="1.6" stroke-linejoin="round"/><ellipse cx="11" cy="17" rx="4" ry="1.5" stroke="#9BB8AE" stroke-width="1.4"/></svg>`,
-    org:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M3 19c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/><circle cx="11" cy="8" r="4" stroke="#9BB8AE" stroke-width="1.6"/></svg>`,
-    deadline:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#9BB8AE" stroke-width="1.6"/><path d="M11 7v4.5l3 1.5" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/></svg>`,
-    trophy:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M6 3h10v8a5 5 0 01-10 0V3z" stroke="#9BB8AE" stroke-width="1.6"/><path d="M6 5H3v2a3 3 0 003 3M16 5h3v2a3 3 0 01-3 3" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/><line x1="11" y1="16" x2="11" y2="19" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/><line x1="7" y1="19" x2="15" y2="19" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/></svg>`,
-    money:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#9BB8AE" stroke-width="1.6"/><path d="M11 7v1m0 6v1m-3-4h4a1.5 1.5 0 010 3H9m0-3h2a1.5 1.5 0 000-3H9" stroke="#9BB8AE" stroke-width="1.4" stroke-linecap="round"/></svg>`,
-    method:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><rect x="4" y="3" width="14" height="17" rx="2" stroke="#9BB8AE" stroke-width="1.6"/><line x1="7" y1="8" x2="15" y2="8" stroke="#9BB8AE" stroke-width="1.4" stroke-linecap="round"/><line x1="7" y1="12" x2="15" y2="12" stroke="#9BB8AE" stroke-width="1.4" stroke-linecap="round"/><line x1="7" y1="16" x2="11" y2="16" stroke="#9BB8AE" stroke-width="1.4" stroke-linecap="round"/></svg>`,
-    user:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3.5" stroke="#9BB8AE" stroke-width="1.6"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/></svg>`,
-    num:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M5 8h12M5 12h12M5 16h8" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/></svg>`,
-    cancel:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="#9BB8AE" stroke-width="1.6"/><path d="M8 8l6 6M14 8l-6 6" stroke="#9BB8AE" stroke-width="1.6" stroke-linecap="round"/></svg>`,
-  };
-  return icons[type]||icons.cal;
-}
-
-// カレンダーに追加
-function _tdmAddToCalendar(){
-  if(!_tdmCurrentId) return;
-  toggleSearchAdd(_tdmCurrentId);
-  const isAdded = addedIds.has(_tdmCurrentId);
-  showToast(isAdded?'カレンダーに追加しました':'カレンダーから削除しました');
-}
-
-// お気に入りトグル
 function _tdmToggleFav(){
-  if(!_tdmCurrentId) return;
+  if(!_tdmCurrentId)return;
   toggleFavTournament(_tdmCurrentId);
-  const t = TOURNAMENTS_FLAT.find(x=>x.id===_tdmCurrentId);
-  if(t) _renderTdm(t);
+  const t=TOURNAMENTS_FLAT.find(x=>x.id===_tdmCurrentId);
+  if(t)_renderTdm(t);
 }
-
-// エントリーURLを開く
 function _tdmOpenEntry(){
-  if(!_tdmCurrentId) return;
-  const t = TOURNAMENTS_FLAT.find(x=>x.id===_tdmCurrentId);
-  if(t&&t.entryUrl) window.open(t.entryUrl,'_blank');
+  if(!_tdmCurrentId)return;
+  const t=TOURNAMENTS_FLAT.find(x=>x.id===_tdmCurrentId);
+  const url=(t&&t.entryUrl)||(t&&t._raw&&t._raw.links&&t._raw.links.entry)||'';
+  if(url)window.open(url,'_blank','noopener');
   else showToast('エントリーURLは未設定です');
 }
-
-// ── ドラッグで閉じる ──
 function _tdmInitDrag(){
-  /* ★ BottomSheetDrag（Phase8）が全シートのドラッグを管理するため、
-     この関数は BottomSheetDrag 初期化後には不要。
-     互換性のため関数は残すが中身はno-op。
-     ✕ボタンの設定のみ残す。 */
-  const closeBtn = document.getElementById('tdm-close-btn');
-  if(closeBtn){
-    closeBtn.ontouchstart = function(e){ e.stopPropagation(); };
-    closeBtn.ontouchend   = function(e){ e.preventDefault(); e.stopPropagation(); closeTournamentModal(); };
-  }
+  const cb=document.getElementById('tdm-close-btn');
+  if(cb){cb.ontouchstart=e=>e.stopPropagation();cb.ontouchend=e=>{e.preventDefault();e.stopPropagation();closeTournamentModal();};}
 }
-
-// ★ Phase2: 日付をフォーマット（YYYY-MM-DD → M/D）
-function _fmtDate(ds){if(!ds)return'-';const[,m,d]=ds.split('-');return`${parseInt(m)}/${parseInt(d)}`;}
-// ★ Phase2: 締切日の緊急度を判定
-function _deadlineClass(ds){
-  if(!ds)return'';
-  const today=todayStr();
-  if(ds<today)return''; // 過去
-  const diff=Math.floor((new Date(ds)-new Date(today))/(1000*60*60*24));
-  if(diff===0)return'deadline-today';
-  if(diff<=3)return'deadline-near';
-  return'';
-}
-// ★ Phase2: 賞金表示（省略なし）
+function _fmtDate(ds){if(!ds)return'-';try{const[,m,d]=ds.split('-');return parseInt(m)+'/'+parseInt(d);}catch(e){return ds;}}
+function _deadlineClass(ds){if(!ds)return'';const today=todayStr();if(ds<today)return'';const diff=Math.floor((new Date(ds)-new Date(today))/(1000*60*60*24));if(diff===0)return'deadline-today';if(diff<=3)return'deadline-near';return'';}
 function _fmtPrize(v){return v||'-';}
+function _tdmIcon(type){return'<svg width="16" height="16" viewBox="0 0 22 22" fill="none" style="color:var(--text-tertiary);">'+(typeof _PX_IC!=='undefined'?(_PX_IC[type]||_PX_IC.cal||''):'')+'</svg>';}
+
 
 // 大会単体カードのHTML（Phase2 新デザイン）
 function _searchCardHTML(t){
@@ -18801,1132 +19027,6 @@ console.info(
   '%c[TDM v2]%c 大会詳細モーダル 強化版 適用済み',
   'background:#39C892;color:#fff;padding:1px 6px;border-radius:3px;font-weight:700;',
   'color:#1A6640;font-weight:600;'
-);
-
-})();
-</script>
-
-<!-- ================================================================
-  ProNexaX — 大会詳細モーダル 強化 v3
-  ・Skeleton / Error Toast / Loading状態
-  ・マップ選択シート（Google Maps / Apple Maps）
-  ・ステータスバッジ強化（5状態＋キャンセル）
-  ・賞金・費用・エントリー・リンク完全表示
-  ・Firestore links/status/prize/course完全同期
-  ・Apple純正風 高品質UI
-  ================================================================ -->
-<style id="tdm-v3-css">
-
-/* ================================================================
-   TDM v3 — 追加スタイル（v2を上書き・拡張）
-   ================================================================ */
-
-/* ── エラートースト ── */
-.tdmv3-toast {
-  position: fixed;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 90px);
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: rgba(30,30,30,.92);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 10px 20px;
-  border-radius: 24px;
-  white-space: nowrap;
-  z-index: 9999;
-  opacity: 0;
-  transition: opacity .22s, transform .22s cubic-bezier(.34,1.56,.64,1);
-  pointer-events: none;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  max-width: 88vw;
-  text-align: center;
-  box-shadow: 0 4px 24px rgba(0,0,0,.28);
-}
-.tdmv3-toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-.tdmv3-toast.error { background: rgba(180,30,30,.92); }
-.tdmv3-toast.success { background: rgba(15,100,60,.92); }
-
-/* ── スケルトンローディング（v2より精細） ── */
-.tdmv3-skeleton-wrap {
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.tdmv3-skel-badge {
-  width: 80px;
-  height: 24px;
-  border-radius: 12px;
-  background: linear-gradient(90deg,#f0f0f5 25%,#e4e4ec 50%,#f0f0f5 75%);
-  background-size: 300% 100%;
-  animation: tdmv3-shimmer 1.6s ease-in-out infinite;
-}
-.tdmv3-skel-prize {
-  display: flex;
-  gap: 8px;
-  height: 76px;
-}
-.tdmv3-skel-prize-box {
-  flex: 1;
-  border-radius: 14px;
-  background: linear-gradient(90deg,#f8f4e8 25%,#ede9d8 50%,#f8f4e8 75%);
-  background-size: 300% 100%;
-  animation: tdmv3-shimmer 1.6s ease-in-out infinite;
-}
-.tdmv3-skel-card {
-  border-radius: 14px;
-  overflow: hidden;
-  border: .5px solid rgba(0,0,0,.06);
-}
-.tdmv3-skel-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-bottom: .5px solid rgba(0,0,0,.04);
-}
-.tdmv3-skel-row:last-child { border-bottom: none; }
-.tdmv3-skel-icon {
-  width: 28px; height: 28px;
-  border-radius: 8px;
-  background: linear-gradient(90deg,#e8f5ee 25%,#d8ece2 50%,#e8f5ee 75%);
-  background-size: 300% 100%;
-  animation: tdmv3-shimmer 1.6s ease-in-out infinite;
-  flex-shrink: 0;
-}
-.tdmv3-skel-line {
-  height: 13px;
-  border-radius: 6px;
-  background: linear-gradient(90deg,#f0f0f5 25%,#e4e4ec 50%,#f0f0f5 75%);
-  background-size: 300% 100%;
-  animation: tdmv3-shimmer 1.6s ease-in-out infinite;
-}
-.tdmv3-skel-link-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 4px 14px 14px;
-}
-.tdmv3-skel-link-btn {
-  height: 58px;
-  border-radius: 13px;
-  background: linear-gradient(90deg,#f0f0f5 25%,#e4e4ec 50%,#f0f0f5 75%);
-  background-size: 300% 100%;
-  animation: tdmv3-shimmer 1.6s ease-in-out infinite .1s;
-}
-@keyframes tdmv3-shimmer {
-  0%   { background-position: 300% 0 }
-  100% { background-position: -300% 0 }
-}
-
-/* ── マップ選択シート ── */
-.tdmv3-mapsheet-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.42);
-  z-index: 8000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .22s ease;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-.tdmv3-mapsheet-overlay.show {
-  opacity: 1;
-  pointer-events: auto;
-}
-.tdmv3-mapsheet {
-  background: #fff;
-  border-radius: 20px 20px 0 0;
-  width: 100%;
-  max-width: 540px;
-  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 12px);
-  transform: translateY(100%);
-  transition: transform .32s cubic-bezier(.32,1,.25,1);
-  overflow: hidden;
-}
-.tdmv3-mapsheet-overlay.show .tdmv3-mapsheet {
-  transform: translateY(0);
-}
-:root[data-theme="dark"] .tdmv3-mapsheet { background: #1C1C1E; }
-
-.tdmv3-mapsheet-handle {
-  display: flex;
-  justify-content: center;
-  padding: 10px 0 4px;
-}
-.tdmv3-mapsheet-pip {
-  width: 36px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(0,0,0,.14);
-}
-:root[data-theme="dark"] .tdmv3-mapsheet-pip { background: rgba(255,255,255,.2); }
-
-.tdmv3-mapsheet-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-tertiary, #7A9E94);
-  text-align: center;
-  padding: 2px 16px 12px;
-  letter-spacing: .3px;
-}
-.tdmv3-mapsheet-loc {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary, #0F1E18);
-  text-align: center;
-  padding: 0 16px 14px;
-  border-bottom: .5px solid rgba(0,0,0,.07);
-  line-height: 1.4;
-}
-:root[data-theme="dark"] .tdmv3-mapsheet-loc { color: #E8F0EC; border-bottom-color: rgba(255,255,255,.07); }
-
-.tdmv3-mapsheet-btn {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 15px 20px;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: background .1s;
-  font-family: inherit;
-}
-.tdmv3-mapsheet-btn:active { background: rgba(0,0,0,.05); }
-:root[data-theme="dark"] .tdmv3-mapsheet-btn:active { background: rgba(255,255,255,.06); }
-.tdmv3-mapsheet-btn + .tdmv3-mapsheet-btn {
-  border-top: .5px solid rgba(0,0,0,.06);
-}
-:root[data-theme="dark"] .tdmv3-mapsheet-btn + .tdmv3-mapsheet-btn { border-top-color: rgba(255,255,255,.06); }
-
-.tdmv3-mapsheet-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 22px;
-}
-.tdmv3-mapsheet-text { flex: 1; min-width: 0; }
-.tdmv3-mapsheet-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary, #0F1E18);
-  display: block;
-  margin-bottom: 2px;
-}
-:root[data-theme="dark"] .tdmv3-mapsheet-name { color: #E8F0EC; }
-.tdmv3-mapsheet-sub {
-  font-size: 12px;
-  color: var(--text-tertiary, #7A9E94);
-  display: block;
-}
-.tdmv3-mapsheet-chev {
-  color: var(--text-tertiary, #7A9E94);
-  flex-shrink: 0;
-}
-
-.tdmv3-mapsheet-cancel {
-  display: block;
-  width: calc(100% - 28px);
-  margin: 10px 14px 0;
-  padding: 14px;
-  border: none;
-  border-radius: 14px;
-  background: rgba(0,0,0,.05);
-  color: var(--text-primary, #0F1E18);
-  font-size: 15px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: background .1s;
-}
-.tdmv3-mapsheet-cancel:active { background: rgba(0,0,0,.09); }
-:root[data-theme="dark"] .tdmv3-mapsheet-cancel { background: rgba(255,255,255,.07); color: #E8F0EC; }
-
-/* ── ステータスバッジ強化（v2を上書き） ── */
-.tdmv2-st-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 11px 5px 8px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: .05px;
-  flex-shrink: 0;
-}
-.tdmv2-st-open         { background: #D8F5E8; color: #0A6E3A; border: 1px solid rgba(10,110,58,.15); }
-.tdmv2-st-closing_soon { background: #FFF0D0; color: #9A5000; border: 1px solid rgba(154,80,0,.15); }
-.tdmv2-st-closed       { background: #ECEEF2; color: #6A7A8A; border: 1px solid rgba(106,122,138,.12); }
-.tdmv2-st-ongoing      { background: #DCF0FF; color: #1A4E90; border: 1px solid rgba(26,78,144,.15); }
-.tdmv2-st-ended        { background: #F2F2F5; color: #7A7A8A; border: 1px solid rgba(122,122,138,.10); }
-.tdmv2-st-tbd          { background: #F0F0F5; color: #7A7A8A; border: 1px solid rgba(122,122,138,.10); }
-.tdmv2-st-cancelled    { background: #FFE8E8; color: #C02828; border: 1px solid rgba(192,40,40,.14); }
-
-:root[data-theme="dark"] .tdmv2-st-open         { background: #0E3A24; color: #4ADB8A; border-color: rgba(74,219,138,.2); }
-:root[data-theme="dark"] .tdmv2-st-closing_soon { background: #3A2600; color: #FFC044; border-color: rgba(255,192,68,.2); }
-:root[data-theme="dark"] .tdmv2-st-closed       { background: #222428; color: #8898A8; border-color: rgba(136,152,168,.12); }
-:root[data-theme="dark"] .tdmv2-st-ongoing      { background: #0A1E38; color: #60A0E8; border-color: rgba(96,160,232,.2); }
-:root[data-theme="dark"] .tdmv2-st-ended        { background: #1E1E22; color: #7878A8; border-color: rgba(120,120,168,.1); }
-:root[data-theme="dark"] .tdmv2-st-cancelled    { background: #3A0A0A; color: #FF6060; border-color: rgba(255,96,96,.2); }
-
-/* ── 詳細ヘッダーの大会名エリア強化 ── */
-.tdmv3-hero-header {
-  padding: 0 16px 12px;
-  border-bottom: .5px solid rgba(0,0,0,.07);
-  flex-shrink: 0;
-}
-:root[data-theme="dark"] .tdmv3-hero-header { border-bottom-color: rgba(255,255,255,.07); }
-
-.tdmv3-hero-name {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text-primary, #0F1E18);
-  line-height: 1.3;
-  letter-spacing: -.4px;
-  margin-bottom: 6px;
-}
-:root[data-theme="dark"] .tdmv3-hero-name { color: #E8F0EC; }
-.tdmv3-hero-badges {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-/* ── 費用カード：特別スタイル ── */
-.tdmv3-cost-row {
-  display: flex;
-  align-items: center;
-  padding: 11px 14px;
-  gap: 12px;
-  border-bottom: .5px solid rgba(0,0,0,.04);
-}
-.tdmv3-cost-row:last-child { border-bottom: none; }
-:root[data-theme="dark"] .tdmv3-cost-row { border-bottom-color: rgba(255,255,255,.04); }
-.tdmv3-cost-label {
-  flex: 1;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary, #3A5C52);
-}
-.tdmv3-cost-value {
-  font-size: 15px;
-  font-weight: 700;
-  color: #3A3A3A;
-  letter-spacing: -.2px;
-}
-:root[data-theme="dark"] .tdmv3-cost-value { color: #D8D8D8; }
-.tdmv3-cost-value.highlight {
-  color: var(--green-dark, #22A874);
-}
-
-/* ── マップ行タップターゲット強化 ── */
-.tdmv3-map-tap {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--green-chip, #E0F8EE);
-  border: 1px solid rgba(57,200,146,.3);
-  border-radius: 10px;
-  padding: 5px 10px 5px 8px;
-  color: var(--green-dark, #22A874);
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: opacity .12s, transform .1s;
-  text-decoration: none;
-  max-width: 100%;
-  word-break: break-all;
-}
-.tdmv3-map-tap:active { opacity: .75; transform: scale(.97); }
-:root[data-theme="dark"] .tdmv3-map-tap {
-  background: rgba(57,200,146,.12);
-  border-color: rgba(57,200,146,.25);
-  color: #39C892;
-}
-
-/* ── リンクグリッド2.0（ステータス付き、アイコン大きめ） ── */
-.tdmv3-link-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #fff;
-  border: 1px solid rgba(0,0,0,.08);
-  border-radius: 14px;
-  padding: 12px 13px;
-  text-decoration: none;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background .12s, transform .1s, box-shadow .1s;
-  touch-action: manipulation;
-  position: relative;
-  overflow: hidden;
-}
-.tdmv3-link-btn:active { transform: scale(.96); box-shadow: none; }
-.tdmv3-link-btn.active {
-  border-color: transparent;
-  box-shadow: 0 2px 10px rgba(0,0,0,.09), 0 0 0 1.5px rgba(57,200,146,.25);
-}
-.tdmv3-link-btn.inactive {
-  background: rgba(0,0,0,.02);
-  border-color: rgba(0,0,0,.05);
-  opacity: .55;
-  pointer-events: none;
-}
-:root[data-theme="dark"] .tdmv3-link-btn {
-  background: rgba(255,255,255,.05);
-  border-color: rgba(255,255,255,.09);
-}
-:root[data-theme="dark"] .tdmv3-link-btn.active {
-  box-shadow: 0 2px 10px rgba(0,0,0,.3), 0 0 0 1.5px rgba(57,200,146,.3);
-}
-.tdmv3-link-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 16px;
-}
-.tdmv3-link-text { flex: 1; min-width: 0; }
-.tdmv3-link-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-primary, #0F1E18);
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-:root[data-theme="dark"] .tdmv3-link-name { color: #D8E8E0; }
-.tdmv3-link-sub {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text-tertiary, #7A9E94);
-  display: block;
-  margin-top: 1px;
-}
-.tdmv3-link-btn.active .tdmv3-link-sub { color: var(--green-main, #39C892); }
-.tdmv3-link-arrow {
-  color: var(--text-tertiary, #7A9E94);
-  flex-shrink: 0;
-  opacity: .6;
-}
-
-/* ── 賞金ヒーローカード v3 ── */
-.tdmv3-prize-wrap {
-  margin: 0 14px 10px;
-  background: linear-gradient(135deg, #FFFBF0 0%, #FFF6D8 50%, #FDF0B8 100%);
-  border-radius: 16px;
-  border: 1px solid rgba(184,136,26,.2);
-  overflow: hidden;
-  position: relative;
-}
-:root[data-theme="dark"] .tdmv3-prize-wrap {
-  background: linear-gradient(135deg, #2A2210 0%, #1E1A08 50%, #181400 100%);
-  border-color: rgba(184,136,26,.25);
-}
-.tdmv3-prize-header {
-  padding: 10px 14px 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.tdmv3-prize-header-icon {
-  font-size: 14px;
-}
-.tdmv3-prize-header-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: #8A6800;
-  letter-spacing: .5px;
-  text-transform: uppercase;
-}
-:root[data-theme="dark"] .tdmv3-prize-header-label { color: #C4A040; }
-.tdmv3-prize-grid {
-  display: flex;
-  gap: 1px;
-  border-top: .5px solid rgba(184,136,26,.15);
-}
-.tdmv3-prize-cell {
-  flex: 1;
-  padding: 10px 14px 12px;
-  position: relative;
-}
-.tdmv3-prize-cell + .tdmv3-prize-cell {
-  border-left: .5px solid rgba(184,136,26,.15);
-}
-.tdmv3-prize-cell-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: #8A6000;
-  letter-spacing: .2px;
-  margin-bottom: 3px;
-}
-:root[data-theme="dark"] .tdmv3-prize-cell-label { color: #B08020; }
-.tdmv3-prize-cell-value {
-  font-size: 16px;
-  font-weight: 800;
-  color: #4A3200;
-  letter-spacing: -.4px;
-  line-height: 1.2;
-}
-:root[data-theme="dark"] .tdmv3-prize-cell-value { color: #E8C858; }
-
-/* ── セクションヘッダー v3（v2上書き） ── */
-.tdmv2-section-hdr {
-  padding: 16px 16px 7px;
-}
-.tdmv2-section-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-tertiary, #7A9E94);
-  letter-spacing: .7px;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.tdmv2-section-label::after {
-  content: '';
-  flex: 1;
-  height: .5px;
-  background: rgba(0,0,0,.08);
-}
-:root[data-theme="dark"] .tdmv2-section-label::after { background: rgba(255,255,255,.09); }
-
-/* ── カードv3 ── */
-.tdmv2-card {
-  background: var(--card-bg, #fff);
-  border-radius: 16px;
-  margin: 0 14px 4px;
-  overflow: hidden;
-  border: .5px solid rgba(0,0,0,.07);
-  box-shadow: 0 1px 4px rgba(0,0,0,.04);
-}
-:root[data-theme="dark"] .tdmv2-card {
-  background: rgba(255,255,255,.04);
-  border-color: rgba(255,255,255,.08);
-  box-shadow: none;
-}
-
-/* ── 情報行 v3 ── */
-.tdmv2-row {
-  padding: 11px 14px;
-  gap: 11px;
-}
-.tdmv2-row-label {
-  width: 72px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--text-tertiary, #7A9E94);
-  letter-spacing: .02px;
-}
-.tdmv2-row-value {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--text-primary, #0F1E18);
-  letter-spacing: -.12px;
-}
-:root[data-theme="dark"] .tdmv2-row-value { color: #D8E8E0; }
-
-/* ── ノーツ v3 ── */
-.tdmv2-notes {
-  margin: 6px 14px 10px;
-  padding: 13px 14px;
-  background: rgba(57,200,146,.07);
-  border-radius: 14px;
-  border-left: 3px solid var(--green-main, #39C892);
-  font-size: 12.5px;
-  color: var(--text-secondary, #3A5C52);
-  line-height: 1.65;
-}
-
-/* ── フッター v3 強化 ── */
-#tdm-footer {
-  flex-shrink: 0;
-  background: #fff;
-  border-top: .5px solid rgba(0,0,0,.08);
-  padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 10px);
-}
-:root[data-theme="dark"] #tdm-footer {
-  background: #1C1C1E;
-  border-top-color: rgba(255,255,255,.08);
-}
-
-/* ── シェアボタン ── */
-.tdmv3-share-btn {
-  width: 52px;
-  height: 52px;
-  background: rgba(0,0,0,.05);
-  border: none;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  flex-shrink: 0;
-  transition: background .12s;
-  color: var(--text-secondary, #3A5C52);
-}
-.tdmv3-share-btn:active { background: rgba(0,0,0,.10); }
-:root[data-theme="dark"] .tdmv3-share-btn { background: rgba(255,255,255,.08); color: #D8E8E0; }
-
-</style>
-
-<!-- マップ選択シート DOM -->
-<div class="tdmv3-mapsheet-overlay" id="tdmv3-mapsheet-overlay" onclick="tdmv3CloseMapSheet(event)">
-  <div class="tdmv3-mapsheet" id="tdmv3-mapsheet">
-    <div class="tdmv3-mapsheet-handle"><div class="tdmv3-mapsheet-pip"></div></div>
-    <div class="tdmv3-mapsheet-title">地図アプリを選択</div>
-    <div class="tdmv3-mapsheet-loc" id="tdmv3-mapsheet-loc"></div>
-    <button class="tdmv3-mapsheet-btn" id="tdmv3-btn-gmap">
-      <div class="tdmv3-mapsheet-icon" style="background:#E8F5E9;">🗺️</div>
-      <div class="tdmv3-mapsheet-text">
-        <span class="tdmv3-mapsheet-name">Google マップ</span>
-        <span class="tdmv3-mapsheet-sub">ブラウザで開く</span>
-      </div>
-      <svg class="tdmv3-mapsheet-chev" width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M9 6l5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <button class="tdmv3-mapsheet-btn" id="tdmv3-btn-amap">
-      <div class="tdmv3-mapsheet-icon" style="background:#FFF3E0;">🍎</div>
-      <div class="tdmv3-mapsheet-text">
-        <span class="tdmv3-mapsheet-name">Apple マップ</span>
-        <span class="tdmv3-mapsheet-sub">マップアプリで開く</span>
-      </div>
-      <svg class="tdmv3-mapsheet-chev" width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M9 6l5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <button class="tdmv3-mapsheet-cancel" onclick="tdmv3CloseMapSheet()">キャンセル</button>
-  </div>
-</div>
-
-<!-- エラートースト DOM -->
-<div class="tdmv3-toast" id="tdmv3-toast"></div>
-
-<script>
-/* ================================================================
-  ProNexaX — TDM v3 強化スクリプト
-  ・_renderTdm を v3 完全版に再上書き
-  ・マップ選択シート
-  ・Skeleton / Toast
-  ・Firestore全フィールド対応
-  ================================================================ */
-(function(){
-'use strict';
-
-/* ────── ユーティリティ ────── */
-const _e = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-
-function _fmt(ds){
-  if(!ds) return null;
-  try{
-    const d=new Date(ds+'T00:00:00');
-    const w=['日','月','火','水','木','金','土'][d.getDay()];
-    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${w}）`;
-  }catch(e){ return ds; }
-}
-
-function _fmtShort(ds){
-  if(!ds) return null;
-  try{
-    const d=new Date(ds+'T00:00:00');
-    const w=['日','月','火','水','木','金','土'][d.getDay()];
-    return `${d.getMonth()+1}月${d.getDate()}日（${w}）`;
-  }catch(e){ return ds; }
-}
-
-function _tdmStatusV3(t){
-  if(typeof calcTournamentStatus==='function') return calcTournamentStatus(t);
-  const today=new Date().toISOString().slice(0,10);
-  const raw=t._raw||t;
-  const s=t.start||t.startDate||raw.startDate;
-  const en=t.end||t.endDate||raw.endDate;
-  const dl=t.entryDeadline||raw.entryDeadline;
-  const st=t.status||raw.status||'';
-  if(st==='cancelled'||st==='canceled') return 'cancelled';
-  if(!s) return 'tbd';
-  if(today>(en||s)) return 'ended';
-  if(today>=s) return 'ongoing';
-  if(dl&&today>dl) return 'closed';
-  if(dl){ const diff=(new Date(dl)-new Date(today))/86400000; if(diff<=7) return 'closing_soon'; }
-  return 'open';
-}
-
-const ST3 = {
-  open:         {label:'募集中',     cls:'tdmv2-st-open',         dot:true,  emoji:'🟢'},
-  closing_soon: {label:'締切間近',   cls:'tdmv2-st-closing_soon', dot:true,  emoji:'🟡'},
-  closed:       {label:'締切済み',   cls:'tdmv2-st-closed',       dot:false, emoji:'⛔'},
-  ongoing:      {label:'開催中',     cls:'tdmv2-st-ongoing',      dot:false, emoji:'🏌️'},
-  ended:        {label:'終了',       cls:'tdmv2-st-ended',        dot:false, emoji:'✅'},
-  tbd:          {label:'日程未定',   cls:'tdmv2-st-tbd',          dot:false, emoji:'📅'},
-  cancelled:    {label:'中止',       cls:'tdmv2-st-cancelled',    dot:false, emoji:'❌'},
-};
-
-function _dlBadge(ds){
-  if(!ds) return '';
-  const diff=Math.round((new Date(ds)-new Date(new Date().toISOString().slice(0,10)))/86400000);
-  if(diff<0) return '';
-  if(diff===0) return `<span style="display:inline-block;margin-left:6px;background:#C03030;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;">今日締切</span>`;
-  if(diff<=3)  return `<span style="display:inline-block;margin-left:6px;background:#D06000;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;">${diff}日後</span>`;
-  if(diff<=7)  return `<span style="display:inline-block;margin-left:6px;background:#F0B020;color:#4A2800;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;">${diff}日後</span>`;
-  if(diff<=14) return `<span style="display:inline-block;margin-left:6px;color:var(--text-tertiary);font-size:11px;font-weight:600;">${diff}日後</span>`;
-  return '';
-}
-
-/* ────── トースト ────── */
-let _toastTimer=null;
-window.tdmv3Toast = function(msg, type=''){
-  const el=document.getElementById('tdmv3-toast');
-  if(!el) return;
-  el.textContent=msg;
-  el.className='tdmv3-toast'+(type?' '+type:'');
-  void el.offsetWidth;
-  el.classList.add('show');
-  clearTimeout(_toastTimer);
-  _toastTimer=setTimeout(()=>{ el.classList.remove('show'); }, 2600);
-};
-
-/* ────── スケルトン表示 ────── */
-function _showSkeleton(scrollEl){
-  if(!scrollEl) return;
-  scrollEl.innerHTML = `
-    <div class="tdmv3-skeleton-wrap">
-      <div style="display:flex;gap:8px;margin-bottom:4px;">
-        <div class="tdmv3-skel-badge"></div>
-        <div class="tdmv3-skel-badge" style="width:60px;"></div>
-      </div>
-      <div class="tdmv3-skel-prize">
-        <div class="tdmv3-skel-prize-box"></div>
-        <div class="tdmv3-skel-prize-box"></div>
-      </div>
-      <div class="tdmv2-section-hdr"><div class="tdmv2-section-label">開催情報</div></div>
-      <div class="tdmv2-card tdmv3-skel-card">
-        ${[80,65,90,55,70].map(w=>`<div class="tdmv3-skel-row"><div class="tdmv3-skel-icon"></div><div style="flex:1;display:flex;gap:8px;align-items:center;"><div class="tdmv3-skel-line" style="width:60px;height:11px;"></div><div class="tdmv3-skel-line" style="width:${w}%;"></div></div></div>`).join('')}
-      </div>
-      <div class="tdmv2-section-hdr"><div class="tdmv2-section-label">リンク</div></div>
-      <div class="tdmv3-skel-link-grid">
-        ${[1,2,3,4].map(()=>`<div class="tdmv3-skel-link-btn"></div>`).join('')}
-      </div>
-    </div>`;
-}
-
-/* ────── マップシート ────── */
-let _mapQuery='', _mapName='';
-window.tdmv3OpenMapSheet = function(courseName, place, country){
-  _mapName = courseName || place || '';
-  _mapQuery = encodeURIComponent([courseName, place, country].filter(Boolean).join(' '));
-  const locEl = document.getElementById('tdmv3-mapsheet-loc');
-  if(locEl) locEl.textContent = _mapName;
-
-  const gmBtn = document.getElementById('tdmv3-btn-gmap');
-  const amBtn = document.getElementById('tdmv3-btn-amap');
-  if(gmBtn) gmBtn.onclick = ()=>{ window.open(`https://www.google.com/maps/search/?api=1&query=${_mapQuery}`,'_blank','noopener'); tdmv3CloseMapSheet(); };
-  if(amBtn) amBtn.onclick = ()=>{ window.open(`maps://?q=${_mapQuery}`,'_blank','noopener'); tdmv3CloseMapSheet(); };
-
-  const ov = document.getElementById('tdmv3-mapsheet-overlay');
-  if(ov){ ov.style.display='flex'; void ov.offsetWidth; ov.classList.add('show'); }
-};
-window.tdmv3CloseMapSheet = function(e){
-  if(e && e.target!==e.currentTarget) return;
-  const ov = document.getElementById('tdmv3-mapsheet-overlay');
-  if(!ov) return;
-  ov.classList.remove('show');
-  setTimeout(()=>{ ov.style.display='none'; }, 320);
-};
-
-/* ────── リンクボタン v3 ────── */
-const SVG3 = {
-  globe: `<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M2 11h18M11 2a13.5 13.5 0 010 18M11 2a13.5 13.5 0 000 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-  ig:    `<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="16" height="16" rx="4.5" stroke="currentColor" stroke-width="1.7"/><circle cx="11" cy="11" r="3.5" stroke="currentColor" stroke-width="1.5"/><circle cx="15.5" cy="6.5" r=".9" fill="currentColor"/></svg>`,
-  entry: `<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M9 11l2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="8" y="1" width="6" height="4" rx="1" stroke="currentColor" stroke-width="1.7"/></svg>`,
-  doc:   `<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><rect x="4" y="3" width="14" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/><line x1="7" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="12" x2="15" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="16" x2="11" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-  trophy:`<svg width="16" height="16" viewBox="0 0 22 22" fill="none"><path d="M6 3h10v8a5 5 0 01-10 0V3z" stroke="currentColor" stroke-width="1.7"/><path d="M6 5H3v2a3 3 0 003 3M16 5h3v2a3 3 0 01-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="11" y1="16" x2="11" y2="19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="7" y1="19" x2="15" y2="19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`,
-  ext:   `<svg width="11" height="11" viewBox="0 0 22 22" fill="none"><path d="M9 4H4a1 1 0 00-1 1v13a1 1 0 001 1h13a1 1 0 001-1v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 3h5m0 0v5m0-5L10 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-  share: `<svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M15 8l3-3-3-3M18 5H9a5 5 0 000 10h1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 14l3 3-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-  cal:   `<svg width="15" height="15" viewBox="0 0 22 22" fill="none"><rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/></svg>`,
-  map:   `<svg width="15" height="15" viewBox="0 0 22 22" fill="none"><path d="M11 3.5a5 5 0 015 5c0 4-5 10-5 10S6 12.5 6 8.5a5 5 0 015-5z" stroke="currentColor" stroke-width="1.7"/><circle cx="11" cy="8.5" r="2" stroke="currentColor" stroke-width="1.5"/></svg>`,
-};
-
-function _linkBtn3(url, label, iconSvg, iconBg, iconColor, subLabel){
-  const active = url ? ' active' : ' inactive';
-  const href = url
-    ? ` href="${_e(url)}" target="_blank" rel="noopener noreferrer"`
-    : '';
-  const sub = url ? (subLabel||'タップして開く') : '未設定';
-  const svgInner = (SVG3[iconSvg]||SVG3.globe).replace(/^<svg[^>]*/,'').replace(/<\/svg>$/,'');
-  return `<a class="tdmv3-link-btn${active}"${href}>
-    <div class="tdmv3-link-icon" style="background:${iconBg};">
-      <svg width="16" height="16" viewBox="0 0 22 22" fill="none" style="color:${iconColor};">${SVG3[iconSvg]?.match(/<svg[^>]*>([\s\S]*)<\/svg>/)?.[1]||''}</svg>
-    </div>
-    <div class="tdmv3-link-text">
-      <span class="tdmv3-link-name">${label}</span>
-      <span class="tdmv3-link-sub">${url?subLabel||'タップして開く':'未設定'}</span>
-    </div>
-    ${url?`<span class="tdmv3-link-arrow">${SVG3.ext}</span>`:''}
-  </a>`;
-}
-
-/* ────── アイコン行 v3 ────── */
-const IC3 = {
-  cal:    {bg:'#EAF7F1', color:'#0A6E3A'},
-  clock:  {bg:'#FFF4E0', color:'#9A5000'},
-  pin:    {bg:'#EAF2FB', color:'#2A72C8'},
-  golf:   {bg:'#EAF7F1', color:'#0A6E3A'},
-  org:    {bg:'#F5F0FA', color:'#7040B0'},
-  trophy: {bg:'#FFF8E0', color:'#8A6000'},
-  money:  {bg:'#FFF8E0', color:'#8A6000'},
-  doc:    {bg:'#EAF2FB', color:'#2A72C8'},
-  user:   {bg:'#F0F7F4', color:'#3A9A78'},
-  num:    {bg:'#EAF2FB', color:'#2A72C8'},
-  cancel: {bg:'#FFF0F0', color:'#C02828'},
-  flag:   {bg:'#FFF0E8', color:'#D06000'},
-  star:   {bg:'#FFF8D8', color:'#9A7800'},
-};
-
-const SVG_IC = {
-  cal:    `<rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/>`,
-  clock:  `<circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M11 7v4.5l3 1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
-  pin:    `<path d="M11 3.5a5 5 0 015 5c0 4-5 10-5 10S6 12.5 6 8.5a5 5 0 015-5z" stroke="currentColor" stroke-width="1.7"/><circle cx="11" cy="8.5" r="1.8" fill="currentColor"/>`,
-  golf:   `<path d="M11 3v10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M11 3l5 2.5-5 2.5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><ellipse cx="11" cy="17" rx="4" ry="1.5" stroke="currentColor" stroke-width="1.5"/>`,
-  org:    `<path d="M3 19c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="11" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/>`,
-  trophy: `<path d="M6 3h10v8a5 5 0 01-10 0V3z" stroke="currentColor" stroke-width="1.7"/><path d="M6 5H3v2a3 3 0 003 3M16 5h3v2a3 3 0 01-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="11" y1="16" x2="11" y2="19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="7" y1="19" x2="15" y2="19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
-  money:  `<circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M11 7v1m0 6v1m-3-4h4a1.5 1.5 0 010 3H9m0-3h2a1.5 1.5 0 000-3H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
-  doc:    `<rect x="4" y="3" width="14" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/><line x1="7" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="12" x2="15" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="16" x2="11" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
-  user:   `<circle cx="11" cy="8" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
-  num:    `<path d="M5 8h12M5 12h12M5 16h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
-  cancel: `<circle cx="11" cy="11" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 8l6 6M14 8l-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
-  flag:   `<path d="M5 3v18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 3h12l-3 5h3l-3 5H5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>`,
-  star:   `<path d="M11 3l2.4 5.2 5.6.8-4 4 .9 5.6-5-2.7-5 2.7.9-5.6-4-4 5.6-.8L11 3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>`,
-};
-
-function _row3(iconType, label, value, extra){
-  const ic = IC3[iconType] || {bg:'#F0F5F2', color:'#6A8E84'};
-  const svgIn = SVG_IC[iconType] || '';
-  const iconHtml = `<div class="tdmv2-row-icon" style="background:${ic.bg};">
-    <svg width="15" height="15" viewBox="0 0 22 22" fill="none" style="color:${ic.color};">${svgIn}</svg>
-  </div>`;
-  const valHtml = value
-    ? `<div class="tdmv2-row-value${extra?' '+extra:''}">${value}</div>`
-    : `<div class="tdmv2-row-value empty" style="color:var(--text-tertiary);font-style:italic;font-weight:400;">未設定</div>`;
-  return `<div class="tdmv2-row">${iconHtml}<div class="tdmv2-row-label">${label}</div>${valHtml}</div>`;
-}
-
-/* ────── _renderTdm v3 完全版 ────── */
-window._renderTdm = function(t){
-  if(!t) return;
-
-  const scrollEl = document.getElementById('tdm-scroll');
-  if(!scrollEl) return;
-
-  // スケルトンを即表示
-  scrollEl.scrollTop = 0;
-  _showSkeleton(scrollEl);
-
-  // 非同期にレンダリング（体感速度向上）
-  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
-    _doRenderTdmV3(t, scrollEl);
-  }); });
-};
-
-function _doRenderTdmV3(t, scrollEl){
-  /* ── フィールド正規化 ── */
-  const raw = t._raw || t;
-
-  const id           = t.id || raw.id || '';
-  const name         = t.name || raw.title || raw.name || '';
-  const cat          = t.cat || raw.category || '';
-  const catColor     = (typeof CAT_COLORS!=='undefined'?CAT_COLORS[cat]:null) || '#8090A0';
-  const catLabel     = (typeof CAT_LABELS!=='undefined'?CAT_LABELS[cat]:null) || cat;
-  const genderRaw    = t.gender || raw.gender || '';
-  const genderLabel  = ({womens:'女子',both:'男女',mens:'男子',amateur:'アマ'})[genderRaw] || '';
-
-  const status       = _tdmStatusV3(t);
-  const stDef        = ST3[status] || ST3.tbd;
-
-  // 日程
-  const startDate    = t.start || t.startDate || raw.startDate || '';
-  const endDate      = t.end   || t.endDate   || raw.endDate   || '';
-  const deadline     = t.entryDeadline || raw.entryDeadline || '';
-  const cancelDl     = t.cancelDeadline || raw.cancelDeadline || '';
-
-  // 会場・地域
-  const courseName   = t.courseName || raw.course || raw.courseName || '';
-  const prefRaw      = raw.prefecture || t.prefecture || '';
-  const place        = t.place || (typeof _PREF_MAP!=='undefined'?_PREF_MAP[prefRaw]||prefRaw:prefRaw) || '';
-  const country      = raw.country || t.country || '';
-  const organizer    = t.organizer || raw.organizer || '';
-
-  // 賞金・費用
-  const prize        = t.prize        || raw.prize        || '';
-  const prizeWinner  = t.prizeWinner  || raw.prizeWinner  || raw.winnerPrize || '';
-  const entryFee     = t.entryFee     || raw.entryFee     || '';
-  const pracFee      = t.practiceRoundFee || raw.practiceRoundFee || raw.practiceFee || '';
-  const capacity     = t.capacity     || raw.capacity     || '';
-
-  // エントリー詳細
-  const entryMethod  = t.entryMethod  || raw.entryMethod  || '';
-  const qualification= t.qualification|| raw.qualification|| '';
-
-  // URL（links{}対応）
-  const links        = raw.links || {};
-  const officialUrl  = t.officialUrl  || links.website || links.official || '';
-  const igUrl        = t.igUrl        || links.instagram || '';
-  const entryUrl     = t.entryUrl     || links.entry || '';
-  const pairUrl      = t.pairUrl      || links.pairing || links.pairs || '';
-  const resultUrl    = t.resultUrl    || links.result || links.results || '';
-
-  const notes        = raw.notes || t.notes || '';
-
-  // お気に入り・カレンダー
-  const isFav  = (typeof FavoritesDB!=='undefined'?FavoritesDB.has(id):false)
-              || (typeof favTournaments!=='undefined'&&favTournaments.has(id));
-  const isAdded= typeof addedIds!=='undefined' && addedIds.has(id);
-
-  /* ── ヘッダー更新 ── */
-  const titleEl = document.getElementById('tdm-title');
-  if(titleEl) titleEl.textContent = name;
-
-  const catRowEl = document.getElementById('tdm-cat-row');
-  if(catRowEl) catRowEl.innerHTML = `
-    <span class="t-cat-badge" style="background:${catColor}1A;color:${catColor};border:1px solid ${catColor}30;font-size:10px;padding:3px 9px;">${_e(catLabel)}</span>
-    ${genderLabel?`<span class="t-gender-badge ${genderRaw}" style="font-size:10px;">${genderLabel}</span>`:''}
-  `;
-
-  const actEl = document.getElementById('tdm-actions');
-  if(actEl) actEl.innerHTML = '';
-
-  /* ── ステータスバー ── */
-  const stBar = `
-    <div class="tdmv2-status-bar" style="padding:10px 14px 12px;gap:7px;flex-wrap:wrap;">
-      <span class="tdmv2-st-badge ${stDef.cls}">
-        ${stDef.dot?'<span class="tdmv2-st-dot"></span>':''}
-        ${stDef.label}
-      </span>
-      ${genderLabel?`<span style="font-size:11.5px;font-weight:600;color:var(--text-tertiary);">${genderLabel}</span>`:''}
-      ${catLabel?`<span style="font-size:11px;color:var(--text-tertiary);">／ ${_e(catLabel)}</span>`:''}
-    </div>`;
-
-  /* ── 賞金ヒーロー v3 ── */
-  let prizeSection = '';
-  if(prize || prizeWinner){
-    prizeSection = `
-      <div class="tdmv3-prize-wrap">
-        <div class="tdmv3-prize-header">
-          <span class="tdmv3-prize-header-icon">🏆</span>
-          <span class="tdmv3-prize-header-label">Prize Money</span>
-        </div>
-        <div class="tdmv3-prize-grid">
-          ${prize?`<div class="tdmv3-prize-cell">
-            <div class="tdmv3-prize-cell-label">賞金総額</div>
-            <div class="tdmv3-prize-cell-value">${_e(prize)}</div>
-          </div>`:''}
-          ${prizeWinner?`<div class="tdmv3-prize-cell">
-            <div class="tdmv3-prize-cell-label">優勝賞金</div>
-            <div class="tdmv3-prize-cell-value">${_e(prizeWinner)}</div>
-          </div>`:''}
-        </div>
-      </div>`;
-  }
-
-  /* ── 日付文字列 ── */
-  let dateVal = null;
-  if(startDate){
-    const s = _fmt(startDate)||startDate;
-    const e = endDate&&endDate!==startDate ? (_fmt(endDate)||endDate) : null;
-    dateVal = e ? `${s}<br><span style="font-size:11px;color:var(--text-tertiary);"> 〜 </span>${e}` : s;
-  }
-
-  /* ── 締切表示（残日数バッジ付き） ── */
-  let dlValue = null;
-  if(deadline){
-    dlValue = (_fmt(deadline)||deadline) + _dlBadge(deadline);
-  }
-
-  /* ── 会場（マップ選択シート） ── */
-  let courseVal = null;
-  if(courseName){
-    const onTap = `event.preventDefault();tdmv3OpenMapSheet(${JSON.stringify(courseName)},${JSON.stringify(place)},${JSON.stringify(country)})`;
-    courseVal = `<button class="tdmv3-map-tap" onclick="${onTap}" type="button">
-      <svg width="13" height="13" viewBox="0 0 22 22" fill="none" style="flex-shrink:0;">${SVG_IC.pin}</svg>
-      ${_e(courseName)}
-    </button>`;
-  }
-
-  /* ── 開催情報カード ── */
-  const basicCard = `
-    <div class="tdmv2-section-hdr"><div class="tdmv2-section-label">開催情報</div></div>
-    <div class="tdmv2-card">
-      ${_row3('cal',   '開催日',        dateVal,                 '')}
-      ${_row3('clock', 'エントリー<br>締切', dlValue,            '')}
-      ${cancelDl?_row3('cancel','キャンセル<br>締切',_fmt(cancelDl)||cancelDl,''):''}
-      ${courseVal
-        ? `<div class="tdmv2-row"><div class="tdmv2-row-icon" style="background:${IC3.golf.bg};"><svg width="15" height="15" viewBox="0 0 22 22" fill="none" style="color:${IC3.golf.color};">${SVG_IC.golf}</svg></div><div class="tdmv2-row-label">ゴルフ場</div><div class="tdmv2-row-value">${courseVal}</div></div>`
-        : _row3('golf', 'ゴルフ場', null, '')}
-      ${place?_row3('pin', '開催地', `${_e(place)}${country&&country!=='japan'?`<span style="color:var(--text-tertiary);font-size:12px;"> / ${_e(country)}</span>`:''}`, ''):''}
-      ${organizer?_row3('org','主催',_e(organizer),''):''}
-    </div>`;
-
-  /* ── 費用カード ── */
-  let costCard = '';
-  if(entryFee || pracFee || capacity){
-    const rows = [];
-    if(entryFee)  rows.push(`<div class="tdmv3-cost-row"><span class="tdmv3-cost-label">参加費</span><span class="tdmv3-cost-value">${_e(entryFee)}</span></div>`);
-    if(pracFee)   rows.push(`<div class="tdmv3-cost-row"><span class="tdmv3-cost-label">練習ラウンド費</span><span class="tdmv3-cost-value">${_e(pracFee)}</span></div>`);
-    if(capacity)  rows.push(`<div class="tdmv3-cost-row"><span class="tdmv3-cost-label">定員</span><span class="tdmv3-cost-value highlight">${_e(capacity)}</span></div>`);
-    costCard = `
-      <div class="tdmv2-section-hdr"><div class="tdmv2-section-label">費用・定員</div></div>
-      <div class="tdmv2-card">${rows.join('')}</div>`;
-  }
-
-  /* ── エントリー情報カード ── */
-  let entryCard = '';
-  if(entryMethod || qualification){
-    entryCard = `
-      <div class="tdmv2-section-hdr"><div class="tdmv2-section-label">エントリー情報</div></div>
-      <div class="tdmv2-card">
-        ${entryMethod   ? _row3('doc',  'エントリー<br>方法',  _e(entryMethod),   '') : ''}
-        ${qualification ? _row3('user', '出場資格',            _e(qualification), '') : ''}
-      </div>`;
-  }
-
-  /* ── リンクグリッド v3 ── */
-  const hasAnyLink = officialUrl || igUrl || entryUrl || pairUrl || resultUrl;
-  const linkSection = `
-    <div class="tdmv2-section-hdr"><div class="tdmv2-section-label">リンク</div></div>
-    <div class="tdmv2-link-grid" style="grid-template-columns:1fr 1fr;gap:9px;padding:4px 14px 14px;">
-      ${_linkBtn3(officialUrl, '公式サイト', 'globe', '#EEF0FA', '#5060A0', '公式サイトへ')}
-      ${_linkBtn3(igUrl,       'Instagram',  'ig',    '#FFF0F6', '#C060A0', 'Instagramへ')}
-      ${_linkBtn3(entryUrl,    'エントリー', 'entry', '#E6F7EE', '#0A6E3A', 'エントリーへ')}
-      ${_linkBtn3(pairUrl,     '組み合わせ', 'doc',   '#E6F0FB', '#2A72C8', '組み合わせへ')}
-      ${_linkBtn3(resultUrl,   '結果速報',   'trophy','#FFF8E0', '#8A6000', '結果ページへ')}
-    </div>`;
-
-  /* ── メモ ── */
-  const notesHtml = notes
-    ? `<div class="tdmv2-notes">📝 ${_e(notes)}</div>` : '';
-
-  /* ── 全体組み立て ── */
-  try {
-    scrollEl.innerHTML = `
-      ${stBar}
-      <div style="height:8px;"></div>
-      ${prizeSection}
-      ${basicCard}
-      ${costCard}
-      ${entryCard}
-      ${linkSection}
-      ${notesHtml}
-      <div class="tdmv2-bottom-pad"></div>`;
-  } catch(err){
-    tdmv3Toast('⚠️ 表示エラーが発生しました', 'error');
-    scrollEl.innerHTML = `<div style="padding:32px 16px;text-align:center;color:var(--text-tertiary);">
-      <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
-      <div style="font-size:14px;font-weight:600;">データの読み込みに失敗しました</div>
-      <div style="font-size:12px;margin-top:8px;">もう一度お試しください</div>
-    </div>`;
-    return;
-  }
-
-  /* ── フッター更新 ── */
-  _renderFooterV3(t, {isFav, isAdded, entryUrl, id, officialUrl, name});
-}
-
-/* ── フッター v3 ── */
-function _renderFooterV3(t, {isFav, isAdded, entryUrl, id, officialUrl, name}){
-  const footerEl = document.getElementById('tdm-footer');
-  if(!footerEl) return;
-
-  footerEl.innerHTML = `
-    <div class="tdmv2-footer-row" style="gap:8px;">
-      <button class="tdmv2-btn-cal${isAdded?' added':''}" id="tdmv2-btn-cal" onclick="_tdmV3Cal()">
-        ${SVG3.cal}
-        <span>${isAdded?'追加済み':'カレンダー'}</span>
-      </button>
-      ${entryUrl
-        ? `<a class="tdmv2-btn-entry" href="${_e(entryUrl)}" target="_blank" rel="noopener noreferrer">
-            ${SVG3.entry}
-            エントリーへ
-          </a>`
-        : (officialUrl
-          ? `<a class="tdmv2-btn-entry" href="${_e(officialUrl)}" target="_blank" rel="noopener noreferrer" style="background:linear-gradient(135deg,#5060A0,#3040A0);">
-              ${SVG3.globe}
-              公式サイト
-            </a>`
-          : `<button class="tdmv2-btn-entry disabled" onclick="tdmv3Toast('エントリーURLは未設定です')">
-              未設定
-            </button>`)
-      }
-      <button class="tdmv2-btn-fav${isFav?' faved':''}" id="tdmv2-btn-fav" onclick="_tdmV3Fav()" aria-label="お気に入り">
-        ${isFav?'★':'☆'}
-      </button>
-    </div>`;
-
-  footerEl.style.padding = '';
-  footerEl.style.border  = '';
-}
-
-/* ── フッターアクション ── */
-window._tdmV3Cal = function(){
-  if(!window._tdmCurrentId) return;
-  if(typeof toggleSearchAdd==='function') toggleSearchAdd(window._tdmCurrentId);
-  const added = typeof addedIds!=='undefined' && addedIds.has(window._tdmCurrentId);
-  const btn = document.getElementById('tdmv2-btn-cal');
-  if(btn){
-    btn.querySelector('span').textContent = added?'追加済み':'カレンダー';
-    btn.classList.toggle('added', added);
-  }
-  tdmv3Toast(added?'✅ カレンダーに追加しました':'カレンダーから削除しました', added?'success':'');
-};
-
-window._tdmV3Fav = async function(){
-  if(!window._tdmCurrentId) return;
-  if(typeof toggleFavTournament==='function') await toggleFavTournament(window._tdmCurrentId);
-  const isFav = (typeof FavoritesDB!=='undefined'?FavoritesDB.has(window._tdmCurrentId):false)
-             || (typeof favTournaments!=='undefined'&&favTournaments.has(window._tdmCurrentId));
-  const btn = document.getElementById('tdmv2-btn-fav');
-  if(btn){ btn.textContent=isFav?'★':'☆'; btn.classList.toggle('faved',isFav); }
-  tdmv3Toast(isFav?'⭐ お気に入りに追加':'お気に入りから削除', isFav?'success':'');
-};
-
-/* ── v2との後方互換 ── */
-window._tdmV2Cal = window._tdmV3Cal;
-window._tdmV2Fav = window._tdmV3Fav;
-window._tdmToggleFav = window._tdmV3Fav;
-
-/* ── Firebaseリスナーエラー時トースト ── */
-if(typeof window.addEventListener==='function'){
-  window.addEventListener('tdm:loadError', ()=>{
-    tdmv3Toast('⚠️ データの読み込みに失敗しました', 'error');
-  });
-}
-
-console.info(
-  '%c[TDM v3]%c 大会詳細 プラットフォーム強化版 適用済み',
-  'background:#39C892;color:#fff;padding:2px 8px;border-radius:4px;font-weight:800;font-size:11px;',
-  'color:#1A6640;font-weight:700;'
 );
 
 })();
