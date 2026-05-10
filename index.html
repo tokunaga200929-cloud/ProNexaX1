@@ -5521,362 +5521,140 @@ body{
 
 
 /* ================================================================
-   ★★★ Phase5: 大会管理システム CSS ★★★
+   Phase5+6: 大会管理 + AI抽出パイプライン CSS
    ================================================================ */
 
-/* ── 管理バッジ（管理者ログイン時のみ表示） ── */
-.admin-badge {
-  display: none;
-  position: fixed; top: env(safe-area-inset-top, 44px); right: 10px;
-  z-index: 8000;
-  background: #1d1d1f; color: #39C892;
-  font-size: 10px; font-weight: 700; letter-spacing: .5px;
-  padding: 4px 10px; border-radius: 20px;
-  pointer-events: none;
-}
-body.is-admin .admin-badge { display: block; }
+/* ── 管理者バッジ ── */
+.admin-badge{display:none;position:fixed;top:max(env(safe-area-inset-top,44px),44px);right:10px;z-index:8000;background:#1d1d1f;color:#39C892;font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:20px;pointer-events:none;}
+body.is-admin .admin-badge{display:block;}
 
 /* ── 管理ページ ── */
-#page-admin {
-  background: #f2f2f7;
-}
-.admin-header {
-  background: #fff;
-  padding: env(safe-area-inset-top, 0px) 0 0;
-  border-bottom: 0.5px solid rgba(0,0,0,.1);
-  flex-shrink: 0;
-}
-.admin-header-top {
-  display: flex; align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px 12px;
-}
-.admin-title {
-  font-size: 17px; font-weight: 700;
-  letter-spacing: -.3px; color: #1d1d1f;
-}
-.admin-add-btn {
-  display: flex; align-items: center; gap: 5px;
-  background: #39C892; color: #fff;
-  border: none; border-radius: 10px;
-  padding: 8px 14px;
-  font-size: 13px; font-weight: 700;
-  font-family: inherit; cursor: pointer;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  touch-action: manipulation;
-  transition: opacity .1s linear, transform .1s ease;
-}
-.admin-add-btn:active { opacity: .75; transform: scale(.96); }
+#page-admin{background:#f2f2f7;}
+.admin-header{background:#fff;border-bottom:.5px solid rgba(0,0,0,.1);flex-shrink:0;}
+.admin-header-top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 12px;padding-top:calc(env(safe-area-inset-top,0px) + 10px);}
+.admin-title{font-size:17px;font-weight:700;letter-spacing:-.3px;color:#1d1d1f;}
+.admin-header-actions{display:flex;gap:7px;}
+.admin-add-btn,.admin-url-btn{display:flex;align-items:center;gap:5px;border:none;border-radius:10px;padding:8px 13px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;transition:opacity .1s,transform .1s;}
+.admin-add-btn{background:#39C892;color:#fff;}
+.admin-url-btn{background:#1d1d1f;color:#39C892;}
+.admin-add-btn:active,.admin-url-btn:active{opacity:.75;transform:scale(.96);}
 
-/* ── 管理リスト ── */
-.admin-scroll {
-  flex: 1; overflow-y: auto; min-height: 0;
-  -webkit-overflow-scrolling: touch;
-  padding: 12px 0 32px;
-}
-.admin-section-label {
-  font-size: 11px; font-weight: 700;
-  color: #8e8e93; letter-spacing: .5px;
-  padding: 8px 20px 4px;
-  text-transform: uppercase;
-}
-.admin-card {
-  background: #fff;
-  margin: 0 16px 8px;
-  border-radius: 14px;
-  border: 0.5px solid rgba(0,0,0,.06);
-  box-shadow: 0 1px 4px rgba(0,0,0,.05);
-  overflow: hidden;
-}
-.admin-card-main {
-  display: flex; align-items: center;
-  padding: 13px 14px;
-  gap: 10px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-}
-.admin-card-stripe {
-  width: 4px; height: 40px;
-  border-radius: 2px; flex-shrink: 0;
-}
-.admin-card-info { flex: 1; min-width: 0; }
-.admin-card-title {
-  font-size: 13px; font-weight: 600;
-  color: #1d1d1f; line-height: 1.3;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  margin-bottom: 3px;
-}
-.admin-card-meta {
-  font-size: 11px; color: #8e8e93;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.admin-card-actions {
-  display: flex; gap: 6px; flex-shrink: 0;
-}
-.admin-action-btn {
-  width: 32px; height: 32px;
-  border-radius: 8px; border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-family: inherit;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  touch-action: manipulation;
-  transition: opacity .1s, transform .1s;
-}
-.admin-action-btn:active { opacity: .6; transform: scale(.88); }
-.admin-edit-btn { background: #e8f0fb; color: #2D7DD2; }
-.admin-del-btn  { background: #fce8e8; color: #C03030; }
+.admin-scroll{flex:1;overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch;padding:10px 0 40px;}
+.admin-section-label{font-size:10.5px;font-weight:700;color:#8e8e93;letter-spacing:.5px;padding:10px 20px 4px;text-transform:uppercase;}
+.admin-card{background:#fff;margin:0 14px 8px;border-radius:14px;border:.5px solid rgba(0,0,0,.06);box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden;}
+.admin-card-main{display:flex;align-items:center;padding:11px 13px;gap:10px;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);}
+.admin-card-main:active{background:rgba(0,0,0,.03);}
+.admin-card-stripe{width:4px;height:36px;border-radius:2px;flex-shrink:0;}
+.admin-card-info{flex:1;min-width:0;}
+.admin-card-title{font-size:13px;font-weight:600;color:#1d1d1f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.admin-card-meta{font-size:10.5px;color:#8e8e93;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.admin-card-actions{display:flex;gap:5px;flex-shrink:0;}
+.admin-act-btn{width:30px;height:30px;border-radius:8px;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:rgba(0,0,0,0);transition:opacity .1s,transform .1s;}
+.admin-act-btn:active{opacity:.6;transform:scale(.86);}
+.admin-edit-btn{background:#e8f0fb;color:#2D7DD2;}
+.admin-del-btn{background:#fce8e8;color:#C03030;}
 
-/* ── ステータスバッジ（管理カード用） ── */
-.admin-status-badge {
-  display: inline-flex; align-items: center; gap: 3px;
-  font-size: 9px; font-weight: 700;
-  padding: 2px 7px; border-radius: 10px;
-  letter-spacing: .2px;
-}
-.st-open         { background: #e0f7ee; color: #0B7A44; }
-.st-closing_soon { background: #fff0dc; color: #A05800; }
-.st-closed       { background: #f0f2f5; color: #8090A0; }
-.st-ongoing      { background: #e5f0fc; color: #1A5090; }
-.st-ended        { background: #f5f5f5; color: #aaa; }
-.st-tbd          { background: #f0f0f5; color: #888; }
+/* ── ステータスバッジ ── */
+.st-badge{display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;letter-spacing:.15px;white-space:nowrap;}
+.st-open{background:#e0f7ee;color:#0B7A44;}
+.st-closing_soon{background:#fff3dc;color:#A05800;}
+.st-closed{background:#f0f2f5;color:#8090A0;}
+.st-ongoing{background:#e5f0fc;color:#1A5090;}
+.st-ended{background:#f5f5f5;color:#aaa;}
+.st-tbd{background:#f0f0f5;color:#888;}
 
-/* ── 大会編集フォーム（ Bottom Sheet） ── */
-.atm-overlay {
-  position: fixed; inset: 0; z-index: 6000;
-  background: rgba(0,0,0,.38);
-  opacity: 0; pointer-events: none;
-  transition: opacity .28s ease;
-}
-.atm-overlay.show { opacity: 1; pointer-events: auto; }
+/* ── 解析ステータスバッジ ── */
+.ps-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;}
+.ps-idle{background:#f0f2f5;color:#888;}
+.ps-fetching,.ps-parsing{background:#fffbe0;color:#8a6600;}
+.ps-success{background:#e0f7ee;color:#0B7A44;}
+.ps-failed{background:#fce8e8;color:#C03030;}
+@keyframes psBlink{0%,100%{opacity:1;}50%{opacity:.4;}}
+.ps-fetching .ps-dot,.ps-parsing .ps-dot{display:inline-block;animation:psBlink .8s infinite;}
 
-.atm-sheet {
-  position: fixed; left: 0; right: 0; bottom: 0;
-  z-index: 6001;
-  background: #fff;
-  border-radius: 20px 20px 0 0;
-  max-height: 94vh;
-  display: flex; flex-direction: column;
-  transform: translateY(100%);
-  transition: transform .36s cubic-bezier(.32,.72,.25,1);
-  box-shadow: 0 -2px 20px rgba(0,0,0,.1);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-.atm-sheet.show { transform: translateY(0); }
+/* ── 大会編集シート (atm) ── */
+.atm-overlay{position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,.38);opacity:0;pointer-events:none;transition:opacity .26s ease;}
+.atm-overlay.show{opacity:1;pointer-events:auto;}
+.atm-sheet{position:fixed;left:0;right:0;bottom:0;z-index:6001;background:#fff;border-radius:20px 20px 0 0;max-height:94vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .34s cubic-bezier(.32,.72,.25,1);box-shadow:0 -2px 20px rgba(0,0,0,.1);padding-bottom:env(safe-area-inset-bottom,0px);}
+.atm-sheet.show{transform:translateY(0);}
+.atm-grabber{width:36px;height:5px;border-radius:3px;background:rgba(0,0,0,.14);margin:10px auto 0;flex-shrink:0;}
+.atm-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 12px;border-bottom:.5px solid rgba(0,0,0,.08);flex-shrink:0;}
+.atm-header-title{font-size:16px;font-weight:700;color:#1d1d1f;letter-spacing:-.2px;}
+.atm-close-btn{width:28px;height:28px;border-radius:50%;background:#f0f0f4;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#666;font-size:14px;-webkit-tap-highlight-color:rgba(0,0,0,0);transition:opacity .1s;}
+.atm-close-btn:active{opacity:.6;}
+.atm-scroll{flex:1;overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch;padding:14px 16px;scrollbar-width:none;}
+.atm-scroll::-webkit-scrollbar{display:none;}
+.atm-group{margin-bottom:18px;}
+.atm-group-title{font-size:10px;font-weight:700;color:#8e8e93;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.atm-group-title::after{content:'';flex:1;height:.5px;background:rgba(0,0,0,.07);}
+.atm-field{margin-bottom:9px;}
+.atm-label{font-size:11px;font-weight:600;color:#6a6a6a;margin-bottom:4px;display:block;}
+.atm-input,.atm-select,.atm-textarea{width:100%;background:#f5f5f7;border:1.5px solid transparent;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;color:#1d1d1f;outline:none;transition:border-color .18s,box-shadow .18s,background .18s;-webkit-appearance:none;box-sizing:border-box;}
+.atm-input:focus,.atm-select:focus,.atm-textarea:focus{border-color:#39C892;box-shadow:0 0 0 3px rgba(57,200,146,.12);background:#fff;}
+.atm-textarea{min-height:68px;resize:none;line-height:1.5;}
+.atm-row{display:flex;gap:8px;}
+.atm-row .atm-field{flex:1;}
+.atm-footer{flex-shrink:0;padding:10px 16px 12px;border-top:.5px solid rgba(0,0,0,.07);display:flex;gap:8px;}
+.atm-save-btn{flex:1;height:50px;background:linear-gradient(135deg,#39C892,#22A874);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);box-shadow:0 4px 12px rgba(34,168,116,.28);transition:opacity .1s,transform .1s;}
+.atm-save-btn:active{opacity:.8;transform:scale(.975);}
+.atm-cancel-btn{width:80px;height:50px;background:#f0f0f4;color:#555;border:none;border-radius:13px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);transition:opacity .1s;}
+.atm-cancel-btn:active{opacity:.6;}
 
-.atm-grabber {
-  width: 36px; height: 5px; border-radius: 3px;
-  background: rgba(0,0,0,.14);
-  margin: 10px auto 0; flex-shrink: 0;
-}
-.atm-header {
-  display: flex; align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px 12px;
-  border-bottom: 0.5px solid rgba(0,0,0,.08);
-  flex-shrink: 0;
-}
-.atm-header-title {
-  font-size: 16px; font-weight: 700;
-  color: #1d1d1f; letter-spacing: -.2px;
-}
-.atm-close-btn {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: #f0f0f4; border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: #666; font-size: 14px;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  transition: opacity .1s;
-}
-.atm-close-btn:active { opacity: .6; }
-
-.atm-scroll {
-  flex: 1; overflow-y: auto; min-height: 0;
-  -webkit-overflow-scrolling: touch;
-  padding: 16px;
-}
-.atm-scroll::-webkit-scrollbar { display: none; }
-
-/* フォームグループ */
-.atm-group {
-  margin-bottom: 18px;
-}
-.atm-group-title {
-  font-size: 10.5px; font-weight: 700;
-  color: #8e8e93; letter-spacing: .6px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-  display: flex; align-items: center; gap: 6px;
-}
-.atm-group-title::after {
-  content: ''; flex: 1; height: 0.5px; background: rgba(0,0,0,.07);
-}
-
-/* フォームフィールド */
-.atm-field {
-  margin-bottom: 10px;
-}
-.atm-label {
-  font-size: 11px; font-weight: 600;
-  color: #6a6a6a; margin-bottom: 5px; display: block;
-}
-.atm-input, .atm-select, .atm-textarea {
-  width: 100%; background: #f5f5f7;
-  border: 1.5px solid transparent;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 14px; font-family: inherit; color: #1d1d1f;
-  outline: none;
-  transition: border-color .18s, box-shadow .18s, background .18s;
-  -webkit-appearance: none;
-  box-sizing: border-box;
-}
-.atm-input:focus, .atm-select:focus, .atm-textarea:focus {
-  border-color: #39C892;
-  box-shadow: 0 0 0 3px rgba(57,200,146,.12);
-  background: #fff;
-}
-.atm-textarea {
-  min-height: 72px; resize: none;
-  line-height: 1.5;
-}
-.atm-input-row {
-  display: flex; gap: 8px;
-}
-.atm-input-row .atm-field { flex: 1; }
-
-/* URL フィールド（グリーンアクセント） */
-.atm-url-field {
-  position: relative;
-}
-.atm-url-prefix {
-  position: absolute; left: 11px; top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px; color: #39C892; font-weight: 600;
-  pointer-events: none;
-}
-.atm-url-field .atm-input { padding-left: 36px; }
-
-/* フォームフッター */
-.atm-footer {
-  flex-shrink: 0;
-  padding: 10px 16px 14px;
-  border-top: 0.5px solid rgba(0,0,0,.07);
-  display: flex; gap: 8px;
-}
-.atm-save-btn {
-  flex: 1; height: 50px;
-  background: linear-gradient(135deg, #39C892, #22A874);
-  color: #fff; border: none; border-radius: 14px;
-  font-size: 15px; font-weight: 700; font-family: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  touch-action: manipulation;
-  box-shadow: 0 4px 14px rgba(34,168,116,.28);
-  transition: opacity .1s, transform .1s;
-}
-.atm-save-btn:active { opacity: .8; transform: scale(.975); }
-.atm-cancel-btn {
-  width: 80px; height: 50px;
-  background: #f0f0f4; color: #555;
-  border: none; border-radius: 14px;
-  font-size: 14px; font-weight: 600; font-family: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  touch-action: manipulation;
-  transition: opacity .1s;
-}
-.atm-cancel-btn:active { opacity: .6; }
+/* ── URL解析モーダル ── */
+.url-modal-overlay{position:fixed;inset:0;z-index:7500;background:rgba(0,0,0,.42);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .26s ease;}
+.url-modal-overlay.show{opacity:1;pointer-events:auto;}
+.url-modal-sheet{width:100%;max-width:480px;background:#fff;border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom,0px);transform:translateY(100%);transition:transform .34s cubic-bezier(.32,.72,.25,1);}
+.url-modal-overlay.show .url-modal-sheet{transform:translateY(0);}
+.url-modal-grabber{width:36px;height:5px;border-radius:3px;background:rgba(0,0,0,.14);margin:10px auto 8px;}
+.url-modal-body{padding:12px 20px 20px;}
+.url-modal-title{font-size:17px;font-weight:700;color:#1d1d1f;margin-bottom:5px;letter-spacing:-.3px;}
+.url-modal-sub{font-size:12px;color:#8e8e93;margin-bottom:16px;line-height:1.6;}
+.url-input-wrap{display:flex;gap:8px;margin-bottom:12px;}
+.url-input{flex:1;height:48px;background:#f5f5f7;border:1.5px solid transparent;border-radius:12px;padding:0 14px;font-size:14px;font-family:inherit;color:#1d1d1f;outline:none;transition:border-color .18s,box-shadow .18s;-webkit-appearance:none;box-sizing:border-box;}
+.url-input:focus{border-color:#39C892;box-shadow:0 0 0 3px rgba(57,200,146,.12);background:#fff;}
+.url-fetch-btn{height:48px;padding:0 16px;background:#1d1d1f;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:rgba(0,0,0,0);transition:opacity .1s,transform .1s;}
+.url-fetch-btn:active{opacity:.7;transform:scale(.95);}
+.url-fetch-btn:disabled{opacity:.4;cursor:not-allowed;}
+.url-type-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:10px;background:#f0f2f5;font-size:11px;font-weight:600;color:#555;margin-bottom:10px;}
+.url-progress{display:none;margin-bottom:12px;}
+.url-progress.show{display:block;}
+.url-progress-bar-wrap{height:4px;background:#f0f0f5;border-radius:2px;overflow:hidden;margin-top:6px;}
+.url-progress-bar{height:100%;border-radius:2px;background:linear-gradient(90deg,#39C892,#22A874);width:0%;transition:width .4s ease;}
+.url-progress-label{font-size:11px;color:#8e8e93;font-weight:500;}
+.url-result-box{display:none;background:#f8fdf9;border:1px solid rgba(57,200,146,.25);border-radius:12px;padding:13px;margin-bottom:12px;}
+.url-result-box.show{display:block;}
+.url-result-title{font-size:13px;font-weight:700;color:#1d1d1f;margin-bottom:6px;}
+.url-result-row{display:flex;gap:6px;font-size:11.5px;color:#555;margin-bottom:3px;align-items:flex-start;}
+.url-result-label{font-weight:600;color:#39C892;white-space:nowrap;min-width:64px;}
+.url-result-val{flex:1;word-break:break-all;}
+.url-error-box{display:none;background:#fdf0f0;border:1px solid rgba(200,50,50,.2);border-radius:12px;padding:12px;margin-bottom:12px;font-size:12px;color:#C03030;line-height:1.5;}
+.url-error-box.show{display:block;}
+.url-action-row{display:flex;gap:8px;}
+.url-confirm-btn{flex:1;height:48px;background:linear-gradient(135deg,#39C892,#22A874);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 12px rgba(34,168,116,.28);-webkit-tap-highlight-color:rgba(0,0,0,0);transition:opacity .1s,transform .1s;}
+.url-confirm-btn:active{opacity:.8;transform:scale(.975);}
+.url-cancel-btn{width:80px;height:48px;background:#f0f0f4;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);transition:opacity .1s;}
+.url-cancel-btn:active{opacity:.6;}
 
 /* ── 管理者ログインモーダル ── */
-.admin-login-overlay {
-  position: fixed; inset: 0; z-index: 7000;
-  background: rgba(0,0,0,.5);
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; pointer-events: none;
-  transition: opacity .22s ease;
-  padding: 20px;
-}
-.admin-login-overlay.show { opacity: 1; pointer-events: auto; }
-.admin-login-card {
-  background: #fff; border-radius: 22px;
-  padding: 28px 24px;
-  width: 100%; max-width: 340px;
-  box-shadow: 0 8px 40px rgba(0,0,0,.2);
-  animation: adminCardIn .3s cubic-bezier(.32,.72,.25,1) both;
-}
-@keyframes adminCardIn {
-  from { opacity: 0; transform: scale(.94) translateY(12px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-.admin-login-title {
-  font-size: 18px; font-weight: 700; color: #1d1d1f;
-  margin-bottom: 6px; letter-spacing: -.3px;
-}
-.admin-login-sub {
-  font-size: 12px; color: #8e8e93; margin-bottom: 20px;
-}
-.admin-login-input {
-  width: 100%; height: 50px;
-  background: #f5f5f7; border: 1.5px solid transparent;
-  border-radius: 12px; padding: 0 14px;
-  font-size: 16px; font-family: inherit; color: #1d1d1f;
-  outline: none; letter-spacing: .1em;
-  transition: border-color .18s, box-shadow .18s;
-  -webkit-appearance: none; box-sizing: border-box;
-  margin-bottom: 12px;
-}
-.admin-login-input:focus {
-  border-color: #39C892;
-  box-shadow: 0 0 0 3px rgba(57,200,146,.12);
-  background: #fff;
-}
-.admin-login-btn {
-  width: 100%; height: 50px;
-  background: linear-gradient(135deg, #39C892, #22A874);
-  color: #fff; border: none; border-radius: 13px;
-  font-size: 15px; font-weight: 700; font-family: inherit;
-  cursor: pointer; margin-bottom: 8px;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  box-shadow: 0 4px 14px rgba(34,168,116,.28);
-  transition: opacity .1s, transform .1s;
-}
-.admin-login-btn:active { opacity: .8; transform: scale(.975); }
-.admin-login-cancel {
-  width: 100%; background: none; border: none;
-  font-size: 13px; color: #8e8e93; font-family: inherit;
-  cursor: pointer; padding: 6px;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-}
-.admin-login-error {
-  font-size: 12px; color: #C03030; text-align: center;
-  min-height: 18px; margin-bottom: 8px; font-weight: 500;
-}
+.admin-login-overlay{position:fixed;inset:0;z-index:7000;background:rgba(0,0,0,.48);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s ease;}
+.admin-login-overlay.show{opacity:1;pointer-events:auto;}
+.admin-login-card{background:#fff;border-radius:22px;padding:28px 24px;width:100%;max-width:340px;box-shadow:0 8px 40px rgba(0,0,0,.2);animation:adminCardIn .3s cubic-bezier(.32,.72,.25,1) both;}
+@keyframes adminCardIn{from{opacity:0;transform:scale(.94) translateY(12px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.admin-login-title{font-size:18px;font-weight:700;color:#1d1d1f;margin-bottom:5px;letter-spacing:-.3px;}
+.admin-login-sub{font-size:12px;color:#8e8e93;margin-bottom:18px;line-height:1.5;}
+.admin-login-input{width:100%;height:50px;background:#f5f5f7;border:1.5px solid transparent;border-radius:12px;padding:0 14px;font-size:16px;font-family:inherit;color:#1d1d1f;outline:none;letter-spacing:.08em;transition:border-color .18s,box-shadow .18s;-webkit-appearance:none;box-sizing:border-box;margin-bottom:10px;}
+.admin-login-input:focus{border-color:#39C892;box-shadow:0 0 0 3px rgba(57,200,146,.12);background:#fff;}
+.admin-login-error{font-size:12px;color:#C03030;text-align:center;min-height:18px;margin-bottom:8px;font-weight:500;}
+.admin-login-btn{width:100%;height:50px;background:linear-gradient(135deg,#39C892,#22A874);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px;box-shadow:0 4px 12px rgba(34,168,116,.26);-webkit-tap-highlight-color:rgba(0,0,0,0);transition:opacity .1s,transform .1s;}
+.admin-login-btn:active{opacity:.8;transform:scale(.975);}
+.admin-login-cancel{width:100%;background:none;border:none;font-size:13px;color:#8e8e93;font-family:inherit;cursor:pointer;padding:6px;-webkit-tap-highlight-color:rgba(0,0,0,0);}
 
-/* ── ソートバー（Phase5強化）── */
-.sort-bar {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 16px;
-  overflow-x: auto; scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  border-bottom: 0.5px solid rgba(0,0,0,.05);
-}
-.sort-bar::-webkit-scrollbar { display: none; }
-.sort-chip {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 5px 12px; border-radius: 20px;
-  font-size: 11px; font-weight: 600;
-  border: 1px solid rgba(0,0,0,.1);
-  background: #f2f2f7; color: #636366;
-  white-space: nowrap; cursor: pointer;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  touch-action: manipulation;
-  transition: background .15s, color .15s, border-color .15s;
-  flex-shrink: 0;
-}
-.sort-chip.active {
-  background: #1d1d1f; color: #fff; border-color: transparent;
-}
-.sort-chip-icon { font-size: 10px; }
+/* ── ソートバー ── */
+.sort-bar{display:flex;align-items:center;gap:6px;padding:6px 16px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-bottom:.5px solid rgba(0,0,0,.05);}
+.sort-bar::-webkit-scrollbar{display:none;}
+.sort-chip{display:inline-flex;align-items:center;gap:3px;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid rgba(0,0,0,.1);background:#f2f2f7;color:#636366;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;transition:background .15s,color .15s,border-color .15s;flex-shrink:0;}
+.sort-chip.active{background:#1d1d1f;color:#fff;border-color:transparent;}
+.sort-chip:active{transform:scale(.92);}
 </style>
 
 
@@ -6163,23 +5941,30 @@ body.is-admin .admin-badge { display: block; }
   </div>
 
   <!-- ================================================================ -->
-  <!-- ★★★ Phase5: 管理者ページ ★★★ -->
+  <!-- Phase5+6: 大会管理ページ                                          -->
+  <!-- ================================================================ -->
   <div class="page" id="page-admin">
     <div class="admin-header">
       <div class="admin-header-top">
         <span class="admin-title">⚙️ 大会管理</span>
-        <button class="admin-add-btn" onclick="openAtmSheet(null)">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <line x1="7" y1="1" x2="7" y2="13" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-            <line x1="1" y1="7" x2="13" y2="7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          大会を追加
-        </button>
+        <div class="admin-header-actions">
+          <button class="admin-url-btn" onclick="openUrlModal()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            URL解析
+          </button>
+          <button class="admin-add-btn" onclick="openAtmSheet(null)">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><line x1="7" y1="1" x2="7" y2="13" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><line x1="1" y1="7" x2="13" y2="7" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+            手動追加
+          </button>
+        </div>
       </div>
     </div>
-    <div class="admin-scroll" id="admin-list-scroll"><!-- JS描画 --></div>
+    <div class="admin-scroll" id="admin-list-scroll">
+      <div style="text-align:center;padding:48px 24px;color:#8e8e93;font-size:14px;">読み込み中...</div>
+    </div>
   </div>
 
+  <!-- ================================================================ -->
   <!-- ★★★ 収支（Finance）ページ ★★★                                    -->
   <!-- 現在リセット中 → 新設計で再構築予定                               -->
   <!-- ================================================================ -->
@@ -6456,11 +6241,17 @@ body.is-admin .admin-badge { display: block; }
   </div>
   <div class="home-bar"></div>
 
-  <!-- ★★★ Phase5: 管理者ログインモーダル ★★★ -->
+  <!-- ============================================================ -->
+  <!-- Phase5+6: 管理者ページ                                        -->
+  <!-- ============================================================ -->
+  <!-- ★ 管理バッジ（管理者ログイン時のみ表示） -->
+  <div class="admin-badge" id="admin-badge">ADMIN</div>
+
+  <!-- ★ 管理者ログインモーダル -->
   <div class="admin-login-overlay" id="admin-login-overlay">
     <div class="admin-login-card">
       <div class="admin-login-title">🔐 管理者ログイン</div>
-      <div class="admin-login-sub">管理者パスコードを入力してください</div>
+      <div class="admin-login-sub">管理者パスコードを入力してください<br>※プレースホルダー環境では任意の文字列で入れます</div>
       <input class="admin-login-input" id="admin-passcode-input"
         type="password" placeholder="パスコード" autocomplete="off"
         onkeydown="if(event.key==='Enter')adminLogin()">
@@ -6470,7 +6261,7 @@ body.is-admin .admin-badge { display: block; }
     </div>
   </div>
 
-  <!-- ★★★ Phase5: 大会追加・編集シート ★★★ -->
+  <!-- ★ 大会追加・編集シート -->
   <div class="atm-overlay" id="atm-overlay" onclick="if(event.target===this)closeAtmSheet()"></div>
   <div class="atm-sheet" id="atm-sheet">
     <div class="atm-grabber"></div>
@@ -6478,19 +6269,19 @@ body.is-admin .admin-badge { display: block; }
       <span class="atm-header-title" id="atm-header-title">大会を追加</span>
       <button class="atm-close-btn" onclick="closeAtmSheet()">✕</button>
     </div>
-    <div class="atm-scroll" id="atm-scroll">
+    <div class="atm-scroll" id="atm-form-scroll">
       <div class="atm-group">
         <div class="atm-group-title">基本情報</div>
         <div class="atm-field"><label class="atm-label">大会名 *</label><input class="atm-input" id="atm-title" type="text" placeholder="例：東建ホームメイトカップ"></div>
-        <div class="atm-input-row">
+        <div class="atm-row">
           <div class="atm-field"><label class="atm-label">カテゴリ *</label><select class="atm-select" id="atm-category"></select></div>
-          <div class="atm-field"><label class="atm-label">性別</label><select class="atm-select" id="atm-gender"><option value="mens">男子</option><option value="womens">女子</option><option value="both">男女共通</option></select></div>
+          <div class="atm-field"><label class="atm-label">性別</label><select class="atm-select" id="atm-gender"><option value="mens">男子</option><option value="womens">女子</option><option value="both">男女</option></select></div>
         </div>
-        <div class="atm-input-row">
+        <div class="atm-row">
           <div class="atm-field"><label class="atm-label">地域区分</label><select class="atm-select" id="atm-region"><option value="domestic">国内</option><option value="overseas">海外</option></select></div>
           <div class="atm-field"><label class="atm-label">ステータス</label><select class="atm-select" id="atm-status"><option value="tbd">自動判定</option><option value="open">募集中</option><option value="closing_soon">締切間近</option><option value="closed">締切済</option><option value="ongoing">開催中</option><option value="ended">終了</option></select></div>
         </div>
-        <div class="atm-input-row">
+        <div class="atm-row">
           <div class="atm-field"><label class="atm-label">都道府県</label><select class="atm-select" id="atm-prefecture"></select></div>
           <div class="atm-field"><label class="atm-label">エリア</label><select class="atm-select" id="atm-area"><option value="kanto">関東</option><option value="kansai">関西</option><option value="chubu">中部</option><option value="kyushu">九州・沖縄</option><option value="hokkaido">北海道・東北</option><option value="chugoku">中国・四国</option><option value="overseas">海外</option></select></div>
         </div>
@@ -6499,22 +6290,22 @@ body.is-admin .admin-badge { display: block; }
       </div>
       <div class="atm-group">
         <div class="atm-group-title">日程</div>
-        <div class="atm-input-row">
+        <div class="atm-row">
           <div class="atm-field"><label class="atm-label">開始日</label><input class="atm-input" id="atm-startDate" type="date"></div>
           <div class="atm-field"><label class="atm-label">終了日</label><input class="atm-input" id="atm-endDate" type="date"></div>
         </div>
-        <div class="atm-input-row">
+        <div class="atm-row">
           <div class="atm-field"><label class="atm-label">エントリー締切</label><input class="atm-input" id="atm-entryDeadline" type="date"></div>
           <div class="atm-field"><label class="atm-label">キャンセル締切</label><input class="atm-input" id="atm-cancelDeadline" type="date"></div>
         </div>
       </div>
       <div class="atm-group">
         <div class="atm-group-title">賞金・費用</div>
-        <div class="atm-input-row">
+        <div class="atm-row">
           <div class="atm-field"><label class="atm-label">賞金総額</label><input class="atm-input" id="atm-prize" type="text" placeholder="例：15,000万円"></div>
           <div class="atm-field"><label class="atm-label">優勝賞金</label><input class="atm-input" id="atm-prizeWinner" type="text" placeholder="例：3,000万円"></div>
         </div>
-        <div class="atm-input-row">
+        <div class="atm-row">
           <div class="atm-field"><label class="atm-label">参加費</label><input class="atm-input" id="atm-entryFee" type="text" placeholder="例：30,000円"></div>
           <div class="atm-field"><label class="atm-label">練習ラウンド費</label><input class="atm-input" id="atm-practiceRoundFee" type="text" placeholder="例：8,000円"></div>
         </div>
@@ -6522,41 +6313,78 @@ body.is-admin .admin-badge { display: block; }
       <div class="atm-group">
         <div class="atm-group-title">エントリー情報</div>
         <div class="atm-field"><label class="atm-label">エントリー方法</label><input class="atm-input" id="atm-entryMethod" type="text" placeholder="例：JGTOオンライン申請"></div>
-        <div class="atm-input-row">
+        <div class="atm-row">
           <div class="atm-field"><label class="atm-label">出場資格</label><input class="atm-input" id="atm-qualification" type="text" placeholder="例：JGTO出場資格保持者"></div>
           <div class="atm-field"><label class="atm-label">定員</label><input class="atm-input" id="atm-capacity" type="text" placeholder="例：144名"></div>
         </div>
       </div>
       <div class="atm-group">
-        <div class="atm-group-title">リンク（URL）</div>
+        <div class="atm-group-title">リンク・URL</div>
         <div class="atm-field"><label class="atm-label">公式HP</label><input class="atm-input" id="atm-link-official" type="url" placeholder="https://..."></div>
         <div class="atm-field"><label class="atm-label">Instagram</label><input class="atm-input" id="atm-link-instagram" type="url" placeholder="https://instagram.com/..."></div>
         <div class="atm-field"><label class="atm-label">エントリーフォーム</label><input class="atm-input" id="atm-link-entry" type="url" placeholder="https://..."></div>
-        <div class="atm-input-row">
+        <div class="atm-row">
           <div class="atm-field"><label class="atm-label">組み合わせ</label><input class="atm-input" id="atm-link-pairs" type="url" placeholder="https://..."></div>
           <div class="atm-field"><label class="atm-label">結果速報</label><input class="atm-input" id="atm-link-result" type="url" placeholder="https://..."></div>
         </div>
       </div>
       <div class="atm-group">
         <div class="atm-group-title">データソース（AI連携準備）</div>
-        <div class="atm-input-row">
+        <div class="atm-row">
           <div class="atm-field"><label class="atm-label">取得方法</label><select class="atm-select" id="atm-sourceType"><option value="manual">手動入力</option><option value="ai_url">AI（URL解析）</option><option value="ai_instagram">AI（Instagram）</option><option value="ai_pdf">AI（PDF）</option></select></div>
         </div>
-        <div class="atm-field"><label class="atm-label">ソースURL（AI解析元）</label><input class="atm-input" id="atm-sourceUrl" type="url" placeholder="https://...（将来AIが自動入力）"></div>
+        <div class="atm-field"><label class="atm-label">ソースURL</label><input class="atm-input" id="atm-sourceUrl" type="url" placeholder="https://...（AI解析元URL）"></div>
         <div class="atm-field"><label class="atm-label">管理メモ</label><textarea class="atm-textarea" id="atm-notes" placeholder="管理者のみ表示されるメモ"></textarea></div>
       </div>
       <div style="height:8px;"></div>
     </div>
     <div class="atm-footer">
       <button class="atm-cancel-btn" onclick="closeAtmSheet()">キャンセル</button>
-      <button class="atm-save-btn" onclick="atmSave()">保存する</button>
+      <button class="atm-save-btn" id="atm-save-btn" onclick="atmSave()">保存する</button>
     </div>
   </div>
 
-  <!-- 管理者バッジ -->
-  <div class="admin-badge" id="admin-badge">ADMIN</div>
-
-  <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <!-- ★ URL解析モーダル（AI抽出パイプライン入口） -->
+  <div class="url-modal-overlay" id="url-modal-overlay" onclick="if(event.target===this)closeUrlModal()">
+    <div class="url-modal-sheet">
+      <div class="url-modal-grabber"></div>
+      <div class="url-modal-body">
+        <div class="url-modal-title">URLから大会を追加</div>
+        <div class="url-modal-sub">大会の公式ページ・Instagram・PDFのURLを貼り付けると<br>自動で大会情報を取得します（AI解析は準備中）</div>
+        <!-- URL入力 -->
+        <div class="url-input-wrap">
+          <input class="url-input" id="url-modal-input" type="url"
+            placeholder="https://... または Instagram URL"
+            oninput="onUrlInputChange()"
+            onkeydown="if(event.key==='Enter')startUrlFetch()">
+          <button class="url-fetch-btn" id="url-fetch-btn" onclick="startUrlFetch()">解析</button>
+        </div>
+        <!-- 自動判定チップ -->
+        <div id="url-type-display" style="margin-bottom:10px;display:none;">
+          <span class="url-type-chip" id="url-type-chip">🌐 website</span>
+        </div>
+        <!-- 進捗バー -->
+        <div class="url-progress" id="url-progress">
+          <div class="url-progress-label" id="url-progress-label">取得中...</div>
+          <div class="url-progress-bar-wrap"><div class="url-progress-bar" id="url-progress-bar"></div></div>
+        </div>
+        <!-- 結果プレビュー -->
+        <div class="url-result-box" id="url-result-box">
+          <div class="url-result-title" id="url-result-title">取得結果</div>
+          <div id="url-result-rows"></div>
+        </div>
+        <!-- エラー -->
+        <div class="url-error-box" id="url-error-box"></div>
+        <!-- アクション -->
+        <div class="url-action-row">
+          <button class="url-cancel-btn" onclick="closeUrlModal()">閉じる</button>
+          <button class="url-confirm-btn" id="url-confirm-btn" style="display:none;" onclick="confirmUrlResult()">
+            この内容で追加する
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-title" id="modal-title">予定を追加</div>
@@ -7395,53 +7223,12 @@ function _getTourDef(tourKey){
 //
 // ================================================================
 const tournaments = [
-  // ================================================================
-  // ★★★ Phase5: 統一大会データフォーマット ★★★
-  //
-  // 【フィールド仕様】
-  //   id          : 'category-year-seq' 形式のユニークID
-  //   title       : 大会名（必須）
-  //   category    : カテゴリキー（必須）
-  //   subCategory : サブカテゴリ（任意）例:'major','classic','open'
-  //   gender      : 'mens'|'womens'|'both'
-  //   region      : 'domestic'|'overseas'
-  //   area        : kanto/kansai/chubu/kyushu/hokkaido/overseas
-  //   prefecture  : 都道府県キー
-  //   country     : 開催国（海外のみ）例:'usa','uk','australia'
-  //   course      : ゴルフ場名
-  //   startDate   : 'YYYY-MM-DD'
-  //   endDate     : 'YYYY-MM-DD'
-  //   entryDeadline : 'YYYY-MM-DD'|null
-  //   cancelDeadline: 'YYYY-MM-DD'|null
-  //   prize       : '15,000万円' など
-  //   prizeWinner : 優勝賞金
-  //   entryFee    : 参加費
-  //   practiceRoundFee: 練習ラウンド費
-  //   entryMethod : エントリー方法
-  //   qualification: 出場資格
-  //   capacity    : '144名' など
-  //   organizer   : 主催者
-  //   tags        : ['メジャー','招待制'] など
-  //   status      : 'open'|'closing_soon'|'closed'|'ongoing'|'ended'|'tbd'
-  //                 （省略時はstartDate/endDate/entryDeadlineから自動計算）
-  //   sourceType  : データ取得元 'manual'|'ai_url'|'ai_instagram'|'ai_pdf'
-  //   sourceUrl   : 取得元URL（AI解析用）
-  //   notes       : 管理メモ（管理者のみ表示）
-  //   createdAt   : 作成日時 ISO string
-  //   updatedAt   : 更新日時 ISO string
-  //   links: {
-  //     official  : 公式HP URL
-  //     instagram : Instagram URL
-  //     entry     : エントリーフォーム URL
-  //     pairs     : 組み合わせ URL
-  //     result    : 結果速報 URL
-  //   }
-  // ================================================================
   // ─── JGTO 男子ツアー ───────────────────────────────────────────
   {
-    id:'jgto-2025-001', title:'東建ホームメイトカップ',
-    category:'jgto', subCategory:'regular', gender:'mens', region:'domestic',
-    area:'chubu', prefecture:'mie', country:'japan',
+    id:'jgto-2025-001',
+    title:'東建ホームメイトカップ',
+    category:'jgto', gender:'mens', region:'domestic',
+    area:'chubu', prefecture:'mie',
     course:'東建多度CC・名古屋',
     startDate:'2025-04-03', endDate:'2025-04-06',
     entryDeadline:'2025-03-10', cancelDeadline:'2025-03-20',
@@ -7450,14 +7237,13 @@ const tournaments = [
     entryMethod:'JGTOオンライン申請',
     qualification:'JGTO出場資格保持者', capacity:'144名',
     organizer:'東建コーポレーション', tags:[],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   {
-    id:'jgto-2025-002', title:'中日クラウンズ',
-    category:'jgto', subCategory:'regular', gender:'mens', region:'domestic',
-    area:'chubu', prefecture:'aichi', country:'japan',
+    id:'jgto-2025-002',
+    title:'中日クラウンズ',
+    category:'jgto', gender:'mens', region:'domestic',
+    area:'chubu', prefecture:'aichi',
     course:'名古屋GC 和合コース',
     startDate:'2025-04-24', endDate:'2025-04-27',
     entryDeadline:'2025-03-28', cancelDeadline:'2025-04-10',
@@ -7466,14 +7252,13 @@ const tournaments = [
     entryMethod:'JGTO公式サイト',
     qualification:'JGTO出場資格保持者', capacity:'144名',
     organizer:'中日新聞社', tags:[],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   {
-    id:'jgto-2025-003', title:'日本プロゴルフ選手権',
-    category:'jgto', subCategory:'major', gender:'mens', region:'domestic',
-    area:'kansai', prefecture:'hyogo', country:'japan',
+    id:'jgto-2025-003',
+    title:'日本プロゴルフ選手権',
+    category:'jgto', gender:'mens', region:'domestic',
+    area:'kansai', prefecture:'hyogo',
     course:'宝塚GC',
     startDate:'2025-05-15', endDate:'2025-05-18',
     entryDeadline:'2025-04-20', cancelDeadline:'2025-05-01',
@@ -7482,14 +7267,13 @@ const tournaments = [
     entryMethod:'JPGA会員専用フォーム',
     qualification:'PGA正会員・特別会員', capacity:'156名',
     organizer:'日本プロゴルフ協会', tags:['メジャー'],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   {
-    id:'jgto-2025-004', title:'日本ゴルフツアー選手権 森ビルカップ Shishido Hills',
-    category:'jgto', subCategory:'major', gender:'mens', region:'domestic',
-    area:'kanto', prefecture:'ibaraki', country:'japan',
+    id:'jgto-2025-004',
+    title:'日本ゴルフツアー選手権 森ビルカップ Shishido Hills',
+    category:'jgto', gender:'mens', region:'domestic',
+    area:'kanto', prefecture:'ibaraki',
     course:'宍戸ヒルズCC 西コース',
     startDate:'2025-06-05', endDate:'2025-06-08',
     entryDeadline:'2025-05-09', cancelDeadline:'2025-05-22',
@@ -7498,14 +7282,13 @@ const tournaments = [
     entryMethod:'JGTOオンライン申請',
     qualification:'JGTO出場資格保持者', capacity:'144名',
     organizer:'JGTO / 森ビル', tags:['メジャー'],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   {
-    id:'jgto-2025-005', title:'日本オープン',
-    category:'jgto', subCategory:'major', gender:'mens', region:'domestic',
-    area:'kanto', prefecture:'chiba', country:'japan',
+    id:'jgto-2025-005',
+    title:'日本オープン',
+    category:'jgto', gender:'mens', region:'domestic',
+    area:'kanto', prefecture:'chiba',
     course:'袖ヶ浦カンツリークラブ',
     startDate:'2025-10-09', endDate:'2025-10-12',
     entryDeadline:'2025-09-01', cancelDeadline:'2025-09-20',
@@ -7514,14 +7297,13 @@ const tournaments = [
     entryMethod:'JGA公式サイト',
     qualification:'JGA規定による', capacity:'156名',
     organizer:'日本ゴルフ協会', tags:['メジャー'],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   {
-    id:'jgto-2025-006', title:'ダンロップフェニックス',
-    category:'jgto', subCategory:'regular', gender:'mens', region:'domestic',
-    area:'kyushu', prefecture:'miyazaki', country:'japan',
+    id:'jgto-2025-006',
+    title:'ダンロップフェニックス',
+    category:'jgto', gender:'mens', region:'domestic',
+    area:'kyushu', prefecture:'miyazaki',
     course:'フェニックスCC',
     startDate:'2025-11-20', endDate:'2025-11-23',
     entryDeadline:'2025-10-20', cancelDeadline:'2025-11-05',
@@ -7530,15 +7312,14 @@ const tournaments = [
     entryMethod:'JGTOオンライン申請',
     qualification:'JGTO出場資格保持者', capacity:'144名',
     organizer:'住友ゴム工業', tags:[],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   // ─── JLPGA 女子ツアー ──────────────────────────────────────────
   {
-    id:'jlpga-2025-001', title:'ダイキンオーキッドレディス',
-    category:'jlpga', subCategory:'regular', gender:'womens', region:'domestic',
-    area:'kyushu', prefecture:'okinawa', country:'japan',
+    id:'jlpga-2025-001',
+    title:'ダイキンオーキッドレディス',
+    category:'jlpga', gender:'womens', region:'domestic',
+    area:'kyushu', prefecture:'okinawa',
     course:'琉球GC',
     startDate:'2025-03-06', endDate:'2025-03-09',
     entryDeadline:'2025-02-07', cancelDeadline:'2025-02-20',
@@ -7547,14 +7328,13 @@ const tournaments = [
     entryMethod:'JLPGA公式サイト',
     qualification:'JLPGA出場資格保持者', capacity:'120名',
     organizer:'ダイキン工業', tags:[],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   {
-    id:'jlpga-2025-002', title:'ワールドレディスチャンピオンシップ サロンパスカップ',
-    category:'jlpga', subCategory:'major', gender:'womens', region:'domestic',
-    area:'kanto', prefecture:'chiba', country:'japan',
+    id:'jlpga-2025-002',
+    title:'ワールドレディスチャンピオンシップ サロンパスカップ',
+    category:'jlpga', gender:'womens', region:'domestic',
+    area:'kanto', prefecture:'chiba',
     course:'勝浦東急GC',
     startDate:'2025-05-08', endDate:'2025-05-11',
     entryDeadline:'2025-04-11', cancelDeadline:'2025-04-25',
@@ -7563,14 +7343,13 @@ const tournaments = [
     entryMethod:'JLPGA公式サイト',
     qualification:'JLPGA出場資格保持者', capacity:'120名',
     organizer:'ニチバン', tags:['メジャー'],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   {
-    id:'jlpga-2025-003', title:'日本女子オープン',
-    category:'jlpga', subCategory:'major', gender:'womens', region:'domestic',
-    area:'kansai', prefecture:'hyogo', country:'japan',
+    id:'jlpga-2025-003',
+    title:'日本女子オープン',
+    category:'jlpga', gender:'womens', region:'domestic',
+    area:'kansai', prefecture:'hyogo',
     course:'小野GC',
     startDate:'2025-10-02', endDate:'2025-10-05',
     entryDeadline:'2025-09-01', cancelDeadline:'2025-09-18',
@@ -7579,15 +7358,14 @@ const tournaments = [
     entryMethod:'JGA公式サイト',
     qualification:'JGA規定による', capacity:'120名',
     organizer:'日本ゴルフ協会', tags:['メジャー'],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   // ─── PGA TOUR / 海外 ──────────────────────────────────────────
   {
-    id:'pga-2025-001', title:'マスターズ',
-    category:'pga', subCategory:'major', gender:'mens', region:'overseas',
-    area:'overseas', prefecture:'overseas', country:'usa',
+    id:'pga-2025-001',
+    title:'マスターズ',
+    category:'pga', gender:'mens', region:'overseas',
+    area:'overseas', prefecture:'overseas',
     course:'オーガスタナショナルGC',
     startDate:'2025-04-10', endDate:'2025-04-13',
     entryDeadline:null, cancelDeadline:null,
@@ -7596,14 +7374,13 @@ const tournaments = [
     entryMethod:'招待制（出場資格保持者のみ）',
     qualification:'マスターズ出場資格者', capacity:'90名前後',
     organizer:'オーガスタナショナルGC', tags:['メジャー','招待制'],
-    status:'tbd', sourceType:'manual', sourceUrl:'https://www.masters.com', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'https://www.masters.com', instagram:'', entry:'', pairs:'', result:'' }
   },
   {
-    id:'pga-2025-002', title:'全米オープン',
-    category:'pga', subCategory:'major', gender:'mens', region:'overseas',
-    area:'overseas', prefecture:'overseas', country:'usa',
+    id:'pga-2025-002',
+    title:'全米オープン',
+    category:'pga', gender:'mens', region:'overseas',
+    area:'overseas', prefecture:'overseas',
     course:'オークモントCC（ペンシルベニア州）',
     startDate:'2025-06-12', endDate:'2025-06-15',
     entryDeadline:'2025-04-14', cancelDeadline:null,
@@ -7612,15 +7389,14 @@ const tournaments = [
     entryMethod:'USGA公式サイト（予選会あり）',
     qualification:'JGA推薦・予選会通過', capacity:'156名',
     organizer:'USGA', tags:['メジャー'],
-    status:'tbd', sourceType:'manual', sourceUrl:'https://www.usopen.com', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'https://www.usopen.com', instagram:'', entry:'', pairs:'', result:'' }
   },
   // ─── 予選会 ───────────────────────────────────────────────────
   {
-    id:'qt-2025-001', title:'JGTO QT 第1ステージ 関東会場',
-    category:'qualifier', subCategory:'qt', gender:'mens', region:'domestic',
-    area:'kanto', prefecture:'chiba', country:'japan',
+    id:'qt-2025-001',
+    title:'JGTO QT 第1ステージ 関東会場',
+    category:'qualifier', gender:'mens', region:'domestic',
+    area:'kanto', prefecture:'chiba',
     course:'PGAゴルフアカデミー',
     startDate:'2025-09-15', endDate:'2025-09-17',
     entryDeadline:'2025-08-20', cancelDeadline:'2025-09-01',
@@ -7629,14 +7405,13 @@ const tournaments = [
     entryMethod:'JGTOオンライン申請',
     qualification:'プロゴルファー（PGA・JGTO登録者）', capacity:'72名',
     organizer:'JGTO', tags:['QT'],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   {
-    id:'qt-2025-002', title:'JGTO QT ファイナルステージ',
-    category:'qualifier', subCategory:'qt', gender:'mens', region:'domestic',
-    area:'kanto', prefecture:'ibaraki', country:'japan',
+    id:'qt-2025-002',
+    title:'JGTO QT ファイナルステージ',
+    category:'qualifier', gender:'mens', region:'domestic',
+    area:'kanto', prefecture:'ibaraki',
     course:'宍戸ヒルズCC',
     startDate:'2025-10-20', endDate:'2025-10-23',
     entryDeadline:'2025-09-25', cancelDeadline:'2025-10-06',
@@ -7645,15 +7420,14 @@ const tournaments = [
     entryMethod:'各ステージ通過者のみ',
     qualification:'QT各ステージ通過者', capacity:'144名',
     organizer:'JGTO', tags:['QT','ファイナル'],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   // ─── ミニツアー ───────────────────────────────────────────────
   {
-    id:'mini-2025-001', title:'Future Tour 第1戦 関東大会',
-    category:'mini', subCategory:'future_tour', gender:'mens', region:'domestic',
-    area:'kanto', prefecture:'chiba', country:'japan',
+    id:'mini-2025-001',
+    title:'Future Tour 第1戦 関東大会',
+    category:'mini', gender:'mens', region:'domestic',
+    area:'kanto', prefecture:'chiba',
     course:'袖ヶ浦カンツリークラブ',
     startDate:'2025-04-21', endDate:'2025-04-22',
     entryDeadline:'2025-04-07', cancelDeadline:'2025-04-14',
@@ -7662,14 +7436,13 @@ const tournaments = [
     entryMethod:'Future Tour公式LINE申請',
     qualification:'プロ・アマ（ハンデ3以内）', capacity:'48名',
     organizer:'Future Tour運営委員会', tags:['ミニツアー'],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   {
-    id:'mini-2025-002', title:'P&A CUP 第3戦',
-    category:'mini', subCategory:'pandc', gender:'mens', region:'domestic',
-    area:'kanto', prefecture:'kanagawa', country:'japan',
+    id:'mini-2025-002',
+    title:'P&A CUP 第3戦',
+    category:'mini', gender:'mens', region:'domestic',
+    area:'kanto', prefecture:'kanagawa',
     course:'川崎国際生田緑地GC',
     startDate:'2025-05-26', endDate:'2025-05-27',
     entryDeadline:'2025-05-12', cancelDeadline:'2025-05-19',
@@ -7678,15 +7451,14 @@ const tournaments = [
     entryMethod:'P&A CUP公式サイト',
     qualification:'プロゴルファー（登録不要）', capacity:'60名',
     organizer:'P&A CUP実行委員会', tags:['ミニツアー'],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   // ─── オープン大会 ─────────────────────────────────────────────
   {
-    id:'open-2025-001', title:'ミズノオープン',
-    category:'open', subCategory:'classic', gender:'mens', region:'domestic',
-    area:'chubu', prefecture:'aichi', country:'japan',
+    id:'open-2025-001',
+    title:'ミズノオープン',
+    category:'open', gender:'mens', region:'domestic',
+    area:'chubu', prefecture:'aichi',
     course:'名古屋GC',
     startDate:'2025-05-22', endDate:'2025-05-25',
     entryDeadline:'2025-04-25', cancelDeadline:'2025-05-08',
@@ -7695,14 +7467,13 @@ const tournaments = [
     entryMethod:'JGTOオンライン申請',
     qualification:'JGTO出場資格保持者', capacity:'144名',
     organizer:'ミズノ', tags:[],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
   {
-    id:'open-2025-002', title:'北海道オープン',
-    category:'open', subCategory:'pref_open', gender:'mens', region:'domestic',
-    area:'hokkaido', prefecture:'hokkaido', country:'japan',
+    id:'open-2025-002',
+    title:'北海道オープン',
+    category:'open', gender:'mens', region:'domestic',
+    area:'hokkaido', prefecture:'hokkaido',
     course:'札幌GC 輪厚コース',
     startDate:'2025-05-29', endDate:'2025-05-31',
     entryDeadline:'2025-05-01', cancelDeadline:'2025-05-15',
@@ -7711,11 +7482,10 @@ const tournaments = [
     entryMethod:'北海道ゴルフ連盟申請',
     qualification:'プロゴルファー（北海道出身・在住優先）', capacity:'80名',
     organizer:'北海道ゴルフ連盟', tags:[],
-    status:'tbd', sourceType:'manual', sourceUrl:'', notes:'',
-    createdAt:'2025-01-01T00:00:00.000Z', updatedAt:'2025-01-01T00:00:00.000Z',
     links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
   },
 ];
+
 // ================================================================
 // ★★★ Phase3: データアダプター ★★★
 // tournaments[] → 旧来のTOURNAMENTS_FLAT互換形式に変換
@@ -13995,212 +13765,240 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
 </script>
 
 <script>
-// ================================================================
-// ★★★ Phase5: 大会管理システム ★★★
-// ① 管理者モード  ② 大会CRUD  ③ ステータス自動判定
-// ④ localStorage永続化（Firestore移行準備済み）
-// ⑤ ソート強化  ⑥ 都道府県・カテゴリフォーム自動生成
-// ================================================================
+/* ================================================================
+   Phase5+6: 大会管理 + AI抽出パイプライン
+   ① TOURNAMENTS_DB  ② 管理者モード  ③ 大会CRUD
+   ④ URL解析パイプライン  ⑤ Parser Layer  ⑥ AI正規化フック
+   ================================================================ */
+'use strict';
 
-// ── 定数 ──
-const ADMIN_PASSCODE_KEY = 'pronexax.adminMode.v1';
-const ADMIN_CUSTOM_TOURS_KEY = 'pronexax.customTournaments.v1';
-// ★ 本番環境では環境変数化すること。開発中は平文でOK
-const _ADMIN_PASSCODE_HASH = 'pronexax2025admin'; // ← 変更推奨
-
-// ── 管理者状態 ──
-let _isAdminMode = false;
-
-// ── カスタム大会データ（localStorage管理）──
-let _customTournaments = [];
-
-// ── 編集中の大会ID（null=新規）──
-let _atmEditingId = null;
-
-// ── ソート状態（Phase5拡張）──
-// 'date'|'deadline'|'prize'|'area'
-let _sortMode = 'date';
-let _sortAsc  = true;
+// ── ストレージキー ──
+const _K = {
+  admin:   'pronexax.adminMode.v1',
+  custom:  'pronexax.customTournaments.v2',
+  tdb:     'pronexax.tournamentsDB.v1',       // TOURNAMENTS_DB 永続化
+  passcode:'pronexax2025admin',               // ★ 本番では環境変数推奨
+};
 
 // ================================================================
-// 都道府県マスター
+// ① TOURNAMENTS_DB — 大会専用DB構造
+// EVENTSとは完全分離。AI抽出結果・手動追加を統合管理。
 // ================================================================
-const PREF_MASTER = [
-  {key:'hokkaido', label:'北海道', area:'hokkaido'},
-  {key:'aomori',   label:'青森県', area:'hokkaido'},
-  {key:'iwate',    label:'岩手県', area:'hokkaido'},
-  {key:'miyagi',   label:'宮城県', area:'hokkaido'},
-  {key:'akita',    label:'秋田県', area:'hokkaido'},
-  {key:'yamagata', label:'山形県', area:'hokkaido'},
-  {key:'fukushima',label:'福島県', area:'hokkaido'},
-  {key:'ibaraki',  label:'茨城県', area:'kanto'},
-  {key:'tochigi',  label:'栃木県', area:'kanto'},
-  {key:'gunma',    label:'群馬県', area:'kanto'},
-  {key:'saitama',  label:'埼玉県', area:'kanto'},
-  {key:'chiba',    label:'千葉県', area:'kanto'},
-  {key:'tokyo',    label:'東京都', area:'kanto'},
-  {key:'kanagawa', label:'神奈川県', area:'kanto'},
-  {key:'yamanashi',label:'山梨県', area:'kanto'},
-  {key:'nagano',   label:'長野県', area:'chubu'},
-  {key:'niigata',  label:'新潟県', area:'chubu'},
-  {key:'toyama',   label:'富山県', area:'chubu'},
-  {key:'ishikawa', label:'石川県', area:'chubu'},
-  {key:'fukui',    label:'福井県', area:'chubu'},
-  {key:'shizuoka', label:'静岡県', area:'chubu'},
-  {key:'aichi',    label:'愛知県', area:'chubu'},
-  {key:'mie',      label:'三重県', area:'chubu'},
-  {key:'gifu',     label:'岐阜県', area:'chubu'},
-  {key:'shiga',    label:'滋賀県', area:'kansai'},
-  {key:'kyoto',    label:'京都府', area:'kansai'},
-  {key:'osaka',    label:'大阪府', area:'kansai'},
-  {key:'hyogo',    label:'兵庫県', area:'kansai'},
-  {key:'nara',     label:'奈良県', area:'kansai'},
-  {key:'wakayama', label:'和歌山県', area:'kansai'},
-  {key:'tottori',  label:'鳥取県', area:'chugoku'},
-  {key:'shimane',  label:'島根県', area:'chugoku'},
-  {key:'okayama',  label:'岡山県', area:'chugoku'},
-  {key:'hiroshima',label:'広島県', area:'chugoku'},
-  {key:'yamaguchi',label:'山口県', area:'chugoku'},
-  {key:'tokushima',label:'徳島県', area:'chugoku'},
-  {key:'kagawa',   label:'香川県', area:'chugoku'},
-  {key:'ehime',    label:'愛媛県', area:'chugoku'},
-  {key:'kochi',    label:'高知県', area:'chugoku'},
-  {key:'fukuoka',  label:'福岡県', area:'kyushu'},
-  {key:'saga',     label:'佐賀県', area:'kyushu'},
-  {key:'nagasaki', label:'長崎県', area:'kyushu'},
-  {key:'kumamoto', label:'熊本県', area:'kyushu'},
-  {key:'oita',     label:'大分県', area:'kyushu'},
-  {key:'miyazaki', label:'宮崎県', area:'kyushu'},
-  {key:'kagoshima',label:'鹿児島県',area:'kyushu'},
-  {key:'okinawa',  label:'沖縄県', area:'kyushu'},
-  {key:'overseas', label:'海外',   area:'overseas'},
-];
+let TOURNAMENTS_DB = [];   // メインDB（静的 + カスタム + AI抽出）
 
-const PREF_LABEL_MAP = PREF_MASTER.reduce((m,p)=>{ m[p.key]=p.label; return m; }, {});
+/** TOURNAMENTS_DB エントリの完全フォーマット（将来フィールド含む）*/
+function _tdbTemplate(override) {
+  const now = new Date().toISOString();
+  return Object.assign({
+    // ── 識別 ──
+    id:             '',          // 'category-year-seq'
+    title:          '',
+    // ── 分類 ──
+    category:       '',
+    subCategory:    '',          // 'major'|'regular'|'qt' など
+    gender:         'mens',      // 'mens'|'womens'|'both'
+    region:         'domestic',  // 'domestic'|'overseas'
+    area:           '',
+    prefecture:     '',
+    country:        'japan',
+    // ── 日程 ──
+    startDate:      null,
+    endDate:        null,
+    entryDeadline:  null,
+    cancelDeadline: null,
+    // ── 会場 ──
+    course:         '',
+    organizer:      '',
+    // ── 金額 ──
+    prize:          '',
+    prizeWinner:    '',
+    entryFee:       '',
+    practiceRoundFee: '',
+    // ── エントリー ──
+    entryMethod:    '',
+    qualification:  '',
+    capacity:       '',
+    tags:           [],
+    // ── ステータス ──
+    status:         'tbd',       // 'open'|'closing_soon'|'closed'|'ongoing'|'ended'|'tbd'
+    // ── データソース（AI連携準備）──
+    sourceType:     'manual',    // 'manual'|'ai_url'|'ai_instagram'|'ai_pdf'|'ai_lp'
+    sourceUrl:      '',
+    parsingStatus:  'idle',      // 'idle'|'fetching'|'parsing'|'success'|'failed'
+    aiConfidence:   null,        // 0.0〜1.0（AI解析の信頼度）
+    // ── 生データ保存（AI抽出前）──
+    rawContent:     '',          // 取得した生HTML/テキスト（将来AI解析用）
+    extractedText:  '',          // テキスト抽出済みコンテンツ
+    ocrText:        '',          // OCR結果（PDF/画像から）
+    // ── リンク ──
+    links: {
+      website:   '',
+      instagram: '',
+      entry:     '',
+      pairing:   '',
+      result:    '',
+    },
+    // ── 管理 ──
+    notes:          '',
+    createdAt:      now,
+    updatedAt:      now,
+    // ── 後方互換（旧フィールド）──
+    entryDeadline2: null,        // 旧 cancelDeadline
+  }, override);
+}
+
+// ── DB ロード ──
+function _tdbLoad() {
+  try {
+    const raw = localStorage.getItem(_K.custom);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) {
+        TOURNAMENTS_DB = arr.map(t => _tdbTemplate(t));
+      }
+    }
+  } catch(e) { console.warn('[TDB] load error', e); }
+}
+
+// ── DB 保存 ──
+function _tdbSave() {
+  try {
+    localStorage.setItem(_K.custom, JSON.stringify(TOURNAMENTS_DB));
+  } catch(e) { showToast('保存失敗: ストレージ容量を確認してください'); }
+  // ★ Firestore 移行フック（将来ここで _db.collection('tournaments').set() を呼ぶ）
+}
+
+// ── ID 生成 ──
+function _tdbGenId(cat) {
+  return `${cat||'custom'}-${new Date().getFullYear()}-${Date.now().toString(36).slice(-5)}`;
+}
+
+// ── Upsert（追加 or 更新）──
+function _tdbUpsert(entry) {
+  const idx = TOURNAMENTS_DB.findIndex(t => t.id === entry.id);
+  entry.updatedAt = new Date().toISOString();
+  if (idx >= 0) TOURNAMENTS_DB[idx] = entry;
+  else TOURNAMENTS_DB.unshift(entry);
+  _tdbSave();
+  _rebuildFlat();
+}
+
+// ── 削除 ──
+function _tdbDelete(id) {
+  TOURNAMENTS_DB = TOURNAMENTS_DB.filter(t => t.id !== id);
+  _tdbSave();
+  _rebuildFlat();
+}
+
+// ── TOURNAMENTS_FLAT / DB 互換を再構築 ──
+const _PREF_MAP = (function(){
+  const m = {};
+  [['hokkaido','北海道'],['aomori','青森県'],['iwate','岩手県'],['miyagi','宮城県'],
+   ['akita','秋田県'],['yamagata','山形県'],['fukushima','福島県'],['ibaraki','茨城県'],
+   ['tochigi','栃木県'],['gunma','群馬県'],['saitama','埼玉県'],['chiba','千葉県'],
+   ['tokyo','東京都'],['kanagawa','神奈川県'],['yamanashi','山梨県'],['nagano','長野県'],
+   ['niigata','新潟県'],['toyama','富山県'],['ishikawa','石川県'],['fukui','福井県'],
+   ['shizuoka','静岡県'],['aichi','愛知県'],['mie','三重県'],['gifu','岐阜県'],
+   ['shiga','滋賀県'],['kyoto','京都府'],['osaka','大阪府'],['hyogo','兵庫県'],
+   ['nara','奈良県'],['wakayama','和歌山県'],['tottori','鳥取県'],['shimane','島根県'],
+   ['okayama','岡山県'],['hiroshima','広島県'],['yamaguchi','山口県'],['tokushima','徳島県'],
+   ['kagawa','香川県'],['ehime','愛媛県'],['kochi','高知県'],['fukuoka','福岡県'],
+   ['saga','佐賀県'],['nagasaki','長崎県'],['kumamoto','熊本県'],['oita','大分県'],
+   ['miyazaki','宮崎県'],['kagoshima','鹿児島県'],['okinawa','沖縄県'],['overseas','海外']
+  ].forEach(([k,v]) => m[k] = v);
+  return m;
+})();
+
+const _PREF_MASTER = Object.entries(_PREF_MAP).map(([key,label]) => ({key, label}));
+
+function _tdbToFlat(t) {
+  return {
+    id: t.id, name: t.title,
+    cat: t.category, gender: t.gender, region: t.region,
+    place: _PREF_MAP[t.prefecture] || t.prefecture || '',
+    courseName: t.course || '',
+    start: t.startDate, end: t.endDate, area: t.area, prefecture: t.prefecture,
+    entryDeadline: t.entryDeadline, cancelDeadline: t.cancelDeadline,
+    prize: t.prize || '', prizeWinner: t.prizeWinner || '',
+    entryFee: t.entryFee || '', practiceRoundFee: t.practiceRoundFee || '',
+    entryMethod: t.entryMethod || '', qualification: t.qualification || '',
+    capacity: t.capacity || '', organizer: t.organizer || '', tags: t.tags || [],
+    officialUrl: t.links?.website || t.links?.official || '',
+    igUrl:       t.links?.instagram || '',
+    entryUrl:    t.links?.entry || '',
+    pairUrl:     t.links?.pairing || t.links?.pairs || '',
+    resultUrl:   t.links?.result || '',
+    subCategory: t.subCategory || '',
+    country: t.country || 'japan', status: t.status || 'tbd',
+    sourceType: t.sourceType || 'manual', sourceUrl: t.sourceUrl || '',
+    parsingStatus: t.parsingStatus || 'idle',
+    notes: t.notes || '', createdAt: t.createdAt, updatedAt: t.updatedAt,
+    _raw: t,
+  };
+}
+
+function _rebuildFlat() {
+  // 静的データ + TOURNAMENTS_DB のマージ（DB側が上書き）
+  const map = new Map();
+  // ① 静的ベースデータ
+  if (typeof tournaments !== 'undefined') {
+    tournaments.forEach(t => {
+      const flat = _tdbToFlat(_tdbTemplate(t));
+      map.set(flat.id, flat);
+    });
+  }
+  // ② カスタムDB（新フォーマット）
+  TOURNAMENTS_DB.forEach(t => map.set(t.id, _tdbToFlat(t)));
+  // TOURNAMENTS_FLAT 破壊的更新
+  if (typeof TOURNAMENTS_FLAT !== 'undefined') {
+    TOURNAMENTS_FLAT.length = 0;
+    map.forEach(v => TOURNAMENTS_FLAT.push(v));
+  }
+  // DB互換レイヤー再構築
+  if (typeof DB !== 'undefined') {
+    Object.keys(DB).forEach(k => { if(k !== 'personal') delete DB[k]; });
+    map.forEach(t => {
+      if (!DB[t.cat]) DB[t.cat] = [];
+      DB[t.cat].push({ name:t.name, place:(t.courseName?t.place+' '+t.courseName:t.place)||'', start:t.start, end:t.end, area:t.area, prefecture:t.prefecture });
+    });
+  }
+  if (typeof _invalidateSearchCache === 'function') _invalidateSearchCache();
+}
 
 // ================================================================
-// ステータス自動判定
+// ② ステータス自動判定
 // ================================================================
 function calcTournamentStatus(t) {
-  // 手動設定優先
   if (t.status && t.status !== 'tbd') return t.status;
-  const today = todayStr();
-  const dl  = t.entryDeadline;
-  const st  = t.startDate;
-  const en  = t.endDate;
+  const today = (typeof todayStr === 'function') ? todayStr() : new Date().toISOString().slice(0,10);
+  const dl = t.entryDeadline; const st = t.startDate; const en = t.endDate;
   if (!st) return 'tbd';
   if (today > (en || st)) return 'ended';
   if (today >= st)         return 'ongoing';
   if (dl && today > dl)   return 'closed';
   if (dl) {
-    // 締切まで7日以内
-    const diff = (new Date(dl) - new Date(today)) / (1000*60*60*24);
+    const diff = (new Date(dl) - new Date(today)) / 86400000;
     if (diff <= 7) return 'closing_soon';
   }
   return 'open';
 }
 
-const STATUS_LABEL = {
-  open:'募集中', closing_soon:'締切間近', closed:'締切済',
-  ongoing:'開催中', ended:'終了', tbd:'日程未定'
-};
-const STATUS_CLASS = {
-  open:'st-open', closing_soon:'st-closing_soon', closed:'st-closed',
-  ongoing:'st-ongoing', ended:'st-ended', tbd:'st-tbd'
-};
+const _ST_LABEL = { open:'募集中', closing_soon:'締切間近', closed:'締切済', ongoing:'開催中', ended:'終了', tbd:'日程未定' };
+const _ST_CLASS = { open:'st-open', closing_soon:'st-closing_soon', closed:'st-closed', ongoing:'st-ongoing', ended:'st-ended', tbd:'st-tbd' };
+const _PS_LABEL = { idle:'未解析', fetching:'取得中', parsing:'解析中', success:'解析済', failed:'エラー' };
 
 // ================================================================
-// カスタム大会データ永続化（localStorage / Firestore移行準備）
+// ③ 管理者認証
 // ================================================================
-function _loadCustomTournaments() {
-  try {
-    const raw = localStorage.getItem(ADMIN_CUSTOM_TOURS_KEY);
-    if (raw) {
-      const arr = JSON.parse(raw);
-      if (Array.isArray(arr)) _customTournaments = arr;
-    }
-  } catch(e) {}
-}
+let _isAdmin = false;
 
-function _saveCustomTournaments() {
-  try {
-    localStorage.setItem(ADMIN_CUSTOM_TOURS_KEY, JSON.stringify(_customTournaments));
-  } catch(e) { showToast('保存に失敗しました'); }
-  // ★ 将来のFirestore移行用フック（現在はno-op）
-  // if (_db && _currentUser) _syncCustomTournamentsToFirestore();
-}
-
-// TOURNAMENTS_FLAT をカスタムデータで更新（再構築）
-function _rebuildTournamentsFlat() {
-  // ① 元の静的データ
-  const baseFlat = tournaments.map(t => _toFlat(t));
-  // ② カスタムデータ（管理者追加分）
-  const customFlat = _customTournaments.map(t => _toFlat(t));
-  // ③ マージ（カスタムが同IDで上書き）
-  const idMap = new Map();
-  baseFlat.forEach(t => idMap.set(t.id, t));
-  customFlat.forEach(t => idMap.set(t.id, t));
-  // TOURNAMENTS_FLAT を再構築（破壊的更新）
-  TOURNAMENTS_FLAT.length = 0;
-  idMap.forEach(t => TOURNAMENTS_FLAT.push(t));
-  // DB互換レイヤーも再構築
-  _rebuildDB();
-}
-
-function _toFlat(t) {
-  const prefLabel = PREF_LABEL_MAP[t.prefecture] || t.prefecture || '';
-  return {
-    id: t.id, name: t.title,
-    cat: t.category, gender: t.gender, region: t.region,
-    place: prefLabel, courseName: t.course || '',
-    start: t.startDate, end: t.endDate,
-    area: t.area, prefecture: t.prefecture,
-    entryDeadline: t.entryDeadline, cancelDeadline: t.cancelDeadline,
-    prize: t.prize || '', prizeWinner: t.prizeWinner || '',
-    entryFee: t.entryFee || '', practiceRoundFee: t.practiceRoundFee || '',
-    entryMethod: t.entryMethod || '', qualification: t.qualification || '',
-    capacity: t.capacity || '', organizer: t.organizer || '',
-    tags: t.tags || [],
-    officialUrl: t.links?.official || '',
-    igUrl: t.links?.instagram || '',
-    entryUrl: t.links?.entry || '',
-    pairUrl: t.links?.pairs || '',
-    resultUrl: t.links?.result || '',
-    // Phase5拡張フィールド
-    subCategory: t.subCategory || '',
-    country: t.country || 'japan',
-    status: t.status || 'tbd',
-    sourceType: t.sourceType || 'manual',
-    sourceUrl: t.sourceUrl || '',
-    notes: t.notes || '',
-    createdAt: t.createdAt || new Date().toISOString(),
-    updatedAt: t.updatedAt || new Date().toISOString(),
-    _raw: t,
-  };
-}
-
-function _rebuildDB() {
-  // DB互換オブジェクトを再構築
-  Object.keys(DB).forEach(k => { if(k !== 'personal') delete DB[k]; });
-  TOURNAMENTS_FLAT.forEach(t => {
-    if (!DB[t.cat]) DB[t.cat] = [];
-    DB[t.cat].push({
-      name: t.name, place: (t.courseName ? t.place+' '+t.courseName : t.place) || '',
-      start: t.start, end: t.end, area: t.area, prefecture: t.prefecture,
-    });
-  });
-}
-
-// ================================================================
-// 管理者認証
-// ================================================================
 function openAdminLogin() {
-  const overlay = document.getElementById('admin-login-overlay');
-  if (!overlay) return;
-  const inp = document.getElementById('admin-passcode-input');
-  if (inp) { inp.value = ''; inp.focus(); }
+  const ov = document.getElementById('admin-login-overlay');
+  if (!ov) return;
+  document.getElementById('admin-passcode-input').value = '';
   document.getElementById('admin-login-error').textContent = '';
-  overlay.classList.add('show');
+  ov.classList.add('show');
+  setTimeout(() => document.getElementById('admin-passcode-input')?.focus(), 100);
 }
 function closeAdminLogin() {
   document.getElementById('admin-login-overlay')?.classList.remove('show');
@@ -14210,139 +14008,138 @@ function adminLogin() {
   const errEl = document.getElementById('admin-login-error');
   const code = inp?.value?.trim();
   if (!code) { errEl.textContent = 'パスコードを入力してください'; return; }
-  if (code === _ADMIN_PASSCODE_HASH) {
-    _isAdminMode = true;
-    try { localStorage.setItem(ADMIN_PASSCODE_KEY, '1'); } catch(e) {}
+  if (code === _K.passcode) {
+    _isAdmin = true;
+    try { localStorage.setItem(_K.admin, '1'); } catch(e) {}
     document.body.classList.add('is-admin');
     closeAdminLogin();
-    switchPage('admin');
+    if (typeof switchPage === 'function') switchPage('admin');
     renderAdminList();
-    showToast('管理者モードに入りました');
+    if (typeof showToast === 'function') showToast('管理者モードに入りました');
   } else {
     errEl.textContent = 'パスコードが違います';
     inp?.select();
   }
 }
-function adminLogout() {
-  _isAdminMode = false;
-  try { localStorage.removeItem(ADMIN_PASSCODE_KEY); } catch(e) {}
-  document.body.classList.remove('is-admin');
-  switchPage('calendar');
-  showToast('管理者モードを終了しました');
-}
-// セッション復元
 function _restoreAdminSession() {
   try {
-    if (localStorage.getItem(ADMIN_PASSCODE_KEY) === '1') {
-      _isAdminMode = true;
+    if (localStorage.getItem(_K.admin) === '1') {
+      _isAdmin = true;
       document.body.classList.add('is-admin');
     }
   } catch(e) {}
 }
 
 // ================================================================
-// 管理リスト描画
+// ④ 管理リスト描画
 // ================================================================
 function renderAdminList() {
   const el = document.getElementById('admin-list-scroll');
   if (!el) return;
 
   // 全大会（静的 + カスタム）
-  const allIds = new Set();
-  const allTours = [];
-  [...tournaments, ..._customTournaments].forEach(t => {
-    if (!allIds.has(t.id)) { allIds.add(t.id); allTours.push(t); }
-  });
-  // カスタム大会は先頭に（最新追加順）
-  allTours.sort((a,b) => (b.updatedAt||'').localeCompare(a.updatedAt||''));
+  const allMap = new Map();
+  if (typeof tournaments !== 'undefined') tournaments.forEach(t => allMap.set(t.id, {_raw:t, isCustom:false}));
+  TOURNAMENTS_DB.forEach(t => allMap.set(t.id, {_raw:t, isCustom:true}));
+  const all = [...allMap.values()].sort((a,b) => (b._raw.updatedAt||'').localeCompare(a._raw.updatedAt||''));
 
-  if (!allTours.length) {
-    el.innerHTML = `<div style="text-align:center;padding:48px 24px;color:#8e8e93;font-size:14px;">大会データがありません</div>`;
-    return;
-  }
+  if (!all.length) { el.innerHTML = '<div style="text-align:center;padding:48px 24px;color:#8e8e93;font-size:14px;">大会データがありません</div>'; return; }
 
   // カテゴリ別グループ
   const groups = {};
-  allTours.forEach(t => {
+  all.forEach(({_raw:t, isCustom}) => {
     const g = t.category || 'other';
     if (!groups[g]) groups[g] = [];
-    groups[g].push(t);
+    groups[g].push({t, isCustom});
   });
 
-  const catLabel = k => (CAT_LABELS[k] || k);
-  const catColor = k => (CAT_COLORS[k] || '#8090A0');
-  const isCustom = t => _customTournaments.some(c => c.id === t.id);
+  const getLabel = k => (typeof CAT_LABELS !== 'undefined' ? CAT_LABELS[k]||k : k);
+  const getColor = k => (typeof CAT_COLORS !== 'undefined' ? CAT_COLORS[k]||'#8090A0' : '#8090A0');
 
   let html = '';
-  Object.entries(groups).forEach(([cat, tours]) => {
-    html += `<div class="admin-section-label">${catLabel(cat)} (${tours.length}件)</div>`;
-    tours.forEach(t => {
+  Object.entries(groups).forEach(([cat, items]) => {
+    html += `<div class="admin-section-label">${getLabel(cat)} (${items.length})</div>`;
+    items.forEach(({t, isCustom}) => {
       const st = calcTournamentStatus(t);
-      const color = catColor(t.category);
-      const custom = isCustom(t);
+      const ps = t.parsingStatus || 'idle';
+      const color = getColor(t.category);
+      const prefLabel = _PREF_MAP[t.prefecture] || t.prefecture || '';
+      const dateStr = t.startDate ? t.startDate.slice(0,10) : '日程未定';
       html += `<div class="admin-card">
-        <div class="admin-card-main" onclick="openAtmSheet('${t.id}')">
-          <div class="admin-card-stripe" style="background:${color};"></div>
-          <div class="admin-card-info">
-            <div class="admin-card-title">${escapeHtml(t.title)}${custom?'<span style="color:#39C892;font-size:9px;margin-left:5px;">●</span>':''}</div>
-            <div class="admin-card-meta">
-              <span class="admin-status-badge ${STATUS_CLASS[st]}">${STATUS_LABEL[st]}</span>
-              &nbsp;${t.startDate||'日程未定'} ${t.prefecture?'/ '+(PREF_LABEL_MAP[t.prefecture]||t.prefecture):''}
-            </div>
-          </div>
-          <div class="admin-card-actions">
-            <button class="admin-action-btn admin-edit-btn" onclick="event.stopPropagation();openAtmSheet('${t.id}')" aria-label="編集">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-            ${custom?`<button class="admin-action-btn admin-del-btn" onclick="event.stopPropagation();atmDelete('${t.id}')" aria-label="削除">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            </button>`:''}
-          </div>
-        </div>
-      </div>`;
+  <div class="admin-card-main" onclick="openAtmSheet('${escapeHtml(t.id)}')">
+    <div class="admin-card-stripe" style="background:${color};"></div>
+    <div class="admin-card-info">
+      <div class="admin-card-title">${escapeHtml(t.title||'')}${isCustom?'<span style="color:#39C892;font-size:8px;vertical-align:middle;margin-left:4px;">●NEW</span>':''}</div>
+      <div class="admin-card-meta">
+        <span class="st-badge ${_ST_CLASS[st]||'st-tbd'}">${_ST_LABEL[st]||st}</span>
+        ${ps!=='idle'?`<span class="ps-badge ps-${ps}">${ps==='fetching'||ps==='parsing'?`<span class="ps-dot">⟳</span>`:''}${_PS_LABEL[ps]||ps}</span>`:''}
+        <span>${dateStr}${prefLabel?' / '+prefLabel:''}</span>
+      </div>
+    </div>
+    <div class="admin-card-actions">
+      <button class="admin-act-btn admin-edit-btn" onclick="event.stopPropagation();openAtmSheet('${escapeHtml(t.id)}')" aria-label="編集">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+      </button>
+      ${isCustom?`<button class="admin-act-btn admin-del-btn" onclick="event.stopPropagation();tdbDelete('${escapeHtml(t.id)}')" aria-label="削除">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>`:''}
+    </div>
+  </div>
+</div>`;
     });
   });
   el.innerHTML = html;
 }
 
-// ================================================================
-// 大会追加・編集シート
-// ================================================================
-function openAtmSheet(tid) {
-  // カテゴリセレクトを動的生成
-  const catSel = document.getElementById('atm-category');
-  if (catSel && catSel.options.length === 0) {
-    window._TOUR_MASTER.forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t.key; opt.textContent = t.label;
-      catSel.appendChild(opt);
-    });
-  }
-  // 都道府県セレクトを動的生成
-  const prefSel = document.getElementById('atm-prefecture');
-  if (prefSel && prefSel.options.length === 0) {
-    PREF_MASTER.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p.key; opt.textContent = p.label;
-      prefSel.appendChild(opt);
-    });
-  }
+function tdbDelete(id) {
+  const t = TOURNAMENTS_DB.find(t => t.id === id);
+  if (!t) { if (typeof showToast === 'function') showToast('削除できるのは追加済みのデータのみです'); return; }
+  if (!confirm(`「${t.title}」を削除しますか？`)) return;
+  _tdbDelete(id);
+  renderAdminList();
+  if (typeof applySearchFilters === 'function') applySearchFilters();
+  if (typeof showToast === 'function') showToast('削除しました');
+}
 
+// ================================================================
+// ⑤ 大会追加・編集シート
+// ================================================================
+let _atmEditingId = null;
+
+function _atmInitSelects() {
+  const catSel  = document.getElementById('atm-category');
+  const prefSel = document.getElementById('atm-prefecture');
+  if (catSel && catSel.options.length === 0) {
+    if (window._TOUR_MASTER) {
+      window._TOUR_MASTER.forEach(t => {
+        const o = document.createElement('option');
+        o.value = t.key; o.textContent = t.label;
+        catSel.appendChild(o);
+      });
+    }
+  }
+  if (prefSel && prefSel.options.length === 0) {
+    _PREF_MASTER.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.key; o.textContent = p.label;
+      prefSel.appendChild(o);
+    });
+  }
+}
+
+function openAtmSheet(tid) {
+  _atmInitSelects();
   _atmEditingId = tid;
   const titleEl = document.getElementById('atm-header-title');
-
   if (tid) {
-    // 編集モード：既存データを読み込む
-    const existing = [...tournaments, ..._customTournaments].find(t => t.id === tid);
-    if (!existing) { showToast('大会が見つかりません'); return; }
+    const src = [...TOURNAMENTS_DB, ...(typeof tournaments!=='undefined'?tournaments:[])].find(t=>t.id===tid);
+    if (!src) { if(typeof showToast==='function') showToast('大会が見つかりません'); return; }
     if (titleEl) titleEl.textContent = '大会を編集';
-    _atmFillForm(existing);
+    _atmFill(src);
   } else {
-    // 新規追加モード
     if (titleEl) titleEl.textContent = '大会を追加';
-    _atmClearForm();
+    _atmClear();
   }
-
   document.getElementById('atm-overlay')?.classList.add('show');
   document.getElementById('atm-sheet')?.classList.add('show');
 }
@@ -14351,186 +14148,446 @@ function closeAtmSheet() {
   document.getElementById('atm-sheet')?.classList.remove('show');
   _atmEditingId = null;
 }
+function _atmSet(id, val) { const e = document.getElementById(id); if(e) e.value = val||''; }
+function _atmGet(id)      { return document.getElementById(id)?.value?.trim()||''; }
 
-function _atmFillForm(t) {
-  const set = (id, val) => { const el=document.getElementById(id); if(el) el.value = val||''; };
-  set('atm-title', t.title);
-  set('atm-category', t.category);
-  set('atm-gender', t.gender);
-  set('atm-region', t.region);
-  set('atm-prefecture', t.prefecture);
-  set('atm-area', t.area);
-  set('atm-status', t.status || 'tbd');
-  set('atm-course', t.course);
-  set('atm-organizer', t.organizer);
-  set('atm-startDate', t.startDate);
-  set('atm-endDate', t.endDate);
-  set('atm-entryDeadline', t.entryDeadline);
-  set('atm-cancelDeadline', t.cancelDeadline);
-  set('atm-prize', t.prize);
-  set('atm-prizeWinner', t.prizeWinner);
-  set('atm-entryFee', t.entryFee);
-  set('atm-practiceRoundFee', t.practiceRoundFee);
-  set('atm-entryMethod', t.entryMethod);
-  set('atm-qualification', t.qualification);
-  set('atm-capacity', t.capacity);
-  set('atm-link-official', t.links?.official);
-  set('atm-link-instagram', t.links?.instagram);
-  set('atm-link-entry', t.links?.entry);
-  set('atm-link-pairs', t.links?.pairs);
-  set('atm-link-result', t.links?.result);
-  set('atm-sourceType', t.sourceType || 'manual');
-  set('atm-sourceUrl', t.sourceUrl);
-  set('atm-notes', t.notes);
+function _atmFill(t) {
+  _atmSet('atm-title', t.title);
+  _atmSet('atm-category', t.category);
+  _atmSet('atm-gender', t.gender);
+  _atmSet('atm-region', t.region);
+  _atmSet('atm-prefecture', t.prefecture);
+  _atmSet('atm-area', t.area);
+  _atmSet('atm-status', t.status||'tbd');
+  _atmSet('atm-course', t.course);
+  _atmSet('atm-organizer', t.organizer);
+  _atmSet('atm-startDate', t.startDate);
+  _atmSet('atm-endDate', t.endDate);
+  _atmSet('atm-entryDeadline', t.entryDeadline);
+  _atmSet('atm-cancelDeadline', t.cancelDeadline);
+  _atmSet('atm-prize', t.prize);
+  _atmSet('atm-prizeWinner', t.prizeWinner);
+  _atmSet('atm-entryFee', t.entryFee);
+  _atmSet('atm-practiceRoundFee', t.practiceRoundFee);
+  _atmSet('atm-entryMethod', t.entryMethod);
+  _atmSet('atm-qualification', t.qualification);
+  _atmSet('atm-capacity', t.capacity);
+  _atmSet('atm-link-official', t.links?.website || t.links?.official);
+  _atmSet('atm-link-instagram', t.links?.instagram);
+  _atmSet('atm-link-entry', t.links?.entry);
+  _atmSet('atm-link-pairs', t.links?.pairing || t.links?.pairs);
+  _atmSet('atm-link-result', t.links?.result);
+  _atmSet('atm-sourceType', t.sourceType||'manual');
+  _atmSet('atm-sourceUrl', t.sourceUrl);
+  _atmSet('atm-notes', t.notes);
 }
-function _atmClearForm() {
-  document.querySelectorAll('#atm-scroll input, #atm-scroll select, #atm-scroll textarea')
-    .forEach(el => { el.value = el.tagName === 'SELECT' ? el.options[0]?.value||'' : ''; });
-  // デフォルト値
-  const st = document.getElementById('atm-status'); if(st) st.value = 'tbd';
-  const ge = document.getElementById('atm-gender'); if(ge) ge.value = 'mens';
-  const re = document.getElementById('atm-region'); if(re) re.value = 'domestic';
-  const so = document.getElementById('atm-sourceType'); if(so) so.value = 'manual';
-}
-
-function _atmCollectForm() {
-  const get = id => document.getElementById(id)?.value?.trim() || '';
-  const now = new Date().toISOString();
-  return {
-    id: _atmEditingId || _atmGenId(get('atm-category')),
-    title: get('atm-title'),
-    category: get('atm-category'),
-    subCategory: '',
-    gender: get('atm-gender'),
-    region: get('atm-region'),
-    area: get('atm-area'),
-    prefecture: get('atm-prefecture'),
-    country: get('atm-region') === 'overseas' ? 'overseas' : 'japan',
-    course: get('atm-course'),
-    organizer: get('atm-organizer'),
-    startDate: get('atm-startDate') || null,
-    endDate: get('atm-endDate') || null,
-    entryDeadline: get('atm-entryDeadline') || null,
-    cancelDeadline: get('atm-cancelDeadline') || null,
-    prize: get('atm-prize'),
-    prizeWinner: get('atm-prizeWinner'),
-    entryFee: get('atm-entryFee'),
-    practiceRoundFee: get('atm-practiceRoundFee'),
-    entryMethod: get('atm-entryMethod'),
-    qualification: get('atm-qualification'),
-    capacity: get('atm-capacity'),
-    tags: [],
-    status: get('atm-status'),
-    sourceType: get('atm-sourceType') || 'manual',
-    sourceUrl: get('atm-sourceUrl'),
-    notes: get('atm-notes'),
-    createdAt: _atmEditingId
-      ? ([...tournaments, ..._customTournaments].find(t=>t.id===_atmEditingId)?.createdAt || now)
-      : now,
-    updatedAt: now,
-    links: {
-      official:  get('atm-link-official'),
-      instagram: get('atm-link-instagram'),
-      entry:     get('atm-link-entry'),
-      pairs:     get('atm-link-pairs'),
-      result:    get('atm-link-result'),
-    },
-  };
-}
-
-function _atmGenId(cat) {
-  const y = new Date().getFullYear();
-  const seq = String(Date.now()).slice(-4);
-  return `${cat||'custom'}-${y}-${seq}`;
+function _atmClear() {
+  document.querySelectorAll('#atm-form-scroll input, #atm-form-scroll select, #atm-form-scroll textarea')
+    .forEach(el => { el.value = el.tagName==='SELECT' ? (el.options[0]?.value||'') : ''; });
+  _atmSet('atm-status','tbd'); _atmSet('atm-gender','mens');
+  _atmSet('atm-region','domestic'); _atmSet('atm-sourceType','manual');
 }
 
 function atmSave() {
-  const data = _atmCollectForm();
-  if (!data.title) { showToast('大会名を入力してください'); return; }
-  if (!data.category) { showToast('カテゴリを選択してください'); return; }
+  const title = _atmGet('atm-title');
+  const cat   = _atmGet('atm-category');
+  if (!title) { if(typeof showToast==='function') showToast('大会名を入力してください'); return; }
+  if (!cat)   { if(typeof showToast==='function') showToast('カテゴリを選択してください'); return; }
 
-  // 既存カスタムから同IDを削除して再挿入
-  _customTournaments = _customTournaments.filter(t => t.id !== data.id);
-  _customTournaments.unshift(data);
-  _saveCustomTournaments();
+  const existing = TOURNAMENTS_DB.find(t => t.id === _atmEditingId) ||
+                   (typeof tournaments!=='undefined' ? tournaments.find(t=>t.id===_atmEditingId) : null);
+  const now = new Date().toISOString();
 
-  // TOURNAMENTS_FLAT / DB を再構築
-  _rebuildTournamentsFlat();
-  _invalidateSearchCache();
+  const entry = _tdbTemplate({
+    id:              _atmEditingId || _tdbGenId(cat),
+    title,
+    category:        cat,
+    gender:          _atmGet('atm-gender'),
+    region:          _atmGet('atm-region'),
+    area:            _atmGet('atm-area'),
+    prefecture:      _atmGet('atm-prefecture'),
+    country:         _atmGet('atm-region')==='overseas' ? 'overseas' : 'japan',
+    course:          _atmGet('atm-course'),
+    organizer:       _atmGet('atm-organizer'),
+    startDate:       _atmGet('atm-startDate')||null,
+    endDate:         _atmGet('atm-endDate')||null,
+    entryDeadline:   _atmGet('atm-entryDeadline')||null,
+    cancelDeadline:  _atmGet('atm-cancelDeadline')||null,
+    prize:           _atmGet('atm-prize'),
+    prizeWinner:     _atmGet('atm-prizeWinner'),
+    entryFee:        _atmGet('atm-entryFee'),
+    practiceRoundFee:_atmGet('atm-practiceRoundFee'),
+    entryMethod:     _atmGet('atm-entryMethod'),
+    qualification:   _atmGet('atm-qualification'),
+    capacity:        _atmGet('atm-capacity'),
+    status:          _atmGet('atm-status'),
+    sourceType:      _atmGet('atm-sourceType')||'manual',
+    sourceUrl:       _atmGet('atm-sourceUrl'),
+    notes:           _atmGet('atm-notes'),
+    rawContent:      existing?.rawContent || '',
+    extractedText:   existing?.extractedText || '',
+    parsingStatus:   existing?.parsingStatus || 'idle',
+    aiConfidence:    existing?.aiConfidence || null,
+    createdAt:       existing?.createdAt || now,
+    updatedAt:       now,
+    links: {
+      website:   _atmGet('atm-link-official'),
+      instagram: _atmGet('atm-link-instagram'),
+      entry:     _atmGet('atm-link-entry'),
+      pairing:   _atmGet('atm-link-pairs'),
+      result:    _atmGet('atm-link-result'),
+    },
+  });
 
+  _tdbUpsert(entry);
   closeAtmSheet();
   renderAdminList();
-  applySearchFilters();
-  showToast(`「${data.title}」を保存しました`);
-}
-
-function atmDelete(tid) {
-  const t = _customTournaments.find(t => t.id === tid);
-  if (!t) { showToast('削除できるのは追加済みの大会のみです'); return; }
-  if (!confirm(`「${t.title}」を削除しますか？`)) return;
-  _customTournaments = _customTournaments.filter(c => c.id !== tid);
-  _saveCustomTournaments();
-  _rebuildTournamentsFlat();
-  _invalidateSearchCache();
-  renderAdminList();
-  applySearchFilters();
-  showToast('削除しました');
+  if (typeof applySearchFilters === 'function') applySearchFilters();
+  if (typeof showToast === 'function') showToast(`「${title}」を保存しました`);
 }
 
 // ================================================================
-// Phase5: ソート強化
+// ⑥ URL解析パイプライン
 // ================================================================
-// applySearchFiltersの既存ソートを Phase5 対応に拡張
-// （_sortMode を使う）
-function p5ApplySortToArray(arr) {
-  return [...arr].sort((a, b) => {
-    let va, vb;
-    switch(_sortMode) {
-      case 'deadline':
-        va = a.entryDeadline || '9999';
-        vb = b.entryDeadline || '9999';
-        break;
-      case 'prize':
-        // 数値抽出（万円単位）
-        va = parseInt((a.prize||'0').replace(/[^0-9]/g,'')) || 0;
-        vb = parseInt((b.prize||'0').replace(/[^0-9]/g,'')) || 0;
-        return _sortAsc ? va - vb : vb - va;
-      case 'area':
-        va = a.area || '';
-        vb = b.area || '';
-        break;
-      default: // 'date'
-        va = a.start || '9999';
-        vb = b.start || '9999';
+let _urlParseResult = null; // 解析結果の一時保持
+
+/** sourceType自動判定（URLパターンマッチング）*/
+function detectSourceType(url) {
+  if (!url) return 'manual';
+  const u = url.toLowerCase();
+  if (u.includes('instagram.com'))  return 'ai_instagram';
+  if (u.endsWith('.pdf') || u.includes('/pdf') || u.includes('pdf=')) return 'ai_pdf';
+  if (u.includes('docs.google.com') || u.includes('forms.gle')) return 'ai_googleform';
+  if (u.includes('lin.ee') || u.includes('line.me')) return 'ai_line';
+  return 'ai_url';
+}
+
+const _URL_TYPE_ICON = {
+  ai_instagram:'📸 Instagram', ai_pdf:'📄 PDF', ai_googleform:'📋 Googleフォーム',
+  ai_line:'💬 LINE', ai_url:'🌐 ウェブサイト', manual:'✏️ 手動',
+};
+
+function onUrlInputChange() {
+  const url = document.getElementById('url-modal-input')?.value?.trim();
+  const typeDisp = document.getElementById('url-type-display');
+  const typeChip = document.getElementById('url-type-chip');
+  if (!url || !url.startsWith('http')) { typeDisp.style.display='none'; return; }
+  const st = detectSourceType(url);
+  typeChip.textContent = _URL_TYPE_ICON[st] || st;
+  typeDisp.style.display = 'block';
+  _hideUrlResults();
+}
+
+function openUrlModal() {
+  document.getElementById('url-modal-input').value = '';
+  document.getElementById('url-type-display').style.display = 'none';
+  _hideUrlResults();
+  document.getElementById('url-modal-overlay')?.classList.add('show');
+  setTimeout(() => document.getElementById('url-modal-input')?.focus(), 150);
+}
+function closeUrlModal() {
+  document.getElementById('url-modal-overlay')?.classList.remove('show');
+  _urlParseResult = null;
+}
+function _hideUrlResults() {
+  document.getElementById('url-progress').classList.remove('show');
+  document.getElementById('url-result-box').classList.remove('show');
+  document.getElementById('url-error-box').classList.remove('show');
+  document.getElementById('url-confirm-btn').style.display = 'none';
+  _setUrlProgress(0,'');
+}
+
+function _setUrlProgress(pct, label) {
+  const bar = document.getElementById('url-progress-bar');
+  const lbl = document.getElementById('url-progress-label');
+  if (bar) bar.style.width = pct + '%';
+  if (lbl) lbl.textContent = label;
+}
+
+/** メイン解析フロー */
+async function startUrlFetch() {
+  const url = document.getElementById('url-modal-input')?.value?.trim();
+  if (!url || !url.startsWith('http')) {
+    _showUrlError('有効なURLを入力してください（https://... ）');
+    return;
+  }
+  const btn = document.getElementById('url-fetch-btn');
+  btn.disabled = true;
+  _hideUrlResults();
+
+  const sourceType = detectSourceType(url);
+
+  // progress 表示
+  document.getElementById('url-progress').classList.add('show');
+  _setUrlProgress(10, 'URLを解析中...');
+
+  try {
+    // ① parsingStatus: fetching
+    _setUrlProgress(30, 'データを取得中...');
+    const rawData = await fetchUrlContent(url);
+
+    _setUrlProgress(60, '大会情報を抽出中...');
+    // ② parser layer へ
+    const parsed = await parseTournamentUrl(url, sourceType, rawData);
+
+    _setUrlProgress(90, 'AI正規化中...');
+    // ③ AI正規化（現在はダミー、将来OpenAI接続）
+    const normalized = await normalizeTournamentData(parsed, sourceType);
+
+    _setUrlProgress(100, '完了');
+    _urlParseResult = { ...normalized, sourceUrl: url, sourceType };
+    _showUrlResult(_urlParseResult);
+
+  } catch(err) {
+    console.warn('[URL Parse]', err);
+    _showUrlError(err.message || '解析に失敗しました');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function _showUrlResult(data) {
+  const box   = document.getElementById('url-result-box');
+  const title = document.getElementById('url-result-title');
+  const rows  = document.getElementById('url-result-rows');
+  if (!box) return;
+
+  title.textContent = data.title || '大会情報（要確認）';
+  const fields = [
+    ['カテゴリ',  data.category],
+    ['開催日',    data.startDate ? `${data.startDate} 〜 ${data.endDate||''}` : ''],
+    ['締切',      data.entryDeadline],
+    ['会場',      data.course],
+    ['都道府県',  _PREF_MAP[data.prefecture] || data.prefecture],
+    ['賞金',      data.prize],
+    ['参加費',    data.entryFee],
+    ['ソース',    data.sourceUrl ? data.sourceUrl.slice(0,40)+'...' : ''],
+  ].filter(([,v]) => v);
+
+  rows.innerHTML = fields.map(([l,v]) =>
+    `<div class="url-result-row"><span class="url-result-label">${l}</span><span class="url-result-val">${escapeHtml(String(v))}</span></div>`
+  ).join('');
+
+  box.classList.add('show');
+  document.getElementById('url-error-box').classList.remove('show');
+  document.getElementById('url-confirm-btn').style.display = '';
+}
+
+function _showUrlError(msg) {
+  const eb = document.getElementById('url-error-box');
+  if (eb) { eb.textContent = '⚠️ ' + msg; eb.classList.add('show'); }
+  document.getElementById('url-result-box').classList.remove('show');
+  document.getElementById('url-confirm-btn').style.display = 'none';
+  document.getElementById('url-progress').classList.remove('show');
+}
+
+/** URL解析結果を確定して編集シートに流し込む */
+function confirmUrlResult() {
+  if (!_urlParseResult) return;
+  closeUrlModal();
+  // 解析結果をフォームに pre-fill
+  _atmInitSelects();
+  _atmEditingId = null;
+  const titleEl = document.getElementById('atm-header-title');
+  if (titleEl) titleEl.textContent = '大会を追加（URL解析結果）';
+  _atmClear();
+  _atmFill(_urlParseResult);
+  _atmSet('atm-sourceUrl',  _urlParseResult.sourceUrl);
+  _atmSet('atm-sourceType', _urlParseResult.sourceType);
+  document.getElementById('atm-overlay')?.classList.add('show');
+  document.getElementById('atm-sheet')?.classList.add('show');
+}
+
+// ================================================================
+// ⑦ Parser Layer（AI連携準備済み空実装）
+// ================================================================
+
+/**
+ * fetchUrlContent — URLのコンテンツ取得
+ * ★ 現在: CORS制約のため直接取得不可 → プロキシサーバー経由が必要
+ *    将来: Cloud Functions / Edge Function でプロキシ化
+ */
+async function fetchUrlContent(url) {
+  // ダミー遅延（実装プレースホルダー）
+  await _delay(800);
+  // ★ TODO: CORS プロキシ経由で fetch
+  // const proxy = 'https://your-proxy.example.com/fetch?url=' + encodeURIComponent(url);
+  // const res = await fetch(proxy);
+  // const text = await res.text();
+  // return { rawHtml: text, rawText: _extractText(text), ocrText: '' };
+
+  return { rawHtml: '', rawText: '', ocrText: '', url };
+}
+
+/**
+ * parseTournamentUrl — URL種別に応じてパーサーを振り分け
+ * ★ 将来: ここで sourceType に応じて AI API を呼ぶ
+ */
+async function parseTournamentUrl(url, sourceType, rawData) {
+  await _delay(400);
+  switch(sourceType) {
+    case 'ai_instagram': return await parseInstagramTournament(url, rawData);
+    case 'ai_pdf':       return await parsePdfTournament(url, rawData);
+    default:             return await parseWebsiteTournament(url, rawData);
+  }
+}
+
+/**
+ * parseWebsiteTournament — ウェブサイトから大会情報抽出
+ * ★ 将来: Claude / GPT-4o に rawHtml を渡してJSON抽出
+ */
+async function parseWebsiteTournament(url, rawData) {
+  await _delay(300);
+  // ダミー結果（URLドメインからタイトルを推測する最低限の実装）
+  const domain = (() => { try { return new URL(url).hostname; } catch(e){ return url; } })();
+  return {
+    title:        '',
+    category:     '',
+    gender:       'mens',
+    region:       'domestic',
+    area:         '',
+    prefecture:   '',
+    course:       '',
+    organizer:    domain,
+    startDate:    null,
+    endDate:      null,
+    entryDeadline:null,
+    prize:        '',
+    entryFee:     '',
+    sourceUrl:    url,
+    sourceType:   'ai_url',
+    parsingStatus:'success',
+    rawContent:   rawData.rawHtml || '',
+    extractedText:rawData.rawText || '',
+    links:        { website: url, instagram:'', entry:'', pairing:'', result:'' },
+    aiConfidence: 0,
+  };
+}
+
+/**
+ * parseInstagramTournament — Instagramから大会情報抽出
+ * ★ 将来: Instagram Graph API + Claude でキャプション解析
+ */
+async function parseInstagramTournament(url, rawData) {
+  await _delay(300);
+  return {
+    title:        '',
+    category:     '',
+    gender:       'mens',
+    region:       'domestic',
+    area:         '',
+    prefecture:   '',
+    course:       '',
+    organizer:    '',
+    startDate:    null,
+    endDate:      null,
+    entryDeadline:null,
+    prize:        '',
+    entryFee:     '',
+    sourceUrl:    url,
+    sourceType:   'ai_instagram',
+    parsingStatus:'success',
+    rawContent:   rawData.rawHtml || '',
+    extractedText:rawData.rawText || '',
+    links:        { website:'', instagram: url, entry:'', pairing:'', result:'' },
+    aiConfidence: 0,
+  };
+}
+
+/**
+ * parsePdfTournament — PDFから大会情報抽出
+ * ★ 将来: pdf.js でテキスト抽出 → Claude OCR / GPT-4V
+ */
+async function parsePdfTournament(url, rawData) {
+  await _delay(300);
+  return {
+    title:        '',
+    category:     '',
+    gender:       'mens',
+    region:       'domestic',
+    area:         '',
+    prefecture:   '',
+    course:       '',
+    organizer:    '',
+    startDate:    null,
+    endDate:      null,
+    entryDeadline:null,
+    prize:        '',
+    entryFee:     '',
+    sourceUrl:    url,
+    sourceType:   'ai_pdf',
+    parsingStatus:'success',
+    rawContent:   rawData.rawHtml || '',
+    extractedText:rawData.rawText || rawData.ocrText || '',
+    links:        { website:'', instagram:'', entry:'', pairing:'', result:'' },
+    aiConfidence: 0,
+  };
+}
+
+/**
+ * normalizeTournamentData — AI正規化（AI連携の中心）
+ * ★ 将来: このasync関数にOpenAI / Claude APIを接続する
+ *
+ * 接続方法（将来）:
+ *   const response = await fetch('https://api.openai.com/v1/chat/completions', {
+ *     method: 'POST',
+ *     headers: { 'Authorization': 'Bearer ' + AI_API_KEY, 'Content-Type': 'application/json' },
+ *     body: JSON.stringify({
+ *       model: 'gpt-4o',
+ *       messages: [
+ *         { role: 'system', content: SYSTEM_PROMPT_TOURNAMENT_EXTRACTOR },
+ *         { role: 'user',   content: parsed.extractedText }
+ *       ],
+ *       response_format: { type: 'json_object' }
+ *     })
+ *   });
+ *   const json = await response.json();
+ *   return JSON.parse(json.choices[0].message.content);
+ */
+async function normalizeTournamentData(parsed, sourceType) {
+  await _delay(200);
+  // 現在はそのまま返す（AI接続後はここでフィールドを補完する）
+  return { ...parsed, aiConfidence: 0, parsingStatus: 'success' };
+}
+
+// ================================================================
+// ⑧ nav-mypage → 管理者ページ連携
+// ================================================================
+function _initAdminNav() {
+  const btn = document.getElementById('nav-mypage');
+  if (!btn) return;
+  btn.onclick = function() {
+    if (_isAdmin) {
+      if (typeof switchPage === 'function') switchPage('admin');
+      renderAdminList();
+    } else {
+      openAdminLogin();
     }
-    return _sortAsc
-      ? String(va).localeCompare(String(vb))
-      : String(vb).localeCompare(String(va));
-  });
+  };
+  const lbl = btn.querySelector('.bnav-label');
+  if (lbl) lbl.textContent = '管理';
 }
 
-// ソートバーの描画（検索ページに追加）
+// ================================================================
+// ⑨ ソートバー（Phase5互換）
+// ================================================================
+let _sortMode = 'date', _sortAsc = true;
+
 function renderSortBar() {
   const meta = document.getElementById('result-meta');
   if (!meta) return;
-  // 既存のsort-barがあれば削除
-  const existing = document.getElementById('p5-sort-bar');
-  if (existing) existing.remove();
-
+  const old = document.getElementById('p5-sort-bar');
+  if (old) old.remove();
+  const modes = [
+    {key:'date','label':'日付順'},
+    {key:'deadline','label':'締切近い順'},
+    {key:'prize','label':'賞金順'},
+    {key:'area','label':'地域順'},
+  ];
   const bar = document.createElement('div');
   bar.id = 'p5-sort-bar'; bar.className = 'sort-bar';
-
-  const modes = [
-    { key:'date',     label:'日付順',   icon:'📅' },
-    { key:'deadline', label:'締切近い順',icon:'⏰' },
-    { key:'prize',    label:'賞金順',   icon:'🏆' },
-    { key:'area',     label:'地域順',   icon:'📍' },
-  ];
   bar.innerHTML = modes.map(m =>
-    `<button class="sort-chip${_sortMode===m.key?' active':''}"
-      onclick="p5SetSort('${m.key}')">
-      <span class="sort-chip-icon">${m.icon}</span>${m.label}
-    </button>`
+    `<button class="sort-chip${_sortMode===m.key?' active':''}" onclick="p5SetSort('${m.key}')">${m.label}</button>`
   ).join('');
   meta.insertAdjacentElement('afterend', bar);
 }
@@ -14538,57 +14595,37 @@ function renderSortBar() {
 function p5SetSort(mode) {
   if (_sortMode === mode) _sortAsc = !_sortAsc;
   else { _sortMode = mode; _sortAsc = true; }
-  _invalidateSearchCache();
+  if (typeof _invalidateSearchCache === 'function') _invalidateSearchCache();
   renderSortBar();
-  applySearchFilters();
+  if (typeof applySearchFilters === 'function') applySearchFilters();
 }
 
 // ================================================================
-// 管理者ボタンをマイページに追加
+// ⑩ 初期化
 // ================================================================
-function _initAdminButton() {
-  // マイページボタンのonclickを置き換え
-  const btn = document.getElementById('nav-mypage');
-  if (btn) {
-    btn.onclick = function() {
-      if (_isAdminMode) {
-        switchPage('admin');
-        renderAdminList();
-      } else {
-        openAdminLogin();
-      }
-    };
-    // ラベルをドロワー連動で動的変更
-    const lbl = btn.querySelector('.bnav-label');
-    if (lbl) lbl.textContent = '管理';
-  }
-}
+function _delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// ================================================================
-// 初期化
-// ================================================================
-(function p5Init() {
-  _loadCustomTournaments();
+(function phase56Init() {
+  _tdbLoad();
   _restoreAdminSession();
-  // カスタムデータで TOURNAMENTS_FLAT を更新
-  if (_customTournaments.length > 0) {
-    _rebuildTournamentsFlat();
-    _invalidateSearchCache();
-  }
-  // 管理者ボタン初期化（DOM準備後）
+  if (TOURNAMENTS_DB.length > 0) _rebuildFlat();
+
+  const ready = () => {
+    _initAdminNav();
+    renderSortBar();
+    if (_isAdmin && document.getElementById('admin-list-scroll')) {
+      renderAdminList();
+    }
+  };
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      _initAdminButton();
-      renderSortBar();
-    }, { once: true });
+    document.addEventListener('DOMContentLoaded', ready, { once: true });
   } else {
-    setTimeout(function() {
-      _initAdminButton();
-      renderSortBar();
-    }, 100);
+    setTimeout(ready, 80);
   }
 })();
 </script>
+
 
 </body>
 </html>
