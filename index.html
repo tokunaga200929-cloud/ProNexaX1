@@ -4573,10 +4573,14 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
   /* contain: layout style; ← Safari bug: 親のflex height計算を壊すため使用禁止 */
 }
 
-/* モーダルシート：合成レイヤー */
-.tdm-sheet, .modal-sheet, .fbs-sheet, .remind-sheet {
+/* モーダルシート：合成レイヤー（tdm-sheetはtransformで開閉するため除外） */
+.modal-sheet, .fbs-sheet, .remind-sheet {
   will-change: transform;
   transform: translateZ(0);
+}
+/* tdm-sheetは translateY(100%) 初期値を保護するため will-change のみ */
+.tdm-sheet {
+  will-change: transform;
 }
 
 /* オーバーレイ：GPUへオフロード */
@@ -6033,7 +6037,12 @@ body{
     </div>
   </div>
 
-  <!-- ★★★ 大会詳細モーダル (phone-inner直下 / position:fixed正常動作) ★★★ -->
+  <!-- ================================================================ -->
+  <!-- ★★★ 大会詳細モーダル / リマインド                                 -->
+  <!-- phone-inner直下に配置：position:fixed が正しくviewport基準で動作 -->
+  <!-- page-search内に置くと overflow:hidden stacking contextに閉じ込め  -->
+  <!-- られ iOS Safariでの表示・タッチイベントが破綻するため必ずここに置く -->
+  <!-- ================================================================ -->
   <div class="tdm-overlay" id="tdm-overlay" onclick="closeTournamentModal()"></div>
   <div class="tdm-sheet" id="tdm-sheet">
     <!-- グラバーバー -->
@@ -6102,7 +6111,7 @@ body{
     </div>
   </div>
 
-  <!-- ★ リマインド：時間選択シート (phone-inner直下) -->
+  <!-- ★ リマインド：時間選択シート（phone-inner直下） -->
   <div class="remind-overlay" id="remind-overlay" onclick="if(event.target===this)closeRemindSheet()">
     <div class="remind-sheet" onclick="event.stopPropagation()">
       <div class="remind-handle"></div>
@@ -7132,7 +7141,16 @@ function switchPage(page){
   });
   const activeBtn=document.getElementById('nav-'+page),activeIcon=document.getElementById('icon-'+page);
   if(activeBtn){activeBtn.classList.add('active');const lbl=activeBtn.querySelector('.bnav-label');lbl.style.color='#1AAF7A';lbl.style.fontWeight='600';if(activeIcon&&NAV_ICONS[page])activeIcon.innerHTML=NAV_ICONS[page].active;}
-  if(page==='search')applySearchFilters();
+  if(page==='search'){
+    applySearchFilters();
+    // ★ 検索画面切替時：モーダルを確実に閉じてstateリセット
+    // （let変数のTDZを避けDOM操作のみで完結させる）
+    const _s = document.getElementById('tdm-sheet');
+    const _o = document.getElementById('tdm-overlay');
+    if(_s){ _s.classList.remove('show','is-dragging'); _s.style.transform=''; _s.style.transition=''; }
+    if(_o){ _o.classList.remove('show'); }
+    if(typeof closeTournamentModal === 'function' && typeof _tdmCurrentId !== 'undefined' && _tdmCurrentId){ closeTournamentModal(); }
+  }
   if(page==='calendar'){renderAllPanels();renderCalList();}
 }
 
