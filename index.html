@@ -2736,12 +2736,6 @@ button,input,select,textarea{
   color:#606068;
   font-size:15px;
   font-weight:600;
-  /* ★ 修正: 最前面保証 */
-  position:relative;
-  z-index:10;
-  touch-action:manipulation;
-  -webkit-user-select:none;
-  user-select:none;
 }
 .tdm-close-btn:active{transform:scale(.88);background:#E0E4E8;}
 :root[data-theme="dark"] .tdm-close-btn{background:#2C2C2E;color:#E0E4E8;}
@@ -4647,10 +4641,6 @@ button, .filter-chip, .t-cat-badge, .search-gender-btn,
   pointer-events: none;
   user-select: none;
 }
-/* ✕ボタンはドラッグ中でも必ずタップ受付 */
-.tdm-sheet.is-dragging .tdm-close-btn {
-  pointer-events: auto !important;
-}
 
 /* split handle タッチ領域拡張 */
 .split-handle { min-height:20px !important; }
@@ -5576,74 +5566,6 @@ body{
     </div>
     <div class="search-scroll"><div class="search-list-top-pad"></div><div id="search-list"></div><div style="height:20px;"></div></div>
 
-    <!-- ★★★ Phase2: 大会詳細モーダル ★★★ -->
-    <div class="tdm-overlay" id="tdm-overlay" onclick="closeTournamentModal()"></div>
-    <div class="tdm-sheet" id="tdm-sheet">
-      <!-- グラバーバー -->
-      <div class="tdm-grabber" id="tdm-grabber"></div>
-
-      <!-- ヘッダー：大会名＋カテゴリ -->
-      <div class="tdm-header">
-        <div class="tdm-header-left">
-          <div class="tdm-cat-row" id="tdm-cat-row"></div>
-          <div class="tdm-title" id="tdm-title">大会名</div>
-        </div>
-        <button class="tdm-close-btn" id="tdm-close-btn" onclick="closeTournamentModal()" aria-label="閉じる">✕</button>
-      </div>
-
-      <!-- アクションボタン群 -->
-      <div class="tdm-actions" id="tdm-actions"></div>
-
-      <!-- スクロールエリア -->
-      <div class="tdm-scroll" id="tdm-scroll">
-        <!-- 基本情報 -->
-        <div class="tdm-section">
-          <div class="tdm-section-title">基本情報</div>
-          <div id="tdm-basic-rows"></div>
-        </div>
-
-        <!-- 金額情報 -->
-        <div class="tdm-section">
-          <div class="tdm-section-title">賞金・費用</div>
-          <div id="tdm-money-rows"></div>
-        </div>
-
-        <!-- エントリー情報 -->
-        <div class="tdm-section">
-          <div class="tdm-section-title">エントリー</div>
-          <div id="tdm-entry-rows"></div>
-        </div>
-
-        <!-- リンク -->
-        <div class="tdm-section">
-          <div class="tdm-section-title">リンク</div>
-        </div>
-        <div class="tdm-link-grid" id="tdm-link-grid"></div>
-
-        <div style="height:8px;"></div>
-      </div>
-
-      <!-- フッター：主要CTA -->
-      <div class="tdm-footer" id="tdm-footer">
-        <button class="tdm-footer-cal" id="tdm-footer-cal" onclick="_tdmAddToCalendar()">
-          <svg width="15" height="15" viewBox="0 0 22 22" fill="none">
-            <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/>
-            <line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            <line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            <line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/>
-          </svg>
-          カレンダーに追加
-        </button>
-        <button class="tdm-footer-entry" id="tdm-footer-entry" onclick="_tdmOpenEntry()">
-          <svg width="14" height="14" viewBox="0 0 22 22" fill="none">
-            <path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
-            <path d="M9 11l2 2 4-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="8" y="1" width="6" height="4" rx="1" stroke="#fff" stroke-width="1.7"/>
-          </svg>
-          エントリーへ
-        </button>
-      </div>
-    </div>
     <!-- ★ リマインド：時間選択シート -->
     <div class="remind-overlay" id="remind-overlay" onclick="if(event.target===this)closeRemindSheet()">
       <div class="remind-sheet" onclick="event.stopPropagation()">
@@ -6132,6 +6054,75 @@ body{
       <div class="add-cat-section-label" style="margin-top:18px;">追加済みカテゴリ</div>
       <div class="add-cat-manage-list" id="add-cat-manage-list"></div>
     </div>
+  </div>
+
+<!-- ★★★ Phase2: 大会詳細モーダル ★★★ -->
+  <div class="tdm-overlay" id="tdm-overlay" onclick="closeTournamentModal()"></div>
+  <div class="tdm-sheet" id="tdm-sheet">
+  <!-- グラバーバー -->
+  <div class="tdm-grabber" id="tdm-grabber"></div>
+
+  <!-- ヘッダー：大会名＋カテゴリ -->
+  <div class="tdm-header">
+    <div class="tdm-header-left">
+      <div class="tdm-cat-row" id="tdm-cat-row"></div>
+      <div class="tdm-title" id="tdm-title"></div>
+    </div>
+    <button class="tdm-close-btn" onclick="closeTournamentModal()" aria-label="閉じる">✕</button>
+  </div>
+
+  <!-- アクションボタン群 -->
+  <div class="tdm-actions" id="tdm-actions"></div>
+
+  <!-- スクロールエリア -->
+  <div class="tdm-scroll" id="tdm-scroll">
+    <!-- 基本情報 -->
+    <div class="tdm-section">
+      <div class="tdm-section-title">基本情報</div>
+      <div id="tdm-basic-rows"></div>
+    </div>
+
+    <!-- 金額情報 -->
+    <div class="tdm-section">
+      <div class="tdm-section-title">賞金・費用</div>
+      <div id="tdm-money-rows"></div>
+    </div>
+
+    <!-- エントリー情報 -->
+    <div class="tdm-section">
+      <div class="tdm-section-title">エントリー</div>
+      <div id="tdm-entry-rows"></div>
+    </div>
+
+    <!-- リンク -->
+    <div class="tdm-section">
+      <div class="tdm-section-title">リンク</div>
+    </div>
+    <div class="tdm-link-grid" id="tdm-link-grid"></div>
+
+    <div style="height:8px;"></div>
+  </div>
+
+  <!-- フッター：主要CTA -->
+  <div class="tdm-footer" id="tdm-footer">
+    <button class="tdm-footer-cal" id="tdm-footer-cal" onclick="_tdmAddToCalendar()">
+      <svg width="15" height="15" viewBox="0 0 22 22" fill="none">
+        <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/>
+        <line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        <line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        <line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/>
+      </svg>
+      カレンダーに追加
+    </button>
+    <button class="tdm-footer-entry" id="tdm-footer-entry" onclick="_tdmOpenEntry()">
+      <svg width="14" height="14" viewBox="0 0 22 22" fill="none">
+        <path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
+        <path d="M9 11l2 2 4-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="8" y="1" width="6" height="4" rx="1" stroke="#fff" stroke-width="1.7"/>
+      </svg>
+      エントリーへ
+    </button>
+  </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -8523,29 +8514,13 @@ function openTournamentModal(tid){
   });
   // ドラッグ閉じ初期化
   _tdmInitDrag();
-  // ★ 修正: ✕ボタンにtouchstart即時反応リスナー（iPhone Safari 300ms遅延ゼロ化）
-  const closeBtn = document.getElementById('tdm-close-btn');
-  if(closeBtn){
-    closeBtn.ontouchstart = function(e){
-      e.stopPropagation(); // dragに伝播させない
-    };
-    closeBtn.ontouchend = function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      closeTournamentModal();
-    };
-  }
 }
 
 // モーダルを閉じる
 function closeTournamentModal(){
   const sheet = document.getElementById('tdm-sheet');
   const overlay = document.getElementById('tdm-overlay');
-  // ★ 修正: is-dragging残留・transform残留をリセット
-  sheet.classList.remove('show','is-dragging');
-  sheet.style.transform = '';
-  sheet.style.transition = '';
-  _tdmIsDragging = false;
+  sheet.classList.remove('show');
   overlay.classList.remove('show');
   setTimeout(()=>{ _tdmCurrentId = null; }, 400);
 }
@@ -8740,13 +8715,8 @@ function _tdmInitDrag(){
   const grabber = document.getElementById('tdm-grabber');
   if(!sheet||!grabber) return;
 
-  let _didDrag = false; // drag移動量チェック用フラグ
-
   const onStart = (e)=>{
-    // ✕ボタン上からのタッチはdragを開始しない
-    if(e.target && e.target.closest && e.target.closest('.tdm-close-btn')) return;
     _tdmIsDragging = true;
-    _didDrag = false;
     _tdmDragStartY = (e.touches?e.touches[0].clientY:e.clientY);
     _tdmDragCurrentY = 0;
     sheet.classList.add('is-dragging');
@@ -8756,19 +8726,13 @@ function _tdmInitDrag(){
     const y = (e.touches?e.touches[0].clientY:e.clientY);
     const dy = y - _tdmDragStartY;
     if(dy < 0) return; // 上方向は無視
-    if(dy > 4) _didDrag = true; // 実際に動いた
     _tdmDragCurrentY = dy;
     sheet.style.transform = `translateY(${dy}px)`;
   };
-  const onEnd = (e)=>{
+  const onEnd = ()=>{
     if(!_tdmIsDragging) return;
     _tdmIsDragging = false;
     sheet.classList.remove('is-dragging');
-    // ✕ボタンへのタップはdragEndで処理しない（clickに任せる）
-    if(e && e.target && e.target.closest && e.target.closest('.tdm-close-btn')){
-      sheet.style.transform = '';
-      return;
-    }
     if(_tdmDragCurrentY > 120){
       sheet.style.transform = '';
       closeTournamentModal();
@@ -8777,7 +8741,6 @@ function _tdmInitDrag(){
       sheet.style.transition = 'transform .35s cubic-bezier(.32,.72,.25,1)';
       setTimeout(()=>{ sheet.style.transition=''; }, 350);
     }
-    _didDrag = false;
   };
 
   // 既存リスナー削除
