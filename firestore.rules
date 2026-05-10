@@ -2,34 +2,20 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── tournaments: 全員読み取り可、書き込みはログイン必須 ──
+    // ── tournaments: 読み取りは全員、書き込みは管理者のみ ──
     match /tournaments/{docId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
-    // ── users: 本人のみ ──
+    // ── users: 本人のみ読み書き ──
     match /users/{uid} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid == uid;
+      allow read, write: if request.auth != null && request.auth.uid == uid;
     }
 
-    // ── favorites/{uid}/savedTournaments ──
+    // ── favorites: 本人のみ読み書き ──
     match /favorites/{uid}/{document=**} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid == uid;
-    }
-
-    // ── events/{uid}/calendarEvents ──
-    match /events/{uid}/{document=**} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid == uid;
-    }
-
-    // ── settings/{uid} ──
-    match /settings/{uid} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid == uid;
+      allow read, write: if request.auth != null && request.auth.uid == uid;
     }
   }
 }
