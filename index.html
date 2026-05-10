@@ -1509,6 +1509,206 @@ button,input,select,textarea{
   padding: 5px 16px 9px;
   gap: 6px;
 }
+
+/* ================================================================ */
+/* ★★★ iOS風 第2階層セレクトUI ★★★                                  */
+/* ================================================================ */
+.hcat-select-wrap{
+  padding: 6px 16px 10px;
+  background: #fff;
+  position: relative;
+}
+:root[data-theme="dark"] .hcat-select-wrap{
+  background: var(--card-bg);
+}
+
+/* セレクトボタン本体 */
+.hcat-select-btn{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #f2f2f7;
+  border: 1.5px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  padding: 0 14px;
+  height: 40px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+:root[data-theme="dark"] .hcat-select-btn{
+  background: #2c2c2e;
+  border-color: rgba(255,255,255,.08);
+}
+.hcat-select-btn:active{
+  transform: scale(.98);
+  background: #e8e8ed;
+}
+:root[data-theme="dark"] .hcat-select-btn:active{
+  background: #3a3a3c;
+}
+.hcat-select-btn.is-open{
+  border-color: var(--green-main);
+  box-shadow: 0 0 0 3px rgba(57,200,146,.12);
+  background: #fff;
+}
+:root[data-theme="dark"] .hcat-select-btn.is-open{
+  background: #2c2c2e;
+}
+
+/* セレクトボタン左：ドット＋ラベル */
+.hcat-select-left{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.hcat-select-dot{
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+.hcat-select-label{
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -.01em;
+}
+.hcat-select-sub{
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  margin-left: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* シェブロン */
+.hcat-select-chevron{
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .25s cubic-bezier(.34,1.2,.64,1);
+}
+.hcat-select-btn.is-open .hcat-select-chevron{
+  transform: rotate(180deg);
+}
+.hcat-select-chevron svg{
+  display: block;
+}
+
+/* ドロップダウンパネル */
+.hcat-dropdown{
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0 6px;
+  animation: hcatDropIn .22s cubic-bezier(.34,1.2,.64,1);
+  overflow: hidden;
+}
+.hcat-dropdown.is-open{
+  display: flex;
+}
+@keyframes hcatDropIn{
+  from{ opacity:0; transform:translateY(-6px) scaleY(.96); }
+  to{   opacity:1; transform:translateY(0)    scaleY(1);   }
+}
+
+/* ドロップダウン各行 */
+.hcat-dropdown-item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  height: 42px;
+  border-radius: 10px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .12s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.hcat-dropdown-item:active{
+  background: rgba(0,0,0,.05);
+}
+:root[data-theme="dark"] .hcat-dropdown-item:active{
+  background: rgba(255,255,255,.06);
+}
+.hcat-dropdown-item.is-selected{
+  background: var(--green-chip);
+}
+:root[data-theme="dark"] .hcat-dropdown-item.is-selected{
+  background: rgba(57,200,146,.12);
+}
+
+/* ドロップダウン行：ドット */
+.hcat-dd-dot{
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+/* ドロップダウン行：テキスト */
+.hcat-dd-text{
+  flex: 1;
+  min-width: 0;
+}
+.hcat-dd-label{
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hcat-dd-desc{
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* ドロップダウン行：チェック */
+.hcat-dd-check{
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.hcat-dropdown-item.is-selected .hcat-dd-check{
+  opacity: 1;
+}
+/* 区切り線 */
+.hcat-dd-divider{
+  height: 1px;
+  background: var(--border);
+  margin: 3px 14px;
+  opacity: .6;
+}
 .hcat-group-chip{
   font-size: 10.5px !important;
   height: 26px !important;
@@ -8673,9 +8873,91 @@ function renderSearchFilters(){
   tourChips.push(`<button class="filter-chip${searchFilter==='added'?' active':''}" data-key="added"
     onclick="_setTourCatFilter('added',this)">✓ 登録済み</button>`);
 
+  // ── セレクトUIで現在選択グループ・ツアーのラベル/カラーを取得 ──
+  let selGroupDef  = _searchGroupKey ? regionDef.groups[_searchGroupKey] : null;
+  let selTourKey   = (searchFilter && searchFilter !== 'all' && searchFilter !== 'added') ? searchFilter : null;
+  let selTourDef   = null;
+  if(selTourKey){
+    // どのグループにあるか探す
+    for(const [,gd] of groups){
+      if(gd.tours && gd.tours[selTourKey]){ selTourDef = gd.tours[selTourKey]; break; }
+    }
+  }
+
+  // ── セレクトボタンのラベル計算 ──
+  let selectDotColor = selGroupDef ? selGroupDef.color : (selTourDef ? selTourDef.color : '#aaa');
+  let selectMainLabel, selectSubLabel;
+  if(searchFilter === 'added'){
+    selectDotColor = 'var(--green-main)';
+    selectMainLabel = '✓ 登録済み';
+    selectSubLabel  = '';
+  } else if(selTourDef){
+    selectMainLabel = selTourDef.label;
+    selectSubLabel  = selGroupDef ? selGroupDef.label : '';
+  } else if(selGroupDef){
+    selectMainLabel = selGroupDef.label + ' — すべて';
+    selectSubLabel  = '';
+  } else {
+    selectMainLabel = 'すべて';
+    selectSubLabel  = '';
+  }
+
+  // ── ドロップダウン行生成 ──
+  let ddItems = [];
+  // 「すべて」行
+  ddItems.push(`<button class="hcat-dropdown-item${searchFilter==='all' && !_searchGroupKey?' is-selected':''}" onclick="_hcatSelectTour('all',null,this)">
+    <span class="hcat-dd-dot" style="background:#aaa;opacity:.4;"></span>
+    <span class="hcat-dd-text"><span class="hcat-dd-label">すべて</span></span>
+    <span class="hcat-dd-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5L5.5 10.5L11.5 4" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  </button>`);
+
+  // グループ別ツアー行
+  const targetGroups = _searchGroupKey
+    ? groups.filter(([gk])=> gk === _searchGroupKey)
+    : groups;
+
+  targetGroups.forEach(([gk, gd], gi) => {
+    if(gi > 0) ddItems.push(`<div class="hcat-dd-divider"></div>`);
+    Object.entries(gd.tours||{}).forEach(([tk,td]) => {
+      const isSel = searchFilter === tk;
+      ddItems.push(`<button class="hcat-dropdown-item${isSel?' is-selected':''}" onclick="_hcatSelectTour('${tk}','${gk}',this)">
+        <span class="hcat-dd-dot" style="background:${td.color};"></span>
+        <span class="hcat-dd-text">
+          <span class="hcat-dd-label">${td.label}</span>
+          <span class="hcat-dd-desc">${gd.label}</span>
+        </span>
+        <span class="hcat-dd-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5L5.5 10.5L11.5 4" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </button>`);
+    });
+  });
+
+  // 「登録済み」行
+  ddItems.push(`<div class="hcat-dd-divider"></div>`);
+  ddItems.push(`<button class="hcat-dropdown-item${searchFilter==='added'?' is-selected':''}" onclick="_hcatSelectTour('added',null,this)">
+    <span class="hcat-dd-dot" style="background:var(--green-main);"></span>
+    <span class="hcat-dd-text"><span class="hcat-dd-label">✓ 登録済み</span></span>
+    <span class="hcat-dd-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5L5.5 10.5L11.5 4" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  </button>`);
+
   grid.innerHTML =
     `<div class="filter-scroll-rail hcat-group-row">${groupHtml}</div>` +
-    `<div class="filter-scroll-rail hcat-tour-row">${tourChips.join('')}</div>`;
+    `<div class="hcat-select-wrap">
+      <button class="hcat-select-btn" id="hcat-select-btn" onclick="_hcatToggleDropdown()" aria-expanded="false">
+        <span class="hcat-select-left">
+          <span class="hcat-select-dot" style="background:${selectDotColor};"></span>
+          <span class="hcat-select-label">${selectMainLabel}</span>
+          ${selectSubLabel ? `<span class="hcat-select-sub">${selectSubLabel}</span>` : ''}
+        </span>
+        <span class="hcat-select-chevron">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 5L7 9L11 5" stroke="var(--text-tertiary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </button>
+      <div class="hcat-dropdown" id="hcat-dropdown">
+        ${ddItems.join('')}
+      </div>
+    </div>`;
 }
 
 // ★ グループフィルターセット
@@ -8686,6 +8968,55 @@ function _setGroupFilter(groupKey, el) {
   _searchGroupKey = (_searchGroupKey === groupKey) ? null : groupKey;
   searchFilter = 'all';
   _invalidateSearchCache();
+  renderSearchFilters();
+  applySearchFilters();
+}
+
+// ★★★ iOS風セレクトUI制御 ★★★
+
+// ドロップダウン開閉
+function _hcatToggleDropdown() {
+  const btn = document.getElementById('hcat-select-btn');
+  const dd  = document.getElementById('hcat-dropdown');
+  if (!btn || !dd) return;
+  const isOpen = dd.classList.contains('is-open');
+  if (isOpen) {
+    _hcatCloseDropdown();
+  } else {
+    btn.classList.add('is-open');
+    dd.classList.add('is-open');
+    btn.setAttribute('aria-expanded', 'true');
+    // タップアウト検知
+    setTimeout(() => {
+      document.addEventListener('touchstart', _hcatOutsideTap, { once: true, passive: true });
+      document.addEventListener('click', _hcatOutsideTap, { once: true });
+    }, 10);
+  }
+}
+
+function _hcatCloseDropdown() {
+  const btn = document.getElementById('hcat-select-btn');
+  const dd  = document.getElementById('hcat-dropdown');
+  if (btn) { btn.classList.remove('is-open'); btn.setAttribute('aria-expanded','false'); }
+  if (dd)  { dd.classList.remove('is-open'); }
+}
+
+function _hcatOutsideTap(e) {
+  const wrap = document.querySelector('.hcat-select-wrap');
+  if (wrap && wrap.contains(e.target)) return;
+  _hcatCloseDropdown();
+}
+
+// ドロップダウン行タップ → ツアー選択
+function _hcatSelectTour(tourKey, groupKey, el) {
+  // ハプティクス風バウンス
+  el.style.transform = 'scale(.96)';
+  setTimeout(() => { el.style.transform = ''; }, 120);
+
+  if (groupKey) _searchGroupKey = groupKey;
+  searchFilter = tourKey;
+  _invalidateSearchCache();
+  _hcatCloseDropdown();
   renderSearchFilters();
   applySearchFilters();
 }
