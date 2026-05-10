@@ -6246,33 +6246,32 @@ body.is-admin .admin-card-actions.admin-only {
     </div>
   </div>
 
-  <!-- ================================================================ -->
-  <!-- ★★★ マイ大会ページ                                             -->
-  <!--   .page 構造 → active 時のみ display:flex                       -->
-  <!--   position:fixed / overflow干渉 は一切なし                      -->
-  <!-- ================================================================ -->
+  <!-- ★★★ マイ大会ページ（Firestore favorites同期）
+       .page クラス → display:none がデフォルト
+       active 時のみ display:flex で表示
+       position:fixed / overflow競合 は一切なし           ★★★ -->
   <div class="page" id="page-mypage">
-    <div class="mp-hdr">
-      <div class="mp-hdr-inner">
-        <span class="mp-hdr-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    <!-- ヘッダー＋ソート：flex-shrink:0 でスクロールしない -->
+    <div id="mp-hdr">
+      <div id="mp-hdr-top">
+        <span id="mp-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           マイ大会
         </span>
-        <span class="mp-hdr-badge" id="mp-badge">0</span>
+        <span id="mp-badge">0</span>
       </div>
-      <!-- ソートチップ -->
-      <div class="mp-sort-row">
-        <button class="mp-chip mp-chip-active" data-s="saved"     onclick="mpSort('saved',this)">保存順</button>
-        <button class="mp-chip"                data-s="deadline"  onclick="mpSort('deadline',this)">締切順</button>
-        <button class="mp-chip"                data-s="startDate" onclick="mpSort('startDate',this)">開催日順</button>
+      <div id="mp-sort-bar">
+        <button class="mp-s-chip mp-chip-on" data-s="saved"     onclick="mpSetSort('saved',this)">保存順</button>
+        <button class="mp-s-chip"             data-s="deadline"  onclick="mpSetSort('deadline',this)">締切順</button>
+        <button class="mp-s-chip"             data-s="startDate" onclick="mpSetSort('startDate',this)">開催日順</button>
       </div>
     </div>
     <!-- カテゴリフィルター -->
-    <div class="mp-cat-row" id="mp-cat-row">
-      <button class="mp-chip mp-chip-cat mp-chip-active" data-c="all" onclick="mpCat('all',this)">すべて</button>
+    <div id="mp-cat-bar">
+      <button class="mp-c-chip mp-chip-on" data-c="all" onclick="mpSetCat('all',this)">すべて</button>
     </div>
-    <!-- リスト（page内スクロール） -->
-    <div class="mp-list" id="mp-list"></div>
+    <!-- リスト：flex:1 + overflow-y:auto で page 内完結スクロール -->
+    <div id="mp-list"></div>
   </div>
 
 <!-- ★ Auth ローディングオーバーレイ（iOS リダイレクト中のちらつき防止） -->
@@ -18052,35 +18051,33 @@ body.is-admin #page-admin.active {
 </script>
 
 <!-- ================================================================
-   マイ大会ページ — CSS + JS
-   ・#page-mypage は .page 構造（display:none / active 時 display:flex）
-   ・position:fixed は使わない
-   ・overflow競合なし
-   ================================================================ -->
-<style id="mp-css">
+  ProNexaX — マイ大会 Firestore完全同期 v2
+  Firestore構造: users/{uid}/favorites/{tournamentId}
+                 { tournamentId, savedAt }
+  ================================================================ -->
+<style id="mp-v2-css">
+/* ──────────────────────────────────────────
+   #page-mypage は .page クラスが display:none を管理
+   ここでは page 内部レイアウトのみ定義
+   position:fixed / bottom:0 は一切使わない
+   ────────────────────────────────────────── */
+#page-mypage { background:#f2f2f7; }
 
-/* ── #page-mypage 全体 ──
-   .page の display:none / display:flex は既存CSSが制御
-   ここでは page 内部のレイアウトだけを定義する               */
-#page-mypage {
-  background: #f2f2f7;
-  /* flex-direction:column は .page に設定済み */
-}
-
-/* ── ヘッダー部（flex-shrink:0 でスクロールしない） ── */
-.mp-hdr {
+/* ── ヘッダーブロック ── */
+#mp-hdr {
   flex-shrink: 0;
   background: #fff;
   border-bottom: .5px solid rgba(0,0,0,.08);
+  padding-bottom: 2px;
 }
-.mp-hdr-inner {
+#mp-hdr-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px 0;
   padding-top: calc(env(safe-area-inset-top,0px) + 10px);
 }
-.mp-hdr-title {
+#mp-title {
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -.3px;
@@ -18089,8 +18086,8 @@ body.is-admin #page-admin.active {
   align-items: center;
   gap: 6px;
 }
-.mp-hdr-title svg { color: #E5A41A; flex-shrink: 0; }
-.mp-hdr-badge {
+#mp-title svg { color: #E5A41A; }
+#mp-badge {
   min-width: 22px;
   height: 22px;
   background: #39C892;
@@ -18102,12 +18099,12 @@ body.is-admin #page-admin.active {
   align-items: center;
   justify-content: center;
   padding: 0 6px;
-  transition: transform .2s cubic-bezier(.34,1.56,.64,1);
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1), background .2s;
 }
-.mp-hdr-badge.bump { transform: scale(1.3); }
+#mp-badge.pop { transform: scale(1.35); background: #E5A41A; }
 
-/* ── ソート行 ── */
-.mp-sort-row {
+/* ── ソートバー ── */
+#mp-sort-bar {
   display: flex;
   gap: 6px;
   overflow-x: auto;
@@ -18115,26 +18112,26 @@ body.is-admin #page-admin.active {
   -webkit-overflow-scrolling: touch;
   padding: 8px 14px 8px;
 }
-.mp-sort-row::-webkit-scrollbar { display: none; }
+#mp-sort-bar::-webkit-scrollbar { display: none; }
 
-/* ── カテゴリ行 ── */
-.mp-cat-row {
+/* ── カテゴリバー ── */
+#mp-cat-bar {
   flex-shrink: 0;
   display: flex;
   gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  padding: 6px 14px 8px;
+  padding: 6px 14px 7px;
   background: #f2f2f7;
 }
-.mp-cat-row::-webkit-scrollbar { display: none; }
+#mp-cat-bar::-webkit-scrollbar { display: none; }
 
-/* ── チップ共通 ── */
-.mp-chip {
+/* ── チップ ── */
+.mp-s-chip, .mp-c-chip {
   display: inline-flex;
   align-items: center;
-  padding: 5px 12px;
+  padding: 5px 13px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
@@ -18145,22 +18142,23 @@ body.is-admin #page-admin.active {
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: background .13s, border-color .13s, color .13s;
+  transition: background .12s, border-color .12s, color .12s;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
-.mp-chip:active { opacity: .7; }
-.mp-chip.mp-chip-active       { background: #1d1d1f; border-color: #1d1d1f; color: #fff; }
-.mp-chip.mp-chip-cat.mp-chip-active { background: #39C892; border-color: #39C892; color: #fff; }
+.mp-s-chip:active, .mp-c-chip:active { opacity: .7; }
+.mp-s-chip.mp-chip-on { background: #1d1d1f; border-color: #1d1d1f; color: #fff; }
+.mp-c-chip.mp-chip-on { background: #39C892; border-color: #39C892; color: #fff; }
 
-/* ── リストエリア（page内スクロール）
-   flex:1 + overflow-y:auto で bottom-nav の上まで自然に収まる ── */
-.mp-list {
+/* ── リストエリア ──
+   flex:1 で残り高さを全て使い、overflow-y:auto で内部スクロール
+   他ページには一切影響しない                                     */
+#mp-list {
   flex: 1;
   overflow-y: auto;
-  min-height: 0;
+  min-height: 0;                      /* flexbox Safari バグ回避 */
   -webkit-overflow-scrolling: touch;
-  padding: 8px 0 calc(env(safe-area-inset-bottom,0px) + 56px);
+  padding: 8px 0 calc(env(safe-area-inset-bottom,0px) + 58px);
 }
 
 /* ── カード ── */
@@ -18174,35 +18172,37 @@ body.is-admin #page-admin.active {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform .12s, box-shadow .12s;
-  animation: mp-in .24s cubic-bezier(.32,.72,.25,1) both;
+  animation: mp-card-in .24s cubic-bezier(.32,.72,.25,1) both;
 }
 .mp-card:active { transform: scale(.975); box-shadow: none; }
-@keyframes mp-in {
+@keyframes mp-card-in {
   from { opacity:0; transform:translateY(6px) scale(.98); }
   to   { opacity:1; transform:none; }
 }
-.mp-card-row { display: flex; align-items: stretch; }
-.mp-stripe   { width: 4px; flex-shrink: 0; }
-.mp-card-body {
+.mp-card-inner { display:flex; align-items:stretch; }
+.mp-stripe     { width:4px; flex-shrink:0; }
+.mp-body {
   flex: 1;
   min-width: 0;
   padding: 11px 12px 11px 10px;
 }
-.mp-card-top {
+.mp-row-top {
   display: flex;
   align-items: flex-start;
   gap: 6px;
   margin-bottom: 5px;
 }
-.mp-card-name {
+.mp-name {
   flex: 1;
   min-width: 0;
   font-size: 13.5px;
   font-weight: 700;
   color: #1d1d1f;
   line-height: 1.3;
+  word-break: break-all;
 }
-.mp-star {
+/* ★ボタン */
+.mp-fav-btn {
   width: 30px;
   height: 30px;
   border: none;
@@ -18211,7 +18211,7 @@ body.is-admin #page-admin.active {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 19px;
+  font-size: 20px;
   flex-shrink: 0;
   color: #E5A41A;
   padding: 0;
@@ -18221,32 +18221,31 @@ body.is-admin #page-admin.active {
   transition: transform .18s cubic-bezier(.34,1.56,.64,1);
   line-height: 1;
 }
-.mp-star:active { transform: scale(.7); }
-
+.mp-fav-btn:active { transform: scale(.65); }
+/* メタ行 */
 .mp-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 7px;
   align-items: center;
 }
-.mp-badge-cat {
+.mp-badge-c {
   padding: 2px 8px;
   border-radius: 7px;
   font-size: 10px;
   font-weight: 700;
   display: inline-flex;
 }
-.mp-badge-st {
+.mp-badge-s {
   padding: 2px 7px;
   border-radius: 7px;
   font-size: 10px;
   font-weight: 700;
   display: inline-flex;
 }
-.mp-badge-st.upcoming { background:#e0f7ee; color:#0B7A44; }
-.mp-badge-st.live     { background:#e5f0fc; color:#1A5090; }
-.mp-badge-st.ended    { background:#f5f5f7; color:#8e8e93; }
-
+.mp-badge-s.upcoming { background:#e0f7ee; color:#0B7A44; }
+.mp-badge-s.live     { background:#e5f0fc; color:#1A5090; }
+.mp-badge-s.ended    { background:#f5f5f7; color:#8e8e93; }
 .mp-meta-txt {
   display: inline-flex;
   align-items: center;
@@ -18254,6 +18253,7 @@ body.is-admin #page-admin.active {
   font-size: 10.5px;
   color: #8e8e93;
 }
+/* 締切バナー */
 .mp-dl {
   display: flex;
   align-items: center;
@@ -18266,12 +18266,12 @@ body.is-admin #page-admin.active {
   font-weight: 600;
   color: #A05800;
 }
-.mp-dl.urgent {
+.mp-dl.mp-urgent {
   background: #fce8e8;
   color: #C03030;
   animation: mp-pulse 1.8s ease-in-out infinite;
 }
-@keyframes mp-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+@keyframes mp-pulse { 0%,100%{opacity:1}50%{opacity:.6} }
 
 /* ── 空状態 ── */
 .mp-empty {
@@ -18282,14 +18282,8 @@ body.is-admin #page-admin.active {
   padding: 56px 28px;
   text-align: center;
 }
-.mp-empty-star {
-  font-size: 44px;
-  animation: mp-star-pop .65s cubic-bezier(.34,1.56,.64,1);
-}
-@keyframes mp-star-pop {
-  from { transform:scale(.3) rotate(-20deg); opacity:0; }
-  to   { transform:none; opacity:1; }
-}
+.mp-empty-icon { font-size:42px; animation:mp-pop .6s cubic-bezier(.34,1.56,.64,1); }
+@keyframes mp-pop { from{transform:scale(.3) rotate(-20deg);opacity:0} to{transform:none;opacity:1} }
 .mp-empty-ttl { font-size:16px; font-weight:700; color:#3a3a3c; }
 .mp-empty-sub { font-size:13px; color:#8e8e93; line-height:1.6; }
 .mp-empty-hint {
@@ -18307,46 +18301,101 @@ body.is-admin #page-admin.active {
 
 /* ── スケルトン ── */
 .mp-skel {
-  background: #fff;
-  margin: 0 12px 8px;
-  border-radius: 14px;
-  padding: 14px;
-  border: .5px solid rgba(0,0,0,.05);
+  background:#fff;
+  margin:0 12px 8px;
+  border-radius:14px;
+  padding:14px;
+  border:.5px solid rgba(0,0,0,.05);
 }
 .mp-skel-l {
-  border-radius: 6px;
-  background: linear-gradient(90deg,#f0f0f5 25%,#e8e8f0 50%,#f0f0f5 75%);
-  background-size: 200% 100%;
-  animation: mp-skel-anim 1.4s ease-in-out infinite;
-  margin-bottom: 7px;
+  border-radius:6px;
+  background:linear-gradient(90deg,#f0f0f5 25%,#e8e8f0 50%,#f0f0f5 75%);
+  background-size:200% 100%;
+  animation:mp-skel 1.4s ease-in-out infinite;
+  margin-bottom:7px;
 }
-.mp-skel-l:last-child { margin-bottom:0; }
-.mp-skel-t { height:15px; width:70%; }
-.mp-skel-s { height:10px; width:45%; }
-@keyframes mp-skel-anim { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.mp-skel-l:last-child{margin-bottom:0;}
+.mp-skel-t{height:15px;width:70%;}
+.mp-skel-s{height:10px;width:45%;}
+@keyframes mp-skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-/* ── 大会カード ★ボタン視覚強化 ── */
-.t-fav-btn { transition: transform .2s cubic-bezier(.34,1.56,.64,1), color .15s !important; }
-.t-fav-btn.is-fav { color:#E5A41A !important; transform:scale(1.18) !important; }
+/* ── ログイン誘導シート ── */
+#mp-login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 8500;
+  background: rgba(0,0,0,.42);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .24s;
+}
+#mp-login-overlay.show { opacity:1; pointer-events:auto; }
+#mp-login-sheet {
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 480px;
+  padding: 20px 24px calc(env(safe-area-inset-bottom,0px) + 24px);
+  text-align: center;
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.32,.72,.25,1);
+}
+#mp-login-overlay.show #mp-login-sheet { transform: translateY(0); }
+.mp-login-grab {
+  width:36px; height:5px;
+  background:rgba(0,0,0,.14); border-radius:3px;
+  margin:0 auto 16px;
+}
+.mp-login-icon { font-size:32px; margin-bottom:10px; }
+.mp-login-ttl  { font-size:17px; font-weight:700; color:#1d1d1f; margin-bottom:6px; letter-spacing:-.3px; }
+.mp-login-sub  { font-size:13px; color:#8e8e93; line-height:1.5; margin-bottom:20px; }
+.mp-login-cta  {
+  width:100%; height:52px;
+  background:linear-gradient(135deg,#39C892,#22A874);
+  color:#fff; border:none; border-radius:14px;
+  font-size:15px; font-weight:700; font-family:inherit;
+  cursor:pointer; margin-bottom:10px;
+  box-shadow:0 4px 12px rgba(34,168,116,.28);
+  -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+  transition:opacity .1s,transform .1s;
+}
+.mp-login-cta:active { opacity:.85; transform:scale(.975); }
+.mp-login-skip {
+  width:100%; height:44px; background:none; border:none;
+  color:#8e8e93; font-size:14px; font-weight:600; font-family:inherit;
+  cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+}
+
+/* ── 大会カードの★ボタン強化 ── */
+.t-fav-btn {
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1), color .15s !important;
+}
+.t-fav-btn.is-fav { color:#E5A41A !important; transform:scale(1.2) !important; }
 </style>
 
 <script>
 /* ================================================================
-   マイ大会ページ — JavaScript
-   ================================================================ */
+  ProNexaX Favorites — Firestore完全同期 v2
+  users/{uid}/favorites/{tournamentId} → {tournamentId, savedAt}
+  ================================================================ */
 (function(){
 'use strict';
 
-// ── 状態 ──
-let _mpSort = 'saved';
-let _mpCat  = 'all';
+/* ─────────────────────────────────────────
+  § 1  FavDB — Firestore favorites 同期エンジン
+  ───────────────────────────────────────── */
+const FavDB = (function(){
+  let _uid    = null;
+  let _unsub  = null;
+  let _loaded = false;
+  let _status = 'idle'; // idle|loading|live|error
+  const _map  = new Map(); // tid → savedAt (ISO string)
+  const _cbs  = new Set(); // onChange リスナー
 
-// ── Firestore favorites/{uid}/saved/{tid} ──
-const _FDB = (function(){
-  let _uid=null, _unsub=null;
-  const _map = new Map(); // tid → savedAt
-  const _cbs = new Set();
-
+  /* Firestore 参照を安全に取得 */
   function _db(){
     try{
       if(typeof firebase==='undefined'||!firebase.apps?.length) return null;
@@ -18355,14 +18404,17 @@ const _FDB = (function(){
     }catch(e){ return null; }
   }
 
-  function _notify(){ _cbs.forEach(fn=>{try{fn();}catch(e){}}); }
+  /* リスナーに変更を通知 */
+  function _notify(){ _cbs.forEach(fn=>{try{fn(_map);}catch(e){}}); }
 
+  /* onSnapshot コールバック */
   function _onSnap(snap){
     snap.docChanges().forEach(ch=>{
       if(ch.type==='removed') _map.delete(ch.doc.id);
       else _map.set(ch.doc.id, ch.doc.data().savedAt||new Date().toISOString());
     });
-    // 既存 favTournaments と同期
+    _loaded=true; _status='live';
+    // 既存 favTournaments Set と同期（検索カード★のため）
     if(typeof favTournaments!=='undefined'){
       favTournaments.clear();
       _map.forEach((_,tid)=>favTournaments.add(tid));
@@ -18370,163 +18422,186 @@ const _FDB = (function(){
     _notify();
   }
 
+  function _onErr(e){
+    _status='error';
+    console.error('[FavDB] onSnapshot error:',e);
+    if(typeof showToast==='function') showToast('⚠️ お気に入り同期エラー');
+    // 10秒後にリトライ
+    setTimeout(()=>{ if(_uid) _subscribe(); }, 10000);
+  }
+
+  /* 購読開始 */
+  function _subscribe(){
+    const db=_db();
+    if(!db||!_uid) return;
+    if(_unsub){ _unsub(); _unsub=null; }
+    _status='loading';
+    _unsub=db.collection('users').doc(_uid).collection('favorites')
+      .onSnapshot(_onSnap, _onErr);
+    console.info(
+      '%c[FavDB]%c users/'+_uid+'/favorites 購読開始',
+      'background:#E5A41A;color:#fff;padding:1px 4px;border-radius:2px;font-weight:700;',
+      'color:#8a6600;'
+    );
+  }
+
   return {
+    /* ログイン時に呼ぶ */
     start(uid){
       if(!uid||_uid===uid) return;
-      _uid=uid;
-      const db=_db();
-      if(!db){console.warn('[FDB] Firestore未接続');return;}
-      if(_unsub){_unsub();_unsub=null;}
-      _unsub=db.collection('favorites').doc(uid).collection('saved')
-        .onSnapshot(_onSnap, e=>console.error('[FDB]',e));
-      console.info('%c[FDB]%c favorites/'+uid+'/saved 購読',
-        'background:#E5A41A;color:#fff;padding:1px 4px;border-radius:2px;font-weight:700;',
-        'color:#8a6600;');
+      _uid=uid; _loaded=false;
+      _subscribe();
     },
+    /* ログアウト時に呼ぶ */
     stop(){
-      if(_unsub){_unsub();_unsub=null;}
-      _map.clear(); _uid=null;
+      if(_unsub){ _unsub(); _unsub=null; }
+      _map.clear(); _uid=null; _loaded=false; _status='idle';
     },
+    /* お気に入り判定 */
     has(tid){ return _map.has(tid); },
-    async add(tid){
-      if(!_uid) return false;
-      const now=new Date().toISOString();
-      _map.set(tid,now);
-      if(typeof favTournaments!=='undefined') favTournaments.add(tid);
-      _notify();
-      const db=_db(); if(!db) return true;
-      try{
-        await db.collection('favorites').doc(_uid).collection('saved').doc(tid)
-          .set({tournamentId:tid, savedAt:now});
-        return true;
-      }catch(e){
-        console.error('[FDB] add:',e);
-        _map.delete(tid);
-        if(typeof favTournaments!=='undefined') favTournaments.delete(tid);
-        _notify(); return false;
-      }
-    },
-    async remove(tid){
-      if(!_uid) return false;
-      const prev=_map.get(tid);
-      _map.delete(tid);
-      if(typeof favTournaments!=='undefined') favTournaments.delete(tid);
-      _notify();
-      const db=_db(); if(!db) return true;
-      try{
-        await db.collection('favorites').doc(_uid).collection('saved').doc(tid).delete();
-        return true;
-      }catch(e){
-        console.error('[FDB] remove:',e);
-        if(prev) _map.set(tid,prev);
-        if(typeof favTournaments!=='undefined') favTournaments.add(tid);
-        _notify(); return false;
-      }
-    },
-    async toggle(tid){ return this.has(tid)?this.remove(tid):this.add(tid); },
+    /* 保存順でリスト取得 */
     getAll(){
       return [..._map.entries()].sort((a,b)=>b[1].localeCompare(a[1])).map(([tid,savedAt])=>({tid,savedAt}));
     },
+    /* 追加（optimistic update → Firestore write） */
+    async add(tid){
+      if(!_uid) return false;
+      const now=new Date().toISOString();
+      // optimistic
+      _map.set(tid,now);
+      if(typeof favTournaments!=='undefined') favTournaments.add(tid);
+      _notify();
+      const db=_db();
+      if(!db) return true; // オフライン：ローカルのみ
+      try{
+        await db.collection('users').doc(_uid).collection('favorites').doc(tid)
+          .set({tournamentId:tid, savedAt:now});
+        return true;
+      }catch(e){
+        console.error('[FavDB] add:',e);
+        // rollback
+        _map.delete(tid);
+        if(typeof favTournaments!=='undefined') favTournaments.delete(tid);
+        _notify();
+        if(typeof showToast==='function') showToast('⚠️ 保存に失敗しました');
+        return false;
+      }
+    },
+    /* 削除（optimistic update → Firestore delete） */
+    async remove(tid){
+      if(!_uid) return false;
+      const prev=_map.get(tid);
+      // optimistic
+      _map.delete(tid);
+      if(typeof favTournaments!=='undefined') favTournaments.delete(tid);
+      _notify();
+      const db=_db();
+      if(!db) return true;
+      try{
+        await db.collection('users').doc(_uid).collection('favorites').doc(tid).delete();
+        return true;
+      }catch(e){
+        console.error('[FavDB] remove:',e);
+        // rollback
+        if(prev) _map.set(tid,prev);
+        if(typeof favTournaments!=='undefined') favTournaments.add(tid);
+        _notify();
+        if(typeof showToast==='function') showToast('⚠️ 削除に失敗しました');
+        return false;
+      }
+    },
+    async toggle(tid){ return this.has(tid)?this.remove(tid):this.add(tid); },
+    /* 変更リスナー登録 */
     onChange(fn){ _cbs.add(fn); return ()=>_cbs.delete(fn); },
-    get count(){ return _map.size; },
-    get uid()  { return _uid; },
+    get loaded(){ return _loaded; },
+    get status(){ return _status; },
+    get count() { return _map.size; },
+    get uid()   { return _uid; },
   };
 })();
-window.FavoritesDB = _FDB;
+window.FavoritesDB = FavDB; // 外部参照用
 
-// ── _showApp / logout フック ──
-function _hookShowApp(){
-  const _prev=window._showApp;
-  window._showApp=function(user){
-    if(typeof _prev==='function') _prev(user);
-    if(!user?.uid) return;
-    _FDB.start(user.uid);
-    _FDB.onChange(()=>{
-      _refreshStars();
-      _mpUpdateBadge();
-      if(document.getElementById('page-mypage')?.classList.contains('active')){
-        _mpRender();
-      }
-    });
-  };
-}
-function _hookLogout(){
-  const _prev=window.authLogout;
-  window.authLogout=function(){
-    _FDB.stop();
-    if(typeof _prev==='function') _prev.apply(this,arguments);
-  };
-}
-
-// ── toggleFavTournament を Firestore 対応に置き換え ──
-function _hookToggleFav(){
-  window.toggleFavTournament=async function(tid){
-    if(!tid) return;
-    if(typeof _currentUser==='undefined'||!_currentUser){
-      if(typeof showToast==='function') showToast('ログインが必要です'); return;
-    }
-    const was=_FDB.has(tid)||(typeof favTournaments!=='undefined'&&favTournaments.has(tid));
-    await _FDB.toggle(tid);
-    if(typeof saveSearchPrefs==='function') saveSearchPrefs();
-    if(typeof applySearchFilters==='function') applySearchFilters();
-    // 詳細モーダル更新
-    if(typeof _tdmCurrentId!=='undefined'&&_tdmCurrentId===tid){
-      const t=typeof TOURNAMENTS_FLAT!=='undefined'?TOURNAMENTS_FLAT.find(x=>x.id===tid):null;
-      if(t&&typeof _renderTdm==='function') _renderTdm(t);
-    }
-    _mpUpdateBadge();
-    if(typeof showToast==='function')
-      showToast(was?'☆ お気に入りを解除しました':'★ マイ大会に保存しました');
-  };
-}
-
-// ── switchPage('mypage') フック ──
-function _hookSwitchPage(){
-  const _orig=window.switchPage;
-  if(typeof _orig!=='function') return;
-  window.switchPage=function(page){
-    _orig(page);
-    if(page==='mypage'){
-      _mpRender();
-      _mpUpdateBadge();
-    }
-  };
-}
-
-// ── nav-mypage を確定（_initAdminNav が後から上書きするため 1200ms 後に再設定） ──
-function _fixNav(){
-  const btn=document.getElementById('nav-mypage');
-  if(!btn) return;
-  btn.onclick=()=>switchPage('mypage');
-  const lbl=btn.querySelector('.bnav-label');
-  if(lbl) lbl.textContent='マイ大会';
-
-  if(typeof NAV_ICONS!=='undefined'){
-    NAV_ICONS.mypage={
-      active:  '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="#1AAF7A" stroke="#1AAF7A" stroke-width=".5"/>',
-      inactive:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="none" stroke="#9BB8AE" stroke-width="1.7"/>',
-    };
+/* ─────────────────────────────────────────
+  § 2  toggleFavTournament — Firestore対応版に置き換え
+  ───────────────────────────────────────── */
+window.toggleFavTournament = async function(tid){
+  if(!tid) return;
+  // 未ログイン → ログイン誘導
+  if(typeof _currentUser==='undefined'||!_currentUser||!_currentUser.uid){
+    mpShowLoginSheet();
+    return;
   }
-  _mpUpdateBadge();
-  console.info('%c[マイ大会]%c 初期化完了',
-    'background:#E5A41A;color:#fff;padding:1px 5px;border-radius:2px;font-weight:700;',
-    'color:#8a6600;');
-}
+  const wasFav = FavDB.has(tid);
+  await FavDB.toggle(tid);
+  // 既存の localStorage 保存も維持
+  if(typeof saveSearchPrefs==='function') saveSearchPrefs();
+  // 検索カードの再描画
+  _mpRefreshStars();
+  // 詳細モーダルが開いていれば更新
+  if(typeof _tdmCurrentId!=='undefined'&&_tdmCurrentId===tid){
+    const t=typeof TOURNAMENTS_FLAT!=='undefined'?TOURNAMENTS_FLAT.find(x=>x.id===tid):null;
+    if(t&&typeof _renderTdm==='function') _renderTdm(t);
+  }
+  _mpBadgeUpdate();
+  if(typeof showToast==='function')
+    showToast(wasFav?'☆ お気に入りを解除しました':'★ マイ大会に保存しました');
+};
 
-// ── バッジ更新 ──
-function _mpUpdateBadge(){
-  const n=_FDB.count||(typeof favTournaments!=='undefined'?favTournaments.size:0);
+/* ─────────────────────────────────────────
+  § 3  ログイン誘導シート
+  ───────────────────────────────────────── */
+function _insertLoginSheet(){
+  if(document.getElementById('mp-login-overlay')) return;
+  const el=document.createElement('div');
+  el.innerHTML=`
+    <div id="mp-login-overlay" onclick="if(event.target===this)mpCloseLoginSheet()">
+      <div id="mp-login-sheet">
+        <div class="mp-login-grab"></div>
+        <div class="mp-login-icon">⭐</div>
+        <div class="mp-login-ttl">ログインが必要です</div>
+        <div class="mp-login-sub">お気に入りの保存・同期には<br>ログインが必要です</div>
+        <button class="mp-login-cta" onclick="mpCloseLoginSheet();mpGoAuth()">
+          ログイン / 新規登録
+        </button>
+        <button class="mp-login-skip" onclick="mpCloseLoginSheet()">キャンセル</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el.firstElementChild);
+}
+function mpShowLoginSheet(){
+  document.getElementById('mp-login-overlay')?.classList.add('show');
+}
+function mpCloseLoginSheet(){
+  document.getElementById('mp-login-overlay')?.classList.remove('show');
+}
+function mpGoAuth(){
+  if(typeof _showAuthScreen==='function'){ _showAuthScreen(); return; }
+  const a=document.getElementById('auth-screen');
+  if(a){ a.style.display=''; a.classList.remove('hidden'); }
+}
+window.mpShowLoginSheet  = mpShowLoginSheet;
+window.mpCloseLoginSheet = mpCloseLoginSheet;
+window.mpGoAuth          = mpGoAuth;
+
+/* ─────────────────────────────────────────
+  § 4  マイページ描画エンジン
+  ───────────────────────────────────────── */
+let _mpSort='saved', _mpCat='all';
+
+/* バッジ更新（アニメーション付き） */
+function _mpBadgeUpdate(){
+  const n=FavDB.count||(typeof favTournaments!=='undefined'?favTournaments.size:0);
   const el=document.getElementById('mp-badge');
   if(!el) return;
   if(el.textContent!==String(n)){
     el.textContent=n;
-    el.classList.add('bump');
-    setTimeout(()=>el.classList.remove('bump'),300);
+    el.classList.add('pop');
+    setTimeout(()=>el.classList.remove('pop'),320);
   }
 }
 
-// ── 検索カードの★状態を DOM 直接更新 ──
-function _refreshStars(){
+/* 検索カードの★をDOM直接更新（フルリレンダー不要） */
+function _mpRefreshStars(){
   document.querySelectorAll('.t-fav-btn').forEach(btn=>{
     let tid=btn.dataset?.tid;
     if(!tid){
@@ -18534,52 +18609,53 @@ function _refreshStars(){
       if(m) tid=m[1];
     }
     if(!tid) return;
-    const isFav=_FDB.has(tid)||(typeof favTournaments!=='undefined'&&favTournaments.has(tid));
+    const isFav=FavDB.has(tid)||(typeof favTournaments!=='undefined'&&favTournaments.has(tid));
     btn.classList.toggle('is-fav',isFav);
   });
 }
 
-// ── カテゴリバー更新 ──
-function _mpRenderCats(items){
-  const el=document.getElementById('mp-cat-row');
+/* カテゴリバー再生成 */
+function _mpRenderCatBar(allFavItems){
+  const el=document.getElementById('mp-cat-bar');
   if(!el) return;
-  const counts={};
-  items.forEach(t=>{const c=t.cat||'';if(c) counts[c]=(counts[c]||0)+1;});
-  const getL=k=>(typeof CAT_LABELS!=='undefined'?CAT_LABELS[k]||k:k);
-  let h=`<button class="mp-chip mp-chip-cat${_mpCat==='all'?' mp-chip-active':''}" data-c="all" onclick="mpCat('all',this)">すべて (${items.length})</button>`;
-  Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([c,n])=>{
-    const a=_mpCat===c?' mp-chip-active':'';
-    h+=`<button class="mp-chip mp-chip-cat${a}" data-c="${_e(c)}" onclick="mpCat('${_e(c)}',this)">${_e(getL(c))} (${n})</button>`;
+  const cnt={};
+  allFavItems.forEach(t=>{ const c=t.cat||''; if(c) cnt[c]=(cnt[c]||0)+1; });
+  const gl=k=>(typeof CAT_LABELS!=='undefined'?CAT_LABELS[k]||k:k);
+  let h=`<button class="mp-c-chip${_mpCat==='all'?' mp-chip-on':''}" data-c="all" onclick="mpSetCat('all',this)">すべて (${allFavItems.length})</button>`;
+  Object.entries(cnt).sort((a,b)=>b[1]-a[1]).forEach(([c,n])=>{
+    const a=_mpCat===c?' mp-chip-on':'';
+    h+=`<button class="mp-c-chip${a}" data-c="${_xe(c)}" onclick="mpSetCat('${_xe(c)}',this)">${_xe(gl(c))} (${n})</button>`;
   });
   el.innerHTML=h;
 }
 
-// ── リスト描画（メイン） ──
+/* リスト描画 */
 function _mpRender(){
   const el=document.getElementById('mp-list');
   if(!el) return;
 
-  // スケルトン（Firestore ロード中）
-  if(_FDB.uid && _FDB.count===0 && typeof favTournaments!=='undefined' && favTournaments.size===0){
-    const flat=typeof TOURNAMENTS_FLAT!=='undefined'?TOURNAMENTS_FLAT:[];
-    if(flat.length===0){
-      el.innerHTML=Array.from({length:3},()=>
-        '<div class="mp-skel"><div class="mp-skel-l mp-skel-t"></div><div class="mp-skel-l mp-skel-s"></div></div>'
-      ).join('');
-      return;
-    }
+  // ローディング中のスケルトン
+  if(FavDB.uid && !FavDB.loaded){
+    el.innerHTML=Array.from({length:4},()=>
+      '<div class="mp-skel"><div class="mp-skel-l mp-skel-t"></div><div class="mp-skel-l mp-skel-s"></div></div>'
+    ).join('');
+    return;
   }
 
-  // お気に入りセット（FDB + 既存 favTournaments のマージ）
+  // お気に入りセット（FavDB + 既存 favTournaments のマージ）
   const favSet=new Set([
-    ..._FDB.getAll().map(x=>x.tid),
+    ...FavDB.getAll().map(x=>x.tid),
     ...(typeof favTournaments!=='undefined'?[...favTournaments]:[]),
   ]);
 
-  if(favSet.size===0){
+  const flat=typeof TOURNAMENTS_FLAT!=='undefined'?TOURNAMENTS_FLAT:[];
+  const allFavItems=flat.filter(t=>favSet.has(t.id));
+
+  if(favSet.size===0||allFavItems.length===0){
+    _mpRenderCatBar([]);
     el.innerHTML=`
       <div class="mp-empty">
-        <div class="mp-empty-star">☆</div>
+        <div class="mp-empty-icon">☆</div>
         <div class="mp-empty-ttl">保存した大会がありません</div>
         <div class="mp-empty-sub">気になる大会の ★ をタップすると<br>ここに保存されます</div>
         <div class="mp-empty-hint">
@@ -18587,80 +18663,76 @@ function _mpRender(){
           試合検索から追加できます
         </div>
       </div>`;
-    _mpRenderCats([]);
-    _mpUpdateBadge();
-    return;
+    _mpBadgeUpdate(); return;
   }
 
-  const flat=typeof TOURNAMENTS_FLAT!=='undefined'?TOURNAMENTS_FLAT:[];
-  let list=flat.filter(t=>favSet.has(t.id));
-
-  // カテゴリフィルター
+  let list=allFavItems.slice();
   if(_mpCat!=='all') list=list.filter(t=>(t.cat||'')=== _mpCat);
 
-  // ソート
   const today=new Date().toISOString().slice(0,10);
-  const savedMap=new Map(_FDB.getAll().map(x=>[x.tid,x.savedAt]));
+  const savedMap=new Map(FavDB.getAll().map(x=>[x.tid,x.savedAt]));
   list.sort((a,b)=>{
     if(_mpSort==='deadline')  return (a.entryDeadline||'9999')<(b.entryDeadline||'9999')?-1:1;
     if(_mpSort==='startDate') return (a.start||a.startDate||'9999')<(b.start||b.startDate||'9999')?-1:1;
     return (savedMap.get(b.id)||'').localeCompare(savedMap.get(a.id)||'');
   });
 
-  _mpRenderCats(flat.filter(t=>favSet.has(t.id)));
+  _mpRenderCatBar(allFavItems);
 
   if(!list.length){
-    el.innerHTML='<div class="mp-empty"><div class="mp-empty-star">🔍</div><div class="mp-empty-ttl">このカテゴリには大会がありません</div></div>';
-    _mpUpdateBadge(); return;
+    el.innerHTML='<div class="mp-empty"><div class="mp-empty-icon">🔍</div><div class="mp-empty-ttl">このカテゴリには大会がありません</div></div>';
+    _mpBadgeUpdate(); return;
   }
 
-  el.innerHTML=list.map((t,i)=>_mpCard(t,today,i)).join('');
-  _mpUpdateBadge();
+  el.innerHTML=list.map((t,i)=>_mpCardHTML(t,today,i)).join('');
+  _mpBadgeUpdate();
 }
 
-function _mpCard(t,today,idx){
+function _mpCardHTML(t,today,idx){
   const cc=(typeof CAT_COLORS!=='undefined'?CAT_COLORS[t.cat]:null)||'#8090A0';
   const cl=(typeof CAT_LABELS!=='undefined'?CAT_LABELS[t.cat]:null)||t.cat||'';
   const name=t.name||t.title||'(名称未設定)';
   const start=t.start||t.startDate||'';
   const end=t.end||t.endDate||'';
   const dl=t.entryDeadline||'';
-  const course=t.courseName||t.course||t.place||'';
+  const place=t.courseName||t.course||t.place||'';
+
   let st='upcoming',stl='予定';
   if(start&&end){
     if(today>end){st='ended';stl='終了';}
     else if(today>=start){st='live';stl='開催中';}
   }
-  const dateStr=start?`${_mFmt(start)}${end&&end!==start?' 〜 '+_mFmt(end):''}`:'-';
+
+  const dateStr=start?`${_mfmt(start)}${end&&end!==start?' 〜 '+_mfmt(end):''}`:'-';
+
   let dlHtml='';
   if(dl&&st!=='ended'){
     const days=Math.round((new Date(dl)-new Date(today))/86400000);
     if(days>=0&&days<=14){
       const urg=days<=3;
-      dlHtml=`<div class="mp-dl${urg?' urgent':''}">
+      dlHtml=`<div class="mp-dl${urg?' mp-urgent':''}">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 15.5"/></svg>
-        締切${days===0?'今日':days+'日前'}（${_mFmt(dl)}）</div>`;
+        締切${days===0?'今日':days+'日前'}（${_mfmt(dl)}）</div>`;
     }
   }
-  const delay=Math.min(idx*22,180);
-  return `<div class="mp-card" onclick="openTournamentModal('${_e(t.id)}')" style="animation-delay:${delay}ms;">
-    <div class="mp-card-row">
+
+  return `<div class="mp-card" onclick="openTournamentModal('${_xe(t.id)}')" style="animation-delay:${Math.min(idx*20,160)}ms;">
+    <div class="mp-card-inner">
       <div class="mp-stripe" style="background:${cc};"></div>
-      <div class="mp-card-body">
-        <div class="mp-card-top">
-          <div class="mp-card-name">${_e(name)}</div>
-          <button class="mp-star" onclick="event.stopPropagation();toggleFavTournament('${_e(t.id)}')" aria-label="お気に入りを解除">★</button>
+      <div class="mp-body">
+        <div class="mp-row-top">
+          <div class="mp-name">${_xe(name)}</div>
+          <button class="mp-fav-btn" onclick="event.stopPropagation();toggleFavTournament('${_xe(t.id)}')" aria-label="お気に入りを解除">★</button>
         </div>
         <div class="mp-meta">
-          <span class="mp-badge-cat" style="background:${cc}18;color:${cc};border:1px solid ${cc}35;">${_e(cl)}</span>
-          <span class="mp-badge-st ${st}">${stl}</span>
+          <span class="mp-badge-c" style="background:${cc}18;color:${cc};border:1px solid ${cc}35;">${_xe(cl)}</span>
+          <span class="mp-badge-s ${st}">${stl}</span>
           <span class="mp-meta-txt">
             <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><line x1="5" y1="1.5" x2="5" y2="4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="11" y1="1.5" x2="11" y2="4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="2" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.3"/></svg>
-            ${dateStr}
-          </span>
-          ${course?`<span class="mp-meta-txt">
+            ${dateStr}</span>
+          ${place?`<span class="mp-meta-txt">
             <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 2.5a3.5 3.5 0 013.5 3.5c0 2.8-3.5 7-3.5 7S4.5 8.8 4.5 6A3.5 3.5 0 018 2.5z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="6" r="1.2" fill="currentColor"/></svg>
-            ${_e(course)}</span>`:''}
+            ${_xe(place)}</span>`:''}
         </div>
         ${dlHtml}
       </div>
@@ -18668,41 +18740,109 @@ function _mpCard(t,today,idx){
   </div>`;
 }
 
-function _mFmt(ds){
+function _mfmt(ds){
   try{const d=new Date(ds+'T00:00:00');return`${d.getMonth()+1}/${d.getDate()}`;}catch(e){return ds;}
 }
-function _e(s){
+function _xe(s){
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-// ── 公開API ──
-window.mpSort=function(s,btn){
+/* ─────────────────────────────────────────
+  § 5  公開API（HTML onclick から呼ぶ）
+  ───────────────────────────────────────── */
+window.mpSetSort=function(s,btn){
   _mpSort=s;
-  document.querySelectorAll('.mp-sort-row .mp-chip').forEach(b=>b.classList.remove('mp-chip-active'));
-  if(btn) btn.classList.add('mp-chip-active');
+  document.querySelectorAll('#mp-sort-bar .mp-s-chip').forEach(b=>b.classList.remove('mp-chip-on'));
+  if(btn) btn.classList.add('mp-chip-on');
   _mpRender();
 };
-window.mpCat=function(c,btn){
+window.mpSetCat=function(c,btn){
   _mpCat=c;
-  document.querySelectorAll('#mp-cat-row .mp-chip').forEach(b=>b.classList.remove('mp-chip-active'));
-  if(btn) btn.classList.add('mp-chip-active');
+  document.querySelectorAll('#mp-cat-bar .mp-c-chip').forEach(b=>b.classList.remove('mp-chip-on'));
+  if(btn) btn.classList.add('mp-chip-on');
   _mpRender();
 };
 
-// ── 初期化（DOMContentLoaded 後） ──
-function _init(){
-  _hookToggleFav();
-  _hookSwitchPage();
-  setTimeout(_hookShowApp, 600);
-  setTimeout(_hookLogout,  700);
-  // _initAdminNav より後に実行（1200ms）
+/* ─────────────────────────────────────────
+  § 6  フック群（既存コードへの最小介入）
+  ───────────────────────────────────────── */
+
+/* _showApp フック：ログイン時に FavDB 購読開始 */
+function _hookShowApp(){
+  const _prev=window._showApp;
+  window._showApp=function(user){
+    if(typeof _prev==='function') _prev(user);
+    if(!user?.uid) return;
+    FavDB.start(user.uid);
+    FavDB.onChange(()=>{
+      _mpRefreshStars();
+      _mpBadgeUpdate();
+      if(document.getElementById('page-mypage')?.classList.contains('active')) _mpRender();
+    });
+  };
+}
+
+/* authLogout フック：ログアウト時に FavDB 停止 */
+function _hookLogout(){
+  const _prev=window.authLogout;
+  window.authLogout=function(){
+    FavDB.stop();
+    if(typeof _prev==='function') _prev.apply(this,arguments);
+  };
+}
+
+/* switchPage フック：mypage 遷移時に描画 */
+function _hookSwitch(){
+  const _prev=window.switchPage;
+  if(typeof _prev!=='function') return;
+  window.switchPage=function(page){
+    _prev(page);
+    if(page==='mypage'){
+      _mpRender();
+      _mpBadgeUpdate();
+    }
+  };
+}
+
+/* nav-mypage を確定（_initAdminNav より遅れて実行） */
+function _fixNav(){
+  const btn=document.getElementById('nav-mypage');
+  if(!btn) return;
+  btn.onclick=()=>switchPage('mypage');
+  const lbl=btn.querySelector('.bnav-label');
+  if(lbl) lbl.textContent='マイ大会';
+  // NAV_ICONS 更新
+  if(typeof NAV_ICONS!=='undefined'){
+    NAV_ICONS.mypage={
+      active:  '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="#1AAF7A" stroke="#1AAF7A" stroke-width=".5"/>',
+      inactive:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="none" stroke="#9BB8AE" stroke-width="1.7"/>',
+    };
+  }
+  _mpBadgeUpdate();
+  console.info(
+    '%c[マイ大会 v2]%c Firestore完全同期 初期化完了',
+    'background:#E5A41A;color:#fff;padding:1px 6px;border-radius:3px;font-weight:700;',
+    'color:#8a6600;font-weight:600;'
+  );
+}
+
+/* ─────────────────────────────────────────
+  § 7  初期化
+  ───────────────────────────────────────── */
+function _mpInit(){
+  _insertLoginSheet();
+  _hookSwitch();
+  // _showApp / logout フックは少し遅らせて既存の定義後に適用
+  setTimeout(_hookShowApp, 500);
+  setTimeout(_hookLogout,  600);
+  // _initAdminNav（DOMContentLoaded 直後に実行）より後に nav を確定
   setTimeout(_fixNav, 1200);
 }
 
 if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded', _init, {once:true});
+  document.addEventListener('DOMContentLoaded', _mpInit, {once:true});
 } else {
-  _init();
+  _mpInit();
 }
 
 })();
