@@ -36,7 +36,7 @@
   <title>ProNexaX</title>
   <style>
   /* ============================================================
-     ProNexaX Splash Screen
+     ProNexaX Splash Screen — Pattern 5 / Apple-grade minimal
      ============================================================ */
   #pnx-splash {
     position: fixed;
@@ -50,7 +50,7 @@
     align-items: center;
     justify-content: center;
     opacity: 1;
-    transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     -webkit-user-select: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
@@ -60,43 +60,69 @@
     opacity: 0;
     pointer-events: none;
   }
+
+  /* ── センターブロック ── */
   .pnx-center {
     display: flex;
     flex-direction: column;
     align-items: center;
     opacity: 0;
-    transform: scale(0.93) translateY(-24px);
-    animation: pnx-reveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+    transform: scale(0.94) translateY(-20px);
+    animation: pnx-reveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards;
   }
   @keyframes pnx-reveal {
-    to { opacity: 1; transform: scale(1) translateY(-24px); }
+    to { opacity: 1; transform: scale(1) translateY(-20px); }
   }
+
+  /* ── 円エフェクト付きロゴラッパー ── */
+  /* 旧 .pnx-lines は使わず .pnx-logo-wrap に円を内包 */
   .pnx-lines {
     display: flex;
     align-items: center;
-    gap: 18px;
-    margin-bottom: 28px;
+    justify-content: center;
+    margin-bottom: 32px; /* 【3】logo↓32px→ProNexaX */
   }
-  .pnx-line {
-    width: 52px;
-    height: 1px;
-    background: #E0E0E0;
-    border-radius: 1px;
-    flex-shrink: 0;
-  }
+  .pnx-line { display: none; } /* 横線は非表示（円エフェクトに置換） */
+
   .pnx-logo-wrap {
-    width: 132px;
-    height: 132px;
+    /* 【1】132px → 約148px（+12%）*/
+    width: 148px;
+    height: 148px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 28px;
+    position: relative;
   }
+
+  /* 【2】薄い円エフェクト — opacity 0.10 */
+  .pnx-logo-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -22px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(57,200,146,0.10) 0%, rgba(57,200,146,0.00) 70%);
+    opacity: 1;
+    pointer-events: none;
+  }
+  /* アウターリング：極細、ごく薄 */
+  .pnx-logo-wrap::after {
+    content: '';
+    position: absolute;
+    inset: -18px;
+    border-radius: 50%;
+    border: 1px solid rgba(57,200,146,0.10);
+    pointer-events: none;
+  }
+
   .pnx-logo-wrap img {
-    width: 132px;
-    height: 132px;
+    width: 148px;
+    height: 148px;
     object-fit: contain;
+    position: relative;
+    z-index: 1;
   }
+
+  /* ── テキスト ── */
   .pnx-name {
     font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
     font-size: 28px;
@@ -104,36 +130,44 @@
     letter-spacing: -0.6px;
     color: #1d1d1f;
     line-height: 1;
-    margin-bottom: 9px;
+    margin-bottom: 14px; /* 【3】ProNexaX↓14px→tagline */
     -webkit-font-smoothing: antialiased;
   }
   .pnx-name .pnx-x { color: #39C892; }
+
   .pnx-tagline {
     font-family: -apple-system, "SF Pro Text", "SF Pro Display", "Helvetica Neue", sans-serif;
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 400;
-    letter-spacing: 0.2px;
-    color: #A0A0A0;
+    letter-spacing: 0.3px;
+    color: #B0B0B0;
     line-height: 1;
     -webkit-font-smoothing: antialiased;
   }
+
+  /* ── Loading エリア — 【4】さらに下に */
   .pnx-bottom {
     position: absolute;
-    bottom: calc(env(safe-area-inset-bottom) + 52px);
+    bottom: calc(env(safe-area-inset-bottom) + 44px);
     left: 0;
     right: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
     opacity: 0;
-    animation: pnx-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+    animation: pnx-bottom-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
   }
+  @keyframes pnx-bottom-in {
+    to { opacity: 1; }
+  }
+
+  /* 【5】バーを細く height:2px */
   .pnx-bar-track {
-    width: 96px;
-    height: 3px;
-    background: #EBEBEB;
+    width: 100px;
+    height: 2px;
+    background: #EFEFEF;
     border-radius: 100px;
     overflow: hidden;
     position: relative;
@@ -145,20 +179,21 @@
     width: 0%;
     background: #39C892;
     border-radius: 100px;
-    animation: pnx-load 1.6s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+    animation: pnx-load 1.8s cubic-bezier(0.4, 0, 0.2, 1) 0.45s forwards;
   }
   @keyframes pnx-load {
     0%   { width: 0%; }
-    60%  { width: 72%; }
-    85%  { width: 88%; }
+    55%  { width: 68%; }
+    80%  { width: 86%; }
     100% { width: 96%; }
   }
+
   .pnx-loading-label {
     font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 400;
-    letter-spacing: 0.15px;
-    color: #C0C0C0;
+    letter-spacing: 0.2px;
+    color: #C8C8C8;
     -webkit-font-smoothing: antialiased;
     white-space: nowrap;
   }
@@ -172,11 +207,9 @@
 <div id="pnx-splash" role="presentation" aria-hidden="true">
   <div class="pnx-center">
     <div class="pnx-lines">
-      <div class="pnx-line"></div>
       <div class="pnx-logo-wrap">
         <img src="pronexaX_logo.png" alt="ProNexaX">
       </div>
-      <div class="pnx-line"></div>
     </div>
     <div class="pnx-name">ProNexa<span class="pnx-x">X</span></div>
     <div class="pnx-tagline">Tournament &amp; Career Management</div>
