@@ -825,8 +825,7 @@ button,input,select,textarea{
   opacity:0;
   transition:opacity .18s ease;
   white-space:nowrap;
-  backdrop-filter:blur(6px);
-  -webkit-backdrop-filter:blur(6px);
+  /* backdrop-filter: 削除（Safari パフォーマンス対策） */
   letter-spacing:.2px;
 }
 #range-banner.show{opacity:1;}
@@ -2608,7 +2607,7 @@ button,input,select,textarea{
 .settings-overlay{
   position:absolute;inset:0;background:rgba(10,30,22,.55);
   opacity:0;pointer-events:none;transition:opacity .25s;
-  z-index:55;backdrop-filter:blur(2px);
+  z-index:55;/* backdrop-filter: 削除（Safari パフォーマンス対策） */
 }
 .settings-overlay.show{opacity:1;pointer-events:auto;}
 .settings-panel{
@@ -3513,9 +3512,8 @@ button,input,select,textarea{
 /* ── カード本体：ガラス感 + iOS風シャドウ ── */
 .auth-card {
   width: 100%;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  background: rgba(255,255,255,0.97); /* backdrop-filter 削除分を不透明度で補完 */
+  /* backdrop-filter: 削除（Safari パフォーマンス対策） */
   /* 上下すべて均一な角丸 */
   border-radius: 26px !important;
   border-top-left-radius: 26px !important;
@@ -7404,181 +7402,153 @@ function renderAllPanels(){
   bindPanelEvents();
 }
 
-// ★★★ パネルイベント：チップ長押し→ドラッグ + セル長押し→セル全体ドラッグ ★★★
+// ★★★ パネルイベント：イベント委譲方式（cloneNode廃止）★★★
+// renderAllPanels() のたびに cloneNode+replaceChild していたコストを排除。
+// cal-slide-container に対して1度だけ委譲登録し、DOM再生成後も自動で動作する。
+let _panelEventsBound = false;
 function bindPanelEvents(){
-  ['panel-prev','panel-cur','panel-next'].forEach(id=>{
-    const p=document.getElementById(id),ng=p.cloneNode(true);p.parentNode.replaceChild(ng,p);
-    
-    // クリック処理（チップタップでもセル選択を発火させる）
-    ng.addEventListener('click',e=>{
-      // +N件は専用処理に委譲
-      if(e.target.classList.contains('chip-more'))return;
-      // ★ 複数日バーのタップ検出：pointer-events:none でも座標からバーを特定
-      //    e.target はバーにならないが、クリック座標にバーが存在すれば編集モーダルを開く
-      const barAtPoint=(function(){
-        // まずそのまま closest で確認（pointer-events:auto の場合）
-        const direct=e.target.closest('.cal-multiday-bar');
-        if(direct)return direct;
-        // pointer-events:none の場合：座標上の全要素を走査
-        const els=document.elementsFromPoint(e.clientX,e.clientY);
-        for(const el of els){
-          if(el.classList&&el.classList.contains('cal-multiday-bar'))return el;
-        }
-        return null;
-      })();
-      if(barAtPoint&&barAtPoint.dataset.eventId){
-        e.stopPropagation();
-        const eid=parseInt(barAtPoint.dataset.eventId,10);
-        if(!isNaN(eid))openModal(null,eid);
-        return;
+  if(_panelEventsBound) return; // 2回目以降は何もしない
+  _panelEventsBound = true;
+  const container = document.getElementById('cal-slide-container');
+  if(!container) return;
+
+  // クリック処理（イベント委譲）
+  container.addEventListener('click',e=>{
+    // +N件は専用処理に委譲
+    if(e.target.classList.contains('chip-more'))return;
+    // ★ 複数日バーのタップ検出
+    const barAtPoint=(function(){
+      const direct=e.target.closest('.cal-multiday-bar');
+      if(direct)return direct;
+      const els=document.elementsFromPoint(e.clientX,e.clientY);
+      for(const el of els){
+        if(el.classList&&el.classList.contains('cal-multiday-bar'))return el;
       }
-      // セルドラッグ中・直後のクリックは抑止
-      if(cellDrag.started||cellDrag.active)return;
-      if(Date.now()<cellDrag.suppressClickUntil)return;
-      // チップドラッグ直後のクリックも抑止
-      if(drag.started||drag.active)return;
-      if(Date.now()<drag.suppressClickUntil)return;
-      // 範囲選択中・直後のクリックも抑止
-      if(rangeSelect.active||rangeSelect.startDs)return;
-      const c=e.target.closest('.cal-cell');
-      if(c&&c.dataset.ds)onCellClick(c.dataset.ds);
-    });
-    
-    // ★ touchstart：チップ→チップドラッグ判定 / セル→セルドラッグ判定 / 予定なし→範囲選択
-    ng.addEventListener('touchstart',e=>{
-      // ★ 複数日バー：pointer-events:none でも Safari PWA では e.target がバーになることがある
-      //    バーのタップ = 親セルへの操作として扱う（クリックはclick側で data-event-id を処理）
-      //    ただし長押し・ドラッグはバーを無視してセルの処理を優先する
-      const chip=e.target.closest('.ev-chip');
-      if(chip&&chip.dataset.eventId){
-        startChipPress(e,chip);
-        return;
-      }
-      // chip-more（+N件）はモーダル開く処理に流す
-      if(e.target.classList.contains('chip-more'))return;
-      // バーをタップした場合：短タップはclickに任せる。長押し・ドラッグはセル単位で処理
-      const bar=e.target.closest('.cal-multiday-bar');
-      const c=bar ? bar.closest('.cal-row')  // バーの場合は行内のセルを座標から取得
-                   : e.target.closest('.cal-cell');
-      // バータップ時：座標からセルを特定（バーを pointer-events:none にしても保険）
-      let targetCell=e.target.closest('.cal-cell');
-      if(!targetCell&&bar){
-        // バーが pointer-events を持っていた場合：座標からセルを逆引き
-        const t=e.touches[0];
-        const elBelow=_cellFromPoint(t.clientX,t.clientY);
-        targetCell=elBelow;
-      }
-      if(targetCell&&targetCell.dataset.ds&&!swipeLocked){
-        // 予定が入っている日 → セルドラッグ準備（カテゴリフィルタ適用後で判定）
-        const evs=applyCatFiltersToEvents(getEventsOnDate(targetCell.dataset.ds));
-        if(evs.length>0){
-          startCellPress(e,targetCell.dataset.ds,targetCell);
-        }else{
-          // 予定なしの日 → 範囲選択開始（長押し判定）
-          startRangePress(e,targetCell.dataset.ds,targetCell);
-        }
-      }
-    },{passive:false});
-    
-    ng.addEventListener('touchmove',e=>{
-      // セルドラッグ中：カード追従
-      if(cellDrag.started){
-        e.preventDefault();
-        moveCellDragCard(e);
-        return;
-      }
-      // セル長押し前後：閾値判定
-      if(cellDrag.sourceDs){
-        const t=e.touches[0];
-        const dx=t.clientX-cellDrag.startX,dy=t.clientY-cellDrag.startY;
-        if(cellDrag.active&&Math.hypot(dx,dy)>CELL_DRAG_THRESHOLD){
-          e.preventDefault();
-          beginCellDrag(e);
-        }else if(!cellDrag.active&&Math.hypot(dx,dy)>CELL_DRAG_THRESHOLD){
-          // 長押し前に動いた → スワイプの可能性、ドラッグキャンセル
-          cancelCellPress();
-        }
-        return;
-      }
-      // ★ 範囲選択中 or 判定前
-      if(rangeSelect.startDs){
-        onRangeMove(e);
-        // 範囲選択アクティブ中はスクロール禁止
-        if(rangeSelect.active)e.preventDefault();
-        return;
-      }
-      // チップドラッグ中：カード追従
-      if(drag.started){
-        e.preventDefault();
-        moveDragCard(e);
-        return;
-      }
-      // チップ長押し前後：閾値判定
-      if(drag.eventId){
-        const t=e.touches[0];
-        const dx=t.clientX-drag.startX,dy=t.clientY-drag.startY;
-        if(drag.active&&Math.hypot(dx,dy)>DRAG_THRESHOLD){
-          e.preventDefault();
-          beginDrag(e);
-        }else if(!drag.active&&Math.hypot(dx,dy)>DRAG_THRESHOLD){
-          cancelChipPress();
-        }
-        return;
-      }
-      // 通常のセル長押しキャンセル
-      clearTimeout(lpTimer);if(lpCell)lpCell.classList.remove('longpress-active');hideLpRing();
-    },{passive:false});
-    
-    ng.addEventListener('touchend',e=>{
-      // セルドラッグ完了処理
-      if(cellDrag.started){
-        cellDrag.suppressClickUntil=Date.now()+400;
-        endCellDrag(e);return;
-      }
-      // セル長押し成立後タップ（動かなかった）→ 日付選択（モーダル開かない）
-      if(cellDrag.active&&!cellDrag.started){
-        const ds=cellDrag.sourceDs;
-        cellDrag.suppressClickUntil=Date.now()+400;
-        cancelCellPress();
-        setTimeout(()=>onCellClick(ds),30);
-        return;
-      }
-      // セル長押し前にタップ → click イベントが続けて発火し、そこで onCellClick が動く
-      if(cellDrag.sourceDs&&!cellDrag.active){
-        cancelCellPress();
-      }
-      
-      // ★ 範囲選択終了
-      if(rangeSelect.startDs){
-        onRangeEnd();
-        return;
-      }
-      
-      // チップドラッグ完了処理
-      if(drag.started){endDrag(e);return;}
-      if(drag.active&&!drag.started){
-        // 長押し成立後、動かさず指を離した → 編集モーダルを開く（従来通り）
-        const evId=drag.eventId;
-        cancelChipPress();
-        drag.suppressClickUntil=Date.now()+400;
-        setTimeout(()=>openModal(null,evId),50);
-        return;
-      }
-      if(drag.eventId&&!drag.active){
-        // 長押し前のタップ → セル選択は後続の click イベントに任せる
-        cancelChipPress();
-        // touchend を preventDefault しない限り click が発火するのでそのまま流す
-      }
-      onTouchEndCell();
-    },{passive:false});
-    
-    ng.addEventListener('touchcancel',()=>{
-      if(cellDrag.sourceDs)cancelCellPress();
-      if(drag.eventId)cancelChipPress();
-      if(rangeSelect.startDs)cancelRangePress();
-      onTouchEndCell();
-    },{passive:true});
+      return null;
+    })();
+    if(barAtPoint&&barAtPoint.dataset.eventId){
+      e.stopPropagation();
+      const eid=parseInt(barAtPoint.dataset.eventId,10);
+      if(!isNaN(eid))openModal(null,eid);
+      return;
+    }
+    if(cellDrag.started||cellDrag.active)return;
+    if(Date.now()<cellDrag.suppressClickUntil)return;
+    if(drag.started||drag.active)return;
+    if(Date.now()<drag.suppressClickUntil)return;
+    if(rangeSelect.active||rangeSelect.startDs)return;
+    const c=e.target.closest('.cal-cell');
+    if(c&&c.dataset.ds)onCellClick(c.dataset.ds);
   });
+
+  // touchstart（イベント委譲）
+  container.addEventListener('touchstart',e=>{
+    const chip=e.target.closest('.ev-chip');
+    if(chip&&chip.dataset.eventId){
+      startChipPress(e,chip);
+      return;
+    }
+    if(e.target.classList.contains('chip-more'))return;
+    const bar=e.target.closest('.cal-multiday-bar');
+    let targetCell=e.target.closest('.cal-cell');
+    if(!targetCell&&bar){
+      const t=e.touches[0];
+      const elBelow=_cellFromPoint(t.clientX,t.clientY);
+      targetCell=elBelow;
+    }
+    if(targetCell&&targetCell.dataset.ds&&!swipeLocked){
+      const evs=applyCatFiltersToEvents(getEventsOnDate(targetCell.dataset.ds));
+      if(evs.length>0){
+        startCellPress(e,targetCell.dataset.ds,targetCell);
+      }else{
+        startRangePress(e,targetCell.dataset.ds,targetCell);
+      }
+    }
+  },{passive:false});
+
+  // touchmove（イベント委譲）
+  container.addEventListener('touchmove',e=>{
+    if(cellDrag.started){
+      e.preventDefault();
+      moveCellDragCard(e);
+      return;
+    }
+    if(cellDrag.sourceDs){
+      const t=e.touches[0];
+      const dx=t.clientX-cellDrag.startX,dy=t.clientY-cellDrag.startY;
+      if(cellDrag.active&&Math.hypot(dx,dy)>CELL_DRAG_THRESHOLD){
+        e.preventDefault();
+        beginCellDrag(e);
+      }else if(!cellDrag.active&&Math.hypot(dx,dy)>CELL_DRAG_THRESHOLD){
+        cancelCellPress();
+      }
+      return;
+    }
+    if(rangeSelect.startDs){
+      onRangeMove(e);
+      if(rangeSelect.active)e.preventDefault();
+      return;
+    }
+    if(drag.started){
+      e.preventDefault();
+      moveDragCard(e);
+      return;
+    }
+    if(drag.eventId){
+      const t=e.touches[0];
+      const dx=t.clientX-drag.startX,dy=t.clientY-drag.startY;
+      if(drag.active&&Math.hypot(dx,dy)>DRAG_THRESHOLD){
+        e.preventDefault();
+        beginDrag(e);
+      }else if(!drag.active&&Math.hypot(dx,dy)>DRAG_THRESHOLD){
+        cancelChipPress();
+      }
+      return;
+    }
+    clearTimeout(lpTimer);if(lpCell)lpCell.classList.remove('longpress-active');hideLpRing();
+  },{passive:false});
+
+  // touchend（イベント委譲）
+  container.addEventListener('touchend',e=>{
+    if(cellDrag.started){
+      cellDrag.suppressClickUntil=Date.now()+400;
+      endCellDrag(e);return;
+    }
+    if(cellDrag.active&&!cellDrag.started){
+      const ds=cellDrag.sourceDs;
+      cellDrag.suppressClickUntil=Date.now()+400;
+      cancelCellPress();
+      setTimeout(()=>onCellClick(ds),30);
+      return;
+    }
+    if(cellDrag.sourceDs&&!cellDrag.active){
+      cancelCellPress();
+    }
+    if(rangeSelect.startDs){
+      onRangeEnd();
+      return;
+    }
+    if(drag.started){endDrag(e);return;}
+    if(drag.active&&!drag.started){
+      const evId=drag.eventId;
+      cancelChipPress();
+      drag.suppressClickUntil=Date.now()+400;
+      setTimeout(()=>openModal(null,evId),50);
+      return;
+    }
+    if(drag.eventId&&!drag.active){
+      cancelChipPress();
+    }
+    onTouchEndCell();
+  },{passive:false});
+
+  // touchcancel（イベント委譲）
+  container.addEventListener('touchcancel',()=>{
+    if(cellDrag.sourceDs)cancelCellPress();
+    if(drag.eventId)cancelChipPress();
+    if(rangeSelect.startDs)cancelRangePress();
+    onTouchEndCell();
+  },{passive:true});
 }
 
 // ★ 長押し開始
@@ -13861,9 +13831,7 @@ function _p3UnlockBodyScroll() {
   /* backdrop-filter: none; ← 明示しなくても初期値はnone */
 }
 .tdm-overlay.show {
-  /* 表示時のみ blur 適用（ごく薄く、パフォーマンス配慮） */
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
+  /* backdrop-filter: 削除（Safari パフォーマンス対策） */
 }
 
 /* Phase3: iOS PWA高さ変数対応 */
