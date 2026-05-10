@@ -6801,6 +6801,28 @@ const TOURNAMENTS_FLAT = tournaments.map(t => ({
   _raw: t,
 }));
 
+// ================================================================
+// ★★★ DB互換レイヤー ★★★
+// Phase3でtournaments[]に移行したが、カレンダーモーダルの大会選択
+// (renderTourList / onTourClick) や addedIds 初期化など
+// 旧コードが DB[category] 形式で参照し続けているため互換オブジェクトを生成。
+// ================================================================
+const DB = (function buildDB(){
+  const db = { personal: [] };
+  TOURNAMENTS_FLAT.forEach(function(t){
+    if(!db[t.cat]) db[t.cat] = [];
+    db[t.cat].push({
+      name:  t.name,
+      place: (t.courseName ? t.place + ' ' + t.courseName : t.place) || '',
+      start: t.start,
+      end:   t.end,
+      area:  t.area,
+      prefecture: t.prefecture,
+    });
+  });
+  return db;
+})();
+
 // ★ Phase2: カテゴリラベル（拡張）
 const CAT_LABELS={
   jgto:'JGTO',jlpga:'JLPGA',pga:'PGA TOUR',qualifier:'予選会',mini:'ミニツアー',
@@ -9976,9 +9998,13 @@ function selectCatAuto(key,e){
 function backFromStep3(){selectedCat==='personal'?goStep(1):goStep(2);}
 function renderTourList(q=''){
   const cat=CATEGORIES.find(c=>c.key===selectedCat);document.getElementById('cat-label-sub').textContent=cat?cat.label:'';
-  const tours=DB[selectedCat]||[];const filtered=q?tours.filter(t=>t.name.includes(q)||t.place.includes(q)):tours;
+  const tours=DB[selectedCat]||[];const filtered=q?tours.filter(t=>t.name.includes(q)||(t.place||'').includes(q)):tours;
   if(!filtered.length){document.getElementById('tour-list').innerHTML=`<div style="font-size:11px;color:#9BB8AE;padding:8px 0;">該当する大会がありません</div>`;return;}
-  document.getElementById('tour-list').innerHTML=filtered.map((t,i)=>{const isSel=selectedTour&&selectedTour.name===t.name;return`<div class="tour-item${isSel?' sel':''}" style="${isSel&&cat?`border-color:${cat.color};`:''}" id="tour-item-${i}" onclick="onTourClick(${i},'${q.replace(/'/g,"\\'")}')"><div class="tour-item-name">${t.name}</div><div class="tour-item-meta">${t.start.slice(5).replace('-','/')} 〜 ${t.end.slice(5).replace('-','/')} ｜ ${t.place}</div>${isSel?'<div class="tour-item-badge">⚡ ダブルタップで即追加</div>':''}</div>`;}).join('');
+  document.getElementById('tour-list').innerHTML=filtered.map((t,i)=>{
+    const isSel=selectedTour&&selectedTour.name===t.name;
+    const dateStr=(t.start||'').slice(5).replace('-','/')+' 〜 '+(t.end||'').slice(5).replace('-','/');
+    return`<div class="tour-item${isSel?' sel':''}" style="${isSel&&cat?`border-color:${cat.color};`:''}" id="tour-item-${i}" onclick="onTourClick(${i},'${q.replace(/'/g,"\\'")}')"><div class="tour-item-name">${t.name}</div><div class="tour-item-meta">${dateStr} ｜ ${t.place||''}</div>${isSel?'<div class="tour-item-badge">⚡ ダブルタップで即追加</div>':''}</div>`;
+  }).join('');
 }
 function filterTourList(){tourLastClick={t:0,idx:-1,q:''};renderTourList(document.getElementById('tour-search').value.trim());}
 function onTourClick(idx,q){
