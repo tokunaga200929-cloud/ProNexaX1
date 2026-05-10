@@ -6639,7 +6639,7 @@ body.is-admin .admin-card-actions.admin-only {
       <div class="url-modal-grabber"></div>
       <div class="url-modal-body">
         <div class="url-modal-title">URLから大会を追加</div>
-        <div class="url-modal-sub">大会の公式ページ・InstagramのURLを貼り付けると<br>AIが情報を自動抽出してフォームに入力します</div>
+        <div class="url-modal-sub">大会URLを貼り付けると AIが情報を自動抽出してフォームに入力します</div>
         <!-- URL入力 -->
         <div class="url-input-wrap">
           <input class="url-input" id="url-modal-input" type="url"
@@ -19033,199 +19033,125 @@ console.info(
 </script>
 
 <!-- ================================================================
-  ProNexaX — AI大会情報抽出エンジン v1.0
-  ─ AiUrlParser クラスに全ロジックを分離（保守・拡張しやすい構成）
-  ─ 単一URL解析 / 将来の複数URL一括解析に対応
-  ─ Anthropic Claude API（claude-sonnet-4-20250514）で JSON 抽出
-  ─ allorigins.win CORSプロキシ + DOMParser でテキスト抽出
-  ─ tournamentCategories と完全連携したカテゴリ自動判定
-  ─ 既存 startUrlFetch / fetchUrlContent / normalizeTournamentData を上書き
-  ─ 既存UI・Firestore・PWA・Realtime sync は一切変更しない
+  ProNexaX — AiUrlParser v1.0 (Claude API 本接続)
+  ──────────────────────────────────────────────────────────────────
+  【構成】
+  ① AiUrlParser クラス（分離・再利用可能・将来の一括解析対応）
+     - fetchHtml()        allorigins.win → corsproxy.io フォールバック
+     - htmlToText()       DOMParser でテキスト抽出（スクリプト除去）
+     - callClaude()       Anthropic Messages API 本接続
+     - detectCategory()   URL+タイトルから tournamentCategories キーへ
+     - parse()            単一URL解析（メイン）
+     - parseBatch()       複数URL一括解析（将来拡張用）
+  ② UI制御レイヤー
+     - 4段階ステップアニメーション
+     - 信頼度バッジ・カテゴリチップ付きプレビュー
+     - リトライ・手動フォールバックボタン
+  ③ 既存関数の完全上書き
+     - startUrlFetch()    ← Claude API 実装で置き換え
+     - openUrlModal()     ← 管理者チェック追加
   ================================================================ -->
 
-<style id="ai-engine-css">
-/* ── 解析ステップUI ── */
-.aip-steps {
-  display: none;
-  flex-direction: column;
-  gap: 7px;
-  margin: 0 0 14px;
-}
-.aip-steps.show { display: flex; }
-
+<style id="aip-css">
+/* ── ステップUI ── */
+.aip-steps { display:none; flex-direction:column; gap:8px; margin-bottom:14px; }
+.aip-steps.show { display:flex; }
 .aip-step {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: #c7c7cc;
-  transition: color .18s;
+  display:flex; align-items:center; gap:10px;
+  font-size:12.5px; font-weight:500; color:#c7c7cc;
+  transition:color .18s;
 }
-.aip-step.active { color: #1d1d1f; font-weight: 700; }
-.aip-step.done   { color: #39C892; }
-.aip-step.error  { color: #C03030; }
-
-.aip-step-dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid #e5e5ea;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  flex-shrink: 0;
-  background: #fff;
-  transition: all .18s;
-  color: #c7c7cc;
+.aip-step.active { color:#1d1d1f; font-weight:700; }
+.aip-step.done   { color:#39C892; }
+.aip-step.error  { color:#C03030; }
+.aip-dot {
+  width:22px; height:22px; border-radius:50%;
+  border:2px solid #e5e5ea;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700; flex-shrink:0;
+  background:#fff; transition:all .18s; color:#c7c7cc;
 }
-.aip-step.active .aip-step-dot {
-  border-color: #39C892;
-  color: #39C892;
-  animation: aip-pulse-dot 1.2s ease-in-out infinite;
+.aip-step.active .aip-dot {
+  border-color:#39C892; color:#39C892;
+  animation:aip-pulse 1.2s ease-in-out infinite;
 }
-.aip-step.done .aip-step-dot {
-  border-color: #39C892;
-  background: #39C892;
-  color: #fff;
-  font-weight: 700;
-}
-.aip-step.error .aip-step-dot {
-  border-color: #C03030;
-  background: #C03030;
-  color: #fff;
-}
-@keyframes aip-pulse-dot {
-  0%,100% { box-shadow: 0 0 0 0 rgba(57,200,146,.4); }
-  50%      { box-shadow: 0 0 0 5px rgba(57,200,146,0); }
+.aip-step.done .aip-dot  { border-color:#39C892; background:#39C892; color:#fff; }
+.aip-step.error .aip-dot { border-color:#C03030; background:#C03030; color:#fff; }
+@keyframes aip-pulse {
+  0%,100%{ box-shadow:0 0 0 0 rgba(57,200,146,.4); }
+  50%    { box-shadow:0 0 0 6px rgba(57,200,146,0); }
 }
 
 /* ── 信頼度バッジ ── */
 .aip-conf {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 700;
-  margin-bottom: 10px;
+  display:inline-flex; align-items:center; gap:5px;
+  padding:4px 10px; border-radius:10px;
+  font-size:11px; font-weight:700; margin-bottom:8px;
 }
-.aip-conf.high   { background: #dcf5ea; color: #0B7A44; }
-.aip-conf.mid    { background: #fff3dc; color: #A05800; }
-.aip-conf.low    { background: #fce8e8; color: #C03030; }
+.aip-conf.high { background:#dcf5ea; color:#0B7A44; }
+.aip-conf.mid  { background:#fff3dc; color:#A05800; }
+.aip-conf.low  { background:#fce8e8; color:#C03030; }
 
 /* ── カテゴリチップ ── */
-.aip-cat-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 10px;
-}
+.aip-cat { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:10px; font-size:11px; font-weight:700; color:#fff; margin-bottom:10px; }
 
-/* ── 結果行 ── */
+/* ── 結果行（既存クラスを上書き強化） ── */
 .url-result-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 12px;
-  padding: 5px 0;
-  border-bottom: .5px solid rgba(0,0,0,.05);
+  display:flex; align-items:flex-start; gap:8px;
+  font-size:12px; padding:5px 0;
+  border-bottom:.5px solid rgba(0,0,0,.05);
 }
-.url-result-row:last-child { border-bottom: none; }
-.url-result-label {
-  font-weight: 700;
-  color: #39C892;
-  white-space: nowrap;
-  min-width: 72px;
-  font-size: 11px;
-  padding-top: 1px;
-}
-.url-result-val {
-  flex: 1;
-  color: #1d1d1f;
-  line-height: 1.5;
-  word-break: break-all;
-}
+.url-result-row:last-child { border-bottom:none; }
+.url-result-label { font-weight:700; color:#39C892; white-space:nowrap; min-width:68px; font-size:11px; padding-top:1px; }
+.url-result-val   { flex:1; color:#1d1d1f; line-height:1.5; word-break:break-all; }
 
-/* ── エラーボックス強化 ── */
-.url-error-box {
-  display: none;
-  background: #fdf0f0;
-  border: 1px solid rgba(200,50,50,.2);
-  border-radius: 12px;
-  padding: 13px;
-  margin-bottom: 12px;
-  font-size: 12px;
-  color: #C03030;
-  line-height: 1.6;
-}
-.url-error-box.show { display: block; }
+/* ── エラー ── */
+.url-error-box { display:none; background:#fdf0f0; border:1px solid rgba(200,50,50,.2); border-radius:12px; padding:13px; margin-bottom:12px; font-size:12px; color:#C03030; line-height:1.6; }
+.url-error-box.show { display:block; }
 
-/* ── リトライ・手動ボタン ── */
-.aip-retry-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+/* ── リトライ/手動ボタン ── */
+.aip-btns { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.aip-retry, .aip-manual {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:7px 13px; border-radius:10px;
+  font-size:12px; font-weight:700; font-family:inherit;
+  cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+  transition:opacity .12s;
 }
-.aip-retry-btn, .aip-manual-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 13px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: opacity .12s;
-}
-.aip-retry-btn  { background: #f0fdf6; border: 1.5px solid rgba(57,200,146,.4); color: #0B7A44; }
-.aip-manual-btn { background: #f5f5f7; border: 1.5px solid rgba(0,0,0,.1);      color: #3a3a3c; }
-.aip-retry-btn:active, .aip-manual-btn:active { opacity: .7; }
+.aip-retry  { background:#f0fdf6; border:1.5px solid rgba(57,200,146,.4); color:#0B7A44; }
+.aip-manual { background:#f5f5f7; border:1.5px solid rgba(0,0,0,.1); color:#3a3a3c; }
+.aip-retry:active, .aip-manual:active { opacity:.7; }
 
-/* url-modal-sheet をスクロール可能に */
-.url-modal-sheet {
-  max-height: 88vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
+/* url-modal-sheet スクロール対応 */
+.url-modal-sheet { max-height:88vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.url-modal-body  { padding:12px 18px 24px; }
 </style>
 
 <script>
 /* ================================================================
-  AiUrlParser — AI大会情報抽出クラス（分離・再利用可能）
+  § 1  AiUrlParser クラス — 全解析ロジックを分離
   ================================================================ */
 class AiUrlParser {
 
-  /* ── 設定 ── */
-  static CLAUDE_API   = 'https://api.anthropic.com/v1/messages';
-  static CLAUDE_MODEL = 'claude-sonnet-4-20250514';
-  static MAX_TOKENS   = 1200;
-  static TEXT_LIMIT   = 6000; // APIへ送るテキスト文字数上限
+  // ── 設定 ──
+  static MODEL      = 'claude-sonnet-4-20250514';
+  static API_URL    = 'https://api.anthropic.com/v1/messages';
+  static MAX_TOKENS = 1200;
+  static TEXT_LIMIT = 5500; // Claude へ送るテキストの文字数上限
 
-  /* CORSプロキシ（フォールバック順） */
+  // ── CORSプロキシ（フォールバック順） ──
   static PROXIES = [
     u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
     u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
   ];
 
-  /* ── System Prompt ── */
-  static SYSTEM_PROMPT = `あなたはゴルフ大会情報を抽出する専門AIです。
-与えられたウェブページテキストから大会情報をJSONで返してください。
-フィールドが不明な場合は null にしてください。日付は必ず YYYY-MM-DD 形式に変換してください。
-説明文や前置きは一切不要です。JSONのみを返してください。
+  // ── System Prompt ──
+  static SYS = `あなたはゴルフ大会情報を抽出する専門AIです。
+ウェブページテキストから大会情報をJSONのみで返してください。
+説明・前置き・コードブロックは不要。純粋なJSONだけを返してください。
+日付は必ずYYYY-MM-DD形式に変換してください。不明なフィールドはnullにしてください。
 
-出力するJSONの形式:
+出力JSON形式（このキー名を厳守）:
 {
   "name": "大会名",
   "start": "YYYY-MM-DD",
@@ -19233,8 +19159,8 @@ class AiUrlParser {
   "entryDeadline": "YYYY-MM-DD",
   "cancelDeadline": "YYYY-MM-DD",
   "place": "ゴルフ場名",
-  "prefecture": "都道府県（英字キー: tokyo/osaka/aichi/kanagawa/fukuoka/hokkaido 等）",
-  "category": "カテゴリキー候補: jgto/jlpga/jpga/pga/jgto_open/mini/pref_open/open/senior/qt/overseas",
+  "prefecture": "都道府県（英字キー例: tokyo/osaka/aichi/kanagawa/fukuoka/hokkaido/okinawa）",
+  "category": "カテゴリキー（jgto/jlpga/jpga/pga/senior/qt/mini/pref_open/open/overseas のいずれか）",
   "gender": "mens または womens",
   "region": "domestic または overseas",
   "entryFee": "参加費（例: 30,000円）",
@@ -19248,127 +19174,122 @@ class AiUrlParser {
   "instagram": "Instagram URL",
   "entryUrl": "エントリーフォームURL",
   "memo": "特記事項",
-  "confidence": 0.0〜1.0
+  "confidence": 信頼度0.0〜1.0
 }`;
 
-  /* ────────────────────────────────────────
-     カテゴリ自動判定ルール（URL + タイトルテキスト）
-     tournamentCategories のキーと完全一致させる
-     ──────────────────────────────────────── */
+  // ── カテゴリ自動判定ルール（URL + タイトルテキスト） ──
   static CAT_RULES = [
     // 女子ツアー
-    { re: /jlpga|jlpga\.or\.jp|ladiesgolf/i,          cat:'jlpga',      gender:'womens' },
-    { re: /stepup|step.up|ステップアップ/i,             cat:'stepup',     gender:'womens' },
-    { re: /qt.*w|qtwomen|qualifier.*women/i,           cat:'qt_w',       gender:'womens' },
+    { re:/jlpga|jlpga\.or\.jp|ladiesgolf/i,   cat:'jlpga',      gender:'womens' },
+    { re:/stepup|step.up|ステップアップ/i,     cat:'stepup',     gender:'womens' },
+    { re:/qt.*w|qualifier.*women/i,            cat:'qt_w',       gender:'womens' },
     // 男子国内ツアー
-    { re: /jgto\.or\.jp|jgto\.com|\bjgto\b/i,         cat:'jgto',       gender:'mens'   },
-    { re: /jpga\.or\.jp|\bjpga\b/i,                    cat:'jpga',       gender:'mens'   },
-    { re: /acntour|acn.tour|acngolf/i,                 cat:'acn',        gender:'mens'   },
-    { re: /senior|シニア/i,                             cat:'senior',     gender:'mens'   },
-    { re: /\bqt\b|qualifying.tour|クォリファイ/i,       cat:'qt',         gender:'mens'   },
+    { re:/jgto\.or\.jp|jgto\.com|\bjgto\b/i,  cat:'jgto',       gender:'mens'   },
+    { re:/jpga\.or\.jp|\bjpga\b/i,             cat:'jpga',       gender:'mens'   },
+    { re:/acntour|acn.tour/i,                  cat:'acn',        gender:'mens'   },
+    { re:/senior|シニア/i,                     cat:'senior',     gender:'mens'   },
+    { re:/\bqt\b|クォリファイ/i,               cat:'qt',         gender:'mens'   },
     // ミニツアー
-    { re: /atp.golf|atpgolf/i,                         cat:'atp_golf',   gender:'mens'   },
-    { re: /fj.tour|fjtour/i,                           cat:'fj_tour',    gender:'mens'   },
-    { re: /future.tour/i,                              cat:'future',     gender:'mens'   },
-    { re: /doucus/i,                                   cat:'doucus',     gender:'mens'   },
-    { re: /p&a|pandc/i,                                cat:'pandc',      gender:'mens'   },
-    { re: /カートルズ|kartls/i,                         cat:'karts',      gender:'mens'   },
-    { re: /golf.memo/i,                                cat:'golf_memo',  gender:'mens'   },
-    { re: /speeder|スピーダー/i,                        cat:'speeder',    gender:'mens'   },
+    { re:/atp.golf/i,                          cat:'atp_golf',   gender:'mens'   },
+    { re:/fj.tour/i,                           cat:'fj_tour',    gender:'mens'   },
+    { re:/future.tour/i,                       cat:'future',     gender:'mens'   },
+    { re:/doucus/i,                            cat:'doucus',     gender:'mens'   },
+    { re:/speeder|スピーダー/i,                cat:'speeder',    gender:'mens'   },
     // オープン
-    { re: /県オープン|pref.open/i,                     cat:'pref_open',  gender:'mens'   },
-    { re: /有名オープン|famous.open/i,                  cat:'famous_open',gender:'mens'   },
-    { re: /地方オープン|local.open/i,                   cat:'local_open', gender:'mens'   },
-    { re: /オープン|open/i,                             cat:'open',       gender:'mens'   },
+    { re:/県オープン|pref.open/i,              cat:'pref_open',  gender:'mens'   },
+    { re:/有名オープン|famous.open/i,           cat:'famous_open',gender:'mens'   },
+    { re:/地方オープン|local.open/i,           cat:'local_open', gender:'mens'   },
+    { re:/オープン|open/i,                     cat:'open',       gender:'mens'   },
     // 海外
-    { re: /pgatour|pga\.com/i,                         cat:'pga',        gender:'mens', region:'overseas' },
-    { re: /kornferry|korn.ferry/i,                     cat:'korn_ferry', gender:'mens', region:'overseas' },
-    { re: /europeantour|dp.world/i,                    cat:'dp_world',   gender:'mens', region:'overseas' },
-    { re: /asiantour/i,                                cat:'asian_tour', gender:'mens', region:'overseas' },
-    { re: /livgolf|liv.golf/i,                         cat:'liv',        gender:'mens', region:'overseas' },
+    { re:/pgatour|pga\.com/i,                  cat:'pga',        gender:'mens', region:'overseas' },
+    { re:/kornferry|korn.ferry/i,              cat:'korn_ferry', gender:'mens', region:'overseas' },
+    { re:/europeantour|dp.world/i,             cat:'dp_world',   gender:'mens', region:'overseas' },
+    { re:/asiantour/i,                         cat:'asian_tour', gender:'mens', region:'overseas' },
+    { re:/livgolf|liv.golf/i,                  cat:'liv',        gender:'mens', region:'overseas' },
   ];
 
-  /* ── CORSプロキシ経由でHTMLを取得 ── */
+  /* ── CORSプロキシ経由でHTML取得 ── */
   static async fetchHtml(url) {
     let lastErr;
-    for (const makeProxy of this.PROXIES) {
+    for (const mkProxy of this.PROXIES) {
       try {
-        const res = await fetch(makeProxy(url), {
-          signal: AbortSignal.timeout(14000),
-        });
+        const res = await fetch(mkProxy(url), { signal: AbortSignal.timeout(14000) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         const html = json.contents || json.body || json.html || '';
         if (html) return html;
       } catch(e) { lastErr = e; }
     }
-    throw new Error('ページを取得できませんでした（' + (lastErr?.message || '不明') + '）');
+    // 取得失敗 → URLのみで解析を続行（エラーは投げない）
+    console.warn('[AIP] HTML取得失敗 — URLのみで解析:', lastErr?.message);
+    return '';
   }
 
-  /* ── HTML → プレーンテキスト（DOMParser 使用） ── */
+  /* ── HTML → プレーンテキスト（DOMParser利用） ── */
   static htmlToText(html) {
+    if (!html) return '';
     try {
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      // script / style / nav / footer 除去
-      ['script','style','nav','footer','header','aside'].forEach(tag => {
-        doc.querySelectorAll(tag).forEach(el => el.remove());
-      });
-      const text = doc.body?.innerText || doc.body?.textContent || '';
-      return text.replace(/\s{3,}/g, ' ').trim().slice(0, this.TEXT_LIMIT);
-    } catch(e) {
-      // DOMParser が使えない環境では正規表現でフォールバック
-      return html.replace(/<[^>]+>/g, ' ').replace(/\s{3,}/g, ' ').trim().slice(0, this.TEXT_LIMIT);
+      ['script','style','nav','footer','header','aside','noscript'].forEach(t =>
+        doc.querySelectorAll(t).forEach(el => el.remove())
+      );
+      const txt = (doc.body?.innerText || doc.body?.textContent || '');
+      return txt.replace(/[ \t]{3,}/g, ' ').replace(/\n{4,}/g, '\n\n').trim().slice(0, this.TEXT_LIMIT);
+    } catch {
+      return html.replace(/<[^>]+>/g, ' ').replace(/\s{3,}/g,' ').trim().slice(0, this.TEXT_LIMIT);
     }
   }
 
-  /* ── Claude API 呼び出し ── */
+  /* ── Anthropic Messages API 本接続 ── */
   static async callClaude(pageText, sourceUrl) {
-    const body = {
-      model:      this.CLAUDE_MODEL,
-      max_tokens: this.MAX_TOKENS,
-      system:     this.SYSTEM_PROMPT,
-      messages: [{
-        role: 'user',
-        content: `ソースURL: ${sourceUrl}\n\n--- ページテキスト ---\n${pageText}\n---`,
-      }],
-    };
+    const userContent = `解析対象URL: ${sourceUrl}\n\n--- ページテキスト ---\n${pageText || '（ページ取得失敗。URLから推測してください）'}\n---`;
 
-    const res = await fetch(this.CLAUDE_API, {
+    const res = await fetch(this.API_URL, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(body),
-      signal:  AbortSignal.timeout(35000),
+      body: JSON.stringify({
+        model:      this.MODEL,
+        max_tokens: this.MAX_TOKENS,
+        system:     this.SYS,
+        messages:   [{ role:'user', content: userContent }],
+      }),
+      signal: AbortSignal.timeout(38000),
     });
 
     if (!res.ok) {
       const e = await res.json().catch(() => ({}));
-      throw new Error('Claude API: ' + (e?.error?.message || `HTTP ${res.status}`));
+      const msg = e?.error?.message || `HTTP ${res.status}`;
+      // レートリミット
+      if (res.status === 429) throw new Error('APIのレート制限に達しました。少し待ってからリトライしてください');
+      if (res.status === 401) throw new Error('APIキーが無効です。管理者に連絡してください');
+      throw new Error('Claude API エラー: ' + msg);
     }
 
     const data = await res.json();
-    const raw  = data.content?.[0]?.text || '';
+    const raw  = (data.content?.[0]?.text || '').trim();
+    if (!raw) throw new Error('AIから空のレスポンスが返されました');
 
-    // JSON 抽出（```json ... ``` ブロックも考慮）
-    const clean = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    // JSON パース（コードブロック除去 → オブジェクト抽出）
+    const cleaned = raw.replace(/^```json\s*/i,'').replace(/```\s*$/,'').trim();
     try {
-      return JSON.parse(clean);
+      return JSON.parse(cleaned);
     } catch {
+      // 部分抽出を試みる
       const m = raw.match(/\{[\s\S]*\}/);
-      if (m) return JSON.parse(m[0]);
-      throw new Error('AIからの応答をJSONとして解析できませんでした');
+      if (m) {
+        try { return JSON.parse(m[0]); } catch { /**/ }
+      }
+      console.error('[AIP] JSON parse失敗。raw:', raw.slice(0,300));
+      throw new Error('AIの応答をJSONとして解析できませんでした');
     }
   }
 
-  /* ── URL + タイトルからカテゴリを自動判定 ── */
+  /* ── URL + タイトルテキストからカテゴリを自動判定 ── */
   static detectCategory(url, title = '') {
     const hay = url + ' ' + title;
     for (const rule of this.CAT_RULES) {
       if (rule.re.test(hay)) {
-        return {
-          cat:    rule.cat,
-          gender: rule.gender || 'mens',
-          region: rule.region || 'domestic',
-        };
+        return { cat: rule.cat, gender: rule.gender || 'mens', region: rule.region || 'domestic' };
       }
     }
     return { cat: '', gender: 'mens', region: 'domestic' };
@@ -19384,37 +19305,29 @@ class AiUrlParser {
   }
 
   /* ================================================================
-     単一URL解析（メイン）
-     戻り値: ProNexaX tournaments フィールドと互換のオブジェクト
+     parse() — 単一URL解析（メイン）
+     onStep: (stepKey: 'fetch'|'parse'|'ai'|'cat', state: 'active'|'done'|'error') => void
+     戻り値: _atmFill() に渡せる ProNexaX フィールド互換オブジェクト
      ================================================================ */
-  static async parse(url, onStep) {
-    const step = (id, state) => onStep && onStep(id, state);
+  static async parse(url, onStep = () => {}) {
+    const step = (k, s) => onStep(k, s);
 
-    // ① HTML フェッチ
+    // ① HTMLフェッチ
     step('fetch', 'active');
-    let rawHtml = '';
-    try {
-      rawHtml = await this.fetchHtml(url);
-      step('fetch', 'done');
-    } catch(e) {
-      step('fetch', 'error');
-      // フェッチ失敗でも URL 情報だけで AI 解析を続行
-      rawHtml = '';
-    }
+    const rawHtml = await this.fetchHtml(url); // 失敗しても '' を返す（エラーなし）
+    step('fetch', rawHtml ? 'done' : 'error');
 
     // ② テキスト抽出
     step('parse', 'active');
-    const pageText = rawHtml
-      ? this.htmlToText(rawHtml)
-      : `URL: ${url}\n（ページ取得失敗。URLから推測してください）`;
+    const pageText = this.htmlToText(rawHtml);
     step('parse', 'done');
 
     // ③ Claude AI 解析
     step('ai', 'active');
-    const ai = await this.callClaude(pageText, url);
+    const ai = await this.callClaude(pageText, url); // 失敗時は例外を投げる
     step('ai', 'done');
 
-    // ④ カテゴリ自動判定・統合
+    // ④ カテゴリ自動判定
     step('cat', 'active');
     const urlCatInfo = this.detectCategory(url, ai.name || '');
     const cat    = this.resolveCategory(ai.category, urlCatInfo.cat);
@@ -19425,9 +19338,9 @@ class AiUrlParser {
     const catColor = (typeof CAT_COLORS !== 'undefined' ? CAT_COLORS[cat] : null) || '#8090A0';
     const catLabel = (typeof CAT_LABELS !== 'undefined' ? CAT_LABELS[cat] : null) || cat;
 
-    // ProNexaX フィールド形式に正規化
+    // _atmFill() と完全互換の形式で返す
     return {
-      // ── 大会情報 ──
+      // 基本情報
       title:           ai.name            || '',
       name:            ai.name            || '',
       category:        cat,
@@ -19438,19 +19351,22 @@ class AiUrlParser {
       course:          ai.place           || '',
       courseName:      ai.place           || '',
       organizer:       ai.organizer       || '',
+      // 日程
       startDate:       ai.start           || null,
       endDate:         ai.end             || null,
       entryDeadline:   ai.entryDeadline   || null,
       cancelDeadline:  ai.cancelDeadline  || null,
+      // 賞金・費用
       prize:           ai.prize           || '',
       prizeWinner:     ai.prizeWinner     || '',
       entryFee:        ai.entryFee        || '',
       practiceRoundFee:'',
+      // エントリー
       entryMethod:     ai.entryMethod     || '',
       qualification:   ai.qualification   || '',
       capacity:        ai.capacity        || '',
       notes:           ai.memo            || '',
-      // ── リンク ──
+      // リンク（_atmFill の links.* に対応）
       links: {
         website:   ai.website   || url,
         official:  ai.website   || url,
@@ -19459,38 +19375,40 @@ class AiUrlParser {
         pairing:   '',
         result:    '',
       },
-      officialUrl: ai.website || url,
+      // フラットURL（旧フォーマット互換）
+      officialUrl: ai.website   || url,
       igUrl:       ai.instagram || '',
       entryUrl:    ai.entryUrl  || '',
-      // ── メタ ──
+      // メタ
       sourceUrl:    url,
       sourceType:   'ai_url',
       parsingStatus:'success',
-      aiConfidence: ai.confidence ?? 0,
+      aiConfidence: typeof ai.confidence === 'number' ? ai.confidence : 0,
       rawContent:   rawHtml.slice(0, 2000),
       extractedText:pageText.slice(0, 1000),
       metadata: {
         aiExtracted:   true,
-        aiModel:       this.CLAUDE_MODEL,
+        aiModel:       this.MODEL,
         aiExtractedAt: new Date().toISOString(),
         sourceFormat:  'website',
       },
-      // UI 用
+      // UI用（内部のみ）
       _catColor: catColor,
       _catLabel: catLabel,
     };
   }
 
   /* ================================================================
-     複数URL一括解析（将来拡張用）
-     urls: string[]  onProgress: (i, total, result) => void
+     parseBatch() — 複数URL一括解析（将来拡張用）
+     urls: string[]
+     onProgress: (index, total, result) => void
      ================================================================ */
   static async parseBatch(urls, onProgress) {
     const results = [];
     for (let i = 0; i < urls.length; i++) {
       try {
-        const result = await this.parse(urls[i], null);
-        results.push({ url: urls[i], ok: true, data: result });
+        const data = await this.parse(urls[i]);
+        results.push({ url: urls[i], ok: true, data });
       } catch(e) {
         results.push({ url: urls[i], ok: false, error: e.message });
       }
@@ -19500,70 +19418,70 @@ class AiUrlParser {
   }
 }
 
-// グローバルに公開（将来の外部利用のため）
+// グローバル公開（将来の外部利用のため）
 window.AiUrlParser = AiUrlParser;
 
 
 /* ================================================================
-  UI制御レイヤー — ステップ・プレビュー・エラー表示
+  § 2  UI制御レイヤー
   ================================================================ */
 (function(){
 'use strict';
 
-/* ── ステップ定義 ── */
+// ステップ定義
 const STEPS = [
-  { id:'aip-s1', label:'URLを取得中'       },
-  { id:'aip-s2', label:'テキストを抽出中'   },
-  { id:'aip-s3', label:'AIが大会情報を解析' },
-  { id:'aip-s4', label:'カテゴリを自動判定' },
+  { id:'aip-s1', key:'fetch', label:'URLを取得中'       },
+  { id:'aip-s2', key:'parse', label:'テキストを抽出中'   },
+  { id:'aip-s3', key:'ai',    label:'AIが大会情報を解析' },
+  { id:'aip-s4', key:'cat',   label:'カテゴリを自動判定' },
 ];
+const KEY_TO_ID = Object.fromEntries(STEPS.map(s => [s.key, s.id]));
 
-/* ── ステップUIを動的挿入（初回のみ） ── */
-function _ensureStepsUI() {
+/* ステップUIを動的挿入（初回のみ） */
+function ensureStepsUI() {
   if (document.getElementById('aip-steps')) return;
   const progress = document.getElementById('url-progress');
   if (!progress) return;
-
   const wrap = document.createElement('div');
   wrap.id = 'aip-steps';
   wrap.className = 'aip-steps';
   wrap.innerHTML = STEPS.map((s, i) =>
     `<div class="aip-step" id="${s.id}">
-      <div class="aip-step-dot">${i + 1}</div>
-      <span>${s.label}</span>
-    </div>`
+       <div class="aip-dot">${i + 1}</div>
+       <span>${s.label}</span>
+     </div>`
   ).join('');
   progress.parentNode.insertBefore(wrap, progress);
 }
 
-/* ── ステップ状態を更新 ── */
-function _setStep(id, state) {
-  const el = document.getElementById(id);
+/* ステップ状態を設定 */
+function setStep(key, state) {
+  const el = document.getElementById(KEY_TO_ID[key] || key);
   if (!el) return;
   el.className = 'aip-step ' + state;
-  const dot = el.querySelector('.aip-step-dot');
-  const idx = STEPS.findIndex(s => s.id === id);
-  if (dot) {
-    dot.textContent = state === 'done'  ? '✓'
-                    : state === 'error' ? '✕'
-                    : String(idx + 1);
-  }
+  const dot = el.querySelector('.aip-dot');
+  const idx = STEPS.findIndex(s => s.key === key);
+  if (dot) dot.textContent = state === 'done' ? '✓' : state === 'error' ? '✕' : String(idx + 1);
 }
 
-/* ── ステップを全リセット ── */
-function _resetSteps() {
-  STEPS.forEach((s, i) => _setStep(s.id, ''));
+/* 全ステップリセット */
+function resetSteps() {
+  STEPS.forEach((s, i) => {
+    const el = document.getElementById(s.id);
+    if (!el) return;
+    el.className = 'aip-step';
+    const dot = el.querySelector('.aip-dot');
+    if (dot) dot.textContent = String(i + 1);
+  });
 }
 
-/* ── onStep コールバック（AiUrlParser から呼ばれる） ── */
-function _onStep(stepId, state) {
-  // stepId は 'fetch'|'parse'|'ai'|'cat' → aip-s1〜4 にマッピング
-  const map = { fetch:'aip-s1', parse:'aip-s2', ai:'aip-s3', cat:'aip-s4' };
-  _setStep(map[stepId] || stepId, state);
+/* エスケープ */
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-/* ── 結果プレビュー表示 ── */
-function _showAiResult(data) {
+/* 結果プレビュー表示 */
+function showAiResult(data) {
   const box   = document.getElementById('url-result-box');
   const title = document.getElementById('url-result-title');
   const rows  = document.getElementById('url-result-rows');
@@ -19572,22 +19490,21 @@ function _showAiResult(data) {
   title.textContent = data.title || '大会情報（要確認）';
 
   // 信頼度バッジ
-  const conf   = data.aiConfidence || 0;
-  const level  = conf >= 0.72 ? 'high' : conf >= 0.4 ? 'mid' : 'low';
+  const conf  = data.aiConfidence || 0;
+  const level = conf >= 0.72 ? 'high' : conf >= 0.4 ? 'mid' : 'low';
   const confTx = conf >= 0.72
     ? `✅ 信頼度 高 (${Math.round(conf * 100)}%)`
     : conf >= 0.4
-    ? `⚠️ 要確認 (${Math.round(conf * 100)}%) — 内容をご確認ください`
+    ? `⚠️ 要確認 (${Math.round(conf * 100)}%) — 内容を確認してください`
     : `❌ 信頼度 低 — 手動で修正してください`;
 
-  // 都道府県ラベル変換
+  // 都道府県ラベル
   const prefLabel = (typeof _PREF_MAP !== 'undefined' && data.prefecture)
     ? (_PREF_MAP[data.prefecture] || data.prefecture) : (data.prefecture || '');
 
   // カテゴリチップ
   const catHtml = data._catLabel
-    ? `<span class="aip-cat-chip" style="background:${data._catColor||'#8090A0'};">${data._catLabel}</span>`
-    : '';
+    ? `<div><span class="aip-cat" style="background:${data._catColor||'#8090A0'}">${esc(data._catLabel)}</span></div>` : '';
 
   const fields = [
     ['大会名',   data.title],
@@ -19599,20 +19516,19 @@ function _showAiResult(data) {
     ['賞金',     data.prize],
     ['参加費',   data.entryFee],
     ['定員',     data.capacity],
-    ['公式URL',  data.officialUrl],
+    ['公式URL',  data.links?.official || data.officialUrl],
+    ['Instagram',data.links?.instagram || data.igUrl],
     ['備考',     data.notes],
   ];
-
-  const eH = s => (typeof escapeHtml === 'function' ? escapeHtml(String(s)) : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'));
 
   rows.innerHTML = `
     <div class="aip-conf ${level}">${confTx}</div>
     ${catHtml}
     ${fields.filter(([,v]) => v).map(([l,v]) =>
       `<div class="url-result-row">
-        <span class="url-result-label">${l}</span>
-        <span class="url-result-val">${eH(v)}</span>
-      </div>`
+         <span class="url-result-label">${l}</span>
+         <span class="url-result-val">${esc(v)}</span>
+       </div>`
     ).join('')}
   `;
 
@@ -19621,34 +19537,28 @@ function _showAiResult(data) {
   document.getElementById('url-confirm-btn').style.display = '';
 }
 
-/* ── エラー表示（リトライ・手動ボタン付き） ── */
-function _showAiError(msg) {
+/* エラー表示（リトライ・手動フォールバック付き） */
+function showAiError(msg) {
   const eb = document.getElementById('url-error-box');
   if (!eb) return;
-
   eb.innerHTML = `
-    <div>⚠️ ${msg}</div>
-    <div class="aip-retry-row">
-      <button class="aip-retry-btn" onclick="startUrlFetch()">
-        ↺ リトライ
-      </button>
-      <button class="aip-manual-btn" onclick="_aipManualFallback()">
-        ✏️ 手動入力へ
-      </button>
+    <div style="margin-bottom:6px;">⚠️ ${esc(msg)}</div>
+    <div class="aip-btns">
+      <button class="aip-retry"  onclick="startUrlFetch()">↺ リトライ</button>
+      <button class="aip-manual" onclick="_aipManual()">✏️ 手動入力へ</button>
     </div>
     <div style="margin-top:8px;font-size:10.5px;color:#8e8e93;">
-      ※ URLが取得できない場合は手動入力で大会情報を登録してください
+      URLが取得できない場合は手動入力で登録できます
     </div>`;
   eb.classList.add('show');
-
   document.getElementById('url-result-box')?.classList.remove('show');
   document.getElementById('url-confirm-btn').style.display = 'none';
   document.getElementById('url-progress')?.classList.remove('show');
   document.getElementById('aip-steps')?.classList.remove('show');
 }
 
-/* ── 手動フォールバック ── */
-window._aipManualFallback = function() {
+/* 手動フォールバック */
+window._aipManual = function() {
   const url = document.getElementById('url-modal-input')?.value?.trim() || '';
   _urlParseResult = {
     title:'', name:'', category:'', gender:'mens', region:'domestic',
@@ -19658,8 +19568,9 @@ window._aipManualFallback = function() {
     entryMethod:'', qualification:'', capacity:'', notes:'',
     links:{ website:url, official:url, instagram:'', entry:'', pairing:'', result:'' },
     officialUrl:url, igUrl:'', entryUrl:'',
-    sourceUrl:url, sourceType:'manual', parsingStatus:'manual', aiConfidence:0,
-    rawContent:'', extractedText:'', metadata:{ aiExtracted:false },
+    sourceUrl:url, sourceType:'manual', parsingStatus:'manual',
+    aiConfidence:0, rawContent:'', extractedText:'',
+    metadata:{ aiExtracted:false },
     _catColor:'#8090A0', _catLabel:'',
   };
   confirmUrlResult();
@@ -19667,11 +19578,9 @@ window._aipManualFallback = function() {
 
 /* ================================================================
   ★★★ startUrlFetch 完全置き換え ★★★
-  既存のダミー実装を本物の AI 解析に切り替える
   ================================================================ */
 window.startUrlFetch = async function() {
-
-  /* ① 管理者チェック */
+  // 管理者チェック
   if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
     if (typeof showToast === 'function') showToast('🔒 管理者のみ利用できます');
     return;
@@ -19679,16 +19588,16 @@ window.startUrlFetch = async function() {
 
   const url = document.getElementById('url-modal-input')?.value?.trim();
   if (!url || !url.startsWith('http')) {
-    _showAiError('有効なURLを入力してください（https://... ）');
+    showAiError('有効なURLを入力してください（https://... ）');
     return;
   }
 
   const btn = document.getElementById('url-fetch-btn');
   if (btn) { btn.disabled = true; btn.textContent = '解析中…'; }
 
-  /* ② UI 初期化 */
-  _ensureStepsUI();
-  _resetSteps();
+  // UI初期化
+  ensureStepsUI();
+  resetSteps();
   document.getElementById('aip-steps')?.classList.add('show');
   document.getElementById('url-result-box')?.classList.remove('show');
   document.getElementById('url-error-box')?.classList.remove('show');
@@ -19696,28 +19605,22 @@ window.startUrlFetch = async function() {
   document.getElementById('url-progress')?.classList.remove('show');
 
   try {
-    /* ③ AiUrlParser で解析 */
-    const result = await AiUrlParser.parse(url, _onStep);
-
-    /* ④ 結果格納・表示 */
+    const result = await AiUrlParser.parse(url, setStep);
     _urlParseResult = result;
-    _showAiResult(result);
+    showAiResult(result);
     if (typeof showToast === 'function') showToast('✅ AI解析完了！内容を確認してください');
 
   } catch(err) {
-    console.error('[AiUrlParser]', err);
-    // 全ステップをリセット（activeのままにならないように）
-    _resetSteps();
-    _showAiError(err.message || 'AI解析に失敗しました');
-    if (typeof showToast === 'function') showToast('⚠️ 解析失敗 — リトライまたは手動入力へ');
+    console.error('[AIP]', err);
+    resetSteps();
+    showAiError(err.message || 'AI解析に失敗しました');
+    if (typeof showToast === 'function') showToast('⚠️ 解析失敗');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '解析'; }
   }
 };
 
-/* ================================================================
-  openUrlModal 強化（管理者チェック追加）
-  ================================================================ */
+/* openUrlModal に管理者チェックを追加 */
 const _origOpen = window.openUrlModal;
 window.openUrlModal = function() {
   if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
@@ -19725,16 +19628,15 @@ window.openUrlModal = function() {
     return;
   }
   if (typeof _origOpen === 'function') _origOpen();
-  // ステップUI 初期化
   setTimeout(() => {
-    _ensureStepsUI();
-    _resetSteps();
+    ensureStepsUI();
+    resetSteps();
     document.getElementById('aip-steps')?.classList.remove('show');
   }, 80);
 };
 
 console.info(
-  '%c[AiUrlParser v1]%c Claude Sonnet 統合完了',
+  '%c[AiUrlParser v1]%c Claude API 本接続完了 — claude-sonnet-4-20250514',
   'background:#1d1d1f;color:#39C892;padding:2px 8px;border-radius:3px;font-weight:800;',
   'color:#1d1d1f;font-weight:600;'
 );
