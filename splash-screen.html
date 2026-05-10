@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="white">
+  <title>ProNexaX Splash Preview</title>
+  <style>
+    /* ============================================================
+       ProNexaX Splash Screen
+       Apple-native / Notion / Linear / Apple Calendar aesthetic
+       ============================================================ */
+
+    #pnx-splash {
+      /* Layer */
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+
+      /* Color */
+      background: #FFFFFF;
+
+      /* Safe Area */
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+
+      /* Layout */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      /* Animation state */
+      opacity: 1;
+      transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+
+      /* No web feel */
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      pointer-events: none; /* prevents flash of interaction on login screen below */
+    }
+
+    #pnx-splash.pnx-fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ── Center block ── */
+    .pnx-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+
+      /* Entrance animation */
+      opacity: 0;
+      transform: scale(0.93);
+      animation: pnx-reveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+    }
+
+    @keyframes pnx-reveal {
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* ── Horizontal accent lines (left / right of logo) ── */
+    .pnx-lines {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      width: 100%;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .pnx-line {
+      width: 52px;
+      height: 1px;
+      background: #E0E0E0;
+      border-radius: 1px;
+      flex-shrink: 0;
+    }
+
+    /* ── Logo ── */
+    .pnx-logo-wrap {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 22px;
+    }
+
+    .pnx-logo-wrap img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      /* Fallback SVG placeholder shown when image missing */
+      border-radius: 18px;
+    }
+
+    /* ── App name ── */
+    .pnx-name {
+      font-family: -apple-system, "SF Pro Display", "SF Pro Text",
+                   "Helvetica Neue", sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.6px;
+      color: #1d1d1f;
+      line-height: 1;
+      margin-bottom: 9px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .pnx-name .pnx-x {
+      color: #39C892;
+    }
+
+    /* ── Tagline ── */
+    .pnx-tagline {
+      font-family: -apple-system, "SF Pro Text", "SF Pro Display",
+                   "Helvetica Neue", sans-serif;
+      font-size: 12.5px;
+      font-weight: 400;
+      letter-spacing: 0.2px;
+      color: #A0A0A0;
+      line-height: 1;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Bottom area ── */
+    .pnx-bottom {
+      position: absolute;
+      bottom: calc(env(safe-area-inset-bottom) + 48px);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+
+      opacity: 0;
+      animation: pnx-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+    }
+
+    /* ── Loading bar track ── */
+    .pnx-bar-track {
+      width: 96px;
+      height: 3px;
+      background: #EBEBEB;
+      border-radius: 100px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Loading bar fill (green, left side, animated) ── */
+    .pnx-bar-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0%;
+      background: #39C892;
+      border-radius: 100px;
+      animation: pnx-load 1.6s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+    }
+
+    @keyframes pnx-load {
+      0%   { width: 0%; }
+      60%  { width: 72%; }
+      85%  { width: 88%; }
+      100% { width: 96%; }
+    }
+
+    /* ── Loading text ── */
+    .pnx-loading-label {
+      font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.15px;
+      color: #C0C0C0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── SVG fallback logo (used when image doesn't exist in preview) ── */
+    .pnx-logo-svg {
+      width: 80px;
+      height: 80px;
+    }
+  </style>
+</head>
+<body style="margin:0;background:#fff;">
+
+<!-- ================================================================
+     ProNexaX Splash Screen
+     ▸ Copy the #pnx-splash block + <style> + <script> into index.html
+     ▸ Place immediately after <body>
+     ▸ Script auto-removes splash after auth check
+     ================================================================ -->
+
+<div id="pnx-splash" role="presentation" aria-hidden="true">
+
+  <!-- Center content -->
+  <div class="pnx-center">
+
+    <!-- Accent lines + logo row -->
+    <div class="pnx-lines">
+      <div class="pnx-line"></div>
+
+      <!-- Logo: replace src with your actual pronexaX_logo.png -->
+      <div class="pnx-logo-wrap">
+        <!-- Fallback inline SVG — shown when image is missing in this preview -->
+        <svg class="pnx-logo-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="80" height="80" rx="18" fill="#F5FBF8"/>
+          <!-- Stylised P+X mark -->
+          <rect x="18" y="18" width="10" height="44" rx="3" fill="#39C892"/>
+          <rect x="18" y="18" width="22" height="10" rx="3" fill="#39C892"/>
+          <rect x="18" y="36" width="18" height="9" rx="3" fill="#22A874"/>
+          <line x1="40" y1="18" x2="62" y2="62" stroke="#1d1d1f" stroke-width="7" stroke-linecap="round"/>
+          <line x1="62" y1="18" x2="40" y2="62" stroke="#1d1d1f" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+        <!--
+          In production use:
+          <img src="pronexaX_logo.png" alt="ProNexaX">
+        -->
+      </div>
+
+      <div class="pnx-line"></div>
+    </div>
+
+    <!-- App name -->
+    <div class="pnx-name">ProNex<span class="pnx-x">X</span></div>
+
+    <!-- Tagline -->
+    <div class="pnx-tagline">Tournament &amp; Career Management</div>
+
+  </div>
+
+  <!-- Bottom: loading bar + label -->
+  <div class="pnx-bottom">
+    <div class="pnx-bar-track">
+      <div class="pnx-bar-fill"></div>
+    </div>
+    <div class="pnx-loading-label">Loading...</div>
+  </div>
+
+</div>
+
+<script>
+/* ================================================================
+   ProNexaX Splash — dismissal logic
+   ================================================================
+   Timing:
+     - Splash is visible for ~1.8s minimum (content entrance + load bar)
+     - If auth check finishes before that, we wait for minDisplay
+     - Then fade out (0.55s) and remove from DOM
+
+   Usage in your app:
+     Call window.pnxSplashReady() once auth/firebase check completes.
+     The splash will fade out automatically at the right time.
+   ================================================================ */
+(function () {
+  'use strict';
+
+  var splash = document.getElementById('pnx-splash');
+  if (!splash) return;
+
+  var DISPLAY_MIN_MS = 1800;   // minimum display time (ms)
+  var startTime = Date.now();
+  var authDone  = false;
+  var timerDone = false;
+
+  /* ── minimum display timer ── */
+  var minTimer = setTimeout(function () {
+    timerDone = true;
+    if (authDone) dismiss();
+  }, DISPLAY_MIN_MS);
+
+  /* ── called by your auth code when ready ── */
+  window.pnxSplashReady = function () {
+    authDone = true;
+    if (timerDone) dismiss();
+  };
+
+  /* ── safety: always dismiss after 4s even if auth never fires ── */
+  setTimeout(function () {
+    dismiss();
+  }, 4000);
+
+  function dismiss() {
+    if (!splash || splash._dismissed) return;
+    splash._dismissed = true;
+
+    splash.classList.add('pnx-fade-out');
+
+    var onEnd = function () {
+      if (splash && splash.parentNode) {
+        splash.parentNode.removeChild(splash);
+      }
+    };
+    splash.addEventListener('transitionend', onEnd, { once: true });
+    /* fallback in case transition doesn't fire */
+    setTimeout(onEnd, 700);
+  }
+
+  /* ── In this standalone preview, auto-dismiss for demo purposes ── */
+  /* Remove or comment this line in production: */
+  setTimeout(function () { window.pnxSplashReady(); }, 200);
+
+}());
+</script>
+
+<!-- Demo content below (not part of the snippet) -->
+<div style="
+  display:flex;align-items:center;justify-content:center;
+  height:100vh;font-family:-apple-system,sans-serif;
+  font-size:15px;color:#A0A0A0;letter-spacing:-0.2px;
+">
+  ← App content loads here
+</div>
+
+</body>
+</html>
