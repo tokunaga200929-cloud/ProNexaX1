@@ -2736,6 +2736,12 @@ button,input,select,textarea{
   color:#606068;
   font-size:15px;
   font-weight:600;
+  /* ★ 修正: 最前面保証 */
+  position:relative;
+  z-index:10;
+  touch-action:manipulation;
+  -webkit-user-select:none;
+  user-select:none;
 }
 .tdm-close-btn:active{transform:scale(.88);background:#E0E4E8;}
 :root[data-theme="dark"] .tdm-close-btn{background:#2C2C2E;color:#E0E4E8;}
@@ -4641,6 +4647,10 @@ button, .filter-chip, .t-cat-badge, .search-gender-btn,
   pointer-events: none;
   user-select: none;
 }
+/* ✕ボタンはドラッグ中でも必ずタップ受付 */
+.tdm-sheet.is-dragging .tdm-close-btn {
+  pointer-events: auto !important;
+}
 
 /* split handle タッチ領域拡張 */
 .split-handle { min-height:20px !important; }
@@ -5578,7 +5588,7 @@ body{
           <div class="tdm-cat-row" id="tdm-cat-row"></div>
           <div class="tdm-title" id="tdm-title">大会名</div>
         </div>
-        <button class="tdm-close-btn" onclick="closeTournamentModal()" aria-label="閉じる">✕</button>
+        <button class="tdm-close-btn" id="tdm-close-btn" onclick="closeTournamentModal()" aria-label="閉じる">✕</button>
       </div>
 
       <!-- アクションボタン群 -->
@@ -8513,13 +8523,29 @@ function openTournamentModal(tid){
   });
   // ドラッグ閉じ初期化
   _tdmInitDrag();
+  // ★ 修正: ✕ボタンにtouchstart即時反応リスナー（iPhone Safari 300ms遅延ゼロ化）
+  const closeBtn = document.getElementById('tdm-close-btn');
+  if(closeBtn){
+    closeBtn.ontouchstart = function(e){
+      e.stopPropagation(); // dragに伝播させない
+    };
+    closeBtn.ontouchend = function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      closeTournamentModal();
+    };
+  }
 }
 
 // モーダルを閉じる
 function closeTournamentModal(){
   const sheet = document.getElementById('tdm-sheet');
   const overlay = document.getElementById('tdm-overlay');
-  sheet.classList.remove('show');
+  // ★ 修正: is-dragging残留・transform残留をリセット
+  sheet.classList.remove('show','is-dragging');
+  sheet.style.transform = '';
+  sheet.style.transition = '';
+  _tdmIsDragging = false;
   overlay.classList.remove('show');
   setTimeout(()=>{ _tdmCurrentId = null; }, 400);
 }
@@ -8714,8 +8740,13 @@ function _tdmInitDrag(){
   const grabber = document.getElementById('tdm-grabber');
   if(!sheet||!grabber) return;
 
+  let _didDrag = false; // drag移動量チェック用フラグ
+
   const onStart = (e)=>{
+    // ✕ボタン上からのタッチはdragを開始しない
+    if(e.target && e.target.closest && e.target.closest('.tdm-close-btn')) return;
     _tdmIsDragging = true;
+    _didDrag = false;
     _tdmDragStartY = (e.touches?e.touches[0].clientY:e.clientY);
     _tdmDragCurrentY = 0;
     sheet.classList.add('is-dragging');
@@ -8725,13 +8756,19 @@ function _tdmInitDrag(){
     const y = (e.touches?e.touches[0].clientY:e.clientY);
     const dy = y - _tdmDragStartY;
     if(dy < 0) return; // 上方向は無視
+    if(dy > 4) _didDrag = true; // 実際に動いた
     _tdmDragCurrentY = dy;
     sheet.style.transform = `translateY(${dy}px)`;
   };
-  const onEnd = ()=>{
+  const onEnd = (e)=>{
     if(!_tdmIsDragging) return;
     _tdmIsDragging = false;
     sheet.classList.remove('is-dragging');
+    // ✕ボタンへのタップはdragEndで処理しない（clickに任せる）
+    if(e && e.target && e.target.closest && e.target.closest('.tdm-close-btn')){
+      sheet.style.transform = '';
+      return;
+    }
     if(_tdmDragCurrentY > 120){
       sheet.style.transform = '';
       closeTournamentModal();
@@ -8740,6 +8777,7 @@ function _tdmInitDrag(){
       sheet.style.transition = 'transform .35s cubic-bezier(.32,.72,.25,1)';
       setTimeout(()=>{ sheet.style.transition=''; }, 350);
     }
+    _didDrag = false;
   };
 
   // 既存リスナー削除
