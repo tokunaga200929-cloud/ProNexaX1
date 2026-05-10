@@ -143,16 +143,17 @@
     pointer-events: none;
   }
 
-  /* 【2】img — 完全クリーン、PNG透明背景をそのまま表示 */
-  .pnx-logo-wrap img {
-    width: 156px;
-    height: 156px;
-    object-fit: contain;
+  /* 【4】【5】SVGロゴ本体 — 完全クリーン + 極薄 drop-shadow */
+  .pnx-svg-logo {
+    width: 120px;
+    height: 120px;
     display: block;
-    background: transparent;
+    background: none;
     border: none;
     box-shadow: none;
-    border-radius: 0;
+    overflow: visible;
+    /* 【5】超薄グリーン発光 — かなり弱め */
+    filter: drop-shadow(0 0 20px rgba(57,200,146,0.08));
     position: relative;
     z-index: 1;
   }
@@ -226,11 +227,63 @@
      ============================================================ -->
 <div id="pnx-splash" role="presentation" aria-hidden="true">
 
-  <!-- ロゴのみ中央表示（【1】アプリ名・タグラインはCSS非表示） -->
+  <!-- 中央：SVGロゴのみ（アプリ名・タグライン非表示） -->
   <div class="pnx-center">
     <div class="pnx-lines">
       <div class="pnx-logo-wrap">
-        <img src="pronexaX_logo.png" alt="ProNexaX">
+        <!--
+          ProNexaX ロゴ SVG（精密版）
+          形状分析：
+          - 太い縦ストローク（左寄り）
+          - 上部：右に大きく膨らむ半楕円アーチ（Pの頭）
+          - 下部：縦ストローク末端から右方向へ短いカーブフック
+          - 全体がひとつの連続した太いストロークで構成
+          - グラデーション：明るいグリーン→深いグリーン
+        -->
+        <svg class="pnx-svg-logo"
+             viewBox="0 0 90 115"
+             xmlns="http://www.w3.org/2000/svg"
+             aria-label="ProNexaX logo">
+          <defs>
+            <linearGradient id="pnx-g" x1="0%" y1="0%" x2="60%" y2="100%">
+              <stop offset="0%"   stop-color="#4DD9A0"/>
+              <stop offset="50%"  stop-color="#39C892"/>
+              <stop offset="100%" stop-color="#22A874"/>
+            </linearGradient>
+          </defs>
+
+          <!-- 縦ストローク：左端、上から下まで -->
+          <line
+            x1="17" y1="10"
+            x2="17" y2="105"
+            stroke="url(#pnx-g)"
+            stroke-width="11"
+            stroke-linecap="round"/>
+
+          <!-- 上部Pアーチ：17,10 → 右へ大きく膨らみ → 17,55 -->
+          <path
+            d="M 17 10
+               Q 17 10  34 10
+               Q 68 10  68 32
+               Q 68 56  34 56
+               Q 28 56  17 55"
+            fill="none"
+            stroke="url(#pnx-g)"
+            stroke-width="11"
+            stroke-linecap="round"
+            stroke-linejoin="round"/>
+
+          <!-- 下部フック：縦ストローク末端から右へ短くカーブ -->
+          <path
+            d="M 17 105
+               Q 17 105  38 105
+               Q 46 105  46 94"
+            fill="none"
+            stroke="url(#pnx-g)"
+            stroke-width="11"
+            stroke-linecap="round"
+            stroke-linejoin="round"/>
+        </svg>
       </div>
     </div>
     <div class="pnx-name">ProNexa<span class="pnx-x">X</span></div>
