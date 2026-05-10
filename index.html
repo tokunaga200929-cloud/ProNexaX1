@@ -16721,21 +16721,15 @@ async function _saveUserToFirestore(user, isAdmin) {
     document.body.classList.remove('auth-guest');
 
     // ── 管理者判定 ──
-    // ① 管理者判定
     const isAdmin = typeof _isAdminEmail === 'function' && _isAdminEmail(user.email);
-    // ② グローバル保存
     _isAdmin = isAdmin;
-    window._isAdmin = isAdmin;
 
-    // ③ body クラス制御
+    // body クラス制御
     if (isAdmin) {
       document.body.classList.add('is-admin');
     } else {
       document.body.classList.remove('is-admin');
     }
-
-    // ④ console確認ログ
-    console.log('[Admin]', isAdmin, user.email);
 
     // 管理タブ表示切替
     const adminNavBtn = document.getElementById('nav-admin');
