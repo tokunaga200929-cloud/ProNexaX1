@@ -9670,10 +9670,16 @@ function openTournamentModal(tid){
 function closeTournamentModal(){
   const sheet = document.getElementById('tdm-sheet');
   const overlay = document.getElementById('tdm-overlay');
-  // ★ 修正: is-dragging残留・transform残留をリセット
-  sheet.classList.remove('show','is-dragging');
-  sheet.style.transform = '';
-  sheet.style.transition = '';
+  // is-dragging / ios-dragging を解除
+  sheet.classList.remove('show','is-dragging','ios-dragging');
+  // ★ FIX: IOSSheetDrag._dismiss から呼ばれた場合は transform をここでリセットしない
+  //   dismiss アニメーション中に transform='' すると CSS .show ルールが残っていると
+  //   スナップバックを引き起こす。_dismiss 側の rAF でクリアする。
+  //   _tdmIsDismissing フラグが立っていない通常 close の時のみリセット。
+  if (!sheet._iosDismissing) {
+    sheet.style.transform  = '';
+    sheet.style.transition = '';
+  }
   _tdmIsDragging = false;
   overlay.classList.remove('show');
   setTimeout(()=>{ _tdmCurrentId = null; }, 400);
@@ -15755,37 +15761,70 @@ function IOSSheetDrag(config) {
     }
   }
 
-  // ── dismiss: 下へ落ちてから closeFn を呼ぶ ──
+  // ── dismiss: 下へ落ちてから完全 close ──
+  //
+  // ★ 修正の核心:
+  //   旧実装: animate(110%) → style.transform='' → closeFn()
+  //   問題:   transform='' の時点で .show が残っていると
+  //           CSS .show { transform:translateY(0) } がスナップバックさせる
+  //
+  //   新実装: animate(110%) → closeFn()を先に実行して.showを外す
+  //           → rAF で style.transform='' (この時点で .show なし → CSS も translateY(0)なし)
+  //
   function _dismiss() {
     if (dismissed) return;
     dismissed = true;
+    active = false;
 
-    // 速度に応じてアニメーション時間を調整（速い→短い）
-    const dur = Math.max(180, Math.min(300, 300 - velocity * 80));
+    // ① 速度に応じてアニメーション時間（速いほど短く）
+    const dur = Math.max(160, Math.min(280, 280 - velocity * 80));
 
+    // ② is-dragging 解除・ios-dismissing 付与・transition をセット
+    sheetEl.classList.remove('ios-dragging');
+    sheetEl.classList.add('ios-dismissing');   // CSS .show の transform を無効化
     sheetEl.style.transition = `transform ${dur}ms cubic-bezier(.32,.72,.25,1)`;
-    sheetEl.style.transform  = 'translateY(110%)';
+
+    // ③ 現在位置から下へスライドアウト
+    sheetEl.style.transform = 'translateY(110vh)';
 
     setTimeout(() => {
-      // transition と transform をリセット
-      sheetEl.style.transition = '';
-      sheetEl.style.transform  = '';
-      dismissed = false;
+      // ④ dismiss フラグを立てる（closeFn 内で transform をリセットしないよう制御）
+      sheetEl._iosDismissing = true;
+
+      // ⑤ closeFn を先に呼んで .show / overlay を外す
+      //    これにより CSS の .show { transform:translateY(0) } が無効化される
       if (typeof closeFn === 'function') closeFn();
+
+      // ⑥ rAF 2回で確実にレイアウトが反映された後に transform をクリア
+      //    この時点で .show は外れているため CSS スナップバックは起きない
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          sheetEl._iosDismissing = false;
+          sheetEl.classList.remove('ios-dismissing');
+          sheetEl.style.transition = '';
+          sheetEl.style.transform  = '';
+          dismissed = false;
+        });
+      });
     }, dur);
   }
 
   // ── snap back: iOS の spring animation ──
   function _snapBack() {
     active = false;
-    // cubic-bezier(.32,.72,0,1) = iOS spring 相当
+    sheetEl.classList.remove('ios-dragging');
+
+    // .show クラスが残っている状態で transition をセット
+    // CSS の .show { transform:translateY(0) } と競合しないよう
+    // inline style で明示的に translateY(0) を指定してから spring で戻す
     sheetEl.style.transition = 'transform .42s cubic-bezier(.32,.72,0,1)';
     sheetEl.style.transform  = 'translateY(0)';
 
     setTimeout(() => {
+      // inline style を削除して CSS の管理に戻す
       sheetEl.style.transition = '';
       sheetEl.style.transform  = '';
-    }, 420);
+    }, 440);
     curY = 0;
   }
 
@@ -15995,6 +16034,14 @@ function _applyIOSHandle(containerEl) {
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+}
+
+/* ★ dismiss中: CSS .show の transform上書きを防ぐ */
+.modal-sheet.ios-dismissing,
+.tdm-sheet.ios-dismissing,
+.fbs-sheet.ios-dismissing,
+.add-cat-sheet.ios-dismissing {
+  transform: translateY(110vh) !important;
 }
 `;
   document.head.appendChild(style);
