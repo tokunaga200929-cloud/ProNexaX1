@@ -825,7 +825,8 @@ button,input,select,textarea{
   opacity:0;
   transition:opacity .18s ease;
   white-space:nowrap;
-  /* backdrop-filter: 削除（Safari パフォーマンス対策） */
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
   letter-spacing:.2px;
 }
 #range-banner.show{opacity:1;}
@@ -1037,7 +1038,6 @@ button,input,select,textarea{
 .split-handle{
   flex-shrink:0;
   height:14px;
-  max-height:14px; /* ★ Fix: 高さ上限を明示（touch領域の溢れを防ぐ） */
   background:linear-gradient(180deg,#fff 0%,#F4FAF8 100%);
   border-top:1px solid var(--border);
   border-bottom:1px solid var(--border);
@@ -1048,7 +1048,6 @@ button,input,select,textarea{
   position:relative;
   transition:background .15s;
   z-index:5;
-  overflow:hidden; /* ★ Fix: 子要素のはみ出し防止 */
 }
 .split-handle:active,.split-handle.dragging{
   background:linear-gradient(180deg,var(--green-chip) 0%,#D8F2E5 100%);
@@ -1119,10 +1118,7 @@ button,input,select,textarea{
   flex-shrink:0;
 }
 
-.cal-scroll{flex:1 1 0;min-height:0;overflow-y:auto;background:var(--bg);
-  /* ★ Fix: overflowがbottom-navに溢れないよう明示制限 */
-  overflow-x:hidden;
-}
+.cal-scroll{flex:1 1 0;min-height:0;overflow-y:auto;background:var(--bg);}
 .cal-scroll::-webkit-scrollbar{display:none;}
 .section-header{padding:6px 14px 3px;display:flex;align-items:center;justify-content:space-between;}
 .section-label{font-size:13px;font-weight:600;color:var(--text-primary);}
@@ -1152,26 +1148,89 @@ button,input,select,textarea{
 .badge-jgto{background:var(--green-chip);color:var(--green-dark);}.badge-jlpga{background:#FCEAF2;color:#A02060;}.badge-pga{background:#E8F0FC;color:#1A50A0;}
 .badge-qualifier{background:#FDF0E0;color:#8A5010;}.badge-mini{background:#FEF4E8;color:#A06010;}.badge-open{background:#F2EAFA;color:#6B3FA0;}.badge-personal{background:#EDEDFC;color:#4040A0;}
 .no-events{font-size:12px;color:var(--text-tertiary);padding:6px 14px 8px;}
+/* ================================================================
+   ★★★ Phase1: 大会検索UI全面改修 ★★★
+   ================================================================ */
+
+/* ── 検索ヘッダー ── */
 .search-header{
   background:#ffffff;
-  padding:env(safe-area-inset-top,0px) 16px 10px;flex-shrink:0;
-  box-shadow:0 1px 0 rgba(0,0,0,.06);
-  border-bottom:1.5px solid #39C892;
+  padding:env(safe-area-inset-top,0px) 0 0;
+  flex-shrink:0;
+  border-bottom:1px solid rgba(0,0,0,.06);
   color:#1d1d1f;
 }
-.search-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-top:7px;}
-.page-title{color:#1d1d1f;font-size:17px;font-weight:700;letter-spacing:-.3px;}
-.page-title span{color:#39C892;font-weight:800;}
-/* ===== 複合検索ボックス ===== */
-.search-box{
-  background:#f2f2f7;border-radius:10px;
-  display:flex;align-items:center;flex-wrap:wrap;
-  padding:6px 10px;gap:5px;
-  border:1px solid #e5e5ea;
-  position:relative;
-  transition:background .15s,border-color .15s;
+.search-header-top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px 8px;
 }
-.search-box.is-focused{background:#fff;border-color:#39C892;}
+.page-title{color:#1d1d1f;font-size:17px;font-weight:700;letter-spacing:-.3px;}
+.page-title span{color:var(--green-main);font-weight:800;}
+
+/* ── 男女・国内海外セグメント ── */
+.search-gender-seg{
+  display:flex;align-items:center;gap:0;
+  background:#f2f2f7;border-radius:9px;
+  padding:2px;flex-shrink:0;
+}
+.search-gender-btn{
+  background:none;border:none;
+  font-size:12px;font-weight:600;
+  color:#636366;
+  padding:5px 13px;border-radius:7px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .18s,color .18s,box-shadow .18s;
+  white-space:nowrap;
+}
+.search-gender-btn.is-active{
+  background:#fff;
+  color:var(--green-deep);
+  box-shadow:0 1px 4px rgba(0,0,0,.12);
+}
+:root[data-theme="dark"] .search-gender-seg{background:#2c2c2e;}
+:root[data-theme="dark"] .search-gender-btn.is-active{background:#3a3a3c;color:var(--green-light);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+
+/* ── 国内/海外切替タブ ── */
+.search-region-tabs{
+  display:flex;align-items:center;gap:0;
+  padding:0 16px;
+  border-bottom:1px solid rgba(0,0,0,.05);
+}
+.search-region-tab{
+  background:none;border:none;
+  font-size:12px;font-weight:600;
+  color:#8e8e93;
+  padding:9px 16px 9px 0;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  border-bottom:2px solid transparent;
+  margin-bottom:-1px;
+  transition:color .15s,border-color .15s;
+  white-space:nowrap;
+}
+.search-region-tab.is-active{
+  color:var(--green-deep);
+  border-bottom-color:var(--green-main);
+}
+:root[data-theme="dark"] .search-region-tab.is-active{color:var(--green-light);}
+
+/* ── 検索ボックス（改善版） ── */
+.search-box{
+  background:#f2f2f7;
+  border-radius:12px;
+  display:flex;align-items:center;flex-wrap:wrap;
+  padding:7px 12px;gap:5px;
+  border:1.5px solid transparent;
+  position:relative;
+  margin:8px 16px;
+  transition:background .15s,border-color .2s,box-shadow .2s;
+}
+.search-box.is-focused{
+  background:#fff;
+  border-color:var(--green-main);
+  box-shadow:0 0 0 3px rgba(57,200,146,.12);
+}
 /* 虫眼鏡ボタン */
 .search-box-icon-btn{
   flex-shrink:0;background:none;border:none;padding:0;
@@ -1321,62 +1380,85 @@ button,input,select,textarea{
   min-height:0;
 }
 .sq-token-bar:empty{display:none;}
+/* ★ カテゴリ横スクロールエリア */
 .filter-grid{
   background:#fff;
-  padding:8px 12px;
+  padding:0;
   flex-shrink:0;
   display:flex;
   flex-direction:column;
-  gap:6px;
   border-bottom:1px solid var(--border);
   box-sizing:border-box;
+  overflow:hidden;
 }
+/* 横スクロールレール */
+.filter-scroll-rail{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  padding:9px 16px 10px;
+  -webkit-overflow-scrolling:touch;
+}
+.filter-scroll-rail::-webkit-scrollbar{display:none;}
 .filter-row{
   display:flex;
-  flex-wrap:wrap;
   gap:6px;
   align-items:center;
+  flex-wrap:nowrap;
+  padding:8px 16px;
 }
+/* エリアフィルター行 */
+.filter-area-rail{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  padding:0 16px 9px;
+  -webkit-overflow-scrolling:touch;
+}
+.filter-area-rail::-webkit-scrollbar{display:none;}
 :root[data-theme="dark"] .filter-grid{background:var(--card-bg);}
 .filter-grid.is-hidden{display:none;}
 .filter-chip{
   position:relative;
-  width:auto;
-  min-height:30px;
-  display:flex;
+  height:32px;
+  display:inline-flex;
   align-items:center;
   justify-content:center;
   text-align:center;
-  border:1px solid rgba(0,0,0,.12);
-  border-radius:12px;
-  padding:5px 10px;
-  font-size:10px;
-  color:#5C6B66;
+  border:1.5px solid rgba(0,0,0,.10);
+  border-radius:16px;
+  padding:0 13px;
+  font-size:11px;
+  color:#636366;
   cursor:pointer;
-  background:#F1F7F4;
+  background:#f2f2f7;
   white-space:nowrap;
-  line-height:1.1;
+  line-height:1;
   font-weight:500;
   -webkit-tap-highlight-color:transparent;
-  transition:all .2s ease;
-  box-shadow:0 1px 3px rgba(0,0,0,.06);
+  transition:all .18s cubic-bezier(.34,1.2,.64,1);
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
   box-sizing:border-box;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  flex-shrink:0;
 }
 :root[data-theme="dark"] .filter-chip{
-  background:#1A2520;color:#B0BCB6;
+  background:#2c2c2e;color:#a0a8a4;
   border-color:rgba(255,255,255,.08);
   box-shadow:none;
 }
-.filter-chip:has(.filter-chip-star){padding-right:14px;}
-.filter-chip:active{transform:scale(.95);}
+.filter-chip:has(.filter-chip-star){padding-right:20px;}
+.filter-chip:active{transform:scale(.93);}
 
-/* 選択中：少しだけ濃いめのパステル背景＋深い文字色 */
+/* 選択中 */
 .filter-chip.active{
-  font-weight:600;
+  font-weight:700;
   border-color:transparent;
-  box-shadow:0 1px 3px rgba(0,0,0,.06);
+  box-shadow:0 2px 8px rgba(0,0,0,.10);
 }
 .filter-chip.active[data-key="all"]      {background:#DFF3EA;color:#174F34;}
 .filter-chip.active[data-key="jgto"]     {background:#DCEEE5;color:#0B5234;}
@@ -1386,6 +1468,26 @@ button,input,select,textarea{
 .filter-chip.active[data-key="mini"]     {background:#F2DFC4;color:#7C440F;}
 .filter-chip.active[data-key="open"]     {background:#E7DAF1;color:#502D74;}
 .filter-chip.active[data-key="added"]    {background:#DCEEE5;color:#0B5234;}
+/* Phase1追加カテゴリ */
+.filter-chip.active[data-key="acn"]      {background:#D5EBE0;color:#0D4A2E;}
+.filter-chip.active[data-key="qt"]       {background:#EDD9C3;color:#6E4513;}
+.filter-chip.active[data-key="qt_w"]     {background:#EDD9C3;color:#6E4513;}
+.filter-chip.active[data-key="qualifier_w"]{background:#EDDFC9;color:#6E4513;}
+.filter-chip.active[data-key="jpga"]     {background:#DBEAF7;color:#1A4070;}
+.filter-chip.active[data-key="senior"]   {background:#E5E5F2;color:#3D3D6E;}
+.filter-chip.active[data-key="atp_golf"] {background:#D8EAF7;color:#1A3D6B;}
+.filter-chip.active[data-key="fj_tour"]  {background:#FADDCC;color:#7A3B12;}
+.filter-chip.active[data-key="future"]   {background:#DCE9D4;color:#2D5020;}
+.filter-chip.active[data-key="doucus"]   {background:#E8DAFC;color:#4A1B80;}
+.filter-chip.active[data-key="pandc"]    {background:#F2DFC4;color:#7C440F;}
+.filter-chip.active[data-key="pref_open"]{background:#E7DAF1;color:#502D74;}
+.filter-chip.active[data-key="overseas"] {background:#DAEAF8;color:#1A3F6E;}
+.filter-chip.active[data-key="stepup"]   {background:#FADDEA;color:#8A1F4A;}
+.filter-chip.active[data-key="next_heroine"]{background:#EDD7F7;color:#5E1A80;}
+.filter-chip.active[data-key="oneday"]   {background:#FAECD5;color:#7A4A10;}
+.filter-chip.active[data-key="women_open"]{background:#F7D5E0;color:#7A1A3A;}
+.filter-chip.active[data-key="lpga"]     {background:#DBE7F7;color:#1F4373;}
+.filter-chip.active[data-key="klpga"]    {background:#FCE2E2;color:#7A1A1A;}
 /* ===== エリアチップ active ===== */
 .filter-chip.active[data-area="kanto"]   {background:#E0EEF8;color:#1A4A73;}
 .filter-chip.active[data-area="kansai"]  {background:#F5E8F7;color:#5C2D78;}
@@ -1626,7 +1728,7 @@ button,input,select,textarea{
 
 
 
-.search-scroll{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg);min-height:0;}
+.search-scroll{flex:1;overflow-y:auto;background:var(--bg);min-height:0;}
 .search-scroll::-webkit-scrollbar{display:none;}
 
 /* =====================================================================
@@ -1900,18 +2002,21 @@ button,input,select,textarea{
 .search-mode-tabs{
   display:flex;background:#fff;
   flex-shrink:0;
-  padding:4px 12px 0;
-  gap:4px;
+  padding:0 16px;
+  gap:0;
+  border-bottom:1px solid rgba(0,0,0,.05);
 }
 :root[data-theme="dark"] .search-mode-tabs{background:var(--card-bg);}
 .search-mode-tab{
-  flex:1;background:transparent;border:none;
-  font-size:11px;font-weight:600;color:var(--text-tertiary);
-  padding:7px 8px 8px;
+  background:transparent;border:none;
+  font-size:12px;font-weight:600;color:var(--text-tertiary);
+  padding:9px 14px 9px 0;
   cursor:pointer;-webkit-tap-highlight-color:transparent;
   border-bottom:2px solid transparent;
+  margin-bottom:-1px;
   transition:color .15s,border-color .15s;
-  letter-spacing:.2px;
+  letter-spacing:.1px;
+  white-space:nowrap;
 }
 .search-mode-tab.is-active{
   color:var(--green-deep);
@@ -2382,22 +2487,8 @@ button,input,select,textarea{
 .day-event-del{font-size:11px;border:1px solid #FFD5D5;border-radius:6px;padding:2px 6px;background:#FFF5F5;color:#C84444;cursor:pointer;align-self:center;margin-right:8px;flex-shrink:0;}
 .longpress-ring{position:absolute;border-radius:50%;border:2px solid var(--green-main);pointer-events:none;z-index:50;opacity:0;transform:scale(0);transition:none;}
 .longpress-ring.animating{opacity:1;transform:scale(1);transition:transform .5s ease-out,opacity .5s ease-out;}
-.bottom-nav{background:#fff;border-top:none;box-shadow:none;display:flex;padding:4px 0 max(env(safe-area-inset-bottom,4px),4px);flex-shrink:0;
-  /* ★ Fix: タップ保証 - 最前面固定 */
-  position:relative;
-  z-index:9999;
-  pointer-events:auto !important;
-  -webkit-transform:translateZ(0);
-  transform:translateZ(0);
-  isolation:isolate;
-}
-.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:12px;transition:background .08s ease-out,transform .1s;-webkit-tap-highlight-color:transparent;
-  /* ★ Fix: タップ確実化 */
-  pointer-events:auto !important;
-  position:relative;
-  z-index:9999;
-  touch-action:manipulation;
-}
+.bottom-nav{background:#fff;border-top:none;box-shadow:none;display:flex;padding:4px 0 max(env(safe-area-inset-bottom,4px),4px);flex-shrink:0;}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:12px;transition:background .08s ease-out,transform .1s;-webkit-tap-highlight-color:transparent;}
 .bnav-btn:active{background:rgba(26,175,122,0.12);transform:scale(.92);}
 .bnav-label{font-size:11px;color:var(--text-tertiary);line-height:1;font-weight:400;transition:color .15s;}
 .bnav-btn.active{background:none;}
@@ -2607,7 +2698,7 @@ button,input,select,textarea{
 .settings-overlay{
   position:absolute;inset:0;background:rgba(10,30,22,.55);
   opacity:0;pointer-events:none;transition:opacity .25s;
-  z-index:55;/* backdrop-filter: 削除（Safari パフォーマンス対策） */
+  z-index:55;backdrop-filter:blur(2px);
 }
 .settings-overlay.show{opacity:1;pointer-events:auto;}
 .settings-panel{
@@ -3512,8 +3603,9 @@ button,input,select,textarea{
 /* ── カード本体：ガラス感 + iOS風シャドウ ── */
 .auth-card {
   width: 100%;
-  background: rgba(255,255,255,0.97); /* backdrop-filter 削除分を不透明度で補完 */
-  /* backdrop-filter: 削除（Safari パフォーマンス対策） */
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
   /* 上下すべて均一な角丸 */
   border-radius: 26px !important;
   border-top-left-radius: 26px !important;
@@ -3811,9 +3903,8 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
   overscroll-behavior:contain !important;
 }
 
-/* split handle: min-heightはmax-heightに揃える（タッチ領域の溢れ防止） */
-/* ★ Fix: min-height:20px は廃止 → height:14px, max-height:14px で固定 */
-.split-handle { min-height:14px !important; max-height:14px !important; }
+/* split handle タッチ領域拡張 */
+.split-handle { min-height:20px !important; }
 
 /* ================================================================
    iPhone Safari レイアウト修正
@@ -4449,1320 +4540,6 @@ body{
 }
 
 
-
-/* ================================================================
-   ★★★ Phase1: 大会検索プラットフォーム UI CSS ★★★
-   TDB = Tournament DataBase
-   ================================================================ */
-
-/* ── ヘッダー全体 ── */
-.tdb-header {
-  background: #ffffff;
-  flex-shrink: 0;
-  border-bottom: 1.5px solid var(--green-main);
-  padding-bottom: 0;
-}
-
-/* ── 1行目：ロゴ＋アバター ── */
-.tdb-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: env(safe-area-inset-top, 0px) 16px 10px;
-  padding-top: max(env(safe-area-inset-top, 0px), 8px);
-}
-.tdb-header-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.tdb-header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.tdb-logo {
-  font-size: 17px;
-  font-weight: 800;
-  color: #1d1d1f;
-  letter-spacing: -0.5px;
-}
-.tdb-logo span {
-  color: var(--green-main);
-}
-
-/* ── 男子/女子 セグメント ── */
-.tdb-gender-seg {
-  display: flex;
-  background: #f2f2f7;
-  border-radius: 10px;
-  padding: 3px;
-  margin: 0 16px 10px;
-  gap: 2px;
-}
-.tdb-gender-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 7px 0;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  font-size: 13px;
-  font-weight: 600;
-  color: #8e8e93;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-  font-family: inherit;
-}
-.tdb-gender-btn.is-active {
-  background: #ffffff;
-  color: var(--green-dark);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.10), 0 0.5px 1px rgba(0,0,0,0.06);
-}
-.tdb-gender-btn:active {
-  transform: scale(0.96);
-}
-:root[data-theme="dark"] .tdb-gender-seg {
-  background: #1c1c1e;
-}
-:root[data-theme="dark"] .tdb-gender-btn.is-active {
-  background: #2c2c2e;
-  color: var(--green-light);
-}
-
-/* ── 検索バー ── */
-.tdb-search-wrap {
-  position: relative;
-  margin: 0 16px 10px;
-  background: #f2f2f7;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  padding: 9px 10px;
-  gap: 6px;
-  border: 1.5px solid transparent;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
-}
-.tdb-search-wrap.is-focused {
-  background: #fff;
-  border-color: var(--green-main);
-  box-shadow: 0 0 0 3px rgba(57,200,146,0.12);
-}
-:root[data-theme="dark"] .tdb-search-wrap {
-  background: #1c1c1e;
-}
-:root[data-theme="dark"] .tdb-search-wrap.is-focused {
-  background: #2c2c2e;
-}
-.tdb-search-icon {
-  flex-shrink: 0;
-  opacity: 0.55;
-}
-.tdb-tokens-inline {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.tdb-search-input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 14px;
-  color: #1d1d1f;
-  font-family: inherit;
-  min-width: 60px;
-  letter-spacing: -0.01em;
-}
-.tdb-search-input::placeholder {
-  color: #8e8e93;
-  font-weight: 400;
-}
-:root[data-theme="dark"] .tdb-search-input {
-  color: #f5f5f7;
-}
-.tdb-search-clear {
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  display: none;
-  -webkit-tap-highlight-color: transparent;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-.tdb-search-wrap.has-value .tdb-search-clear {
-  display: flex;
-  opacity: 1;
-}
-
-/* ── 国内/海外 + カテゴリスクロール ── */
-.tdb-filter-area {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  padding-bottom: 10px;
-  overflow: hidden;
-}
-.tdb-scope-pills {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0 8px 0 16px;
-  flex-shrink: 0;
-}
-.tdb-scope-pill {
-  padding: 5px 12px;
-  border-radius: 20px;
-  border: 1.5px solid var(--border);
-  background: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: all 0.15s;
-  white-space: nowrap;
-  font-family: inherit;
-  letter-spacing: 0.1px;
-}
-.tdb-scope-pill.is-active {
-  background: var(--green-main);
-  border-color: var(--green-dark);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(57,200,146,0.3);
-}
-.tdb-scope-pill:active {
-  transform: scale(0.93);
-}
-:root[data-theme="dark"] .tdb-scope-pill {
-  background: var(--card-bg);
-  border-color: var(--border);
-  color: var(--text-secondary);
-}
-
-/* ── カテゴリ横スクロール ── */
-.tdb-cat-scroll-wrap {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-}
-.tdb-cat-scroll-wrap::after {
-  content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 0;
-  width: 20px;
-  background: linear-gradient(to right, transparent, #fff);
-  pointer-events: none;
-  z-index: 1;
-}
-:root[data-theme="dark"] .tdb-cat-scroll-wrap::after {
-  background: linear-gradient(to right, transparent, var(--card-bg));
-}
-.tdb-cat-scroll {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 2px 20px 2px 4px;
-}
-.tdb-cat-scroll::-webkit-scrollbar { display: none; }
-
-/* カテゴリチップ */
-.tdb-cat-chip {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 13px;
-  border-radius: 20px;
-  border: 1.5px solid rgba(0,0,0,0.10);
-  background: #fff;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  font-family: inherit;
-  position: relative;
-}
-.tdb-cat-chip:active {
-  transform: scale(0.93);
-}
-.tdb-cat-chip.is-active {
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-}
-/* カテゴリ別の選択時カラー */
-.tdb-cat-chip.is-active[data-cat="all"]        { background: var(--green-dark); }
-.tdb-cat-chip.is-active[data-cat="jgto"]       { background: #1AAF7A; }
-.tdb-cat-chip.is-active[data-cat="acn"]        { background: #2A9D7E; }
-.tdb-cat-chip.is-active[data-cat="qt"]         { background: #A0631A; }
-.tdb-cat-chip.is-active[data-cat="qualifier"]  { background: #B07015; }
-.tdb-cat-chip.is-active[data-cat="jpga"]       { background: #2D7DD2; }
-.tdb-cat-chip.is-active[data-cat="senior"]     { background: #6B4DB5; }
-.tdb-cat-chip.is-active[data-cat="atp"]        { background: #4A7A8A; }
-.tdb-cat-chip.is-active[data-cat="fj"]         { background: #3D7A6E; }
-.tdb-cat-chip.is-active[data-cat="future"]     { background: #7A6040; }
-.tdb-cat-chip.is-active[data-cat="doucus"]     { background: #8A5A30; }
-.tdb-cat-chip.is-active[data-cat="pa"]         { background: #5A6A80; }
-.tdb-cat-chip.is-active[data-cat="pref-open"]  { background: #7B4DB5; }
-.tdb-cat-chip.is-active[data-cat="overseas"]   { background: #3A4A6A; }
-/* 女子 */
-.tdb-cat-chip.is-active[data-cat="jlpga"]      { background: #D0567E; }
-.tdb-cat-chip.is-active[data-cat="stepup"]     { background: #E0688A; }
-.tdb-cat-chip.is-active[data-cat="qt-w"]       { background: #B04070; }
-.tdb-cat-chip.is-active[data-cat="qualifier-w"]{ background: #C05878; }
-.tdb-cat-chip.is-active[data-cat="next-h"]     { background: #C06880; }
-.tdb-cat-chip.is-active[data-cat="oneday"]     { background: #A05068; }
-.tdb-cat-chip.is-active[data-cat="open-w"]     { background: #8A4060; }
-.tdb-cat-chip.is-active[data-cat="lpga"]       { background: #904870; }
-.tdb-cat-chip.is-active[data-cat="klpga"]      { background: #7A3A5E; }
-
-/* 未選択時のカテゴリカラードット */
-.tdb-cat-chip-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-.tdb-cat-chip.is-active .tdb-cat-chip-dot {
-  background: rgba(255,255,255,0.7) !important;
-}
-:root[data-theme="dark"] .tdb-cat-chip {
-  background: var(--card-bg);
-  border-color: var(--border);
-  color: var(--text-secondary);
-}
-
-/* ── メタバー（件数・ボタン） ── */
-.tdb-meta-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 16px 6px;
-  background: var(--bg);
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--border);
-}
-.tdb-meta-bar.is-hidden { display: none; }
-.tdb-meta-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* ── 大会カード（新デザイン） ── */
-.tdb-card {
-  background: var(--card-bg);
-  border-radius: 14px;
-  margin: 0 14px 10px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.07), 0 3px 10px rgba(0,0,0,0.05);
-  border: 1px solid rgba(0,0,0,0.06);
-  transition: transform 0.12s, box-shadow 0.12s;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.tdb-card:active {
-  transform: scale(0.975);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-}
-.tdb-card.is-added {
-  border-color: rgba(57,200,146,0.3);
-}
-:root[data-theme="dark"] .tdb-card {
-  background: var(--card-bg);
-  border-color: var(--border);
-  box-shadow: none;
-}
-
-/* カード上部：カラーバー＋コンテンツ ── */
-.tdb-card-body {
-  display: flex;
-  align-items: stretch;
-}
-.tdb-card-stripe {
-  width: 4px;
-  flex-shrink: 0;
-  border-radius: 0;
-}
-/* stripeのカラーマッピング（既存クラスを流用） */
-.tdb-card-stripe.stripe-jgto    { background: linear-gradient(180deg,#1AAF7A,#0E7054); }
-.tdb-card-stripe.stripe-jlpga   { background: linear-gradient(180deg,#E0567E,#9A2555); }
-.tdb-card-stripe.stripe-pga     { background: linear-gradient(180deg,#2D7DD2,#1A5DB0); }
-.tdb-card-stripe.stripe-qualifier{ background: linear-gradient(180deg,#A0631A,#6E4513); }
-.tdb-card-stripe.stripe-mini    { background: linear-gradient(180deg,#D4771A,#7C440F); }
-.tdb-card-stripe.stripe-open    { background: linear-gradient(180deg,#7B4DB5,#502D74); }
-.tdb-card-stripe.stripe-personal{ background: linear-gradient(180deg,#6B6ED4,#4040A0); }
-/* 新カテゴリ用 */
-.tdb-card-stripe.stripe-acn     { background: linear-gradient(180deg,#2A9D7E,#1A6E55); }
-.tdb-card-stripe.stripe-qt      { background: linear-gradient(180deg,#A0631A,#6E4513); }
-.tdb-card-stripe.stripe-jpga    { background: linear-gradient(180deg,#2D7DD2,#1A5DB0); }
-.tdb-card-stripe.stripe-senior  { background: linear-gradient(180deg,#7B4DB5,#502D74); }
-.tdb-card-stripe.stripe-atp     { background: linear-gradient(180deg,#4A7A8A,#2D5566); }
-.tdb-card-stripe.stripe-fj      { background: linear-gradient(180deg,#3D7A6E,#255448); }
-.tdb-card-stripe.stripe-future  { background: linear-gradient(180deg,#7A6040,#4E3D20); }
-.tdb-card-stripe.stripe-doucus  { background: linear-gradient(180deg,#8A5A30,#5A3A18); }
-.tdb-card-stripe.stripe-pa      { background: linear-gradient(180deg,#5A6A80,#3A4A5E); }
-.tdb-card-stripe.stripe-jlpga-stepup{ background: linear-gradient(180deg,#E0688A,#A03060); }
-.tdb-card-stripe.stripe-next-h  { background: linear-gradient(180deg,#C06880,#8A3858); }
-.tdb-card-stripe.stripe-oneday  { background: linear-gradient(180deg,#A05068,#6E2840); }
-.tdb-card-stripe.stripe-open-w  { background: linear-gradient(180deg,#8A4060,#5E2040); }
-.tdb-card-stripe.stripe-lpga    { background: linear-gradient(180deg,#904870,#6A284E); }
-.tdb-card-stripe.stripe-klpga   { background: linear-gradient(180deg,#7A3A5E,#521838); }
-.tdb-card-stripe.stripe-overseas{ background: linear-gradient(180deg,#3A4A6A,#202E4A); }
-
-.tdb-card-main {
-  flex: 1;
-  padding: 11px 12px 10px 11px;
-  min-width: 0;
-}
-.tdb-card-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.35;
-  letter-spacing: -0.2px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.tdb-card-name-text {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.tdb-card-added-check {
-  flex-shrink: 0;
-  font-size: 12px;
-  color: var(--green-main);
-  font-weight: 800;
-}
-.tdb-card-meta {
-  font-size: 11.5px;
-  color: var(--text-secondary);
-  margin-top: 3px;
-  letter-spacing: -0.1px;
-}
-.tdb-card-badges {
-  display: flex;
-  gap: 4px;
-  margin-top: 6px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-/* ステータスバッジ */
-.tdb-badge {
-  font-size: 9px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 6px;
-  letter-spacing: 0.1px;
-  white-space: nowrap;
-}
-.tdb-badge-live    { background: #E8F9F1; color: #0B5234; border: 1px solid rgba(11,82,52,0.15); }
-.tdb-badge-upcoming{ background: #EDF4FF; color: #1A4A8A; border: 1px solid rgba(26,74,138,0.12); }
-.tdb-badge-ended   { background: #F2F4F6; color: #6A7280; border: 1px solid rgba(0,0,0,0.08); }
-.tdb-badge-added   { background: var(--green-chip); color: var(--green-dark); border: 1px solid rgba(57,200,146,0.2); }
-.tdb-badge-cat {
-  background: rgba(0,0,0,0.045);
-  color: var(--text-secondary);
-  border: 1px solid rgba(0,0,0,0.07);
-}
-:root[data-theme="dark"] .tdb-badge-live    { background: #0A2E1C; color: #7DD8B0; }
-:root[data-theme="dark"] .tdb-badge-upcoming{ background: #0A1830; color: #80AADE; }
-:root[data-theme="dark"] .tdb-badge-ended   { background: #1E2228; color: #7A8088; }
-:root[data-theme="dark"] .tdb-badge-cat     { background: rgba(255,255,255,0.07); color: var(--text-secondary); }
-
-/* ── カードアクションエリア ── */
-.tdb-card-actions {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding: 10px 12px 10px 4px;
-  gap: 8px;
-}
-.tdb-fav-btn {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  color: #d4d4d8;
-  -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s, transform 0.12s;
-  padding: 2px;
-  line-height: 1;
-}
-.tdb-fav-btn.is-fav { color: #f59e0b; }
-.tdb-fav-btn:active { transform: scale(0.78); }
-.tdb-add-btn {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 5px 11px;
-  border-radius: 20px;
-  border: 1.5px solid var(--green-main);
-  background: transparent;
-  color: var(--green-dark);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: all 0.15s;
-  white-space: nowrap;
-  font-family: inherit;
-  letter-spacing: 0.1px;
-}
-.tdb-add-btn.added {
-  background: var(--green-main);
-  border-color: var(--green-dark);
-  color: #fff;
-}
-.tdb-add-btn:active { transform: scale(0.92); }
-
-/* ── カードリマインドエリア ── */
-.tdb-card-remind {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 12px 9px 15px;
-  border-top: 1px solid var(--border);
-  margin-top: 0;
-}
-
-/* ── セクション見出し ── */
-.tdb-section-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 16px 14px 8px;
-}
-.tdb-section-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.2px;
-}
-.tdb-section-count {
-  font-size: 11px;
-  color: var(--text-tertiary);
-  font-weight: 600;
-}
-
-/* ── 空状態 ── */
-.tdb-empty {
-  text-align: center;
-  padding: 48px 24px;
-  color: var(--text-tertiary);
-}
-.tdb-empty-icon {
-  font-size: 42px;
-  margin-bottom: 12px;
-}
-.tdb-empty-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 6px;
-}
-.tdb-empty-desc {
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-/* ── ダークモード調整 ── */
-:root[data-theme="dark"] .tdb-header {
-  background: #1c1c1e;
-  border-bottom-color: var(--green-main);
-}
-:root[data-theme="dark"] .tdb-logo { color: #f5f5f7; }
-:root[data-theme="dark"] .tdb-meta-bar { background: var(--bg); }
-
-/* ── アニメーション ── */
-@keyframes tdbCardIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.tdb-card {
-  animation: tdbCardIn 0.18s ease-out both;
-}
-
-/* stagger animation for cards */
-.tdb-card:nth-child(1)  { animation-delay: 0.00s; }
-.tdb-card:nth-child(2)  { animation-delay: 0.03s; }
-.tdb-card:nth-child(3)  { animation-delay: 0.06s; }
-.tdb-card:nth-child(4)  { animation-delay: 0.09s; }
-.tdb-card:nth-child(5)  { animation-delay: 0.12s; }
-.tdb-card:nth-child(n+6){ animation-delay: 0.14s; }
-
-/* PWA standalone対応 */
-@media (display-mode: standalone), (display-mode: fullscreen) {
-  .tdb-header-row {
-    padding-top: max(env(safe-area-inset-top, 0px), 10px);
-  }
-}
-
-/* ================================================================ */
-/* ★★★ Phase2: 大会カードUI Premium + 詳細モーダル ★★★             */
-/* Apple Maps / Notion / ゴルフツアー管理 風 高級感設計              */
-/* ================================================================ */
-
-/* ─── Phase2 大会カード：プレミアムデザイン ─── */
-.tdb-p2-card {
-  background: #ffffff;
-  border-radius: 16px;
-  margin: 0 14px 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 14px rgba(0,0,0,0.07);
-  border: 1px solid rgba(0,0,0,0.055);
-  transition: transform 0.14s cubic-bezier(.32,.72,.34,1), box-shadow 0.14s;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  position: relative;
-  animation: tdbCardIn 0.22s ease-out both;
-}
-.tdb-p2-card:active {
-  transform: scale(0.972);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-:root[data-theme="dark"] .tdb-p2-card {
-  background: var(--card-bg);
-  border-color: var(--border);
-  box-shadow: none;
-}
-
-/* カード：左カラーバー */
-.tdb-p2-bar {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
-  border-radius: 0;
-}
-
-/* カード内部レイアウト */
-.tdb-p2-inner {
-  padding: 14px 14px 0 18px;
-}
-
-/* ─── 上段：大会名 + タグ ─── */
-.tdb-p2-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.tdb-p2-title-block {
-  flex: 1;
-  min-width: 0;
-}
-.tdb-p2-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: #0F1E18;
-  letter-spacing: -0.3px;
-  line-height: 1.35;
-  margin-bottom: 5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-:root[data-theme="dark"] .tdb-p2-name { color: #E8F0EC; }
-
-.tdb-p2-tags {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-wrap: wrap;
-}
-.tdb-p2-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
-  letter-spacing: 0.15px;
-  white-space: nowrap;
-}
-.tdb-p2-tag-cat {
-  background: rgba(57,200,146,0.12);
-  color: #17885E;
-  border: 1px solid rgba(57,200,146,0.22);
-}
-:root[data-theme="dark"] .tdb-p2-tag-cat {
-  background: rgba(57,200,146,0.15);
-  color: #58D6A3;
-}
-.tdb-p2-tag-men {
-  background: rgba(45,125,210,0.10);
-  color: #1A5DB0;
-  border: 1px solid rgba(45,125,210,0.18);
-}
-.tdb-p2-tag-women {
-  background: rgba(208,86,126,0.10);
-  color: #A83060;
-  border: 1px solid rgba(208,86,126,0.18);
-}
-.tdb-p2-tag-status-live {
-  background: #E8F9F1;
-  color: #0B5234;
-  border: 1px solid rgba(11,82,52,0.15);
-}
-.tdb-p2-tag-status-upcoming {
-  background: #EDF4FF;
-  color: #1A4A8A;
-  border: 1px solid rgba(26,74,138,0.12);
-}
-.tdb-p2-tag-status-ended {
-  background: #F2F4F6;
-  color: #6A7280;
-  border: 1px solid rgba(0,0,0,0.08);
-}
-
-/* お気に入りボタン（右上） */
-.tdb-p2-fav {
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  color: #d4d4d8;
-  -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s, transform 0.12s;
-  padding: 0;
-  line-height: 1;
-  margin-top: -1px;
-}
-.tdb-p2-fav.is-fav { color: #f59e0b; }
-.tdb-p2-fav:active { transform: scale(0.75); }
-
-/* ─── 中段：情報グリッド ─── */
-.tdb-p2-info {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 12px;
-  margin-bottom: 10px;
-}
-.tdb-p2-info-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 5px;
-  min-width: 0;
-}
-.tdb-p2-info-icon {
-  flex-shrink: 0;
-  width: 14px;
-  height: 14px;
-  margin-top: 1px;
-  opacity: 0.45;
-  color: #3A5C52;
-}
-:root[data-theme="dark"] .tdb-p2-info-icon { color: #A8BEB4; opacity: 0.6; }
-.tdb-p2-info-text {
-  flex: 1;
-  min-width: 0;
-}
-.tdb-p2-info-label {
-  font-size: 9.5px;
-  font-weight: 600;
-  color: #7A9E94;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  display: block;
-  margin-bottom: 1px;
-}
-:root[data-theme="dark"] .tdb-p2-info-label { color: #7A8E86; }
-.tdb-p2-info-value {
-  font-size: 12px;
-  font-weight: 600;
-  color: #1E3A30;
-  letter-spacing: -0.1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-}
-:root[data-theme="dark"] .tdb-p2-info-value { color: #C8D8D0; }
-
-/* 情報区切り線 */
-.tdb-p2-divider {
-  height: 1px;
-  background: #F0F4F2;
-  margin: 0 0 10px;
-}
-:root[data-theme="dark"] .tdb-p2-divider { background: var(--border); }
-
-/* ─── 下段：金額 ─── */
-.tdb-p2-money {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-.tdb-p2-money-item {
-  flex: 1;
-}
-.tdb-p2-money-label {
-  font-size: 9px;
-  font-weight: 600;
-  color: #7A9E94;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  display: block;
-  margin-bottom: 2px;
-}
-.tdb-p2-money-value {
-  font-size: 13px;
-  font-weight: 700;
-  color: #1E3A30;
-  letter-spacing: -0.3px;
-  display: block;
-}
-:root[data-theme="dark"] .tdb-p2-money-value { color: #C8D8D0; }
-.tdb-p2-money-value.is-prize {
-  color: #1A7A50;
-}
-:root[data-theme="dark"] .tdb-p2-money-value.is-prize { color: #58D6A3; }
-.tdb-p2-money-sep {
-  width: 1px;
-  height: 24px;
-  background: #E8EEE8;
-  flex-shrink: 0;
-}
-:root[data-theme="dark"] .tdb-p2-money-sep { background: var(--border); }
-
-/* ─── カードフッター：アクションボタン ─── */
-.tdb-p2-footer {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  border-top: 1px solid #F0F4F2;
-  background: #FAFCFB;
-}
-:root[data-theme="dark"] .tdb-p2-footer {
-  background: rgba(255,255,255,0.03);
-  border-top-color: var(--border);
-}
-.tdb-p2-action {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 10px 6px;
-  border: none;
-  background: transparent;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--green-dark);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.12s, color 0.12s;
-  font-family: inherit;
-  letter-spacing: -0.1px;
-  position: relative;
-}
-.tdb-p2-action::after {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%; height: 44px;
-}
-.tdb-p2-action:active { background: rgba(57,200,146,0.08); }
-.tdb-p2-action-sep {
-  width: 1px; height: 20px;
-  background: #E8EEE8;
-  flex-shrink: 0;
-}
-:root[data-theme="dark"] .tdb-p2-action-sep { background: var(--border); }
-:root[data-theme="dark"] .tdb-p2-action { color: var(--green-light); }
-.tdb-p2-action.is-entry {
-  color: #1A7A50;
-  font-weight: 700;
-}
-:root[data-theme="dark"] .tdb-p2-action.is-entry { color: #58D6A3; }
-.tdb-p2-action.is-added-cal {
-  color: #7A9E94;
-}
-.tdb-p2-action svg {
-  flex-shrink: 0;
-  opacity: 0.8;
-}
-
-/* ─── セクションヘッダー（大会リスト上） ─── */
-.tdb-p2-section-hd {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 14px 14px 6px;
-}
-.tdb-p2-section-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.2px;
-}
-.tdb-p2-section-count {
-  font-size: 11px;
-  color: var(--text-tertiary);
-  font-weight: 500;
-}
-
-/* ─── 空状態 ─── */
-.tdb-p2-empty {
-  text-align: center;
-  padding: 56px 28px;
-  color: var(--text-tertiary);
-}
-.tdb-p2-empty-icon {
-  font-size: 46px;
-  margin-bottom: 14px;
-  opacity: 0.6;
-}
-.tdb-p2-empty-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-  letter-spacing: -0.2px;
-}
-.tdb-p2-empty-desc {
-  font-size: 13px;
-  line-height: 1.65;
-  color: var(--text-tertiary);
-}
-
-/* ================================================================ */
-/* ★★★ Phase2: 大会詳細モーダル（iPhone Apple Maps風 Bottom Sheet）*/
-/* ================================================================ */
-
-/* オーバーレイ */
-.tdm-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0);
-  z-index: 500;
-  pointer-events: none;
-  touch-action: none; /* ★ Fix: 非表示時もtouch-action:noneで透過保証 */
-  /* ★ Fix: visibility:hiddenでSafari タップバグを確実に防止 */
-  visibility: hidden;
-  transition: background 0.32s cubic-bezier(.32,.72,0,1),
-              visibility 0s linear 0.32s; /* 閉じアニメ後にhidden */
-}
-.tdm-overlay.show {
-  background: rgba(0,0,0,0.38);
-  pointer-events: auto;
-  touch-action: auto;
-  visibility: visible;
-  transition: background 0.32s cubic-bezier(.32,.72,0,1),
-              visibility 0s linear 0s; /* 開くときは即visible */
-}
-
-/* ボトムシート本体 */
-.tdm-sheet {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  z-index: 501;
-  background: #ffffff;
-  border-radius: 22px 22px 0 0;
-  transform: translateY(100%);
-  transition: transform 0.42s cubic-bezier(.32,.72,0,1);
-  max-height: 92dvh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 -2px 24px rgba(0,0,0,0.13), 0 -1px 4px rgba(0,0,0,0.06);
-  will-change: transform;
-  overflow: hidden;
-}
-.tdm-sheet.show {
-  transform: translateY(0);
-}
-.tdm-sheet.is-dragging {
-  transition: none;
-}
-:root[data-theme="dark"] .tdm-sheet {
-  background: #1c1c1e;
-}
-
-/* グラバーバー */
-.tdm-grabber {
-  width: 38px; height: 5px;
-  background: #D1D1D6;
-  border-radius: 3px;
-  margin: 10px auto 6px;
-  flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
-  cursor: grab;
-}
-:root[data-theme="dark"] .tdm-grabber { background: #48484A; }
-
-/* ヘッダー */
-.tdm-header {
-  flex-shrink: 0;
-  padding: 0 20px 14px;
-}
-.tdm-header-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-.tdm-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: #0F1E18;
-  letter-spacing: -0.5px;
-  line-height: 1.25;
-  flex: 1;
-}
-:root[data-theme="dark"] .tdm-title { color: #E8F0EC; }
-.tdm-close {
-  width: 30px; height: 30px;
-  border: none;
-  background: #F2F2F7;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  flex-shrink: 0;
-  margin-top: 2px;
-  transition: background 0.12s;
-  font-family: inherit;
-}
-.tdm-close:active { background: #E5E5EA; }
-:root[data-theme="dark"] .tdm-close {
-  background: #2c2c2e;
-}
-:root[data-theme="dark"] .tdm-close:active { background: #3a3a3c; }
-
-/* ヘッダータグ行 */
-.tdm-header-tags {
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.tdm-tag {
-  display: inline-flex;
-  align-items: center;
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 8px;
-  letter-spacing: 0.1px;
-  white-space: nowrap;
-}
-.tdm-tag-cat {
-  background: rgba(57,200,146,0.13);
-  color: #17885E;
-  border: 1px solid rgba(57,200,146,0.25);
-}
-.tdm-tag-men {
-  background: rgba(45,125,210,0.10);
-  color: #1A5DB0;
-  border: 1px solid rgba(45,125,210,0.18);
-}
-.tdm-tag-women {
-  background: rgba(208,86,126,0.10);
-  color: #A83060;
-  border: 1px solid rgba(208,86,126,0.18);
-}
-.tdm-tag-live { background: #E8F9F1; color: #0B5234; border: 1px solid rgba(11,82,52,0.15); }
-.tdm-tag-upcoming { background: #EDF4FF; color: #1A4A8A; border: 1px solid rgba(26,74,138,0.12); }
-.tdm-tag-ended { background: #F2F4F6; color: #6A7280; border: 1px solid rgba(0,0,0,0.08); }
-:root[data-theme="dark"] .tdm-tag-cat { background: rgba(57,200,146,0.15); color: #58D6A3; }
-
-/* ヘッダー下ライン */
-.tdm-header-line {
-  height: 4px;
-  border-radius: 2px;
-  margin-top: 12px;
-  opacity: 0.6;
-}
-
-/* スクロールエリア */
-.tdm-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 0 0 env(safe-area-inset-bottom, 16px);
-}
-.tdm-scroll::-webkit-scrollbar { display: none; }
-
-/* ─── セクション共通 ─── */
-.tdm-section {
-  padding: 14px 20px;
-  border-bottom: 1px solid #F0F4F2;
-}
-.tdm-section:last-child { border-bottom: none; }
-:root[data-theme="dark"] .tdm-section { border-bottom-color: var(--border); }
-
-.tdm-section-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: #7A9E94;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-:root[data-theme="dark"] .tdm-section-title { color: #7A8E86; }
-.tdm-section-title svg { opacity: 0.7; }
-
-/* ─── 情報行 ─── */
-.tdm-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 7px 0;
-  border-bottom: 1px solid #F5F7F6;
-}
-.tdm-row:last-child { border-bottom: none; }
-:root[data-theme="dark"] .tdm-row { border-bottom-color: rgba(255,255,255,0.05); }
-.tdm-row-icon {
-  width: 18px; height: 18px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #7A9E94;
-  margin-top: 1px;
-}
-:root[data-theme="dark"] .tdm-row-icon { color: #7A8E86; }
-.tdm-row-body { flex: 1; min-width: 0; }
-.tdm-row-label {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #7A9E94;
-  letter-spacing: 0.2px;
-  display: block;
-  margin-bottom: 1px;
-}
-:root[data-theme="dark"] .tdm-row-label { color: #7A8E86; }
-.tdm-row-value {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1E3A30;
-  letter-spacing: -0.1px;
-  display: block;
-  line-height: 1.35;
-  word-break: break-all;
-}
-:root[data-theme="dark"] .tdm-row-value { color: #C8D8D0; }
-.tdm-row-value.is-empty {
-  color: #B0BEB8;
-  font-weight: 400;
-  font-style: italic;
-  font-size: 13px;
-}
-:root[data-theme="dark"] .tdm-row-value.is-empty { color: #48484A; }
-.tdm-row-value.is-prize {
-  color: #1A7A50;
-  font-size: 15px;
-  font-weight: 700;
-}
-:root[data-theme="dark"] .tdm-row-value.is-prize { color: #58D6A3; }
-
-/* ─── 金額グリッド ─── */
-.tdm-money-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.tdm-money-cell {
-  background: #F7FAF8;
-  border-radius: 12px;
-  padding: 11px 12px;
-  border: 1px solid #EBF0EE;
-}
-:root[data-theme="dark"] .tdm-money-cell {
-  background: rgba(255,255,255,0.04);
-  border-color: var(--border);
-}
-.tdm-money-cell-label {
-  font-size: 9.5px;
-  font-weight: 700;
-  color: #7A9E94;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  display: block;
-  margin-bottom: 4px;
-}
-:root[data-theme="dark"] .tdm-money-cell-label { color: #7A8E86; }
-.tdm-money-cell-value {
-  font-size: 15px;
-  font-weight: 800;
-  color: #1A7A50;
-  letter-spacing: -0.5px;
-  display: block;
-}
-:root[data-theme="dark"] .tdm-money-cell-value { color: #58D6A3; }
-.tdm-money-cell-value.is-fee {
-  color: #1E3A30;
-  font-size: 14px;
-  font-weight: 700;
-}
-:root[data-theme="dark"] .tdm-money-cell-value.is-fee { color: #C8D8D0; }
-.tdm-money-cell-value.is-empty {
-  color: #B0BEB8;
-  font-size: 13px;
-  font-weight: 500;
-  font-style: italic;
-}
-
-/* ─── リンクボタン ─── */
-.tdm-links {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.tdm-link-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 14px;
-  background: #F7FAF8;
-  border: 1px solid #EBF0EE;
-  border-radius: 12px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  text-decoration: none;
-  transition: background 0.12s, transform 0.1s;
-  position: relative;
-}
-.tdm-link-btn:active {
-  background: #EBF2EE;
-  transform: scale(0.97);
-}
-:root[data-theme="dark"] .tdm-link-btn {
-  background: rgba(255,255,255,0.04);
-  border-color: var(--border);
-}
-:root[data-theme="dark"] .tdm-link-btn:active {
-  background: rgba(255,255,255,0.08);
-}
-.tdm-link-icon {
-  width: 32px; height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 16px;
-}
-.tdm-link-text {
-  flex: 1;
-  min-width: 0;
-}
-.tdm-link-label {
-  font-size: 13px;
-  font-weight: 700;
-  color: #1E3A30;
-  letter-spacing: -0.1px;
-  display: block;
-}
-:root[data-theme="dark"] .tdm-link-label { color: #C8D8D0; }
-.tdm-link-url {
-  font-size: 11px;
-  color: #7A9E94;
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.tdm-link-arrow {
-  color: #B0BEB8;
-  flex-shrink: 0;
-  font-size: 14px;
-}
-.tdm-link-btn.is-empty {
-  opacity: 0.45;
-  cursor: default;
-}
-.tdm-link-btn.is-empty:active { transform: none; }
-
-/* ─── 大きいアクションボタン群 ─── */
-.tdm-cta-area {
-  padding: 14px 20px 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.tdm-cta-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 15px 20px;
-  border-radius: 14px;
-  border: none;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 0.1s, filter 0.12s;
-  font-family: inherit;
-  letter-spacing: -0.2px;
-  width: 100%;
-  text-align: center;
-  text-decoration: none;
-}
-.tdm-cta-btn:active {
-  transform: scale(0.97);
-  filter: brightness(0.93);
-}
-.tdm-cta-primary {
-  background: linear-gradient(135deg, var(--green-main), var(--green-dark));
-  color: #ffffff;
-  box-shadow: 0 3px 12px rgba(57,200,146,0.35);
-}
-.tdm-cta-secondary {
-  background: #F2F2F7;
-  color: var(--green-dark);
-}
-:root[data-theme="dark"] .tdm-cta-secondary {
-  background: #2c2c2e;
-  color: var(--green-light);
-}
-
-/* ─── モーダルアニメーション ─── */
-@keyframes tdmSlideUp {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-}
-@keyframes tdmFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* stagger for p2 cards */
-.tdb-p2-card:nth-child(1)  { animation-delay: 0.00s; }
-.tdb-p2-card:nth-child(2)  { animation-delay: 0.04s; }
-.tdb-p2-card:nth-child(3)  { animation-delay: 0.08s; }
-.tdb-p2-card:nth-child(4)  { animation-delay: 0.12s; }
-.tdb-p2-card:nth-child(5)  { animation-delay: 0.15s; }
-.tdb-p2-card:nth-child(n+6){ animation-delay: 0.17s; }
 </style>
 
 
@@ -5967,101 +4744,69 @@ body{
     </div>
   </div>
 
-  <!-- ================================================================ -->
-  <!-- ★★★ Phase1: 大会検索プラットフォーム UI ★★★                     -->
-  <!-- ================================================================ -->
   <div class="page" id="page-search">
-
-    <!-- ── ヘッダー ── -->
-    <div class="tdb-header" id="tdb-header">
-      <div class="tdb-header-row">
-        <div class="tdb-header-left">
-          <button class="hamburger-btn" type="button" id="hamburger-btn-2" aria-label="メニュー">
-            <svg viewBox="0 0 24 24" fill="none"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
-          </button>
-          <div class="tdb-logo">大会<span>DB</span></div>
+    <div class="search-header">
+      <!-- ヘッダートップ行：ロゴ＋男女セグメント -->
+      <div class="search-header-top">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="hamburger-btn" type="button" id="hamburger-btn-2" aria-label="メニュー"><svg viewBox="0 0 24 24" fill="none"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
+          <span class="page-title">大会<span>検索</span></span>
         </div>
-        <div class="tdb-header-right">
-          <div class="app-avatar" id="tdb-avatar"></div>
+        <!-- 男女切替セグメント -->
+        <div class="search-gender-seg" id="search-gender-seg">
+          <button class="search-gender-btn is-active" data-gender="mens" onclick="_setGender('mens',this)">男子</button>
+          <button class="search-gender-btn" data-gender="womens" onclick="_setGender('womens',this)">女子</button>
         </div>
       </div>
 
-      <!-- ── 男子/女子 切替 ── -->
-      <div class="tdb-gender-seg">
-        <button class="tdb-gender-btn is-active" id="tdb-gender-men" onclick="_tdbSetGender('men')">
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M4 13c0-1.657 1.343-3 3-3s3 1.343 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          男子
+      <!-- 検索ボックス -->
+      <div class="search-box" id="search-box-wrap">
+        <button class="search-box-icon-btn" id="sq-icon-btn" aria-label="検索 / 絞り込み" onclick="_sqIconTap()">
+          <svg id="sq-icon-svg" width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#8e8e93" stroke-width="1.5"/><line x1="10.5" y1="10.5" x2="14" y2="14" stroke="#8e8e93" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="sq-icon-filter-badge"></span>
         </button>
-        <button class="tdb-gender-btn" id="tdb-gender-women" onclick="_tdbSetGender('women')">
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M4 13c0-1.657 1.343-3 3-3s3 1.343 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          女子
-        </button>
-      </div>
-
-      <!-- ── 検索バー ── -->
-      <div class="tdb-search-wrap" id="tdb-search-wrap">
-        <svg class="tdb-search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="6" cy="6" r="4.2" stroke="#8e8e93" stroke-width="1.4"/>
-          <line x1="9.5" y1="9.5" x2="13" y2="13" stroke="#8e8e93" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        <div id="tdb-tokens-inline" class="tdb-tokens-inline"></div>
-        <input type="text" id="search-input" class="tdb-search-input"
-          placeholder="大会名・エリア・カテゴリで検索" autocomplete="off">
-        <button class="tdb-search-clear" id="tdb-search-clear" onclick="_tdbClearSearch()" aria-label="クリア">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <circle cx="6" cy="6" r="5" fill="#c7c7cc"/>
-            <line x1="4" y1="4" x2="8" y2="8" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
-            <line x1="8" y1="4" x2="4" y2="8" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
-          </svg>
-        </button>
-        <!-- サジェストパネル（既存との互換維持） -->
+        <div id="sq-tokens-inline"></div>
+        <input type="text" id="search-input" placeholder="大会名・エリア・カテゴリを検索" autocomplete="off">
+        <!-- サジェストパネル -->
         <div class="sq-suggest" id="sq-suggest"></div>
       </div>
 
-      <!-- ── 国内/海外 + カテゴリ横スクロール ── -->
-      <div class="tdb-filter-area">
-        <!-- 国内/海外ピル -->
-        <div class="tdb-scope-pills">
-          <button class="tdb-scope-pill is-active" id="tdb-scope-domestic" onclick="_tdbSetScope('domestic')">国内</button>
-          <button class="tdb-scope-pill" id="tdb-scope-overseas" onclick="_tdbSetScope('overseas')">海外</button>
-        </div>
-        <!-- カテゴリ横スクロール -->
-        <div class="tdb-cat-scroll-wrap">
-          <div class="tdb-cat-scroll" id="tdb-cat-scroll">
-            <!-- JSで描画 -->
-          </div>
-        </div>
-      </div>
-
-      <!-- ── アクティブフィルターバー ── -->
+      <!-- アクティブフィルターチップバー -->
       <div class="sq-filter-bar" id="sq-filter-bar"></div>
     </div>
 
-    <!-- ── result-meta（件数・並び替え・絞り込み）── -->
-    <div class="tdb-meta-bar" id="result-meta">
+    <!-- タブ行：国内/海外 ＋ すべて/お気に入り -->
+    <div class="search-mode-tabs" id="search-mode-tabs" style="display:flex;align-items:center;justify-content:space-between;">
+      <!-- 国内/海外切替 -->
+      <div class="search-region-tabs" id="search-region-tabs" style="border-bottom:none;padding:0;display:flex;gap:0;">
+        <button class="search-region-tab is-active" data-region="domestic" onclick="_setRegion('domestic',this)">国内</button>
+        <button class="search-region-tab" data-region="overseas" onclick="_setRegion('overseas',this)">海外</button>
+      </div>
+      <!-- すべて/お気に入り -->
+      <div style="display:flex;gap:0;">
+        <button class="search-mode-tab is-active" data-mode="all" onclick="setSearchMode('all');_syncModeTabs(this)">すべて</button>
+        <button class="search-mode-tab" data-mode="fav" onclick="setSearchMode('fav');_syncModeTabs(this)">⭐ お気に入り</button>
+      </div>
+    </div>
+
+    <!-- カテゴリフィルター（横スクロール） -->
+    <div class="filter-grid" id="filter-grid"></div>
+
+    <div class="result-meta" id="result-meta">
       <span class="result-count" id="result-count"></span>
-      <div class="tdb-meta-actions">
+      <div style="display:flex;align-items:center;gap:6px;">
         <button class="filter-open-btn" id="fbs-open-btn" onclick="openFilterSheet()">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <line x1="1" y1="3" x2="11" y2="3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-            <line x1="2.5" y1="6" x2="9.5" y2="6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-            <line x1="4" y1="9" x2="8" y2="9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          </svg>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="1" y1="3" x2="11" y2="3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="2.5" y1="6" x2="9.5" y2="6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="4" y1="9" x2="8" y2="9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           絞り込み
           <span class="filter-open-btn-badge" id="fbs-badge">0</span>
         </button>
         <button class="sort-btn" onclick="toggleSort()">
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-            <line x1="1" y1="3" x2="10" y2="3" stroke="var(--green-main)" stroke-width="1.3" stroke-linecap="round"/>
-            <line x1="1" y1="6" x2="7" y2="6" stroke="var(--green-main)" stroke-width="1.3" stroke-linecap="round"/>
-            <line x1="1" y1="9" x2="5" y2="9" stroke="var(--green-main)" stroke-width="1.3" stroke-linecap="round"/>
-          </svg>
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><line x1="1" y1="3" x2="10" y2="3" stroke="#1AAF7A" stroke-width="1.3" stroke-linecap="round"/><line x1="1" y1="6" x2="7" y2="6" stroke="#1AAF7A" stroke-width="1.3" stroke-linecap="round"/><line x1="1" y1="9" x2="5" y2="9" stroke="#1AAF7A" stroke-width="1.3" stroke-linecap="round"/></svg>
           <span id="sort-label">日付順</span>
         </button>
       </div>
     </div>
-
-    <!-- ── フィルターボトムシート（既存互換） ── -->
+    <!-- ★★★ フィルターボトムシート ★★★ -->
     <div class="fbs-overlay" id="fbs-overlay" onclick="closeFilterSheet()">
       <div class="fbs-sheet" onclick="event.stopPropagation()">
         <div class="fbs-handle"></div>
@@ -6069,29 +4814,16 @@ body{
           <span>🔍 絞り込み</span>
           <button class="fbs-title-reset" id="fbs-reset-btn" onclick="resetFilterSheet()">リセット</button>
         </div>
-        <div class="fbs-scroll" id="fbs-scroll-body"><!-- JS で描画 --></div>
+        <div class="fbs-scroll" id="fbs-scroll-body">
+          <!-- JS で描画 -->
+        </div>
         <div class="fbs-footer">
           <button class="fbs-apply-btn" onclick="applyFilterSheet()">適用する</button>
         </div>
       </div>
     </div>
-
-    <!-- ── お気に入り / すべて タブ（非表示だが機能互換のため残す） ── -->
-    <div class="search-mode-tabs" id="search-mode-tabs" style="display:none;">
-      <button class="search-mode-tab is-active" data-mode="all">すべて表示</button>
-      <button class="search-mode-tab" data-mode="fav">⭐ お気に入り</button>
-    </div>
-    <!-- filter-grid は既存JSが参照するので残す（非表示） -->
-    <div class="filter-grid" id="filter-grid" style="display:none;"></div>
-
-    <!-- ── 大会リスト ── -->
-    <div class="search-scroll" id="tdb-scroll">
-      <div style="height:4px;"></div>
-      <div id="search-list"></div>
-      <div style="height:24px;"></div>
-    </div>
-
-    <!-- ── リマインドシート（既存互換） ── -->
+    <div class="search-scroll"><div style="height:4px;"></div><div id="search-list"></div><div style="height:6px;"></div></div>
+    <!-- ★ リマインド：時間選択シート -->
     <div class="remind-overlay" id="remind-overlay" onclick="if(event.target===this)closeRemindSheet()">
       <div class="remind-sheet" onclick="event.stopPropagation()">
         <div class="remind-handle"></div>
@@ -6960,6 +5692,42 @@ function saveCatOrder(){
   try{localStorage.setItem(CAT_ORDER_KEY,JSON.stringify(CATEGORIES.map(c=>c.key)));}catch(e){}
 }
 const SEARCH_FILTERS=[{key:'all',label:'すべて'},{key:'jgto',label:'JGTO'},{key:'jlpga',label:'JLPGA'},{key:'pga',label:'PGA'},{key:'qualifier',label:'予選会'},{key:'mini',label:'ミニツアー'},{key:'open',label:'オープン'},{key:'added',label:'✓ 登録済み'}];
+
+// ★ Phase1: 男女別カテゴリ定義
+const TOUR_CATS_MENS = [
+  {key:'all',label:'すべて',special:true},
+  {key:'jgto',label:'JGTO',color:'#1AAF7A'},
+  {key:'acn',label:'ACNツアー',color:'#2E8B57'},
+  {key:'qt',label:'QT',color:'#A0631A'},
+  {key:'qualifier',label:'予選会',color:'#C4841A'},
+  {key:'jpga',label:'JPGA',color:'#2D7DD2'},
+  {key:'senior',label:'シニアツアー',color:'#6B6B8E'},
+  {key:'atp_golf',label:'ATP GOLF',color:'#4A90D9'},
+  {key:'fj_tour',label:'FJ TOUR',color:'#E07B39'},
+  {key:'future',label:'Future Tour',color:'#5C8A3C'},
+  {key:'doucus',label:'DOUCUS OPEN',color:'#8B5CF6'},
+  {key:'pandc',label:'P&A CUP',color:'#D4771A'},
+  {key:'pref_open',label:'県オープン',color:'#7B4DB5'},
+  {key:'overseas',label:'海外ツアー',color:'#3B6FC4'},
+  {key:'added',label:'✓ 登録済み',special:true},
+];
+const TOUR_CATS_WOMENS = [
+  {key:'all',label:'すべて',special:true},
+  {key:'jlpga',label:'JLPGA',color:'#E0567E'},
+  {key:'stepup',label:'ステップアップ',color:'#E87FA8'},
+  {key:'qt_w',label:'QT',color:'#A0631A'},
+  {key:'qualifier_w',label:'予選会',color:'#C4841A'},
+  {key:'next_heroine',label:'NEXT HEROINE',color:'#9C59B5'},
+  {key:'oneday',label:'One Day Tour',color:'#E69B3A'},
+  {key:'women_open',label:'女子オープン',color:'#C84B6E'},
+  {key:'lpga',label:'LPGA',color:'#2D7DD2'},
+  {key:'klpga',label:'KLPGA',color:'#E05555'},
+  {key:'added',label:'✓ 登録済み',special:true},
+];
+
+// ★ Phase1: 性別・地域状態
+let _searchGender = 'mens';   // 'mens' | 'womens'
+let _searchRegion = 'domestic'; // 'domestic' | 'overseas'
 // ===== エリア＋都道府県 マスタ =====
 const AREA_FILTERS=[
   {key:'kanto',   label:'関東',    icon:'🗼'},
@@ -7158,7 +5926,6 @@ const cellDrag={
 const CELL_DRAG_LP_MS=350;   // セル長押し閾値（誤操作防止：350ms）
 const CELL_DRAG_THRESHOLD=8;
 
-let searchInitialized=false;
 function switchPage(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
@@ -7170,13 +5937,7 @@ function switchPage(page){
   });
   const activeBtn=document.getElementById('nav-'+page),activeIcon=document.getElementById('icon-'+page);
   if(activeBtn){activeBtn.classList.add('active');const lbl=activeBtn.querySelector('.bnav-label');lbl.style.color='#1AAF7A';lbl.style.fontWeight='600';if(activeIcon&&NAV_ICONS[page])activeIcon.innerHTML=NAV_ICONS[page].active;}
-  if(page==='search'){
-    // ★ Fix: 初回のみ実行。2回目以降はスキップ（毎回の重い再描画を防ぐ）
-    if(!searchInitialized){
-      searchInitialized=true;
-      requestAnimationFrame(function(){ setTimeout(applySearchFilters,0); });
-    }
-  }
+  if(page==='search')applySearchFilters();
   if(page==='calendar'){renderAllPanels();renderCalList();}
 }
 
@@ -7402,153 +6163,181 @@ function renderAllPanels(){
   bindPanelEvents();
 }
 
-// ★★★ パネルイベント：イベント委譲方式（cloneNode廃止）★★★
-// renderAllPanels() のたびに cloneNode+replaceChild していたコストを排除。
-// cal-slide-container に対して1度だけ委譲登録し、DOM再生成後も自動で動作する。
-let _panelEventsBound = false;
+// ★★★ パネルイベント：チップ長押し→ドラッグ + セル長押し→セル全体ドラッグ ★★★
 function bindPanelEvents(){
-  if(_panelEventsBound) return; // 2回目以降は何もしない
-  _panelEventsBound = true;
-  const container = document.getElementById('cal-slide-container');
-  if(!container) return;
-
-  // クリック処理（イベント委譲）
-  container.addEventListener('click',e=>{
-    // +N件は専用処理に委譲
-    if(e.target.classList.contains('chip-more'))return;
-    // ★ 複数日バーのタップ検出
-    const barAtPoint=(function(){
-      const direct=e.target.closest('.cal-multiday-bar');
-      if(direct)return direct;
-      const els=document.elementsFromPoint(e.clientX,e.clientY);
-      for(const el of els){
-        if(el.classList&&el.classList.contains('cal-multiday-bar'))return el;
+  ['panel-prev','panel-cur','panel-next'].forEach(id=>{
+    const p=document.getElementById(id),ng=p.cloneNode(true);p.parentNode.replaceChild(ng,p);
+    
+    // クリック処理（チップタップでもセル選択を発火させる）
+    ng.addEventListener('click',e=>{
+      // +N件は専用処理に委譲
+      if(e.target.classList.contains('chip-more'))return;
+      // ★ 複数日バーのタップ検出：pointer-events:none でも座標からバーを特定
+      //    e.target はバーにならないが、クリック座標にバーが存在すれば編集モーダルを開く
+      const barAtPoint=(function(){
+        // まずそのまま closest で確認（pointer-events:auto の場合）
+        const direct=e.target.closest('.cal-multiday-bar');
+        if(direct)return direct;
+        // pointer-events:none の場合：座標上の全要素を走査
+        const els=document.elementsFromPoint(e.clientX,e.clientY);
+        for(const el of els){
+          if(el.classList&&el.classList.contains('cal-multiday-bar'))return el;
+        }
+        return null;
+      })();
+      if(barAtPoint&&barAtPoint.dataset.eventId){
+        e.stopPropagation();
+        const eid=parseInt(barAtPoint.dataset.eventId,10);
+        if(!isNaN(eid))openModal(null,eid);
+        return;
       }
-      return null;
-    })();
-    if(barAtPoint&&barAtPoint.dataset.eventId){
-      e.stopPropagation();
-      const eid=parseInt(barAtPoint.dataset.eventId,10);
-      if(!isNaN(eid))openModal(null,eid);
-      return;
-    }
-    if(cellDrag.started||cellDrag.active)return;
-    if(Date.now()<cellDrag.suppressClickUntil)return;
-    if(drag.started||drag.active)return;
-    if(Date.now()<drag.suppressClickUntil)return;
-    if(rangeSelect.active||rangeSelect.startDs)return;
-    const c=e.target.closest('.cal-cell');
-    if(c&&c.dataset.ds)onCellClick(c.dataset.ds);
-  });
-
-  // touchstart（イベント委譲）
-  container.addEventListener('touchstart',e=>{
-    const chip=e.target.closest('.ev-chip');
-    if(chip&&chip.dataset.eventId){
-      startChipPress(e,chip);
-      return;
-    }
-    if(e.target.classList.contains('chip-more'))return;
-    const bar=e.target.closest('.cal-multiday-bar');
-    let targetCell=e.target.closest('.cal-cell');
-    if(!targetCell&&bar){
-      const t=e.touches[0];
-      const elBelow=_cellFromPoint(t.clientX,t.clientY);
-      targetCell=elBelow;
-    }
-    if(targetCell&&targetCell.dataset.ds&&!swipeLocked){
-      const evs=applyCatFiltersToEvents(getEventsOnDate(targetCell.dataset.ds));
-      if(evs.length>0){
-        startCellPress(e,targetCell.dataset.ds,targetCell);
-      }else{
-        startRangePress(e,targetCell.dataset.ds,targetCell);
+      // セルドラッグ中・直後のクリックは抑止
+      if(cellDrag.started||cellDrag.active)return;
+      if(Date.now()<cellDrag.suppressClickUntil)return;
+      // チップドラッグ直後のクリックも抑止
+      if(drag.started||drag.active)return;
+      if(Date.now()<drag.suppressClickUntil)return;
+      // 範囲選択中・直後のクリックも抑止
+      if(rangeSelect.active||rangeSelect.startDs)return;
+      const c=e.target.closest('.cal-cell');
+      if(c&&c.dataset.ds)onCellClick(c.dataset.ds);
+    });
+    
+    // ★ touchstart：チップ→チップドラッグ判定 / セル→セルドラッグ判定 / 予定なし→範囲選択
+    ng.addEventListener('touchstart',e=>{
+      // ★ 複数日バー：pointer-events:none でも Safari PWA では e.target がバーになることがある
+      //    バーのタップ = 親セルへの操作として扱う（クリックはclick側で data-event-id を処理）
+      //    ただし長押し・ドラッグはバーを無視してセルの処理を優先する
+      const chip=e.target.closest('.ev-chip');
+      if(chip&&chip.dataset.eventId){
+        startChipPress(e,chip);
+        return;
       }
-    }
-  },{passive:false});
-
-  // touchmove（イベント委譲）
-  container.addEventListener('touchmove',e=>{
-    if(cellDrag.started){
-      e.preventDefault();
-      moveCellDragCard(e);
-      return;
-    }
-    if(cellDrag.sourceDs){
-      const t=e.touches[0];
-      const dx=t.clientX-cellDrag.startX,dy=t.clientY-cellDrag.startY;
-      if(cellDrag.active&&Math.hypot(dx,dy)>CELL_DRAG_THRESHOLD){
+      // chip-more（+N件）はモーダル開く処理に流す
+      if(e.target.classList.contains('chip-more'))return;
+      // バーをタップした場合：短タップはclickに任せる。長押し・ドラッグはセル単位で処理
+      const bar=e.target.closest('.cal-multiday-bar');
+      const c=bar ? bar.closest('.cal-row')  // バーの場合は行内のセルを座標から取得
+                   : e.target.closest('.cal-cell');
+      // バータップ時：座標からセルを特定（バーを pointer-events:none にしても保険）
+      let targetCell=e.target.closest('.cal-cell');
+      if(!targetCell&&bar){
+        // バーが pointer-events を持っていた場合：座標からセルを逆引き
+        const t=e.touches[0];
+        const elBelow=_cellFromPoint(t.clientX,t.clientY);
+        targetCell=elBelow;
+      }
+      if(targetCell&&targetCell.dataset.ds&&!swipeLocked){
+        // 予定が入っている日 → セルドラッグ準備（カテゴリフィルタ適用後で判定）
+        const evs=applyCatFiltersToEvents(getEventsOnDate(targetCell.dataset.ds));
+        if(evs.length>0){
+          startCellPress(e,targetCell.dataset.ds,targetCell);
+        }else{
+          // 予定なしの日 → 範囲選択開始（長押し判定）
+          startRangePress(e,targetCell.dataset.ds,targetCell);
+        }
+      }
+    },{passive:false});
+    
+    ng.addEventListener('touchmove',e=>{
+      // セルドラッグ中：カード追従
+      if(cellDrag.started){
         e.preventDefault();
-        beginCellDrag(e);
-      }else if(!cellDrag.active&&Math.hypot(dx,dy)>CELL_DRAG_THRESHOLD){
+        moveCellDragCard(e);
+        return;
+      }
+      // セル長押し前後：閾値判定
+      if(cellDrag.sourceDs){
+        const t=e.touches[0];
+        const dx=t.clientX-cellDrag.startX,dy=t.clientY-cellDrag.startY;
+        if(cellDrag.active&&Math.hypot(dx,dy)>CELL_DRAG_THRESHOLD){
+          e.preventDefault();
+          beginCellDrag(e);
+        }else if(!cellDrag.active&&Math.hypot(dx,dy)>CELL_DRAG_THRESHOLD){
+          // 長押し前に動いた → スワイプの可能性、ドラッグキャンセル
+          cancelCellPress();
+        }
+        return;
+      }
+      // ★ 範囲選択中 or 判定前
+      if(rangeSelect.startDs){
+        onRangeMove(e);
+        // 範囲選択アクティブ中はスクロール禁止
+        if(rangeSelect.active)e.preventDefault();
+        return;
+      }
+      // チップドラッグ中：カード追従
+      if(drag.started){
+        e.preventDefault();
+        moveDragCard(e);
+        return;
+      }
+      // チップ長押し前後：閾値判定
+      if(drag.eventId){
+        const t=e.touches[0];
+        const dx=t.clientX-drag.startX,dy=t.clientY-drag.startY;
+        if(drag.active&&Math.hypot(dx,dy)>DRAG_THRESHOLD){
+          e.preventDefault();
+          beginDrag(e);
+        }else if(!drag.active&&Math.hypot(dx,dy)>DRAG_THRESHOLD){
+          cancelChipPress();
+        }
+        return;
+      }
+      // 通常のセル長押しキャンセル
+      clearTimeout(lpTimer);if(lpCell)lpCell.classList.remove('longpress-active');hideLpRing();
+    },{passive:false});
+    
+    ng.addEventListener('touchend',e=>{
+      // セルドラッグ完了処理
+      if(cellDrag.started){
+        cellDrag.suppressClickUntil=Date.now()+400;
+        endCellDrag(e);return;
+      }
+      // セル長押し成立後タップ（動かなかった）→ 日付選択（モーダル開かない）
+      if(cellDrag.active&&!cellDrag.started){
+        const ds=cellDrag.sourceDs;
+        cellDrag.suppressClickUntil=Date.now()+400;
+        cancelCellPress();
+        setTimeout(()=>onCellClick(ds),30);
+        return;
+      }
+      // セル長押し前にタップ → click イベントが続けて発火し、そこで onCellClick が動く
+      if(cellDrag.sourceDs&&!cellDrag.active){
         cancelCellPress();
       }
-      return;
-    }
-    if(rangeSelect.startDs){
-      onRangeMove(e);
-      if(rangeSelect.active)e.preventDefault();
-      return;
-    }
-    if(drag.started){
-      e.preventDefault();
-      moveDragCard(e);
-      return;
-    }
-    if(drag.eventId){
-      const t=e.touches[0];
-      const dx=t.clientX-drag.startX,dy=t.clientY-drag.startY;
-      if(drag.active&&Math.hypot(dx,dy)>DRAG_THRESHOLD){
-        e.preventDefault();
-        beginDrag(e);
-      }else if(!drag.active&&Math.hypot(dx,dy)>DRAG_THRESHOLD){
-        cancelChipPress();
+      
+      // ★ 範囲選択終了
+      if(rangeSelect.startDs){
+        onRangeEnd();
+        return;
       }
-      return;
-    }
-    clearTimeout(lpTimer);if(lpCell)lpCell.classList.remove('longpress-active');hideLpRing();
-  },{passive:false});
-
-  // touchend（イベント委譲）
-  container.addEventListener('touchend',e=>{
-    if(cellDrag.started){
-      cellDrag.suppressClickUntil=Date.now()+400;
-      endCellDrag(e);return;
-    }
-    if(cellDrag.active&&!cellDrag.started){
-      const ds=cellDrag.sourceDs;
-      cellDrag.suppressClickUntil=Date.now()+400;
-      cancelCellPress();
-      setTimeout(()=>onCellClick(ds),30);
-      return;
-    }
-    if(cellDrag.sourceDs&&!cellDrag.active){
-      cancelCellPress();
-    }
-    if(rangeSelect.startDs){
-      onRangeEnd();
-      return;
-    }
-    if(drag.started){endDrag(e);return;}
-    if(drag.active&&!drag.started){
-      const evId=drag.eventId;
-      cancelChipPress();
-      drag.suppressClickUntil=Date.now()+400;
-      setTimeout(()=>openModal(null,evId),50);
-      return;
-    }
-    if(drag.eventId&&!drag.active){
-      cancelChipPress();
-    }
-    onTouchEndCell();
-  },{passive:false});
-
-  // touchcancel（イベント委譲）
-  container.addEventListener('touchcancel',()=>{
-    if(cellDrag.sourceDs)cancelCellPress();
-    if(drag.eventId)cancelChipPress();
-    if(rangeSelect.startDs)cancelRangePress();
-    onTouchEndCell();
-  },{passive:true});
+      
+      // チップドラッグ完了処理
+      if(drag.started){endDrag(e);return;}
+      if(drag.active&&!drag.started){
+        // 長押し成立後、動かさず指を離した → 編集モーダルを開く（従来通り）
+        const evId=drag.eventId;
+        cancelChipPress();
+        drag.suppressClickUntil=Date.now()+400;
+        setTimeout(()=>openModal(null,evId),50);
+        return;
+      }
+      if(drag.eventId&&!drag.active){
+        // 長押し前のタップ → セル選択は後続の click イベントに任せる
+        cancelChipPress();
+        // touchend を preventDefault しない限り click が発火するのでそのまま流す
+      }
+      onTouchEndCell();
+    },{passive:false});
+    
+    ng.addEventListener('touchcancel',()=>{
+      if(cellDrag.sourceDs)cancelCellPress();
+      if(drag.eventId)cancelChipPress();
+      if(rangeSelect.startDs)cancelRangePress();
+      onTouchEndCell();
+    },{passive:true});
+  });
 }
 
 // ★ 長押し開始
@@ -8356,12 +7145,12 @@ function _updateFbsOpenBtn(){
 }
 
 function renderSearchFilters(){
-  if(typeof console!=='undefined'&&console.time) console.time('[PNX] renderSearchFilters');
   const hasFbs=fbsCats.size>0||fbsAreas.size>0||fbsPrefs.size>0;
   const grid=document.getElementById('filter-grid');
   if(!grid)return;
+
+  // アクティブフィルタがある場合はバナー表示（FBSボトムシートから）
   if(hasFbs){
-    // アクティブフィルタのサマリーバナー
     const CAT_L={jgto:'JGTO',jlpga:'JLPGA',pga:'PGA',qualifier:'予選会',mini:'ミニツアー',open:'オープン',added:'登録済み'};
     const AREA_L={kanto:'関東',kansai:'関西',chubu:'中部',kyushu:'九州・沖縄',hokkaido:'北海道・東北',overseas:'海外'};
     const PREF_L=Object.values(PREF_BY_AREA).flat().reduce((m,p)=>(m[p.key]=p.label,m),{});
@@ -8373,30 +7162,67 @@ function renderSearchFilters(){
       [...fbsAreas].forEach(k=>tags.push({label:'📍'+AREA_L[k],type:'area'}));
     }
     const tagHtml=tags.map(t=>`<span class="fbs-active-tag">${t.label}</span>`).join('');
-    grid.innerHTML=`<div class="fbs-active-banner">
+    grid.innerHTML=`<div style="padding:8px 16px;"><div class="fbs-active-banner">
       ${tagHtml}
       <button class="fbs-active-clear" onclick="_sqClearAll()">✕ 解除</button>
-    </div>`;
+    </div></div>`;
     return;
   }
-  // FBS未使用時：カテゴリチップのみ（有効なカテゴリのみ表示）
-  // SEARCH_FILTERSから有効カテゴリのみフィルタ
-  const enabledSearchFilters=SEARCH_FILTERS.filter(f=>
-    f.key==='all'||f.key==='added'||userEnabledCategories.includes(f.key)
-  );
-  if(userEnabledCategories.length===0){
-    grid.innerHTML=`<div class="filter-row"><span style="font-size:11px;color:var(--text-tertiary);padding:4px 2px;">カテゴリが未追加です</span></div>`;
-    return;
-  }
-  const catChips=enabledSearchFilters.map(f=>{
-    const showStar=f.key!=='all'&&f.key!=='added';
-    const isFav=favTours.has(f.key);
-    return`<button class="filter-chip${searchFilter===f.key?' active':''}" data-key="${f.key}" onclick="setSearchFilter('${f.key}',this)">${f.label}${showStar?`<span class="filter-chip-star${isFav?' is-fav':''}" data-fav-key="${f.key}" onclick="event.stopPropagation();toggleFavTour('${f.key}')">★</span>`:''}</button>`;
+
+  // ★ Phase1: 男女別カテゴリの横スクロールチップ列
+  const cats = _searchGender === 'womens' ? TOUR_CATS_WOMENS : TOUR_CATS_MENS;
+
+  const chipHtml = cats.map(f => {
+    const isActive = searchFilter === f.key;
+    const color = f.color || '';
+    const activeStyle = isActive && color
+      ? `background:${color}18;color:${color};border-color:${color}60;`
+      : '';
+    return `<button class="filter-chip${isActive ? ' active' : ''}" data-key="${f.key}"
+      style="${activeStyle}"
+      onclick="_setTourCatFilter('${f.key}',this)">${f.label}</button>`;
   }).join('');
-  grid.innerHTML=`<div class="filter-row">${catChips}</div>`;
-  if(typeof console!=='undefined'&&console.timeEnd) console.timeEnd('[PNX] renderSearchFilters');
+
+  grid.innerHTML = `<div class="filter-scroll-rail">${chipHtml}</div>`;
 }
-function setSearchFilter(key,el){el.style.transform='scale(0.92)';setTimeout(()=>{el.style.transform='';},120);searchFilter=key;applySearchFilters();}
+
+// ★ Phase1: ツアーカテゴリフィルターのセット
+function _setTourCatFilter(key, el) {
+  // タップフィードバック
+  el.style.transform = 'scale(0.90)';
+  setTimeout(() => { el.style.transform = ''; }, 140);
+  searchFilter = key;
+  applySearchFilters();
+}
+
+// ★ Phase1: 男女切替
+function _setGender(gender, btn) {
+  _searchGender = gender;
+  // ボタン状態更新
+  document.querySelectorAll('.search-gender-btn').forEach(b => {
+    b.classList.toggle('is-active', b.dataset.gender === gender);
+  });
+  // searchFilterをリセット
+  searchFilter = 'all';
+  renderSearchFilters();
+  applySearchFilters();
+}
+
+// ★ Phase1: 国内/海外切替
+function _setRegion(region, btn) {
+  _searchRegion = region;
+  document.querySelectorAll('.search-region-tab').forEach(b => {
+    b.classList.toggle('is-active', b.dataset.region === region);
+  });
+  applySearchFilters();
+}
+
+// ★ Phase1: タブ同期（すべて/お気に入り）
+function _syncModeTabs(btn) {
+  document.querySelectorAll('.search-mode-tab').forEach(b => {
+    b.classList.toggle('is-active', b === btn);
+  });
+}
 function setSearchAreaFilter(key,el){
   el.style.transform='scale(0.92)';setTimeout(()=>{el.style.transform='';},120);
   // 同じエリアを再タップしたら解除（トグル）
@@ -8508,6 +7334,15 @@ function _buildSuggestMaster(){
     {key:'qualifier',label:'予選会',sub:'QT・予選',icon:'📋'},
     {key:'mini',label:'ミニツアー',sub:'ミニツアー',icon:'⛳'},
     {key:'open',label:'オープン大会',sub:'オープン',icon:'🏆'},
+    {key:'acn',label:'ACNツアー',sub:'男子ツアー',icon:'🏌'},
+    {key:'jpga',label:'JPGA',sub:'男子プロ',icon:'🏌'},
+    {key:'senior',label:'シニアツアー',sub:'シニア',icon:'🏌'},
+    {key:'fj_tour',label:'FJ TOUR',sub:'男子ツアー',icon:'🏌'},
+    {key:'future',label:'Future Tour',sub:'男子ツアー',icon:'🏌'},
+    {key:'stepup',label:'ステップアップ',sub:'女子ツアー',icon:'🏌‍♀️'},
+    {key:'next_heroine',label:'NEXT HEROINE',sub:'女子ツアー',icon:'🏌‍♀️'},
+    {key:'lpga',label:'LPGA',sub:'米国女子ツアー',icon:'🌎'},
+    {key:'klpga',label:'KLPGA',sub:'韓国女子ツアー',icon:'🌎'},
   ];
   catDefs.forEach(c=>items.push({type:'cat',key:c.key,label:c.label,icon:c.icon,sub:c.sub}));
   return items;
@@ -8613,7 +7448,6 @@ function _sqRenderTokens(){
 // ── サジェスト表示 ──
 let _sqSuggestIdx=-1;
 function _sqShowSuggest(q){
-  if(typeof console!=='undefined'&&console.time) console.time('[PNX] _sqShowSuggest');
   const panel=document.getElementById('sq-suggest');
   if(!panel)return;
   // ★ 空欄時：最近の検索 + 人気キーワードを表示
@@ -8682,7 +7516,6 @@ function _sqShowSuggest(q){
     </div>`).join('');
   _sqSuggestIdx=-1;
   panel.classList.add('show');
-  if(typeof console!=='undefined'&&console.timeEnd) console.timeEnd('[PNX] _sqShowSuggest');
 }
 function _sqHideSuggest(){
   const p=document.getElementById('sq-suggest');
@@ -8757,17 +7590,11 @@ function _sqOnKeyDown(e){
 }
 
 // input イベント
-let _sqInputDebounceTimer=null;
 function _sqOnInput(){
   const inp=document.getElementById('search-input');
   const v=inp?inp.value:'';
-  // サジェストは即時（体感レスポンス優先）
   _sqShowSuggest(v.trim());
-  // フィルター適用はdebounce（iPhone Safari負荷対策）
-  clearTimeout(_sqInputDebounceTimer);
-  _sqInputDebounceTimer=setTimeout(function(){
-    applySearchFilters();
-  },120);
+  applySearchFilters();
 }
 
 // 初期化（DOMロード後に呼ぶ）
@@ -8991,18 +7818,11 @@ function initComplexSearch(){
 
 
 function applySearchFilters(){
-  // ★ Fix: 検索ページ非表示時はスキップ（不要なDOM操作を防ぐ）
-  const searchPage = document.getElementById('page-search');
-  if (searchPage && !searchPage.classList.contains('active')) {
-    // 非表示ページは処理をスキップ
-    return;
-  }
-  if(typeof console!=='undefined'&&console.time) console.time('[PNX] applySearchFilters');
   _updateFbsOpenBtn();
   _sqRenderTokens();
-  // モードタブ反映
+  // モードタブ反映（お気に入り/すべて）
   document.querySelectorAll('#search-mode-tabs .search-mode-tab').forEach(el=>{
-    el.classList.toggle('is-active',el.dataset.mode===searchMode);
+    if(el.dataset.mode) el.classList.toggle('is-active',el.dataset.mode===searchMode);
   });
   renderSearchFilters();
   // フリーテキスト（トークン化されていない入力 + textトークン）
@@ -9018,7 +7838,6 @@ function applySearchFilters(){
     resultMeta.classList.add('is-hidden');
     list.innerHTML=_buildFavTabHTML(rawInput);
     _bindFavTabEvents();
-    if(typeof console!=='undefined'&&console.timeEnd) console.timeEnd('[PNX] applySearchFilters');
     return;
   }
   // ★★★ すべて表示タブ ★★★
@@ -9038,6 +7857,19 @@ function applySearchFilters(){
   let arr=TOURNAMENTS_FLAT.filter(t=>{
     // ── 有効カテゴリのみ表示（オプトイン型） ──
     if(!isCatVisible(t.cat))return false;
+
+    // ★ Phase1: 国内/海外フィルター
+    if(_searchRegion === 'domestic' && t.area === 'overseas') return false;
+    if(_searchRegion === 'overseas' && t.area !== 'overseas') return false;
+
+    // ★ Phase1: 男女フィルター（カテゴリキーで判断）
+    const MENS_CATS = ['jgto','acn','qt','qualifier','jpga','senior','atp_golf','fj_tour','future','doucus','pandc','pref_open'];
+    const WOMENS_CATS = ['jlpga','stepup','qt_w','qualifier_w','next_heroine','oneday','women_open'];
+    // 共通カテゴリ（pga, overseas等）は両方に表示
+    const SHARED_CATS = ['pga','mini','open','overseas','personal'];
+    if(_searchGender === 'mens' && WOMENS_CATS.includes(t.cat)) return false;
+    if(_searchGender === 'womens' && MENS_CATS.includes(t.cat)) return false;
+
     // ── カテゴリ判定（トークン優先 → FBS → searchFilter） ──
     const catTokens=sqTokens.filter(x=>x.type==='cat').map(x=>x.key);
     let mc;
@@ -9092,8 +7924,7 @@ function applySearchFilters(){
     list.innerHTML=`<div class="empty-search">該当する大会がありません。<br>条件を広げてみてください</div>`;
     return;
   }
-  list.innerHTML=arr.slice(0,20).map(_searchCardHTML).join(''); // ★ Fix: 初回20件で描画負荷を削減
-  if(typeof console!=='undefined'&&console.timeEnd) console.timeEnd('[PNX] applySearchFilters');
+  list.innerHTML=arr.map(_searchCardHTML).join('');
 }
 
 // ★★★ お気に入りタブ：上部にカテゴリチップ列 + 下部に大会一覧 ★★★
@@ -11459,8 +10290,7 @@ startNotificationLoop(); // ★★★ 通知エンジンを起動
     });
   }
   initComplexSearch(); // ★ 複合検索を初期化
-  // ★ Fix: 初回は非同期で実行（メインスレッドのブロックを防ぐ）
-  // applySearchFilters(); ← 削除：起動時フリーズの原因
+  applySearchFilters();
 })();
 // Day View 時間ドラッグ選択：document レベル委譲で1度だけバインド
 dvBindDragSelect();
@@ -12331,1899 +11161,6 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   });
 })();
 </script>
-
-
-<script>
-// ================================================================
-// ★★★ Phase1: 大会検索プラットフォーム JS ★★★
-// 既存のカレンダー・検索機能は一切壊さない
-// ================================================================
-
-// ── カテゴリマスタ（男子/女子別） ──
-const TDB_CATS_MEN = [
-  { key: 'all',       label: 'すべて',      color: '#1AAF7A', dot: '#1AAF7A' },
-  { key: 'jgto',      label: 'JGTO',        color: '#1AAF7A', dot: '#1AAF7A' },
-  { key: 'acn',       label: 'ACNツアー',   color: '#2A9D7E', dot: '#2A9D7E' },
-  { key: 'qt',        label: 'QT',          color: '#A0631A', dot: '#A0631A' },
-  { key: 'qualifier', label: '予選会',       color: '#B07015', dot: '#B07015' },
-  { key: 'jpga',      label: 'JPGA',        color: '#2D7DD2', dot: '#2D7DD2' },
-  { key: 'senior',    label: 'シニアツアー', color: '#7B4DB5', dot: '#7B4DB5' },
-  { key: 'atp',       label: 'ATP GOLF',    color: '#4A7A8A', dot: '#4A7A8A' },
-  { key: 'fj',        label: 'FJ TOUR',     color: '#3D7A6E', dot: '#3D7A6E' },
-  { key: 'future',    label: 'Future Tour', color: '#7A6040', dot: '#7A6040' },
-  { key: 'doucus',    label: 'DOUCUS OPEN', color: '#8A5A30', dot: '#8A5A30' },
-  { key: 'pa',        label: 'P&A CUP',     color: '#5A6A80', dot: '#5A6A80' },
-  { key: 'pref-open', label: '県オープン',   color: '#7B4DB5', dot: '#7B4DB5' },
-  { key: 'overseas',  label: '海外ツアー',   color: '#3A4A6A', dot: '#3A4A6A' },
-];
-const TDB_CATS_WOMEN = [
-  { key: 'all',         label: 'すべて',         color: '#D0567E', dot: '#D0567E' },
-  { key: 'jlpga',       label: 'JLPGA',          color: '#D0567E', dot: '#D0567E' },
-  { key: 'stepup',      label: 'ステップアップ',  color: '#E0688A', dot: '#E0688A' },
-  { key: 'qt-w',        label: 'QT',             color: '#B04070', dot: '#B04070' },
-  { key: 'qualifier-w', label: '予選会',          color: '#C05878', dot: '#C05878' },
-  { key: 'next-h',      label: 'NEXT HEROINE',   color: '#C06880', dot: '#C06880' },
-  { key: 'oneday',      label: 'One Day Tour',   color: '#A05068', dot: '#A05068' },
-  { key: 'open-w',      label: '女子オープン',    color: '#8A4060', dot: '#8A4060' },
-  { key: 'lpga',        label: 'LPGA',           color: '#904870', dot: '#904870' },
-  { key: 'klpga',       label: 'KLPGA',          color: '#7A3A5E', dot: '#7A3A5E' },
-];
-
-// ── 状態 ──
-let _tdbGender   = 'men';      // 'men' | 'women'
-let _tdbScope    = 'domestic'; // 'domestic' | 'overseas'
-let _tdbActiveCat = 'all';     // カテゴリキー
-
-// ── 初期化 ──
-function _tdbInit() {
-  _tdbRenderCatChips();
-  _tdbSyncGenderUI();
-  _tdbSyncScopeUI();
-  _tdbInitSearch();
-  // アバター同期
-  const src = document.getElementById('app-avatar-text');
-  const dst = document.getElementById('tdb-avatar');
-  if (src && dst) dst.textContent = src.textContent;
-  // アバター：メインヘッダーから値を引き継ぐ
-  const mainAvatar = document.querySelector('.app-avatar');
-  if (mainAvatar && dst) dst.textContent = mainAvatar.textContent;
-}
-
-// ── 男子/女子切替 ──
-window._tdbSetGender = function(gender) {
-  if (_tdbGender === gender) return;
-  _tdbGender = gender;
-  _tdbActiveCat = 'all';
-  _tdbRenderCatChips();
-  _tdbSyncGenderUI();
-  // 検索フィルター再適用（既存関数）
-  if (typeof applySearchFilters === 'function') applySearchFilters();
-};
-
-function _tdbSyncGenderUI() {
-  const menBtn = document.getElementById('tdb-gender-men');
-  const womenBtn = document.getElementById('tdb-gender-women');
-  if (!menBtn || !womenBtn) return;
-  const isWomen = _tdbGender === 'women';
-  menBtn.classList.toggle('is-active', !isWomen);
-  womenBtn.classList.toggle('is-active', isWomen);
-  // 女子モードはヘッダーのアクセントカラーをピンク調に
-  const header = document.getElementById('tdb-header');
-  if (header) {
-    header.style.borderBottomColor = isWomen ? '#D0567E' : '';
-  }
-}
-
-// ── 国内/海外切替 ──
-window._tdbSetScope = function(scope) {
-  if (_tdbScope === scope) return;
-  _tdbScope = scope;
-  _tdbSyncScopeUI();
-  if (typeof applySearchFilters === 'function') applySearchFilters();
-};
-
-function _tdbSyncScopeUI() {
-  const dom = document.getElementById('tdb-scope-domestic');
-  const ovs = document.getElementById('tdb-scope-overseas');
-  if (!dom || !ovs) return;
-  dom.classList.toggle('is-active', _tdbScope === 'domestic');
-  ovs.classList.toggle('is-active', _tdbScope === 'overseas');
-}
-
-// ── カテゴリチップ描画 ──
-function _tdbRenderCatChips() {
-  const wrap = document.getElementById('tdb-cat-scroll');
-  if (!wrap) return;
-  const cats = _tdbGender === 'women' ? TDB_CATS_WOMEN : TDB_CATS_MEN;
-  wrap.innerHTML = cats.map(c => {
-    const isActive = _tdbActiveCat === c.key;
-    const dotStyle = isActive ? 'background:rgba(255,255,255,0.7)' : `background:${c.dot}`;
-    return `<button class="tdb-cat-chip${isActive ? ' is-active' : ''}"
-      data-cat="${c.key}"
-      onclick="_tdbSetCat('${c.key}')"
-      style="${isActive ? `background:${c.color};` : ''}">
-      <span class="tdb-cat-chip-dot" style="${dotStyle}"></span>
-      ${c.label}
-    </button>`;
-  }).join('');
-}
-
-// ── カテゴリ選択 ──
-window._tdbSetCat = function(key) {
-  if (_tdbActiveCat === key) return;
-  _tdbActiveCat = key;
-  _tdbRenderCatChips();
-  // 既存 searchFilter に反映
-  if (typeof searchFilter !== 'undefined') {
-    const mapToExisting = {
-      all: 'all',
-      jgto: 'jgto',
-      jlpga: 'jlpga',
-      qualifier: 'qualifier',
-      'pref-open': 'open',
-    };
-    // マッピングがなければ 'all' に
-    searchFilter = mapToExisting[key] || 'all';
-  }
-  if (typeof applySearchFilters === 'function') applySearchFilters();
-  // スクロール位置をアクティブチップに合わせる
-  const wrap = document.getElementById('tdb-cat-scroll');
-  const chip = wrap ? wrap.querySelector('.tdb-cat-chip.is-active') : null;
-  if (chip && wrap) {
-    const wrapRect = wrap.getBoundingClientRect();
-    const chipRect = chip.getBoundingClientRect();
-    const offset = chipRect.left - wrapRect.left - (wrapRect.width / 2) + (chipRect.width / 2);
-    wrap.scrollBy({ left: offset, behavior: 'smooth' });
-  }
-};
-
-// ── 検索バー初期化 ──
-function _tdbInitSearch() {
-  const inp = document.getElementById('search-input');
-  const wrap = document.getElementById('tdb-search-wrap');
-  if (!inp || !wrap) return;
-  inp.addEventListener('input', () => {
-    const hasVal = inp.value.trim().length > 0;
-    wrap.classList.toggle('has-value', hasVal);
-    // ★ Fix: _sqOnInput内でdebounce済みapplySearchFiltersを呼ぶため
-    // ここではhas-value更新のみ。_sqOnInputへの委譲はinitComplexSearch側で管理。
-    // 二重実行（_sqOnInput + applySearchFilters）を防止
-  });
-  inp.addEventListener('focus', () => {
-    wrap.classList.add('is-focused');
-    if (typeof _sqShowSuggest === 'function') _sqShowSuggest(inp.value.trim());
-  });
-  inp.addEventListener('blur', () => {
-    wrap.classList.remove('is-focused');
-    setTimeout(() => { if (typeof _sqHideSuggest === 'function') _sqHideSuggest(); }, 150);
-  });
-  inp.addEventListener('keydown', e => {
-    if (typeof _sqOnKeyDown === 'function') _sqOnKeyDown(e);
-  });
-}
-
-// ── 検索クリア ──
-window._tdbClearSearch = function() {
-  const inp = document.getElementById('search-input');
-  const wrap = document.getElementById('tdb-search-wrap');
-  if (inp) { inp.value = ''; inp.focus(); }
-  if (wrap) wrap.classList.remove('has-value');
-  if (typeof _sqClearAll === 'function') _sqClearAll();
-};
-
-// ── 新カードHTML（既存 _searchCardHTML を上書き） ──
-// 既存の _searchCardHTML を拡張する形で新デザインを注入
-(function patchSearchCard() {
-  const _origCardHTML = window._searchCardHTML;
-  window._searchCardHTML = function(t) {
-    if (!t) return '';
-    // 既存のステータス・追加済み・お気に入り関数を流用
-    const isAdded = typeof addedIds !== 'undefined' && addedIds.has(t.id);
-    const isFav   = typeof favTournaments !== 'undefined' && favTournaments.has(t.id);
-    const statusFn = typeof _searchStatus === 'function' ? _searchStatus : () => 'upcoming';
-    const status = statusFn(t);
-    const statusLabelMap = { live: '開催中', upcoming: '予定', ended: '終了' };
-    const statusLabel = statusLabelMap[status] || '予定';
-    const catKey = t.cat || 'personal';
-    // カテゴリラベル
-    const catLabelMap = typeof CAT_LABELS !== 'undefined' ? CAT_LABELS : {};
-    const catLabel = catLabelMap[catKey] || catKey;
-    // 日付
-    const datePart = t.start && t.end
-      ? `${t.start.slice(5).replace('-','/')} 〜 ${t.end.slice(5).replace('-','/')}`
-      : (t.start ? t.start.slice(5).replace('-','/') : '');
-    // リマインド状態
-    const rState = (typeof remindMap !== 'undefined' && remindMap[t.id]) || { reminder: false, reminderTiming: [] };
-    const isRemind = rState.reminder;
-    const remindKey = rState.reminderTiming && rState.reminderTiming[0];
-    const RLABELS = { '30min':'30分前', '1hour':'1時間前', sameDay:'当日朝', dayBefore:'前日', weekBefore:'1週間前' };
-    const pillLabel = remindKey ? RLABELS[remindKey] : 'タイミングを選択';
-    const chevSvg = `<svg viewBox="0 0 10 10" fill="none" style="width:9px;height:9px;flex-shrink:0;"><polyline points="3.5,2.5 6.5,5 3.5,7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-    const bellSvg = `<svg class="bell-svg" viewBox="0 0 20 20" fill="none" style="width:16px;height:16px;"><path d="M10 2.5a5.5 5.5 0 0 1 5.5 5.5v3l1.25 2H3.25L4.5 11V8A5.5 5.5 0 0 1 10 2.5Z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M8 15.5a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>`;
-    // 場所表示
-    const placePart = t.place ? ` ｜ ${t.place}` : '';
-    return `<div class="tdb-card${isAdded ? ' is-added' : ''}" data-tid="${t.id}">
-      <div class="tdb-card-body">
-        <div class="tdb-card-stripe stripe-${catKey}"></div>
-        <div class="tdb-card-main">
-          <div class="tdb-card-name">
-            <span class="tdb-card-name-text">${typeof escapeHtml === 'function' ? escapeHtml(t.name) : t.name}</span>
-            ${isAdded ? '<span class="tdb-card-added-check">✓</span>' : ''}
-          </div>
-          <div class="tdb-card-meta">${datePart}${placePart}</div>
-          <div class="tdb-card-badges">
-            <span class="tdb-badge tdb-badge-${status}">${statusLabel}</span>
-            <span class="tdb-badge tdb-badge-cat">${catLabel}</span>
-            ${isAdded ? '<span class="tdb-badge tdb-badge-added">登録済み</span>' : ''}
-          </div>
-        </div>
-        <div class="tdb-card-actions">
-          <button class="tdb-fav-btn${isFav ? ' is-fav' : ''}"
-            onclick="event.stopPropagation();toggleFavTournament('${t.id}')" aria-label="お気に入り">★</button>
-          <button class="tdb-add-btn${isAdded ? ' added' : ''}"
-            onclick="event.stopPropagation();toggleSearchAdd('${t.id}')">
-            ${isAdded ? '✓ 追加済' : '＋ 追加'}
-          </button>
-        </div>
-      </div>
-      <div class="tdb-card-remind t-remind-row">
-        <button class="t-bell-btn${isRemind ? ' is-on' : ''}" id="bell-${t.id}"
-          onclick="event.stopPropagation();_toggleBell('${t.id}')" aria-label="リマインド">
-          ${bellSvg}
-        </button>
-        <button class="t-remind-pill${isRemind ? ' is-set visible' : ''}" id="pill-${t.id}"
-          onclick="event.stopPropagation();openRemindSheet('${t.id}')"
-          aria-label="通知タイミング">
-          ${pillLabel}${chevSvg}
-        </button>
-      </div>
-    </div>`;
-  };
-})();
-
-// ── page-search に切り替わったとき初期化 ──
-// ★ Fix: _tdbInitは初回1回のみ。_p2RenderCardsはapplySearchFiltersフックが担うため削除
-let _tdbInitDone = false;
-(function patchSwitchPage() {
-  const _origSwitch = window.switchPage;
-  window.switchPage = function(page) {
-    if (typeof _origSwitch === 'function') _origSwitch(page);
-    if (page === 'search') {
-      requestAnimationFrame(() => {
-        // 初回のみ_tdbInit（2回目以降は不要）
-        if (!_tdbInitDone) {
-          _tdbInitDone = true;
-          _tdbInit();
-        }
-        // アバター再同期
-        const mainAv = document.querySelector('#page-calendar .app-avatar, .app-header .app-avatar');
-        const tdbAv  = document.getElementById('tdb-avatar');
-        if (mainAv && tdbAv) tdbAv.textContent = mainAv.textContent;
-        // ★ _p2RenderCardsはapplySearchFiltersのhook経由で呼ばれるため不要
-        // _p2RenderCards(); ← 削除：重複描画の原因
-      });
-    }
-  };
-})();
-
-// 初回（DOMロード後）
-document.addEventListener('DOMContentLoaded', function() {
-  // ハンバーガー2の接続（既存の drawer open 関数を使う）
-  const hb2 = document.getElementById('hamburger-btn-2');
-  if (hb2) {
-    hb2.addEventListener('click', () => {
-      if (typeof openDrawer === 'function') openDrawer();
-    });
-  }
-  // カレンダーページのアバターをtdbに同期するオブザーバー
-  const mainAv = document.querySelector('.app-avatar');
-  if (mainAv) {
-    const obs = new MutationObserver(() => {
-      const tdbAv = document.getElementById('tdb-avatar');
-      if (tdbAv) tdbAv.textContent = mainAv.textContent;
-    });
-    obs.observe(mainAv, { childList: true, characterData: true, subtree: true });
-  }
-});
-</script>
-
-<!-- ================================================================ -->
-<!-- ★★★ Phase2: 大会カードUI + 詳細モーダル JavaScript ★★★        -->
-<!-- ================================================================ -->
-<script>
-// ================================================================
-// Phase2 大会データ構造（手動追加可能）
-// ================================================================
-
-// ─── カラーマップ（カテゴリキー → カラー）───
-const TDB_CAT_COLORS = {
-  jgto: '#1AAF7A', acn: '#2A9D7E', qt: '#A0631A', qualifier: '#B07015',
-  jpga: '#2D7DD2', senior: '#7B4DB5', atp: '#4A7A8A', fj: '#3D7A6E',
-  future: '#7A6040', doucus: '#8A5A30', pa: '#5A6A80', 'pref-open': '#7B4DB5',
-  overseas: '#3A4A6A',
-  jlpga: '#D0567E', stepup: '#E0688A', 'qt-w': '#B04070', 'qualifier-w': '#C05878',
-  'next-h': '#C06880', oneday: '#A05068', 'open-w': '#8A4060',
-  lpga: '#904870', klpga: '#7A3A5E',
-  personal: '#6B6ED4', open: '#7B4DB5',
-};
-
-// ─── ダミーデータ（後から1件ずつ追加できる構造） ───
-// 新しい大会を追加するには TDB_TOURNAMENTS 配列にオブジェクトを追加してください
-const TDB_TOURNAMENTS = [
-  {
-    // ─ 識別子 ─
-    id: 'dummy-001',
-    // ─ 基本 ─
-    name: 'Future Tour Kanto Open 2025',
-    cat: 'future',           // カテゴリキー
-    tour: 'Future Tour',     // ツアー名（任意）
-    gender: 'men',           // 'men' | 'women'
-    status: 'upcoming',      // 'live'|'upcoming'|'ended'（startDate/endDateから自動計算も可）
-    // ─ 日程 ─
-    startDate: '2025-09-05',
-    endDate:   '2025-09-07',
-    entryDeadline:  '2025-08-20',
-    cancelDeadline: '2025-08-28',
-    // ─ 会場 ─
-    pref:    '千葉県',
-    region:  'kanto',        // エリアキー（kanto/kansai/chubu/kyushu/hokkaido/overseas）
-    venue:   '○○カントリークラブ',
-    course:  '',             // コース名（任意）
-    country: 'Japan',        // 国（任意、海外大会用）
-    // ─ 主催 ─
-    organizer: 'Future Tour 事務局',
-    // ─ 金額 ─
-    prizeTotal:  '¥3,000,000',
-    prizeWinner: '¥600,000',
-    entryFee:    '¥30,000',
-    practiceFee: '¥8,000',
-    // ─ エントリー ─
-    entryMethod:   'オンラインフォーム',
-    qualification: 'アマ可・ハンディキャップ12以下',
-    capacity:      '60名',
-    // ─ リンク（linksオブジェクト形式） ─
-    links: {
-      website:   'https://example.com',
-      instagram: '',
-      entryForm: 'https://example.com/entry',
-      pairings:  '',
-      liveScore: '',
-      youtube:   '',
-      x:         '',
-    },
-    // ─ 備考 ─
-    notes: '',
-  },
-  {
-    id: 'dummy-002',
-    name: 'DOUCUS OPEN Spring Classic',
-    cat: 'doucus',
-    gender: 'men',
-    status: 'upcoming',
-    startDate: '2025-10-10',
-    endDate:   '2025-10-12',
-    entryDeadline: '2025-09-25',
-    pref: '神奈川県',
-    venue: '△△ゴルフリゾート',
-    organizer: 'DOUCUS実行委員会',
-    prizeTotal:  '¥5,000,000',
-    prizeWinner: '¥1,000,000',
-    entryFee:    '¥35,000',
-    practiceFee: '¥10,000',
-    entryMethod:    'メール・郵送',
-    qualification:  'プロ・アマ可（ハンディ10以下）',
-    capacity:       '72名',
-    cancelDeadline: '2025-10-01',
-    website:     'https://example.com',
-    instagram:   'https://instagram.com/doucus',
-    entryForm:   '',
-    pairings:    '',
-    liveScore:   '',
-  },
-  {
-    id: 'dummy-003',
-    name: 'NEXT HEROINE TOUR Vol.8',
-    cat: 'next-h',
-    gender: 'women',
-    status: 'upcoming',
-    startDate: '2025-09-20',
-    endDate:   '2025-09-21',
-    entryDeadline: '2025-09-10',
-    pref: '埼玉県',
-    venue: '□□レディースCC',
-    organizer: 'NEXT HEROINE事務局',
-    prizeTotal:  '¥2,000,000',
-    prizeWinner: '¥400,000',
-    entryFee:    '¥22,000',
-    practiceFee: '',
-    entryMethod:    'オンラインフォーム',
-    qualification:  '女子アマ・プロ可',
-    capacity:       '50名',
-    cancelDeadline: '2025-09-15',
-    website:     '',
-    instagram:   'https://instagram.com/next_heroine',
-    entryForm:   'https://example.com/entry',
-    pairings:    '',
-    liveScore:   '',
-  },
-  {
-    id: 'dummy-004',
-    name: '○○県知事杯 Prefecture Open 2025',
-    cat: 'pref-open',
-    gender: 'men',
-    status: 'ended',
-    startDate: '2025-07-15',
-    endDate:   '2025-07-16',
-    entryDeadline: '2025-07-01',
-    pref: '○○県',
-    venue: '県立ゴルフ場',
-    organizer: '○○県ゴルフ連盟',
-    prizeTotal:  '¥1,500,000',
-    prizeWinner: '¥300,000',
-    entryFee:    '¥18,000',
-    practiceFee: '¥5,000',
-    entryMethod:    '郵送のみ',
-    qualification:  '○○県内在住・在勤者',
-    capacity:       '96名',
-    cancelDeadline: '2025-07-08',
-    website:     'https://example.com',
-    instagram:   '',
-    entryForm:   '',
-    pairings:    'https://example.com/pairings',
-    liveScore:   'https://example.com/score',
-  },
-  {
-    id: 'dummy-005',
-    name: 'P&A CUP Autumn Series',
-    cat: 'pa',
-    gender: 'men',
-    status: 'upcoming',
-    startDate: '2025-11-03',
-    endDate:   '2025-11-04',
-    entryDeadline: '2025-10-20',
-    pref: '静岡県',
-    venue: '◇◇ゴルフ＆リゾート',
-    organizer: 'P&A CUP実行委員会',
-    prizeTotal:  '¥4,000,000',
-    prizeWinner: '¥800,000',
-    entryFee:    '¥28,000',
-    practiceFee: '¥7,500',
-    entryMethod:    'オンラインフォーム',
-    qualification:  'プロ・認定アマチュア',
-    capacity:       '80名',
-    cancelDeadline: '2025-10-27',
-    website:     'https://example.com',
-    instagram:   '',
-    entryForm:   'https://example.com/entry',
-    pairings:    '',
-    liveScore:   '',
-  },
-];
-
-// ================================================================
-// Phase2 カード描画
-// ================================================================
-
-// カテゴリラベルマップ（Phase1と統合）
-const TDB_P2_CAT_LABELS = {
-  jgto:'JGTO', acn:'ACNツアー', qt:'QT', qualifier:'予選会', jpga:'JPGA',
-  senior:'シニア', atp:'ATP GOLF', fj:'FJ TOUR', future:'Future Tour',
-  doucus:'DOUCUS OPEN', pa:'P&A CUP', 'pref-open':'県オープン', overseas:'海外',
-  jlpga:'JLPGA', stepup:'ステップアップ', 'qt-w':'QT', 'qualifier-w':'予選会',
-  'next-h':'NEXT HEROINE', oneday:'One Day Tour', 'open-w':'女子オープン',
-  lpga:'LPGA', klpga:'KLPGA',
-};
-
-// アイコン SVG ヘルパー
-function _svgCal(){ return `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="2" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1v2M9 1v2M1 5h11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`; }
-function _svgPin(){ return `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1C4.567 1 3 2.567 3 4.5c0 3 3.5 6.5 3.5 6.5S10 7.5 10 4.5C10 2.567 8.433 1 6.5 1Z" stroke="currentColor" stroke-width="1.2"/><circle cx="6.5" cy="4.5" r="1.2" stroke="currentColor" stroke-width="1.1"/></svg>`; }
-function _svgClock(){ return `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 4v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`; }
-function _svgGolf(){ return `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M5 11.5c0-.828 1.343-1.5 3-1.5s3 .672 3 1.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><line x1="8" y1="2" x2="8" y2="10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M8 2l-3 2 3 2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
-
-// 日付フォーマット
-function _fmtDateRange(start, end) {
-  if (!start) return '—';
-  const s = start.slice(5).replace('-','/');
-  if (!end || start === end) return `${start.slice(0,4)}年 ${s}`;
-  const e = end.slice(5).replace('-','/');
-  return `${start.slice(0,4)}年 ${s} 〜 ${e}`;
-}
-function _fmtDeadline(d) {
-  if (!d) return '—';
-  return `${d.slice(0,4)}年 ${d.slice(5).replace('-','/')}`;
-}
-
-// カード1件のHTML生成
-function _p2CardHTML(t) {
-  const catColor = TDB_CAT_COLORS[t.cat] || '#888';
-  const catLabel = TDB_P2_CAT_LABELS[t.cat] || t.cat;
-  const statusMap = { live:'開催中', upcoming:'予定', ended:'終了' };
-  const statusLabel = statusMap[t.status] || '予定';
-  const genderLabel = t.gender === 'women' ? '女子' : '男子';
-  const genderTag = t.gender === 'women'
-    ? `<span class="tdb-p2-tag tdb-p2-tag-women">♀ ${genderLabel}</span>`
-    : `<span class="tdb-p2-tag tdb-p2-tag-men">♂ ${genderLabel}</span>`;
-  const statusClass = `tdb-p2-tag-status-${t.status || 'upcoming'}`;
-  const dateStr = _fmtDateRange(t.startDate, t.endDate);
-  const deadlineStr = _fmtDeadline(t.entryDeadline);
-
-  return `
-<div class="tdb-p2-card" data-tid="${t.id}" onclick="openTournamentModal('${t.id}')">
-  <div class="tdb-p2-bar" style="background:linear-gradient(180deg,${catColor},${catColor}99);"></div>
-  <div class="tdb-p2-inner">
-    <!-- 上段 -->
-    <div class="tdb-p2-top">
-      <div class="tdb-p2-title-block">
-        <div class="tdb-p2-name">${t.name}</div>
-        <div class="tdb-p2-tags">
-          <span class="tdb-p2-tag tdb-p2-tag-cat" style="background:${catColor}18;color:${catColor};border-color:${catColor}33;">${catLabel}</span>
-          ${genderTag}
-          <span class="tdb-p2-tag ${statusClass}">${statusLabel}</span>
-        </div>
-      </div>
-      <button class="tdb-p2-fav" onclick="event.stopPropagation();_p2ToggleFav('${t.id}',this)" aria-label="お気に入り">★</button>
-    </div>
-    <!-- 中段 -->
-    <div class="tdb-p2-info">
-      <div class="tdb-p2-info-item">
-        <div class="tdb-p2-info-icon">${_svgCal()}</div>
-        <div class="tdb-p2-info-text">
-          <span class="tdb-p2-info-label">開催日</span>
-          <span class="tdb-p2-info-value">${dateStr}</span>
-        </div>
-      </div>
-      <div class="tdb-p2-info-item">
-        <div class="tdb-p2-info-icon">${_svgClock()}</div>
-        <div class="tdb-p2-info-text">
-          <span class="tdb-p2-info-label">締切</span>
-          <span class="tdb-p2-info-value">${t.entryDeadline ? t.entryDeadline.slice(5).replace('-','/') : '—'}</span>
-        </div>
-      </div>
-      <div class="tdb-p2-info-item">
-        <div class="tdb-p2-info-icon">${_svgPin()}</div>
-        <div class="tdb-p2-info-text">
-          <span class="tdb-p2-info-label">開催県</span>
-          <span class="tdb-p2-info-value">${t.pref || '—'}</span>
-        </div>
-      </div>
-      <div class="tdb-p2-info-item">
-        <div class="tdb-p2-info-icon">${_svgGolf()}</div>
-        <div class="tdb-p2-info-text">
-          <span class="tdb-p2-info-label">会場</span>
-          <span class="tdb-p2-info-value">${t.venue || '—'}</span>
-        </div>
-      </div>
-    </div>
-    <!-- 区切り -->
-    <div class="tdb-p2-divider"></div>
-    <!-- 下段：金額 -->
-    <div class="tdb-p2-money">
-      <div class="tdb-p2-money-item">
-        <span class="tdb-p2-money-label">賞金総額</span>
-        <span class="tdb-p2-money-value is-prize">${t.prizeTotal || '—'}</span>
-      </div>
-      <div class="tdb-p2-money-sep"></div>
-      <div class="tdb-p2-money-item">
-        <span class="tdb-p2-money-label">エントリー費</span>
-        <span class="tdb-p2-money-value">${t.entryFee || '—'}</span>
-      </div>
-    </div>
-  </div>
-  <!-- フッター：アクション -->
-  <div class="tdb-p2-footer">
-    <button class="tdb-p2-action" onclick="event.stopPropagation();_p2AddCal('${t.id}')" aria-label="カレンダー追加">
-      ${_svgCal()} カレンダー
-    </button>
-    <div class="tdb-p2-action-sep"></div>
-    <button class="tdb-p2-action" onclick="openTournamentModal('${t.id}')" aria-label="詳細">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 5.5v4M6.5 4.2v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-      詳細
-    </button>
-    <div class="tdb-p2-action-sep"></div>
-    <button class="tdb-p2-action is-entry" onclick="event.stopPropagation();_p2Entry('${t.id}')" aria-label="エントリー">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2v9M2 6.5h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-      エントリー
-    </button>
-  </div>
-</div>`;
-}
-
-// カードリスト描画
-function _p2RenderCards() {
-  const listEl = document.getElementById('search-list');
-  if (!listEl) return;
-
-  // 既存の検索テキスト入力がある場合は既存の検索UIに任せる（壊さない）
-  const searchInp = document.getElementById('search-input');
-  if (searchInp && searchInp.value.trim().length > 0) return;
-
-  // フィルタリング：性別 + カテゴリ
-  const gender = typeof _tdbGender !== 'undefined' ? _tdbGender : 'men';
-  const cat    = typeof _tdbActiveCat !== 'undefined' ? _tdbActiveCat : 'all';
-
-  const filtered = TDB_TOURNAMENTS.filter(t => {
-    if (t.gender !== gender) return false;
-    if (cat !== 'all' && t.cat !== cat) return false;
-    return true;
-  });
-
-  // セクションヘッダー + カード群を構築
-  const count = filtered.length;
-  const sectionHd = `<div class="tdb-p2-section-hd">
-    <span class="tdb-p2-section-title">大会一覧</span>
-    <span class="tdb-p2-section-count">${count}件</span>
-  </div>`;
-
-  const cards = filtered.length > 0
-    ? filtered.map(_p2CardHTML).join('')
-    : `<div class="tdb-p2-empty">
-        <div class="tdb-p2-empty-icon">⛳</div>
-        <div class="tdb-p2-empty-title">大会が見つかりません</div>
-        <div class="tdb-p2-empty-desc">カテゴリや性別を変更してみてください</div>
-      </div>`;
-
-  listEl.innerHTML = sectionHd + cards;
-
-  // result-count 更新
-  const rc = document.getElementById('result-count');
-  if (rc) rc.textContent = `${count}件の大会`;
-}
-
-// お気に入り切替
-function _p2ToggleFav(id, btn) {
-  btn.classList.toggle('is-fav');
-  if (typeof showToast === 'function') {
-    showToast(btn.classList.contains('is-fav') ? 'お気に入りに追加しました' : 'お気に入りを解除しました');
-  }
-}
-
-// カレンダーに追加
-function _p2AddCal(id) {
-  const t = TDB_TOURNAMENTS.find(x => x.id === id);
-  if (!t) return;
-  // 既存の prefillForm / openCreateModal を流用
-  if (typeof openCreateModal === 'function' || typeof openModal === 'function') {
-    if (window.selectedDate !== undefined) window.selectedDate = t.startDate;
-    if (typeof prefillForm === 'function') {
-      // 仮の大会オブジェクトで既存フォームを開く
-      const pseudo = {
-        id: t.id,
-        name: t.name,
-        start: t.startDate,
-        end: t.endDate || t.startDate,
-        cat: t.cat,
-        place: t.venue || t.pref || '',
-        memo: `主催：${t.organizer||''} / エントリー費：${t.entryFee||'—'}`,
-      };
-      if (typeof toggleSearchAdd === 'function') toggleSearchAdd(t.id);
-      else if (typeof showToast === 'function') showToast('カレンダーに追加しました');
-    } else {
-      if (typeof showToast === 'function') showToast('カレンダーに追加しました');
-    }
-  } else {
-    if (typeof showToast === 'function') showToast('カレンダーに追加しました');
-  }
-}
-
-// エントリー
-function _p2Entry(id) {
-  const t = TDB_TOURNAMENTS.find(x => x.id === id);
-  if (!t) return;
-  if (t.entryForm) {
-    window.open(t.entryForm, '_blank');
-  } else if (t.website) {
-    window.open(t.website, '_blank');
-  } else {
-    if (typeof showToast === 'function') showToast('エントリーURLが登録されていません');
-  }
-}
-
-// 既存の性別・カテゴリ変更後にPhase2カードも再描画
-(function patchTdbFilters() {
-  const origSetGender = window._tdbSetGender;
-  window._tdbSetGender = function(gender) {
-    if (typeof origSetGender === 'function') origSetGender(gender);
-    requestAnimationFrame(_p2RenderCards);
-  };
-  const origSetCat = window._tdbSetCat;
-  window._tdbSetCat = function(key) {
-    if (typeof origSetCat === 'function') origSetCat(key);
-    requestAnimationFrame(_p2RenderCards);
-  };
-  const origSetScope = window._tdbSetScope;
-  window._tdbSetScope = function(scope) {
-    if (typeof origSetScope === 'function') origSetScope(scope);
-    requestAnimationFrame(_p2RenderCards);
-  };
-})();
-
-// ================================================================
-// Phase2 大会詳細モーダル
-// ================================================================
-
-let _tdmCurrentId = null;
-let _tdmDragStartY = 0;
-let _tdmDragCurrentY = 0;
-let _tdmIsDragging = false;
-
-// モーダルを開く
-window.openTournamentModal = function(id) {
-  const t = TDB_TOURNAMENTS.find(x => x.id === id);
-  if (!t) return;
-  _tdmCurrentId = id;
-
-  // データを流し込む
-  _tdmFill(t);
-
-  // アニメーション表示
-  const overlay = document.getElementById('tdm-overlay');
-  const sheet   = document.getElementById('tdm-sheet');
-  if (!overlay || !sheet) return;
-
-  overlay.classList.add('show');
-  // nextFrame で transform を開始（ブラウザが描画する前にshow追加するとアニメーションが飛ぶ）
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      sheet.classList.add('show');
-    });
-  });
-
-  // スクロール位置をトップに
-  const scroll = document.getElementById('tdm-scroll');
-  if (scroll) scroll.scrollTop = 0;
-
-  // ドラッグ（スワイプ閉じ）バインド
-  _tdmBindDrag();
-};
-
-// モーダルを閉じる
-window.closeTournamentModal = function() {
-  const overlay = document.getElementById('tdm-overlay');
-  const sheet   = document.getElementById('tdm-sheet');
-  if (!overlay || !sheet) return;
-  sheet.classList.remove('show');
-  overlay.classList.remove('show');
-  _tdmCurrentId = null;
-  // transform リセット（ドラッグ後の残留値）
-  setTimeout(() => { sheet.style.transform = ''; }, 420);
-};
-
-// 背景タップで閉じる
-window._tdmCloseOnBg = function(e) {
-  if (e.target === document.getElementById('tdm-overlay')) {
-    closeTournamentModal();
-  }
-};
-
-// ─── データ流し込み ───
-function _tdmFill(t) {
-  // タイトル
-  const titleEl = document.getElementById('tdm-title');
-  if (titleEl) titleEl.textContent = t.name;
-
-  // ヘッダータグ
-  const tagsEl = document.getElementById('tdm-header-tags');
-  if (tagsEl) {
-    const catColor = TDB_CAT_COLORS[t.cat] || '#888';
-    const catLabel = TDB_P2_CAT_LABELS[t.cat] || t.cat;
-    const statusMap = { live:'開催中', upcoming:'予定', ended:'終了' };
-    const genderLabel = t.gender === 'women' ? '♀ 女子' : '♂ 男子';
-    const genderCls = t.gender === 'women' ? 'tdm-tag-women' : 'tdm-tag-men';
-    tagsEl.innerHTML = `
-      <span class="tdm-tag tdm-tag-cat" style="background:${catColor}18;color:${catColor};border-color:${catColor}33;">${catLabel}</span>
-      <span class="tdm-tag ${genderCls}">${genderLabel}</span>
-      <span class="tdm-tag tdm-tag-${t.status||'upcoming'}">${statusMap[t.status]||'予定'}</span>
-    `;
-  }
-
-  // ヘッダーライン（カテゴリカラー）
-  const lineEl = document.getElementById('tdm-header-line');
-  if (lineEl) {
-    const catColor = TDB_CAT_COLORS[t.cat] || 'var(--green-main)';
-    lineEl.style.background = `linear-gradient(90deg, ${catColor}, ${catColor}44)`;
-  }
-
-  // 基本情報
-  _setTdmVal('tdm-dates',          _fmtDateRange(t.startDate, t.endDate));
-  _setTdmVal('tdm-entry-deadline', _fmtDeadline(t.entryDeadline));
-  _setTdmVal('tdm-venue',          t.venue);
-  _setTdmVal('tdm-pref',           t.pref);
-  _setTdmVal('tdm-organizer',      t.organizer);
-
-  // 金額
-  _setTdmMoney('tdm-prize-total',   t.prizeTotal);
-  _setTdmMoney('tdm-prize-winner',  t.prizeWinner);
-  _setTdmMoney('tdm-entry-fee',     t.entryFee,    true);
-  _setTdmMoney('tdm-practice-fee',  t.practiceFee, true);
-
-  // エントリー情報
-  _setTdmVal('tdm-entry-method',    t.entryMethod);
-  _setTdmVal('tdm-qualification',   t.qualification);
-  _setTdmVal('tdm-capacity',        t.capacity);
-  _setTdmVal('tdm-cancel-deadline', _fmtDeadline(t.cancelDeadline));
-
-  // リンク
-  _renderTdmLinks(t);
-}
-
-function _setTdmVal(id, val) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (val) {
-    el.textContent = val;
-    el.classList.remove('is-empty');
-  } else {
-    el.textContent = '未登録';
-    el.classList.add('is-empty');
-  }
-}
-
-function _setTdmMoney(id, val, isFee) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (val) {
-    el.textContent = val;
-    el.classList.remove('is-empty');
-  } else {
-    el.textContent = '未登録';
-    el.classList.add('is-empty');
-  }
-}
-
-function _renderTdmLinks(t) {
-  const container = document.getElementById('tdm-links-list');
-  if (!container) return;
-
-  const linkDefs = [
-    { key:'website',   icon:'🌐', label:'公式ホームページ',    url: t.website },
-    { key:'instagram', icon:'📷', label:'Instagram',           url: t.instagram },
-    { key:'entryForm', icon:'📝', label:'エントリーフォーム',  url: t.entryForm },
-    { key:'pairings',  icon:'📋', label:'組み合わせ',          url: t.pairings },
-    { key:'liveScore', icon:'📊', label:'結果速報',            url: t.liveScore },
-  ];
-
-  container.innerHTML = linkDefs.map(l => {
-    const isEmpty = !l.url;
-    const urlDisplay = l.url ? l.url.replace(/^https?:\/\//, '').split('/')[0] : '未登録';
-    return `<a class="tdm-link-btn${isEmpty ? ' is-empty' : ''}"
-        href="${l.url || '#'}"
-        ${l.url ? 'target="_blank" rel="noopener"' : 'onclick="return false"'}>
-      <div class="tdm-link-icon" style="background:${isEmpty ? '#F2F4F6' : '#F0FAF5'};">${l.icon}</div>
-      <div class="tdm-link-text">
-        <span class="tdm-link-label">${l.label}</span>
-        <span class="tdm-link-url">${urlDisplay}</span>
-      </div>
-      <span class="tdm-link-arrow">${isEmpty ? '' : '›'}</span>
-    </a>`;
-  }).join('');
-}
-
-// CTAボタン
-window._tdmEntry = function() {
-  const t = TDB_TOURNAMENTS.find(x => x.id === _tdmCurrentId);
-  if (!t) return;
-  if (t.entryForm) window.open(t.entryForm, '_blank');
-  else if (t.website) window.open(t.website, '_blank');
-  else if (typeof showToast === 'function') showToast('エントリーURLが登録されていません');
-};
-
-window._tdmAddCal = function() {
-  if (!_tdmCurrentId) return;
-  _p2AddCal(_tdmCurrentId);
-  // ボタンを「追加済み」に変える
-  const btn = document.getElementById('tdm-cta-cal');
-  if (btn) {
-    btn.textContent = '✓ 追加済み';
-    btn.classList.add('is-added-cal');
-    btn.style.color = '#7A9E94';
-  }
-};
-
-// ─── スワイプ（下ドラッグ）で閉じる ───
-function _tdmBindDrag() {
-  const sheet   = document.getElementById('tdm-sheet');
-  const grabber = document.getElementById('tdm-grabber');
-  const header  = document.getElementById('tdm-header');
-  if (!sheet) return;
-
-  let startY = 0;
-  let isDragging = false;
-
-  function onStart(e) {
-    const y = e.touches ? e.touches[0].clientY : e.clientY;
-    startY = y;
-    isDragging = true;
-    sheet.classList.add('is-dragging');
-  }
-  function onMove(e) {
-    if (!isDragging) return;
-    const y = e.touches ? e.touches[0].clientY : e.clientY;
-    const delta = Math.max(0, y - startY);
-    sheet.style.transform = `translateY(${delta}px)`;
-  }
-  function onEnd(e) {
-    if (!isDragging) return;
-    isDragging = false;
-    sheet.classList.remove('is-dragging');
-    const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-    const delta = y - startY;
-    if (delta > 90) {
-      closeTournamentModal();
-    } else {
-      // snap back
-      sheet.style.transition = 'transform 0.32s cubic-bezier(.32,.72,0,1)';
-      sheet.style.transform = 'translateY(0)';
-      setTimeout(() => { sheet.style.transition = ''; }, 340);
-    }
-  }
-
-  // 既存イベントを除去（重複防止）
-  const dragTargets = [grabber, header].filter(Boolean);
-  dragTargets.forEach(el => {
-    const clone = el.cloneNode(true);
-    el.parentNode.replaceChild(clone, el);
-  });
-
-  // 再取得してバインド
-  const g2 = document.getElementById('tdm-grabber');
-  const h2 = document.getElementById('tdm-header');
-  [g2, h2].filter(Boolean).forEach(el => {
-    el.addEventListener('touchstart', onStart, { passive: true });
-    el.addEventListener('touchmove',  onMove,  { passive: true });
-    el.addEventListener('touchend',   onEnd,   { passive: true });
-  });
-}
-
-// ================================================================
-// 初期描画：DOMロード後
-// ================================================================
-document.addEventListener('DOMContentLoaded', function() {
-  // ページが search なら即座に描画
-  const searchPage = document.getElementById('page-search');
-  if (searchPage && searchPage.classList.contains('active')) {
-    requestAnimationFrame(_p2RenderCards);
-  }
-
-  // ★ Fix: applySearchFilters hook - P2カード描画をdebounce付きで実行
-  // 連続呼び出し時の多重描画を防ぐ
-  let _p2RenderDebounce = null;
-  const _origApply = window.applySearchFilters;
-  window.applySearchFilters = function() {
-    if (typeof _origApply === 'function') _origApply.apply(this, arguments);
-    // 検索テキストが空の場合のみP2カードを表示（debounce付き）
-    const inp = document.getElementById('search-input');
-    if (!inp || inp.value.trim().length === 0) {
-      clearTimeout(_p2RenderDebounce);
-      _p2RenderDebounce = setTimeout(function(){
-        requestAnimationFrame(_p2RenderCards);
-      }, 30);
-    }
-  };
-});
-</script>
-
-<!-- ================================================================ -->
-<!-- ★★★ Phase3: 実運用向けデータ構造最適化 + UX仕上げ + パフォーマンス改善 ★★★ -->
-<!-- ================================================================ -->
-<script>
-// ================================================================
-// Phase3-①: 拡張済みデータ構造テンプレート（運用マスタ）
-// ================================================================
-// 【大会データ追加方法】
-// TDB_TOURNAMENTS 配列に以下フォーマットでオブジェクトを追加するだけで
-// ・検索/フィルタ/カレンダー/詳細モーダル 全てに自動反映されます
-//
-// ── フィールド一覧 ──────────────────────────────
-// 必須: id(ユニーク文字列), name, cat, gender, startDate, endDate
-// 推奨: entryDeadline, pref, venue, status
-// 任意: organizer, prizeTotal, prizeWinner, entryFee, practiceFee,
-//       entryMethod, qualification, capacity, cancelDeadline,
-//       tour, region, country, course, notes,
-//       links: { website, instagram, entryForm, pairings, liveScore, youtube, x }
-// ────────────────────────────────────────────────
-
-/**
- * 大会データを安全に追加するヘルパー関数
- * @param {Object} t - 大会データオブジェクト
- */
-window.addTournament = function(t) {
-  if (!t || !t.id || !t.name || !t.startDate) {
-    console.warn('[ProNexaX] addTournament: 必須フィールドが不足しています', t);
-    return false;
-  }
-  // 重複チェック
-  const exists = TDB_TOURNAMENTS.find(x => x.id === t.id);
-  if (exists) {
-    console.warn('[ProNexaX] addTournament: 同IDが既に存在します:', t.id);
-    return false;
-  }
-  // デフォルト値補完
-  const normalized = {
-    status: _p3CalcStatus(t.startDate, t.endDate),
-    gender: 'men',
-    ...t,
-    // links をネスト構造に正規化（旧フラットフィールドも互換）
-    links: t.links || {
-      website:   t.website   || '',
-      instagram: t.instagram || '',
-      entryForm: t.entryForm || '',
-      pairings:  t.pairings  || '',
-      liveScore: t.liveScore || '',
-      youtube:   t.youtube   || '',
-      x:         t.x         || '',
-    },
-  };
-  TDB_TOURNAMENTS.push(normalized);
-  // キャッシュクリア
-  _p3Cache.filtered = null;
-  return true;
-};
-
-/**
- * 日付から自動ステータス計算
- */
-function _p3CalcStatus(startDate, endDate) {
-  if (!startDate) return 'upcoming';
-  const today = _p3TodayStr();
-  const end = endDate || startDate;
-  if (today < startDate) return 'upcoming';
-  if (today > end) return 'ended';
-  return 'live';
-}
-
-/**
- * 全大会のステータスを今日基準で自動更新（1日1回想定）
- */
-function _p3RefreshStatuses() {
-  TDB_TOURNAMENTS.forEach(t => {
-    if (t.startDate) {
-      t.status = _p3CalcStatus(t.startDate, t.endDate);
-    }
-  });
-}
-
-// ================================================================
-// Phase3-②: フィルター＆検索パフォーマンス最適化
-// ================================================================
-
-// ── フィルター結果キャッシュ ──
-const _p3Cache = {
-  filtered: null,
-  lastGender: null,
-  lastCat: null,
-  lastQ: '',
-  lastScope: null,
-};
-
-/**
- * debounce: 連続呼び出しを遅延まとめ
- * iPhone Safari での入力遅延を防ぐ
- */
-function _p3Debounce(fn, ms) {
-  let timer = null;
-  return function(...args) {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => { timer = null; fn.apply(this, args); }, ms);
-  };
-}
-
-/**
- * 高速フィルター（キャッシュ付き）
- * TDB_TOURNAMENTS を性別・カテゴリ・テキストで絞り込む
- */
-function _p3FilterTournaments(gender, cat, q, scope) {
-  const cacheKey = `${gender}|${cat}|${q}|${scope}`;
-  if (_p3Cache.filtered && _p3Cache.key === cacheKey) {
-    return _p3Cache.filtered;
-  }
-  const kw = q ? q.toLowerCase() : '';
-  const result = TDB_TOURNAMENTS.filter(t => {
-    if (t.gender !== gender) return false;
-    if (cat !== 'all' && t.cat !== cat) return false;
-    if (scope === 'overseas' && (t.cat !== 'overseas' && t.cat !== 'pga' && t.cat !== 'lpga' && t.cat !== 'klpga')) return false;
-    if (scope === 'domestic' && (t.cat === 'overseas' || t.cat === 'pga' || t.cat === 'lpga' || t.cat === 'klpga')) return false;
-    if (kw) {
-      const name  = (t.name  || '').toLowerCase();
-      const pref  = (t.pref  || '').toLowerCase();
-      const venue = (t.venue || '').toLowerCase();
-      const org   = (t.organizer || '').toLowerCase();
-      if (!name.includes(kw) && !pref.includes(kw) && !venue.includes(kw) && !org.includes(kw)) return false;
-    }
-    return true;
-  });
-  // 日付昇順（upcoming→live→ended）
-  result.sort((a, b) => {
-    const statusRank = { live: 0, upcoming: 1, ended: 2 };
-    const sa = statusRank[a.status] ?? 1;
-    const sb = statusRank[b.status] ?? 1;
-    if (sa !== sb) return sa - sb;
-    return (a.startDate || '').localeCompare(b.startDate || '');
-  });
-  _p3Cache.filtered = result;
-  _p3Cache.key = cacheKey;
-  return result;
-}
-
-// 今日の日付文字列
-function _p3TodayStr() {
-  const t = new Date();
-  return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
-}
-
-// ================================================================
-// Phase3-③: スクロール性能改善・タッチUX最適化
-// ================================================================
-
-/**
- * スクロール可能な要素にパフォーマンス最適化を適用
- * - will-change: transform（GPU合成レイヤー）
- * - touch-action: pan-y（水平スクロール干渉防止）
- * - overscroll-behavior: contain（バウンス伝播防止）
- */
-function _p3OptimizeScrollContainers() {
-  const selectors = [
-    '.tdm-scroll',
-    '.search-scroll',
-    '.cal-scroll',
-    '.drawer-scroll',
-    '.tdb-cat-scroll',
-    '.cal-multi-day',
-    '#search-list',
-  ];
-  selectors.forEach(sel => {
-    document.querySelectorAll(sel).forEach(el => {
-      el.style.webkitOverflowScrolling = 'touch';
-      el.style.overscrollBehavior = 'contain';
-    });
-  });
-}
-
-/**
- * カード要素にタップフィードバックのhaptics最適化
- * - cursor: pointer付加
- * - -webkit-tap-highlight-color 無効化確認
- */
-function _p3OptimizeTapTargets() {
-  const selectors = [
-    '.tdb-p2-card',
-    '.tdb-card',
-    '.tdm-link-btn',
-    '.tdb-p2-action',
-  ];
-  selectors.forEach(sel => {
-    document.querySelectorAll(sel).forEach(el => {
-      if (!el._p3Optimized) {
-        el._p3Optimized = true;
-        // タップ時の即時視覚フィードバック（transformベース）
-        el.addEventListener('touchstart', _p3OnCardTouchStart, { passive: true });
-        el.addEventListener('touchend',   _p3OnCardTouchEnd,   { passive: true });
-        el.addEventListener('touchcancel',_p3OnCardTouchEnd,   { passive: true });
-      }
-    });
-  });
-}
-
-function _p3OnCardTouchStart(e) {
-  this._p3TouchTarget = e.currentTarget || this;
-  // will-changeを動的セット（アニメーション直前のみ）
-  this.style.willChange = 'transform';
-}
-function _p3OnCardTouchEnd() {
-  const el = this;
-  // will-change を解除（常時ON は逆にメモリ圧迫）
-  setTimeout(() => { el.style.willChange = ''; }, 400);
-}
-
-// ================================================================
-// Phase3-④: iPhone/PWA 最終安定化
-// ================================================================
-
-/**
- * iOS Safari PWA: viewport高さ・safe-area の確実な適用
- * orientationchange / resize 両対応
- */
-(function _p3FixPWALayout() {
-  // CSS変数 --vh を実際のビューポート高に合わせる
-  function setVhVar() {
-    const vh = window.innerHeight * 0.01;
-    document.documentElement.style.setProperty('--vh', `${vh}px`);
-  }
-  setVhVar();
-  // resize: debounce
-  const debouncedSetVh = _p3Debounce(setVhVar, 80);
-  window.addEventListener('resize', debouncedSetVh, { passive: true });
-  // orientationchange: 少し遅延（ブラウザがサイズ確定するのを待つ）
-  window.addEventListener('orientationchange', () => {
-    setTimeout(setVhVar, 200);
-    setTimeout(setVhVar, 600);
-  }, { passive: true });
-})();
-
-/**
- * iOS Safari: 横向き時のUI崩れ防止
- * max-height を innerWidth で固定
- */
-(function _p3PreventLandscapeBreak() {
-  const meta = document.querySelector('meta[name="viewport"]');
-  if (!meta) return;
-  function onOrient() {
-    const angle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
-    if (angle === 90 || angle === -90 || angle === 270) {
-      // 横向き：高さを現在のinnerHeightに固定してズレ防止
-      document.documentElement.style.maxHeight = window.innerHeight + 'px';
-    } else {
-      document.documentElement.style.maxHeight = '';
-    }
-  }
-  window.addEventListener('orientationchange', () => setTimeout(onOrient, 300), { passive: true });
-})();
-
-/**
- * モーダル表示中のbodyスクロール防止（iOS対応）
- * touchmoveをpassiveなしでキャプチャ
- */
-let _p3ModalScrollLocked = false;
-function _p3LockBodyScroll() {
-  if (_p3ModalScrollLocked) return;
-  _p3ModalScrollLocked = true;
-  document.body.style.overflow = 'hidden';
-  document.body.style.position = 'fixed';
-  document.body.style.width = '100%';
-}
-function _p3UnlockBodyScroll() {
-  if (!_p3ModalScrollLocked) return;
-  _p3ModalScrollLocked = false;
-  document.body.style.overflow = '';
-  document.body.style.position = '';
-  document.body.style.width = '';
-}
-
-// 詳細モーダルの開閉にbodyロックを連動
-(function _p3PatchModalScrollLock() {
-  const _origOpen  = window.openTournamentModal;
-  const _origClose = window.closeTournamentModal;
-  window.openTournamentModal = function(id) {
-    _p3LockBodyScroll();
-    if (typeof _origOpen === 'function') _origOpen(id);
-  };
-  window.closeTournamentModal = function() {
-    _p3UnlockBodyScroll();
-    if (typeof _origClose === 'function') _origClose();
-  };
-})();
-
-// ================================================================
-// Phase3-⑤: 詳細モーダルのlinks互換（新旧両フォーマット対応）
-// ================================================================
-
-/**
- * _renderTdmLinks を拡張：
- * 旧フラット形式（t.website, t.instagram...）と
- * 新ネスト形式（t.links.website...）の両方に対応
- */
-(function _p3PatchTdmLinks() {
-  const _origRender = window._renderTdmLinks || function(){};
-  window._renderTdmLinks = function(t) {
-    // 新形式（t.links オブジェクト）を旧フラット形式にマージ
-    const merged = Object.assign({}, t);
-    if (t.links && typeof t.links === 'object') {
-      merged.website   = merged.website   || t.links.website   || '';
-      merged.instagram = merged.instagram || t.links.instagram || '';
-      merged.entryForm = merged.entryForm || t.links.entryForm || '';
-      merged.pairings  = merged.pairings  || t.links.pairings  || '';
-      merged.liveScore = merged.liveScore || t.links.liveScore || '';
-    }
-    const container = document.getElementById('tdm-links-list');
-    if (!container) return;
-    const linkDefs = [
-      { key:'website',   icon:'🌐', label:'公式ホームページ',   url: merged.website   },
-      { key:'instagram', icon:'📷', label:'Instagram',          url: merged.instagram },
-      { key:'entryForm', icon:'📝', label:'エントリーフォーム', url: merged.entryForm },
-      { key:'pairings',  icon:'📋', label:'組み合わせ',         url: merged.pairings  },
-      { key:'liveScore', icon:'📊', label:'結果速報',           url: merged.liveScore },
-      { key:'youtube',   icon:'▶️', label:'YouTube',            url: (t.links && t.links.youtube) || t.youtube || '' },
-      { key:'x',         icon:'𝕏',  label:'X (Twitter)',        url: (t.links && t.links.x) || t.x || '' },
-    ];
-    const rendered = linkDefs.filter(l => l.url).map(l => {
-      const urlDisplay = l.url.replace(/^https?:\/\//, '').split('/')[0];
-      return `<a class="tdm-link-btn" href="${l.url}" target="_blank" rel="noopener">
-        <div class="tdm-link-icon" style="background:#F0FAF5;">${l.icon}</div>
-        <div class="tdm-link-text">
-          <span class="tdm-link-label">${l.label}</span>
-          <span class="tdm-link-url">${urlDisplay}</span>
-        </div>
-        <span class="tdm-link-arrow">›</span>
-      </a>`;
-    });
-    const empty = linkDefs.filter(l => !l.url).map(l => {
-      return `<div class="tdm-link-btn is-empty">
-        <div class="tdm-link-icon" style="background:#F2F4F6;">${l.icon}</div>
-        <div class="tdm-link-text">
-          <span class="tdm-link-label">${l.label}</span>
-          <span class="tdm-link-url">未登録</span>
-        </div>
-        <span class="tdm-link-arrow"></span>
-      </div>`;
-    });
-    container.innerHTML = [...rendered, ...empty].join('');
-  };
-})();
-
-// ================================================================
-// Phase3-⑥: _p2RenderCards をdebounce付き高速版に置換
-// ================================================================
-(function _p3PatchRenderCards() {
-  const _orig = window._p2RenderCards;
-
-  function _fastRender() {
-    const listEl = document.getElementById('search-list');
-    if (!listEl) return;
-
-    // 検索テキストがある場合は既存の検索UIに任せる（壊さない）
-    const searchInp = document.getElementById('search-input');
-    if (searchInp && searchInp.value.trim().length > 0) return;
-
-    const gender = typeof _tdbGender    !== 'undefined' ? _tdbGender    : 'men';
-    const cat    = typeof _tdbActiveCat !== 'undefined' ? _tdbActiveCat : 'all';
-    const scope  = typeof _tdbScope     !== 'undefined' ? _tdbScope     : 'domestic';
-
-    // キャッシュ付き高速フィルター
-    const filtered = _p3FilterTournaments(gender, cat, '', scope);
-
-    if (!filtered.length) {
-      listEl.innerHTML = `<div class="tdb-p2-section-hd">
-        <span class="tdb-p2-section-title">大会一覧</span>
-        <span class="tdb-p2-section-count">0件</span>
-      </div>
-      <div class="tdb-p2-empty">
-        <div class="tdb-p2-empty-icon">⛳</div>
-        <div class="tdb-p2-empty-title">大会が見つかりません</div>
-        <div class="tdb-p2-empty-desc">カテゴリや性別を変更してみてください</div>
-      </div>`;
-    } else {
-      // DocumentFragment でDOM挿入を1回に
-      const sectionHd = `<div class="tdb-p2-section-hd">
-        <span class="tdb-p2-section-title">大会一覧</span>
-        <span class="tdb-p2-section-count">${filtered.length}件</span>
-      </div>`;
-      listEl.innerHTML = sectionHd + filtered.map(_p2CardHTML).join('');
-    }
-
-    const rc = document.getElementById('result-count');
-    if (rc) rc.textContent = `${filtered.length}件の大会`;
-
-    // タップ最適化を適用
-    requestAnimationFrame(_p3OptimizeTapTargets);
-  }
-
-  // debounce付きで上書き（16ms = 約1フレーム）
-  window._p2RenderCards = _p3Debounce(_fastRender, 16);
-})();
-
-// ================================================================
-// Phase3-⑦: UX仕上げ
-// ================================================================
-
-/**
- * カード開閉・モーダルのanimation品質向上
- * transformベースのスプリング感
- */
-(function _p3InjectAnimStyles() {
-  const style = document.createElement('style');
-  style.textContent = `
-/* ── Phase3: パフォーマンス最適化CSS ── */
-
-/* スクロールコンテナのGPU合成ヒント */
-.tdm-scroll,
-.search-scroll,
-.cal-scroll,
-.drawer-scroll,
-.cal-multi-day,
-#search-list {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
-
-/* カード: GPU合成レイヤーに昇格（ホバー・タップ時のみ） */
-.tdb-p2-card,
-.tdb-card {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  cursor: pointer;
-  transform: translateZ(0);       /* GPU昇格 */
-  transition: transform 0.12s cubic-bezier(.32,.72,0,1),
-              box-shadow 0.12s ease;
-}
-.tdb-p2-card:active,
-.tdb-card:active {
-  transform: scale(0.985) translateZ(0);
-  box-shadow: 0 1px 6px rgba(10,107,71,.08) !important;
-}
-
-/* ボタン: タップフィードバック */
-.tdb-p2-action,
-.tdb-p2-fav,
-.tdb-add-btn,
-.tdb-fav-btn,
-.tdm-cta-btn,
-.tdm-close {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: transform 0.1s cubic-bezier(.32,.72,0,1),
-              opacity 0.1s ease;
-}
-.tdb-p2-action:active,
-.tdb-p2-fav:active,
-.tdb-add-btn:active,
-.tdb-fav-btn:active,
-.tdm-cta-btn:active {
-  transform: scale(0.92) translateZ(0);
-  opacity: 0.8;
-}
-.tdm-close:active {
-  transform: scale(0.88) translateZ(0);
-}
-
-/* モーダルシート: スプリング感あるスライドイン */
-.tdm-sheet {
-  will-change: transform;
-  transition: transform 0.38s cubic-bezier(.32,.72,0,1) !important;
-}
-.tdm-sheet.show {
-  transition: transform 0.38s cubic-bezier(.32,.72,0,1) !important;
-}
-
-/* リンクボタン: タップフィードバック */
-.tdm-link-btn:not(.is-empty) {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: background 0.12s ease, transform 0.1s ease;
-}
-.tdm-link-btn:not(.is-empty):active {
-  background: #EDF8F3 !important;
-  transform: scale(0.97) translateZ(0);
-}
-
-/* カテゴリチップ: スムーズスクロール */
-.tdb-cat-scroll {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-}
-.tdb-cat-chip {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: transform 0.1s cubic-bezier(.32,.72,0,1),
-              background 0.15s ease;
-}
-.tdb-cat-chip:active {
-  transform: scale(0.93) translateZ(0);
-}
-
-/* フィルターチップ */
-.filter-chip {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: transform 0.1s cubic-bezier(.32,.72,0,1),
-              background 0.12s ease;
-}
-.filter-chip:active {
-  transform: scale(0.93) translateZ(0);
-}
-
-/* 矢印ボタン（月送り） */
-.m-arrow {
-  touch-action: manipulation;
-}
-
-/* ドロワーオーバーレイ: GPU合成 */
-.drawer-overlay {
-  will-change: opacity;
-}
-.drawer {
-  will-change: transform;
-}
-
-/* tdm-overlay: backdrop-filter - 非表示時は無効化（Safari タップバグ回避） */
-/* ★ Fix: blur(0px) でも stacking context が生成されるため
-   非表示状態では backdrop-filter を一切適用しない */
-.tdm-overlay {
-  /* backdrop-filter: none; ← 明示しなくても初期値はnone */
-}
-.tdm-overlay.show {
-  /* backdrop-filter: 削除（Safari パフォーマンス対策） */
-}
-
-/* Phase3: iOS PWA高さ変数対応 */
-/* ★ Fix: phone-innerはoverflow:hiddenのため padding-bottom 禁止
-   padding-bottom を付けると bottom-nav が clipping されタップ不能になる */
-@supports (height: env(safe-area-inset-bottom)) {
-  /* phone-inner への padding-bottom は削除 */
-  .bottom-nav {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
-  }
-}
-
-/* ヘッダー: ガラスモーフィズム効果（PWA時）
-   ★ Fix: backdrop-filter は Safari で stacking context を生成するため
-   bottom-nav より z-index が高い要素に付けると干渉する可能性あり
-   → app-header は flex内の通常要素なので問題ないが念のため無効化 */
-@media (display-mode: standalone) {
-  .app-header {
-    /* backdrop-filter: blur(20px); ← Safari タップバグ予防のため無効化 */
-    background: rgba(255,255,255,0.98) !important;
-  }
-}
-
-/* 横向き防止CSS（強制縦向き） */
-@media screen and (orientation: landscape) and (max-height: 500px) {
-  .phone-inner {
-    overflow-y: auto;
-  }
-}
-
-/* 詳細モーダル: ダークモード対応 */
-:root[data-theme="dark"] .tdm-sheet {
-  background: #1A2620;
-}
-:root[data-theme="dark"] .tdm-section {
-  background: #1F2E28;
-  border-color: #2A3833;
-}
-:root[data-theme="dark"] .tdm-title,
-:root[data-theme="dark"] .tdm-row-value {
-  color: #E8F0EC;
-}
-:root[data-theme="dark"] .tdm-row-label,
-:root[data-theme="dark"] .tdm-section-title {
-  color: #A8BEB4;
-}
-:root[data-theme="dark"] .tdm-money-cell {
-  background: #1A2620;
-  border-color: #2A3833;
-}
-:root[data-theme="dark"] .tdm-link-btn {
-  background: #1F2E28;
-  border-color: #2A3833;
-}
-:root[data-theme="dark"] .tdm-link-label {
-  color: #E8F0EC;
-}
-:root[data-theme="dark"] .tdm-link-url {
-  color: #7A9E94;
-}
-:root[data-theme="dark"] .tdm-cta-secondary {
-  background: #1F2E28;
-  color: #A8BEB4;
-  border-color: #2A3833;
-}
-
-/* P2カード: ダークモード */
-:root[data-theme="dark"] .tdb-p2-card {
-  background: #1A2620;
-  border-color: #2A3833;
-}
-:root[data-theme="dark"] .tdb-p2-name {
-  color: #E8F0EC;
-}
-:root[data-theme="dark"] .tdb-p2-info-value {
-  color: #A8BEB4;
-}
-:root[data-theme="dark"] .tdb-p2-money-value {
-  color: #A8BEB4;
-}
-:root[data-theme="dark"] .tdb-p2-footer {
-  background: #131D18;
-  border-top-color: #2A3833;
-}
-:root[data-theme="dark"] .tdb-p2-action {
-  color: #A8BEB4;
-}
-:root[data-theme="dark"] .tdb-p2-divider {
-  background: #2A3833;
-}
-
-/* tdbカード: ダークモード */
-:root[data-theme="dark"] .tdb-card {
-  background: #1A2620;
-  border-color: #2A3833;
-}
-:root[data-theme="dark"] .tdb-card-name-text {
-  color: #E8F0EC;
-}
-:root[data-theme="dark"] .tdb-card-meta {
-  color: #7A9E94;
-}
-  `;
-  document.head.appendChild(style);
-})();
-
-// ================================================================
-// Phase3-⑧: 初期化（DOMロード後 + ページ切替時に呼ぶ）
-// ================================================================
-function _p3Init() {
-  // ステータス自動更新
-  _p3RefreshStatuses();
-  // スクロールコンテナ最適化
-  _p3OptimizeScrollContainers();
-  // タップターゲット最適化
-  requestAnimationFrame(_p3OptimizeTapTargets);
-  // キャッシュクリア（データが変わった可能性）
-  _p3Cache.filtered = null;
-}
-
-document.addEventListener('DOMContentLoaded', _p3Init);
-
-// ★ Fix: Phase3 switchPageフックは軽量処理のみ（重い処理は既存フックが担当）
-// _p3OptimizeScrollContainersは初期化時に1回だけ実行済みのためswitchPage毎の実行不要
-// (function _p3PatchSwitchPage() { ... }) - 削除：重複フックの排除
-
-// ★ Fix: Phase3 debounceパッチは _sqOnInput内で統合済みのため削除
-// （二重のdebounceを防ぐ）
-// _p3PatchSearchDebounce -> _sqOnInputのdebounce化で対応済み
-
-// ================================================================
-// ★★★ Fix: bottom-nav タップ問題デバッグ + 自動修復 ★★★
-// ================================================================
-(function _fixBottomNavTap() {
-  // DOMロード後に実行
-  function _applyNavFix() {
-    const nav = document.querySelector('.bottom-nav');
-    if (!nav) return;
-    // z-index / pointer-events を JS からも強制適用
-    nav.style.position   = 'relative';
-    nav.style.zIndex     = '99999';
-    nav.style.pointerEvents = 'auto';
-    nav.style.webkitTransform = 'translateZ(0)';
-    nav.style.transform  = 'translateZ(0)';
-    nav.style.isolation  = 'isolate';
-
-    // 各ボタンにも明示
-    nav.querySelectorAll('.bnav-btn').forEach(btn => {
-      btn.style.pointerEvents  = 'auto';
-      btn.style.position       = 'relative';
-      btn.style.zIndex         = '99999';
-      btn.style.touchAction    = 'manipulation';
-      btn.style.webkitTapHighlightColor = 'transparent';
-    });
-
-    // elementFromPoint で何が乗っているか診断
-    setTimeout(function() {
-      try {
-        const searchBtn = document.getElementById('nav-search');
-        if (!searchBtn) return;
-        const r = searchBtn.getBoundingClientRect();
-        const cx = r.left + r.width / 2;
-        const cy = r.top  + r.height / 2;
-        const topEl = document.elementFromPoint(cx, cy);
-        if (topEl && topEl !== searchBtn && !searchBtn.contains(topEl)) {
-          console.warn('[PNX Fix] nav-search がブロックされています。上にある要素:', topEl, 
-            '| tagName:', topEl.tagName, '| id:', topEl.id, 
-            '| class:', topEl.className,
-            '| z-index:', getComputedStyle(topEl).zIndex,
-            '| pointer-events:', getComputedStyle(topEl).pointerEvents);
-          // 自動修復: blocking要素に pointer-events:none を適用（overlayクラスのみ）
-          const blockStyle = getComputedStyle(topEl);
-          const isOverlay = topEl.classList.contains('tdm-overlay') ||
-                            topEl.classList.contains('modal-overlay') ||
-                            topEl.classList.contains('add-cat-overlay') ||
-                            topEl.classList.contains('drawer-overlay') ||
-                            topEl.classList.contains('month-picker-overlay');
-          if (isOverlay && blockStyle.pointerEvents !== 'none') {
-            console.warn('[PNX Fix] overlayのpointer-eventsを強制none化:', topEl.id || topEl.className);
-            topEl.style.pointerEvents = 'none';
-          }
-        } else if (topEl) {
-          console.log('[PNX Fix] nav-search hit test OK. topEl:', topEl.tagName, topEl.id || topEl.className);
-        }
-      } catch(e) { /* 無視 */ }
-    }, 500);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', _applyNavFix);
-  } else {
-    _applyNavFix();
-  }
-  // switchPage時にも再適用
-  const _prevSwitch = window.switchPage;
-  window.switchPage = function(page) {
-    if (typeof _prevSwitch === 'function') _prevSwitch(page);
-    requestAnimationFrame(_applyNavFix);
-  };
-})();
-
-console.log('[ProNexaX Phase3] ✅ 実運用基盤 初期化完了');
-console.log('[ProNexaX Phase3] 📋 大会データ:', TDB_TOURNAMENTS.length, '件');
-console.log('[ProNexaX Phase3] 💡 大会追加: addTournament({ id, name, cat, gender, startDate, endDate, ... })');
-</script>
-<!-- ================================================================ -->
-<!-- ★★★ Phase2: 大会詳細モーダル（Bottom Sheet） ★★★              -->
-<!-- ================================================================ -->
-<div class="tdm-overlay" id="tdm-overlay" onclick="_tdmCloseOnBg(event)">
-  <div class="tdm-sheet" id="tdm-sheet" onclick="event.stopPropagation()">
-
-    <!-- グラバーバー -->
-    <div class="tdm-grabber" id="tdm-grabber"></div>
-
-    <!-- ─── ヘッダー ─── -->
-    <div class="tdm-header" id="tdm-header">
-      <div class="tdm-header-top">
-        <div class="tdm-title" id="tdm-title">大会名</div>
-        <button class="tdm-close" onclick="closeTournamentModal()" aria-label="閉じる">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <line x1="2" y1="2" x2="10" y2="10" stroke="#8e8e93" stroke-width="1.8" stroke-linecap="round"/>
-            <line x1="10" y1="2" x2="2" y2="10" stroke="#8e8e93" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <div class="tdm-header-tags" id="tdm-header-tags">
-        <!-- JSで描画 -->
-      </div>
-      <div class="tdm-header-line" id="tdm-header-line"></div>
-    </div>
-
-    <!-- ─── スクロール本体 ─── -->
-    <div class="tdm-scroll" id="tdm-scroll">
-
-      <!-- アクションボタン（上部CTA） -->
-      <div class="tdm-cta-area" id="tdm-cta-area">
-        <button class="tdm-cta-btn tdm-cta-primary" id="tdm-cta-entry" onclick="_tdmEntry()">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          エントリーする
-        </button>
-        <div style="display:flex;gap:8px;">
-          <button class="tdm-cta-btn tdm-cta-secondary" style="flex:1;" id="tdm-cta-cal" onclick="_tdmAddCal()">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1.5" y="2.5" width="11" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/>
-              <path d="M4.5 1v3M9.5 1v3M1.5 6h11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            </svg>
-            カレンダーに追加
-          </button>
-          <button class="tdm-cta-btn tdm-cta-secondary" style="flex:1;" onclick="closeTournamentModal()">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <line x1="2" y1="2" x2="12" y2="12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-              <line x1="12" y1="2" x2="2" y2="12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            </svg>
-            閉じる
-          </button>
-        </div>
-      </div>
-
-      <!-- 基本情報 -->
-      <div class="tdm-section" id="tdm-sec-basic">
-        <div class="tdm-section-title">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.3"/>
-            <path d="M6 4v4M6 3.5v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-          </svg>
-          基本情報
-        </div>
-        <div class="tdm-row">
-          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1.5v2M10 1.5v2M1.5 5.5h11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
-          <div class="tdm-row-body">
-            <span class="tdm-row-label">開催日</span>
-            <span class="tdm-row-value" id="tdm-dates">—</span>
-          </div>
-        </div>
-        <div class="tdm-row">
-          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5.5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 12.5c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
-          <div class="tdm-row-body">
-            <span class="tdm-row-label">エントリー締切</span>
-            <span class="tdm-row-value" id="tdm-entry-deadline">—</span>
-          </div>
-        </div>
-        <div class="tdm-row">
-          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5C4.515 1.5 2.5 3.515 2.5 6c0 3.75 4.5 7 4.5 7s4.5-3.25 4.5-7c0-2.485-2.015-4.5-4.5-4.5Z" stroke="currentColor" stroke-width="1.2"/><circle cx="7" cy="6" r="1.5" stroke="currentColor" stroke-width="1.2"/></svg></div>
-          <div class="tdm-row-body">
-            <span class="tdm-row-label">試合会場</span>
-            <span class="tdm-row-value" id="tdm-venue">—</span>
-          </div>
-        </div>
-        <div class="tdm-row">
-          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 5h5M4.5 7.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
-          <div class="tdm-row-body">
-            <span class="tdm-row-label">開催県</span>
-            <span class="tdm-row-value" id="tdm-pref">—</span>
-          </div>
-        </div>
-        <div class="tdm-row">
-          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5 2.5 5.5v7h3.5v-4h2v4H11.5v-7L7 1.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
-          <div class="tdm-row-body">
-            <span class="tdm-row-label">主催</span>
-            <span class="tdm-row-value" id="tdm-organizer">—</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 金額情報 -->
-      <div class="tdm-section" id="tdm-sec-money">
-        <div class="tdm-section-title">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.3"/>
-            <path d="M6 3v6M4.5 4.5h2.25A.75.75 0 0 1 7.5 6H4.5v1.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          金額情報
-        </div>
-        <div class="tdm-money-grid" id="tdm-money-grid">
-          <div class="tdm-money-cell">
-            <span class="tdm-money-cell-label">賞金総額</span>
-            <span class="tdm-money-cell-value" id="tdm-prize-total">—</span>
-          </div>
-          <div class="tdm-money-cell">
-            <span class="tdm-money-cell-label">優勝賞金</span>
-            <span class="tdm-money-cell-value" id="tdm-prize-winner">—</span>
-          </div>
-          <div class="tdm-money-cell">
-            <span class="tdm-money-cell-label">エントリー費</span>
-            <span class="tdm-money-cell-value is-fee" id="tdm-entry-fee">—</span>
-          </div>
-          <div class="tdm-money-cell">
-            <span class="tdm-money-cell-label">練習ラウンド費</span>
-            <span class="tdm-money-cell-value is-fee" id="tdm-practice-fee">—</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- エントリー情報 -->
-      <div class="tdm-section" id="tdm-sec-entry">
-        <div class="tdm-section-title">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M1.5 6h9M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          エントリー情報
-        </div>
-        <div class="tdm-row">
-          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7l3.5 4 7.5-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="tdm-row-body">
-            <span class="tdm-row-label">エントリー方法</span>
-            <span class="tdm-row-value" id="tdm-entry-method">—</span>
-          </div>
-        </div>
-        <div class="tdm-row">
-          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 12c0-2.761 2.239-5 5-5s5 2.239 5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
-          <div class="tdm-row-body">
-            <span class="tdm-row-label">出場資格</span>
-            <span class="tdm-row-value" id="tdm-qualification">—</span>
-          </div>
-        </div>
-        <div class="tdm-row">
-          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7h11M7 1.5v11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div>
-          <div class="tdm-row-body">
-            <span class="tdm-row-label">募集人数</span>
-            <span class="tdm-row-value" id="tdm-capacity">—</span>
-          </div>
-        </div>
-        <div class="tdm-row">
-          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 4v3.5l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
-          <div class="tdm-row-body">
-            <span class="tdm-row-label">キャンセル期限</span>
-            <span class="tdm-row-value" id="tdm-cancel-deadline">—</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- リンク -->
-      <div class="tdm-section" id="tdm-sec-links">
-        <div class="tdm-section-title">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M5 3H3a2 2 0 0 0 0 4h2M7 3h2a2 2 0 0 1 0 4H7M4 6h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-          </svg>
-          リンク
-        </div>
-        <div class="tdm-links" id="tdm-links-list">
-          <!-- JSで描画 -->
-        </div>
-      </div>
-
-      <!-- 下余白 -->
-      <div style="height:24px;"></div>
-
-    </div><!-- /.tdm-scroll -->
-  </div><!-- /.tdm-sheet -->
-</div><!-- /.tdm-overlay -->
 
 </body>
 </html>
