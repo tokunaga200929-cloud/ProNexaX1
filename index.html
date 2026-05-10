@@ -7532,7 +7532,10 @@ const tournaments = [
 // tournaments[] → 旧来のTOURNAMENTS_FLAT互換形式に変換
 // カレンダー機能・検索エンジン全てと互換性を維持
 // ================================================================
-const TOURNAMENTS_FLAT = tournaments.map(t => ({
+// ================================================================
+// ★★★ Phase7: TOURNAMENTS_FLATをlet宣言に変更（_rebuildFlatで再構築可能）★★★
+// ================================================================
+let TOURNAMENTS_FLAT = tournaments.map(t => ({
   // 旧フィールド互換
   id:       t.id,
   name:     t.title,
@@ -7557,11 +7560,21 @@ const TOURNAMENTS_FLAT = tournaments.map(t => ({
   organizer: t.organizer || '',
   tags:     t.tags || [],
   // links を旧フラットフィールドにも展開
-  officialUrl: t.links?.official || '',
+  officialUrl: t.links?.official || t.links?.website || '',
   igUrl:       t.links?.instagram || '',
   entryUrl:    t.links?.entry || '',
-  pairUrl:     t.links?.pairs || '',
+  pairUrl:     t.links?.pairs || t.links?.pairing || '',
   resultUrl:   t.links?.result || '',
+  // ★ Phase7: DB中心構造のための追加フィールド
+  sourceType:    t.sourceType || 'manual',
+  sourceUrl:     t.sourceUrl || '',
+  parsingStatus: t.parsingStatus || 'idle',
+  aiConfidence:  t.aiConfidence || null,
+  status:        t.status || 'tbd',
+  notes:         t.notes || '',
+  country:       t.country || 'japan',
+  subCategory:   t.subCategory || '',
+  // officialUrl: links.websiteも参照
   // 新フォーマット参照用（詳細モーダル等）
   _raw: t,
 }));
@@ -14663,6 +14676,615 @@ function _delay(ms) { return new Promise(r => setTimeout(r, ms)); }
     document.addEventListener('DOMContentLoaded', ready, { once: true });
   } else {
     setTimeout(ready, 80);
+  }
+})();
+</script>
+
+<script>
+/* ================================================================
+   ★★★ Phase7: 大会DB中心構造への進化 ★★★
+   
+   目的：
+   ① 統一appState管理
+   ② TOURNAMENTS_DB → カレンダーEventsの完全パイプライン
+   ③ モーダル管理統一 (openModal / closeModal)
+   ④ IS_ADMINフラグ統一
+   ⑤ パーサー層整備（AI連携準備）
+   ⑥ sourceType自動判定強化
+   ⑦ debounce + メモ化によるパフォーマンス改善
+   ⑧ 将来のファイル分離に向けた名前空間整理
+   ================================================================ */
+'use strict';
+
+// ================================================================
+// ① 統一 appState 管理
+// ================================================================
+window.appState = (function() {
+  const _state = {
+    // カレンダー状態
+    calendar: {
+      year:         null,  // 現在の表示年（グローバルyearと同期）
+      month:        null,  // 現在の表示月（グローバルmonthと同期）
+      selectedDate: null,  // 選択日
+      viewMode:     'month',
+    },
+    // 検索・フィルター状態
+    filters: {
+      gender:     'mens',
+      region:     'domestic',
+      category:   'all',
+      groupKey:   null,
+      areas:      new Set(),
+      prefs:      new Set(),
+      cats:       new Set(),
+      keyword:    '',
+      sortMode:   'date',
+      sortAsc:    true,
+    },
+    // モーダル状態
+    modal: {
+      tournament: { open: false, id: null },
+      create:     { open: false, date: null },
+      admin:      { open: false },
+      filter:     { open: false },
+    },
+    // 大会DB状態
+    tournaments: {
+      loaded:       false,
+      totalCount:   0,
+      filteredCount: 0,
+      lastUpdated:  null,
+    },
+    // パーサー状態（AI連携準備）
+    parser: {
+      status:      'idle',  // 'idle'|'fetching'|'parsing'|'success'|'failed'
+      lastUrl:     '',
+      lastType:    '',
+      queue:       [],
+    },
+    // 管理者状態
+    admin: {
+      isAdmin:     false,
+      mode:        'user',  // 'user'|'admin'
+    },
+  };
+
+  // appState の同期（グローバル変数との橋渡し）
+  function syncFromGlobals() {
+    if (typeof year  !== 'undefined') _state.calendar.year  = year;
+    if (typeof month !== 'undefined') _state.calendar.month = month;
+    if (typeof selectedDate !== 'undefined') _state.calendar.selectedDate = selectedDate;
+    if (typeof viewMode !== 'undefined') _state.calendar.viewMode = viewMode;
+    if (typeof _isAdmin !== 'undefined') _state.admin.isAdmin = _isAdmin;
+    if (typeof searchFilter !== 'undefined') _state.filters.category = searchFilter;
+    if (typeof _searchGender !== 'undefined') _state.filters.gender = _searchGender;
+    if (typeof _searchRegion !== 'undefined') _state.filters.region = _searchRegion;
+    _state.tournaments.totalCount = (typeof TOURNAMENTS_FLAT !== 'undefined') ? TOURNAMENTS_FLAT.length : 0;
+  }
+
+  return {
+    get: (path) => {
+      const keys = path.split('.');
+      let cur = _state;
+      for (const k of keys) { if (cur == null) return undefined; cur = cur[k]; }
+      return cur;
+    },
+    set: (path, value) => {
+      const keys = path.split('.');
+      let cur = _state;
+      for (let i = 0; i < keys.length - 1; i++) { if (cur[keys[i]] == null) cur[keys[i]] = {}; cur = cur[keys[i]]; }
+      cur[keys[keys.length - 1]] = value;
+    },
+    getAll: () => _state,
+    sync: syncFromGlobals,
+  };
+})();
+
+// ================================================================
+// ② IS_ADMIN フラグ統一
+// ================================================================
+// 既存の _isAdmin と appState.admin.isAdmin を同期するプロキシ
+Object.defineProperty(window, 'IS_ADMIN', {
+  get() { return typeof _isAdmin !== 'undefined' ? _isAdmin : false; },
+  set(v) {
+    if (typeof _isAdmin !== 'undefined') { /* _isAdmin は let なので直接代入不可 */ }
+    appState.set('admin.isAdmin', !!v);
+    appState.set('admin.mode', v ? 'admin' : 'user');
+    document.body.classList.toggle('is-admin', !!v);
+  },
+  configurable: true,
+});
+
+// ================================================================
+// ③ TOURNAMENTS_DB → カレンダーEventsへの完全パイプライン
+// ================================================================
+
+/**
+ * TOURNAMENTS_DB の全エントリを EVENTS 互換フォーマットに変換する
+ * （カレンダーに「大会」を自動表示するためのパイプライン）
+ *
+ * 重要：ユーザーが手動追加した EVENTS は保持し、
+ *       大会DBから生成したイベントは `_fromDB: true` フラグで識別する。
+ */
+function _buildCalendarEventsFromDB() {
+  if (typeof TOURNAMENTS_FLAT === 'undefined' || typeof EVENTS === 'undefined') return;
+
+  // ① 既存の手動追加イベント（_fromDB でないもの）を保持
+  const manualEvents = EVENTS.filter(e => !e._fromDB);
+
+  // ② TOURNAMENTS_FLAT から EVENTS 互換オブジェクトを生成
+  // addedIds に入っているものだけカレンダーに反映（ユーザーが「追加」した大会のみ）
+  const dbEvents = [];
+  if (typeof addedIds !== 'undefined') {
+    TOURNAMENTS_FLAT.forEach(t => {
+      if (!addedIds.has(t.id)) return;
+      if (!t.start || !t.end) return;
+      // 既に同じIDの手動イベントがある場合はスキップ（重複防止）
+      if (manualEvents.some(e => e._tournamentId === t.id)) return;
+      dbEvents.push({
+        id: _dbEventId(t.id),
+        name: t.name,
+        date: t.start,
+        end: t.end,
+        place: (t.courseName ? t.place + ' ' + t.courseName : t.place) || '',
+        cat: t.cat,
+        memo: [
+          t.organizer ? `主催：${t.organizer}` : '',
+          t.entryDeadline ? `締切：${t.entryDeadline}` : '',
+          t.prize ? `賞金：${t.prize}` : '',
+        ].filter(Boolean).join('\n'),
+        entryStatus: 'pending',
+        _fromDB: true,
+        _tournamentId: t.id,
+      });
+    });
+  }
+
+  // ③ EVENTS を再構成（手動 + DB由来）
+  EVENTS.length = 0;
+  [...manualEvents, ...dbEvents].forEach(e => EVENTS.push(e));
+
+  // 状態更新
+  appState.set('tournaments.loaded', true);
+  appState.set('tournaments.totalCount', TOURNAMENTS_FLAT.length);
+  appState.set('tournaments.lastUpdated', new Date().toISOString());
+}
+
+// DB由来イベントのID生成（数値形式で既存IDと衝突しないよう大きな値を使う）
+const _DB_EVENT_ID_OFFSET = 1_000_000;
+function _dbEventId(tournamentId) {
+  // tournamentId の hash を数値化
+  let h = 0;
+  for (let i = 0; i < tournamentId.length; i++) {
+    h = (h << 5) - h + tournamentId.charCodeAt(i);
+    h |= 0;
+  }
+  return _DB_EVENT_ID_OFFSET + Math.abs(h) % 999_999;
+}
+
+// ================================================================
+// ④ 統一モーダル管理
+// ================================================================
+/**
+ * openModal(type, id)
+ *   type: 'tournament' | 'create' | 'admin' | 'filter' | 'calendar'
+ *   id:   大会ID（typeがtournamentの場合）or 日付文字列（createの場合）
+ */
+const _modalHandlers = {};
+
+window.openModal = (function(_origOpenModal) {
+  return function(type, id) {
+    // ① 旧 openModal(dateOrId) 形式との後方互換
+    //    type が文字列で日付形式 ('YYYY-MM-DD') or null → 旧形式
+    if (type === null || (typeof type === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(type))) {
+      if (typeof _origOpenModal === 'function') return _origOpenModal(type);
+      return;
+    }
+    // ② 旧形式：type が数値（イベントID）
+    if (typeof type === 'number') {
+      if (typeof _origOpenModal === 'function') return _origOpenModal(null, type);
+      return;
+    }
+
+    switch (type) {
+      case 'tournament':
+        if (typeof openTournamentModal === 'function') {
+          openTournamentModal(id);
+          appState.set('modal.tournament', { open: true, id });
+        }
+        break;
+      case 'filter':
+        if (typeof openFilterSheet === 'function') openFilterSheet();
+        appState.set('modal.filter.open', true);
+        break;
+      case 'admin':
+        if (typeof openAdminLogin === 'function') openAdminLogin();
+        appState.set('modal.admin.open', true);
+        break;
+      default:
+        if (typeof _origOpenModal === 'function') _origOpenModal(type, id);
+    }
+  };
+})(window.openModal);
+
+/**
+ * closeModal(type)
+ *   type: 'tournament' | 'create' | 'admin' | 'filter' | 'all'
+ */
+window.closeModal = function(type) {
+  if (!type || type === 'all') {
+    // すべてのモーダルを閉じる
+    if (typeof closeTournamentModal === 'function') closeTournamentModal();
+    if (typeof closeFilterSheet === 'function') closeFilterSheet();
+    if (typeof closeAdminLogin === 'function') closeAdminLogin();
+    const evModal = document.getElementById('event-modal');
+    if (evModal) evModal.classList.remove('show');
+    appState.set('modal.tournament', { open: false, id: null });
+    appState.set('modal.filter.open', false);
+    appState.set('modal.admin.open', false);
+    return;
+  }
+  switch (type) {
+    case 'tournament':
+      if (typeof closeTournamentModal === 'function') closeTournamentModal();
+      appState.set('modal.tournament', { open: false, id: null });
+      break;
+    case 'filter':
+      if (typeof closeFilterSheet === 'function') closeFilterSheet();
+      appState.set('modal.filter.open', false);
+      break;
+    case 'admin':
+      if (typeof closeAdminLogin === 'function') closeAdminLogin();
+      appState.set('modal.admin.open', false);
+      break;
+    case 'calendar':
+    case 'create':
+      const evModal = document.getElementById('event-modal');
+      if (evModal) evModal.classList.remove('show');
+      break;
+  }
+};
+
+// ================================================================
+// ⑤ パーサー層整備（AI連携準備）
+// ================================================================
+
+/**
+ * detectSourceType(url)
+ * URLからソースタイプを自動判定
+ * 
+ * 戻り値: 'ai_instagram' | 'ai_pdf' | 'ai_googleform' | 'ai_youtube' | 'ai_url'
+ */
+function detectSourceType(url) {
+  if (!url || typeof url !== 'string') return 'manual';
+  const u = url.toLowerCase().trim();
+  if (u.includes('instagram.com'))                          return 'ai_instagram';
+  if (u.endsWith('.pdf') || u.includes('/pdf/'))            return 'ai_pdf';
+  if (u.includes('docs.google.com/forms'))                  return 'ai_googleform';
+  if (u.includes('youtube.com') || u.includes('youtu.be')) return 'ai_youtube';
+  if (u.includes('twitter.com') || u.includes('x.com'))    return 'ai_twitter';
+  if (u.includes('line.me') || u.includes('lin.ee'))        return 'ai_line';
+  if (u.includes('facebook.com'))                           return 'ai_facebook';
+  return 'ai_url';
+}
+
+/**
+ * parseTournamentFromSource(url, options)
+ * URLから大会情報を抽出するメインエントリポイント
+ * 
+ * ★ 将来: AI APIへの接続はここで行う
+ *   options.apiKey  → OpenAI / Claude APIキー
+ *   options.model   → 使用モデル名
+ *   options.prompt  → カスタムシステムプロンプト
+ */
+async function parseTournamentFromSource(url, options = {}) {
+  const sourceType = detectSourceType(url);
+  appState.set('parser.status', 'fetching');
+  appState.set('parser.lastUrl', url);
+  appState.set('parser.lastType', sourceType);
+
+  try {
+    const rawData = await _fetchRawData(url, sourceType);
+    appState.set('parser.status', 'parsing');
+    
+    let parsed;
+    switch (sourceType) {
+      case 'ai_instagram': parsed = await parseInstagramTournament(url, rawData); break;
+      case 'ai_pdf':       parsed = await parsePdfTournament(url, rawData);       break;
+      default:             parsed = await parseWebsiteTournament(url, rawData);   break;
+    }
+
+    // AI正規化（将来ここでAPI呼び出し）
+    const normalized = await normalizeTournamentData(parsed, sourceType);
+    appState.set('parser.status', 'success');
+    return _tdbTemplate({ ...normalized, sourceType, sourceUrl: url });
+
+  } catch (err) {
+    appState.set('parser.status', 'failed');
+    console.error('[Parser] エラー:', err);
+    throw err;
+  }
+}
+
+/**
+ * _fetchRawData — URL からHTMLを取得（ダミー実装）
+ * ★ 将来: CORS Proxy / Cloudflare Worker / バックエンドAPI を経由してrawデータを取得
+ *         例: const res = await fetch(`https://api.pronexax.com/fetch?url=${encodeURIComponent(url)}`);
+ */
+async function _fetchRawData(url, sourceType) {
+  // ダミー実装（将来はサーバーサイドプロキシ経由で実際に取得）
+  await new Promise(r => setTimeout(r, 200));
+  return {
+    rawHtml: '',    // fetch結果のHTML全文
+    rawText: '',    // テキスト抽出済み
+    ocrText: '',    // OCR結果（PDF/画像用）
+    fetchedAt: new Date().toISOString(),
+    statusCode: 200,
+  };
+}
+
+/**
+ * buildTournamentFromForm(formData)
+ * 管理フォームのデータをTOURNAMENTS_DBエントリに変換
+ */
+function buildTournamentFromForm(formData) {
+  const sourceType = formData.sourceUrl ? detectSourceType(formData.sourceUrl) : 'manual';
+  return _tdbTemplate({
+    ...formData,
+    sourceType: formData.sourceType || sourceType,
+    parsingStatus: 'idle',
+    aiConfidence: null,
+  });
+}
+
+// ================================================================
+// ⑥ debounce ユーティリティ
+// ================================================================
+function _debounce(fn, ms) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), ms);
+  };
+}
+
+// 検索フィルターにdebounceを適用（既存applySearchFiltersをラップ）
+// ★ DOMContentLoaded後に実行（applySearchFilters が定義されてから）
+(function _patchSearchDebounce() {
+  const WAIT = 120; // iPhone Safari: 120ms以下でレスポンシブに感じる
+  let _patched = false;
+  
+  function patch() {
+    if (_patched) return;
+    if (typeof applySearchFilters !== 'function') return;
+    _patched = true;
+    
+    const _orig = window.applySearchFilters;
+    let _cache = null;
+    let _cacheKey = '';
+    
+    // キャッシュキー生成
+    function _buildKey() {
+      return JSON.stringify({
+        gender: typeof _searchGender !== 'undefined' ? _searchGender : '',
+        region: typeof _searchRegion !== 'undefined' ? _searchRegion : '',
+        filter: typeof searchFilter !== 'undefined' ? searchFilter : '',
+        group: typeof _searchGroupKey !== 'undefined' ? _searchGroupKey : '',
+        cats: typeof fbsCats !== 'undefined' ? [...fbsCats].sort().join(',') : '',
+        areas: typeof fbsAreas !== 'undefined' ? [...fbsAreas].sort().join(',') : '',
+        prefs: typeof fbsPrefs !== 'undefined' ? [...fbsPrefs].sort().join(',') : '',
+        keyword: document.getElementById('search-query')?.value || '',
+        sortMode: typeof _sortMode !== 'undefined' ? _sortMode : 'date',
+        sortAsc: typeof _sortAsc !== 'undefined' ? _sortAsc : true,
+      });
+    }
+    
+    // キャッシュ無効化（既存の_invalidateSearchCacheをフック）
+    if (typeof _invalidateSearchCache === 'function') {
+      const _origInvalidate = window._invalidateSearchCache;
+      window._invalidateSearchCache = function() {
+        _cache = null; _cacheKey = '';
+        if (typeof _origInvalidate === 'function') _origInvalidate();
+      };
+    }
+    
+    const _debouncedApply = _debounce(function() {
+      const key = _buildKey();
+      if (_cache && key === _cacheKey) return; // キャッシュヒット
+      _cacheKey = key;
+      _orig();
+      _cache = true;
+      // 結果件数をappStateに同期
+      const meta = document.getElementById('result-meta');
+      if (meta) {
+        const n = parseInt(meta.textContent) || 0;
+        appState.set('tournaments.filteredCount', n);
+      }
+    }, WAIT);
+    
+    window.applySearchFilters = _debouncedApply;
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 200), { once: true });
+  } else {
+    setTimeout(patch, 200);
+  }
+})();
+
+// ================================================================
+// ⑦ TOURNAMENTS_DB → EVENTS への自動反映フック
+// ================================================================
+// addedIdsの変更をフックしてカレンダーイベントを再構築する
+(function _hookAddedIds() {
+  function patch() {
+    if (typeof toggleSearchAdd !== 'function') return;
+    const _orig = window.toggleSearchAdd;
+    window.toggleSearchAdd = function(id) {
+      if (typeof _orig === 'function') _orig(id);
+      // DB由来イベントをEVENTSに反映
+      setTimeout(_buildCalendarEventsFromDB, 50);
+      // カレンダーを再描画
+      setTimeout(() => {
+        if (typeof renderAllPanels === 'function') renderAllPanels();
+        if (typeof renderCalList === 'function') renderCalList();
+      }, 80);
+    };
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 300), { once: true });
+  } else {
+    setTimeout(patch, 300);
+  }
+})();
+
+// ================================================================
+// ⑧ 統一データアクセス API (将来のファイル分離準備)
+// ================================================================
+/**
+ * ProNexaX — グローバル名前空間
+ * 将来の /js/api.js として分離する際の公開インターフェース
+ */
+window.ProNexaX = window.ProNexaX || {};
+Object.assign(window.ProNexaX, {
+  // バージョン
+  version: '7.0.0',
+  
+  // DB アクセス
+  db: {
+    /** 全大会を取得（静的 + カスタム） */
+    getAll() {
+      return typeof TOURNAMENTS_FLAT !== 'undefined' ? [...TOURNAMENTS_FLAT] : [];
+    },
+    /** IDで大会を取得 */
+    getById(id) {
+      return typeof TOURNAMENTS_FLAT !== 'undefined' ? TOURNAMENTS_FLAT.find(t => t.id === id) : null;
+    },
+    /** カテゴリで大会を取得 */
+    getByCategory(cat) {
+      return typeof TOURNAMENTS_FLAT !== 'undefined' ? TOURNAMENTS_FLAT.filter(t => t.cat === cat) : [];
+    },
+    /** 日付範囲で大会を取得 */
+    getByDateRange(startDs, endDs) {
+      return typeof TOURNAMENTS_FLAT !== 'undefined'
+        ? TOURNAMENTS_FLAT.filter(t => t.start && t.end && t.start <= endDs && t.end >= startDs)
+        : [];
+    },
+    /** 大会を追加/更新 */
+    upsert(entry) {
+      if (typeof _tdbUpsert === 'function') _tdbUpsert(entry);
+    },
+    /** 大会を削除 */
+    delete(id) {
+      if (typeof _tdbDelete === 'function') _tdbDelete(id);
+    },
+    /** カスタム大会のみ取得 */
+    getCustom() {
+      return typeof TOURNAMENTS_DB !== 'undefined' ? [...TOURNAMENTS_DB] : [];
+    },
+    /** 総件数 */
+    count() {
+      return typeof TOURNAMENTS_FLAT !== 'undefined' ? TOURNAMENTS_FLAT.length : 0;
+    },
+  },
+  
+  // 状態管理
+  state: window.appState,
+  
+  // モーダル管理
+  modal: {
+    open:  (type, id) => window.openModal(type, id),
+    close: (type)     => window.closeModal(type),
+  },
+  
+  // パーサー
+  parser: {
+    detectType: detectSourceType,
+    parse:      parseTournamentFromSource,
+    fromForm:   buildTournamentFromForm,
+  },
+  
+  // カレンダー統合
+  calendar: {
+    /** DB → カレンダーEventsを同期 */
+    syncFromDB: _buildCalendarEventsFromDB,
+    /** カレンダーを再描画 */
+    refresh() {
+      if (typeof renderAllPanels === 'function') renderAllPanels();
+      if (typeof renderCalList   === 'function') renderCalList();
+    },
+  },
+  
+  // ユーティリティ
+  utils: {
+    debounce: _debounce,
+    todayStr: () => typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0,10),
+    calcStatus: (t) => typeof calcTournamentStatus === 'function' ? calcTournamentStatus(t) : 'tbd',
+  },
+});
+
+// ================================================================
+// ⑨ 管理者モード統合（IS_ADMINフラグをadminLogin/adminLogoutに接続）
+// ================================================================
+(function _patchAdminMode() {
+  function patch() {
+    // adminLogin のフック
+    if (typeof adminLogin === 'function') {
+      const _orig = window.adminLogin;
+      window.adminLogin = function() {
+        if (typeof _orig === 'function') _orig.apply(this, arguments);
+        // ログイン成功後に appState を同期
+        setTimeout(() => {
+          appState.set('admin.isAdmin', typeof _isAdmin !== 'undefined' ? _isAdmin : false);
+          appState.set('admin.mode', (typeof _isAdmin !== 'undefined' && _isAdmin) ? 'admin' : 'user');
+          // ProNexaX.db でも IS_ADMIN を確認できるように
+          window.ProNexaX.admin = appState.get('admin');
+        }, 50);
+      };
+    }
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 400), { once: true });
+  } else {
+    setTimeout(patch, 400);
+  }
+})();
+
+// ================================================================
+// ⑩ 初期化（Phase7）
+// ================================================================
+(function phase7Init() {
+  function init() {
+    // appState をグローバル変数と同期
+    appState.sync();
+    
+    // 既存addedIdsからDB由来イベントを初期構築
+    _buildCalendarEventsFromDB();
+    
+    // ProNexaX.admin を設定
+    window.ProNexaX.admin = appState.get('admin');
+    
+    // 開発者向け情報
+    if (typeof console !== 'undefined') {
+      console.log(
+        '%c[ProNexaX v7]%c 大会DB中心構造 初期化完了\n' +
+        '  大会数: %d件 | IS_ADMIN: %s\n' +
+        '  ProNexaX API: window.ProNexaX\n' +
+        '  appState:     window.appState',
+        'background:#39C892;color:#fff;padding:2px 6px;border-radius:3px;font-weight:700;',
+        'color:#3A5C52;',
+        typeof TOURNAMENTS_FLAT !== 'undefined' ? TOURNAMENTS_FLAT.length : 0,
+        typeof _isAdmin !== 'undefined' ? _isAdmin : false,
+      );
+    }
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(init, 150), { once: true });
+  } else {
+    setTimeout(init, 150);
   }
 })();
 </script>
