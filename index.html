@@ -7160,6 +7160,7 @@ const cellDrag={
 const CELL_DRAG_LP_MS=350;   // セル長押し閾値（誤操作防止：350ms）
 const CELL_DRAG_THRESHOLD=8;
 
+let searchInitialized=false;
 function switchPage(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
@@ -7172,8 +7173,11 @@ function switchPage(page){
   const activeBtn=document.getElementById('nav-'+page),activeIcon=document.getElementById('icon-'+page);
   if(activeBtn){activeBtn.classList.add('active');const lbl=activeBtn.querySelector('.bnav-label');lbl.style.color='#1AAF7A';lbl.style.fontWeight='600';if(activeIcon&&NAV_ICONS[page])activeIcon.innerHTML=NAV_ICONS[page].active;}
   if(page==='search'){
-    // ★ Fix: rAFで1フレーム遅延させてページ切替アニメを妨げない
-    requestAnimationFrame(()=>{ setTimeout(applySearchFilters,0); });
+    // ★ Fix: 初回のみ実行。2回目以降はスキップ（毎回の重い再描画を防ぐ）
+    if(!searchInitialized){
+      searchInitialized=true;
+      requestAnimationFrame(function(){ setTimeout(applySearchFilters,0); });
+    }
   }
   if(page==='calendar'){renderAllPanels();renderCalList();}
 }
@@ -9118,7 +9122,7 @@ function applySearchFilters(){
     list.innerHTML=`<div class="empty-search">該当する大会がありません。<br>条件を広げてみてください</div>`;
     return;
   }
-  list.innerHTML=arr.map(_searchCardHTML).join('');
+  list.innerHTML=arr.slice(0,20).map(_searchCardHTML).join(''); // ★ Fix: 初回20件で描画負荷を削減
   if(typeof console!=='undefined'&&console.timeEnd) console.timeEnd('[PNX] applySearchFilters');
 }
 
