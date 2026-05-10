@@ -14174,6 +14174,9 @@ function _tdbToFlat(t) {
     parsingStatus: t.parsingStatus || 'idle',
     notes: t.notes || '', createdAt: t.createdAt, updatedAt: t.updatedAt,
     _raw: t,
+    // Firestore ドキュメントID（存在する場合）
+    _firestoreId: t._firestoreId || null,
+    _fromFirestore: t._fromFirestore || false,
   };
 }
 
@@ -14372,7 +14375,11 @@ function openAtmSheet(tid) {
   _atmEditingId = tid;
   const titleEl = document.getElementById('atm-header-title');
   if (tid) {
-    const src = [...TOURNAMENTS_DB, ...(typeof tournaments!=='undefined'?tournaments:[])].find(t=>t.id===tid);
+    // TOURNAMENTS_DB → TOURNAMENTS_FLAT(Firestore) → 静的データ の順で探す
+    const src = TOURNAMENTS_DB.find(t=>t.id===tid)
+      || (typeof TOURNAMENTS_FLAT!=='undefined' ? TOURNAMENTS_FLAT.find(t=>t.id===tid)?._raw : null)
+      || (typeof TOURNAMENTS_FLAT!=='undefined' ? TOURNAMENTS_FLAT.find(t=>t.id===tid) : null)
+      || (typeof tournaments!=='undefined' ? tournaments.find(t=>t.id===tid) : null);
     if (!src) { if(typeof showToast==='function') showToast('大会が見つかりません'); return; }
     if (titleEl) titleEl.textContent = '大会を編集';
     _atmFill(src);
@@ -14392,14 +14399,14 @@ function _atmSet(id, val) { const e = document.getElementById(id); if(e) e.value
 function _atmGet(id)      { return document.getElementById(id)?.value?.trim()||''; }
 
 function _atmFill(t) {
-  _atmSet('atm-title', t.title);
+  _atmSet('atm-title', t.title || t.name || '');
   _atmSet('atm-category', t.category);
   _atmSet('atm-gender', t.gender);
   _atmSet('atm-region', t.region);
   _atmSet('atm-prefecture', t.prefecture);
   _atmSet('atm-area', t.area);
   _atmSet('atm-status', t.status||'tbd');
-  _atmSet('atm-course', t.course);
+  _atmSet('atm-course', t.course || t.courseName || '');
   _atmSet('atm-organizer', t.organizer);
   _atmSet('atm-startDate', t.startDate);
   _atmSet('atm-endDate', t.endDate);
@@ -15633,6 +15640,582 @@ window.ProNexaX = Object.assign(window.ProNexaX || {}, {
 
 <script>
 /* ================================================================
+   ★★★ Firestore CMS 層 — 管理画面 CRUD ★★★
+
+   既存構造を壊さず以下を追加:
+   ① atmSave()  → Firestore addDoc / updateDoc
+   ② 削除ボタン → Firestore deleteDoc
+   ③ renderAdminList() を Firestore データ対応に拡張
+   ④ バリデーション強化
+   ⑤ loading / success / error toast
+   ⑥ Firestore 構造は AI 抽出追加しやすい設計
+   ================================================================ */
+'use strict';
+
+// ================================================================
+// § 1  Firestore CMS ユーティリティ
+// ================================================================
+const _FCMS = (function() {
+
+  // Firestore db 参照を安全に取得
+  function _db() {
+    if (typeof firebase === 'undefined' || !firebase.apps?.length) return null;
+    if (typeof firebase.firestore !== 'function') return null;
+    try { return firebase.firestore(); } catch(e) { return null; }
+  }
+
+  // ── ① 大会を Firestore へ保存（addDoc / updateDoc） ──
+  async function save(entry) {
+    const db = _db();
+    if (!db) {
+      // Firestore 未接続 → localStorage のみ（従来動作）
+      console.warn('[FCMS] Firestore 未接続 → localStorage に保存');
+      return { ok: false, offline: true };
+    }
+
+    // Firestore 保存用ドキュメント（_raw 等の内部フィールドを除外）
+    const doc = _toFirestoreDoc(entry);
+
+    try {
+      if (entry._firestoreId) {
+        // 既存ドキュメント → updateDoc
+        await db.collection('tournaments')
+          .doc(entry._firestoreId)
+          .update({ ...doc, updatedAt: new Date().toISOString() });
+        console.info('[FCMS] updateDoc:', entry._firestoreId);
+      } else {
+        // 新規 → addDoc（Firestore が ID を生成）
+        const ref = await db.collection('tournaments').add({
+          ...doc,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        console.info('[FCMS] addDoc:', ref.id);
+        entry._firestoreId = ref.id;  // 後続処理のためにセット
+      }
+      return { ok: true };
+    } catch(e) {
+      console.error('[FCMS] save error:', e);
+      return { ok: false, error: e };
+    }
+  }
+
+  // ── ② Firestore からドキュメントを削除 ──
+  async function remove(firestoreId) {
+    const db = _db();
+    if (!db || !firestoreId) return { ok: false };
+    try {
+      await db.collection('tournaments').doc(firestoreId).delete();
+      console.info('[FCMS] deleteDoc:', firestoreId);
+      return { ok: true };
+    } catch(e) {
+      console.error('[FCMS] delete error:', e);
+      return { ok: false, error: e };
+    }
+  }
+
+  // ── エントリーを Firestore ドキュメント形式に変換 ──
+  // 内部専用フィールド（_fromDB, _fromFirestore, _raw 等）を除外
+  // AI 抽出追加しやすいよう構造を整理
+  function _toFirestoreDoc(entry) {
+    return {
+      // 基本情報
+      id:              entry.id || null,
+      title:           entry.title || '',
+      category:        entry.category || '',
+      subCategory:     entry.subCategory || '',
+      gender:          entry.gender || 'mens',
+      region:          entry.region || 'domestic',
+      area:            entry.area || '',
+      prefecture:      entry.prefecture || '',
+      country:         entry.country || 'japan',
+
+      // 日程
+      startDate:       entry.startDate || null,
+      endDate:         entry.endDate || null,
+      entryDeadline:   entry.entryDeadline || null,
+      cancelDeadline:  entry.cancelDeadline || null,
+
+      // 会場・主催
+      course:          entry.course || '',
+      organizer:       entry.organizer || '',
+
+      // 賞金・費用
+      prize:           entry.prize || '',
+      prizeWinner:     entry.prizeWinner || '',
+      entryFee:        entry.entryFee || '',
+      practiceRoundFee: entry.practiceRoundFee || '',
+
+      // エントリー情報
+      entryMethod:     entry.entryMethod || '',
+      qualification:   entry.qualification || '',
+      capacity:        entry.capacity || '',
+
+      // 状態
+      status:          entry.status || 'tbd',
+      tags:            entry.tags || [],
+      notes:           entry.notes || '',
+
+      // リンク
+      links: {
+        website:   entry.links?.website   || '',
+        instagram: entry.links?.instagram || '',
+        entry:     entry.links?.entry     || '',
+        pairing:   entry.links?.pairing   || '',
+        result:    entry.links?.result    || '',
+      },
+
+      // ★ AI 抽出用フィールド（将来の拡張ポイント）
+      sourceType:      entry.sourceType    || 'manual',
+      sourceUrl:       entry.sourceUrl     || '',
+      parsingStatus:   entry.parsingStatus || 'idle',
+      aiConfidence:    entry.aiConfidence  ?? null,
+      rawContent:      entry.rawContent    || '',
+      extractedText:   entry.extractedText || '',
+    };
+  }
+
+  return { save, remove };
+})();
+
+// ================================================================
+// § 2  atmSave() を Firestore 対応版に置き換え
+// ================================================================
+(function patchAtmSave() {
+  // 既存の atmSave を保持（ローカル保存はそのまま）
+  const _origAtmSave = window.atmSave;
+
+  window.atmSave = async function() {
+    // ── バリデーション ──
+    const title     = (document.getElementById('atm-title')?.value || '').trim();
+    const cat       = document.getElementById('atm-category')?.value || '';
+    const startDate = document.getElementById('atm-startDate')?.value || '';
+    const endDate   = document.getElementById('atm-endDate')?.value || '';
+
+    if (!title) {
+      showToast('⚠️ 大会名を入力してください');
+      document.getElementById('atm-title')?.focus();
+      return;
+    }
+    if (!cat) {
+      showToast('⚠️ カテゴリを選択してください');
+      return;
+    }
+    if (startDate && endDate && startDate > endDate) {
+      showToast('⚠️ 終了日は開始日以降を入力してください');
+      return;
+    }
+    const entryDeadline = document.getElementById('atm-entryDeadline')?.value || '';
+    if (entryDeadline && startDate && entryDeadline > startDate) {
+      showToast('⚠️ エントリー締切は開始日以前を推奨します');
+      // 警告のみ（ブロックしない）
+    }
+
+    // ── ローカル保存（既存処理） ──
+    // _origAtmSave() は内部で _tdbUpsert → localStorage を更新する
+    // ただし非同期ではないので先に entry を収集する
+    const editingId = window._atmEditingId;
+    const existing  = [...(typeof TOURNAMENTS_DB !== 'undefined' ? TOURNAMENTS_DB : []),
+                       ...(typeof tournaments !== 'undefined' ? tournaments : [])]
+                       .find(t => t.id === editingId);
+    const now = new Date().toISOString();
+
+    const get = (id) => (document.getElementById(id)?.value || '').trim();
+
+    const entry = (typeof _tdbTemplate === 'function') ? _tdbTemplate({
+      id:               editingId || (typeof _tdbGenId === 'function' ? _tdbGenId(cat) : `fs-${Date.now()}`),
+      title,
+      category:         cat,
+      gender:           get('atm-gender'),
+      region:           get('atm-region'),
+      area:             get('atm-area'),
+      prefecture:       get('atm-prefecture'),
+      country:          get('atm-region') === 'overseas' ? 'overseas' : 'japan',
+      course:           get('atm-course'),
+      organizer:        get('atm-organizer'),
+      startDate:        get('atm-startDate') || null,
+      endDate:          get('atm-endDate')   || null,
+      entryDeadline:    get('atm-entryDeadline') || null,
+      cancelDeadline:   get('atm-cancelDeadline') || null,
+      prize:            get('atm-prize'),
+      prizeWinner:      get('atm-prizeWinner'),
+      entryFee:         get('atm-entryFee'),
+      practiceRoundFee: get('atm-practiceRoundFee'),
+      entryMethod:      get('atm-entryMethod'),
+      qualification:    get('atm-qualification'),
+      capacity:         get('atm-capacity'),
+      status:           get('atm-status') || 'tbd',
+      sourceType:       get('atm-sourceType') || 'manual',
+      sourceUrl:        get('atm-sourceUrl'),
+      notes:            get('atm-notes'),
+      rawContent:       existing?.rawContent    || '',
+      extractedText:    existing?.extractedText || '',
+      parsingStatus:    existing?.parsingStatus || 'idle',
+      aiConfidence:     existing?.aiConfidence  ?? null,
+      createdAt:        existing?.createdAt || now,
+      updatedAt:        now,
+      links: {
+        website:   get('atm-link-official'),
+        instagram: get('atm-link-instagram'),
+        entry:     get('atm-link-entry'),
+        pairing:   get('atm-link-pairs'),
+        result:    get('atm-link-result'),
+      },
+    }) : null;
+
+    if (!entry) { showToast('エラー: テンプレート未ロード'); return; }
+
+    // Firestore ID を引き継ぐ（編集時）
+    if (existing?._firestoreId) entry._firestoreId = existing._firestoreId;
+
+    // ── ボタンを loading 状態に ──
+    const btn = document.getElementById('atm-save-btn');
+    const origText = btn?.textContent;
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '保存中…';
+      btn.style.opacity = '0.7';
+    }
+
+    // ── Firestore へ保存 ──
+    const result = await _FCMS.save(entry);
+
+    // ボタンを復元
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = origText || '保存する';
+      btn.style.opacity = '';
+    }
+
+    if (result.ok) {
+      // ローカルにも保存（onSnapshot が遅延する場合のフォールバック）
+      if (typeof _tdbUpsert === 'function') _tdbUpsert(entry);
+      closeAtmSheet();
+      if (typeof renderAdminList === 'function') renderAdminList();
+      if (typeof applySearchFilters === 'function') applySearchFilters();
+      showToast(`✅ 「${title}」を保存しました`);
+    } else if (result.offline) {
+      // Firestore 未接続 → ローカルのみ保存
+      if (typeof _tdbUpsert === 'function') _tdbUpsert(entry);
+      closeAtmSheet();
+      if (typeof renderAdminList === 'function') renderAdminList();
+      if (typeof applySearchFilters === 'function') applySearchFilters();
+      showToast(`💾 「${title}」をローカルに保存（Firestore未接続）`);
+    } else {
+      // Firestore エラー → ローカルに保存してエラー通知
+      if (typeof _tdbUpsert === 'function') _tdbUpsert(entry);
+      showToast(`⚠️ Firestore保存失敗。ローカルに保存しました。`);
+      console.error('[CMS] Firestore save error:', result.error);
+    }
+  };
+})();
+
+// ================================================================
+// § 3  削除を Firestore 対応に（deleteDoc）
+// ================================================================
+(function patchAtmDelete() {
+  const _origDelete = window.atmDelete || window._atmDelete;
+
+  // 既存の削除関数を置き換え
+  window.atmDelete = async function(id) {
+    if (!confirm(`この大会を削除しますか？\n（Firestoreからも削除されます）`)) return;
+
+    // Firestore ID を特定
+    const entry = (typeof TOURNAMENTS_DB !== 'undefined' ? TOURNAMENTS_DB : [])
+      .find(t => t.id === id);
+    const fsId = entry?._firestoreId;
+
+    // ローカル削除（即時）
+    if (typeof _tdbDelete === 'function') _tdbDelete(id);
+    if (typeof renderAdminList === 'function') renderAdminList();
+    showToast('🗑️ 削除しました');
+
+    // Firestore 削除
+    if (fsId) {
+      const result = await _FCMS.remove(fsId);
+      if (!result.ok) {
+        showToast('⚠️ Firestore削除に失敗しました');
+        console.error('[CMS] deleteDoc error:', result.error);
+      }
+    } else {
+      console.warn('[CMS] _firestoreId が不明 — Firestore側は onSnapshot 経由で反映');
+    }
+  };
+
+  // _atmDelete も同じ関数に
+  window._atmDelete = window.atmDelete;
+})();
+
+// ================================================================
+// § 4  renderAdminList() を Firestore データ対応に拡張
+// ================================================================
+(function patchRenderAdminList() {
+  function patch() {
+    if (typeof renderAdminList !== 'function') return;
+
+    const _orig = window.renderAdminList;
+
+    window.renderAdminList = function() {
+      const el = document.getElementById('admin-list-scroll');
+      if (!el) return;
+
+      // Firestore データ（_fsMap）と ローカルDB をマージ
+      const allMap = new Map();
+
+      // ① 静的データ（低優先）
+      if (typeof tournaments !== 'undefined') {
+        tournaments.forEach(t => allMap.set(t.id, { _raw: t, src: 'static' }));
+      }
+
+      // ② ローカル TOURNAMENTS_DB（中優先）
+      if (typeof TOURNAMENTS_DB !== 'undefined') {
+        TOURNAMENTS_DB.forEach(t => allMap.set(t.id, { _raw: t, src: 'local' }));
+      }
+
+      // ③ Firestore データ（最高優先）— TOURNAMENTS_FLAT から _fromFirestore なものを取得
+      if (typeof TOURNAMENTS_FLAT !== 'undefined') {
+        TOURNAMENTS_FLAT.filter(t => t._fromFirestore).forEach(flat => {
+          allMap.set(flat.id, { _raw: flat._raw || flat, src: 'firestore', flat });
+        });
+      }
+
+      const all = [...allMap.values()]
+        .sort((a, b) => {
+          const ua = a._raw?.updatedAt || a._raw?.createdAt || '';
+          const ub = b._raw?.updatedAt || b._raw?.createdAt || '';
+          return ub.localeCompare(ua);
+        });
+
+      if (!all.length) {
+        el.innerHTML = '<div style="text-align:center;padding:48px 24px;color:#8e8e93;font-size:14px;">大会データがありません</div>';
+        return;
+      }
+
+      // ── ヘッダー: 件数 + Firestore件数 ──
+      const fsCount = all.filter(x => x.src === 'firestore').length;
+      const totalCount = all.length;
+
+      // ── HTML 生成 ──
+      const getLabel = k => (typeof CAT_LABELS !== 'undefined' ? CAT_LABELS[k] || k : k);
+      const getColor = k => (typeof CAT_COLORS !== 'undefined' ? CAT_COLORS[k] || '#8090A0' : '#8090A0');
+
+      // カテゴリ別グループ
+      const groups = {};
+      all.forEach(({ _raw: t, src, flat }) => {
+        const g = t.category || 'other';
+        if (!groups[g]) groups[g] = [];
+        groups[g].push({ t, src, flat });
+      });
+
+      let html = `
+        <div class="admin-summary-bar">
+          <span class="admin-summary-total">全 ${totalCount} 件</span>
+          ${fsCount > 0 ? `<span class="admin-summary-fs">🔥 Firestore: ${fsCount} 件</span>` : ''}
+        </div>`;
+
+      Object.entries(groups).forEach(([cat, items]) => {
+        const color = getColor(cat);
+        html += `<div class="admin-section-label" style="color:${color}">${getLabel(cat)} (${items.length})</div>`;
+
+        items.forEach(({ t, src }) => {
+          const id       = t.id || '';
+          const name     = t.title || t.name || '(名称未設定)';
+          const dateStr  = t.startDate || t.start || '';
+          const place    = t.course || t.courseName || '';
+          const status   = t.status || 'tbd';
+          const isFs     = src === 'firestore';
+          const isLocal  = src === 'local';
+
+          // ステータスバッジ
+          const statusMap = {
+            open: ['募集中','#39C892'], closing_soon: ['締切間近','#F59E0B'],
+            closed: ['締切済','#8e8e93'], ongoing: ['開催中','#3B82F6'],
+            ended: ['終了','#8e8e93'], tbd: ['未定','#8e8e93']
+          };
+          const [stLabel, stColor] = statusMap[status] || ['未定','#8e8e93'];
+
+          // ソース表示
+          const srcBadge = isFs
+            ? '<span class="admin-src-badge fs-badge">🔥 Firestore</span>'
+            : isLocal
+              ? '<span class="admin-src-badge local-badge">📱 ローカル</span>'
+              : '<span class="admin-src-badge static-badge">📦 静的</span>';
+
+          html += `
+            <div class="admin-card">
+              <div class="admin-card-body">
+                <div class="admin-card-top">
+                  <span class="admin-card-name">${name}</span>
+                  <span class="admin-status-dot" style="background:${stColor};color:${stColor};border-color:${stColor}20">${stLabel}</span>
+                </div>
+                <div class="admin-card-meta">
+                  ${dateStr ? `<span>📅 ${dateStr}</span>` : ''}
+                  ${place   ? `<span>⛳ ${place}</span>`   : ''}
+                  ${srcBadge}
+                </div>
+              </div>
+              <div class="admin-card-actions">
+                <button class="admin-edit-btn"   onclick="openAtmSheet('${id}')">編集</button>
+                <button class="admin-delete-btn" onclick="atmDelete('${id}')">削除</button>
+              </div>
+            </div>`;
+        });
+      });
+
+      el.innerHTML = html;
+    };
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 400), { once: true });
+  } else {
+    setTimeout(patch, 400);
+  }
+})();
+
+// ================================================================
+// § 5  Firestore 更新時に管理リストを自動更新
+// ================================================================
+(function hookFirestoreToAdminList() {
+  // _rebuildFromFirestore の後に renderAdminList を呼ぶ
+  const _origRebuild = window._rebuildFromFirestore;
+  if (typeof _origRebuild === 'function') {
+    // NOTE: _rebuildFromFirestore は FirestoreDB スコープ内なので
+    // ProNexaX.firestore 経由でフックする
+  }
+
+  // onSnapshot 完了後（_setStatus('live',...) 後）に管理リストを更新
+  // 管理ページが表示中の時のみ
+  const _origSetStatus = window._setStatus;
+  // _setStatus はクロージャ内なので直接フックできない
+  // 代わりに: ProNexaX.firestore の start() 後に MutationObserver で検出
+  // → シンプルに: switchPage('admin') 時に renderAdminList を呼ぶようフック
+
+  function patch() {
+    const _origSwitch = window.switchPage;
+    if (typeof _origSwitch !== 'function') return;
+    window.switchPage = function(page) {
+      _origSwitch(page);
+      if (page === 'admin') {
+        setTimeout(() => {
+          if (typeof renderAdminList === 'function') renderAdminList();
+        }, 80);
+      }
+    };
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 300), { once: true });
+  } else {
+    setTimeout(patch, 300);
+  }
+})();
+
+// ================================================================
+// § 6  CSS: 管理画面の追加スタイル
+// ================================================================
+(function injectAdminCMSCSS() {
+  const style = document.createElement('style');
+  style.id = 'admin-cms-style';
+  style.textContent = `
+/* ── 管理一覧サマリーバー ── */
+.admin-summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 4px;
+  font-size: 12px;
+}
+.admin-summary-total { color: var(--text-secondary); font-weight: 600; }
+.admin-summary-fs    { color: #E05555; font-weight: 600; }
+
+/* ── ソースバッジ ── */
+.admin-src-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: .01em;
+}
+.fs-badge     { background: #FFF0F0; color: #E05555; }
+.local-badge  { background: #EFF6FF; color: #3B82F6; }
+.static-badge { background: #F3F4F6; color: #6B7280; }
+
+/* ── カードアクションボタン ── */
+.admin-card-body   { flex: 1; padding: 12px 14px; min-width: 0; }
+.admin-card-top    { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.admin-card-name   { font-size: 14px; font-weight: 600; color: var(--text-primary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-card-meta   { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: var(--text-secondary); align-items: center; }
+.admin-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 10px 12px 0;
+  flex-shrink: 0;
+}
+.admin-edit-btn {
+  height: 32px; min-width: 52px;
+  background: var(--green-main, #39C892);
+  color: #fff; border: none;
+  border-radius: 10px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.admin-delete-btn {
+  height: 32px; min-width: 52px;
+  background: none;
+  color: #E05555; border: 1px solid #E0555530;
+  border-radius: 10px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.admin-edit-btn:active   { opacity: .75; }
+.admin-delete-btn:active { background: #FFF0F0; }
+
+/* ── admin-card を flex layout に ── */
+.admin-card { display: flex; align-items: stretch; }
+
+/* ── ステータスバッジ ── */
+.admin-status-dot {
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 20px;
+  border: 1px solid transparent;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.admin-status-dot { color: inherit; background: transparent; }
+
+/* ── atm-save-btn loading 状態 ── */
+.atm-save-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* ── admin セクションラベル ── */
+.admin-section-label {
+  font-size: 11px; font-weight: 700;
+  padding: 14px 16px 4px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  opacity: .7;
+}
+`;
+  document.head.appendChild(style);
+})();
+
+console.info(
+  '%c[CMS]%c Firestore CRUD 層 初期化完了',
+  'background:#E05555;color:#fff;padding:1px 5px;border-radius:2px;font-weight:700;',
+  'color:#C04040;font-weight:600;'
+);
+
+</script>
+<script>
+/* ================================================================
    ★★★ Firestore 大会データ層 ★★★
 
    設計:
@@ -15849,6 +16432,8 @@ const FirestoreDB = (function() {
       sourceType:     normalized.sourceType || 'firestore',
       _raw:           normalized,
       _fromFirestore: true,
+      // ★ Firestore ドキュメントID（updateDoc/deleteDoc で使用）
+      _firestoreId:   docId,
     };
   }
 
