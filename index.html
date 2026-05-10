@@ -176,6 +176,8 @@ button,input,select,textarea{
 :root[data-color-theme="mint"] .search-header,
 :root[data-color-theme="peach"] .search-header{
   background:#ffffff;
+  position:relative;
+  z-index:30;
 }
 
 /* パステル + ボトムシート / モーダルのアクセントは deep を使い視認性を保つ */
@@ -307,6 +309,37 @@ button,input,select,textarea{
   height: 0;            /* ★ flex:1 + height:0 パターン */
 }
 .page.active{display:flex;}
+
+/* ★★★ FIX: カレンダーページ非アクティブ時の安全層 ★★★
+   JS switchPage() が visibility:hidden を設定するが、
+   CSS でも明示的にフォールバックを定義する。
+   (#page-calendar が active でないとき = 検索・設定など他ページ表示中)
+   ★ 重要: display:none の .page は元々タッチ不可だが、
+     position:fixed の子要素（lp-ring, drag-card 等）が
+     スタッキングコンテキスト外に出て他ページを覆う問題を防ぐ */
+#page-calendar:not(.active){
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ★★★ FIX: 検索画面が active の時 ★★★
+   z-index スタッキングを明示して、
+   カレンダー系の absolute 要素がめり込まないようにする */
+#page-search.active{
+  position: relative;
+  z-index: 1;
+}
+
+/* search画面のfilter-gridとhcat-select-wrapに
+   適切なz-indexスタッキングを確保 */
+#page-search.active .filter-grid{
+  position: relative;
+  z-index: 10;
+}
+#page-search.active .hcat-select-wrap{
+  position: relative;
+  z-index: 20;
+}
 /* ================================================================ */
 /* ★★★ NEW MINIMAL HEADER DESIGN ★★★                             */
 /* White-based, Apple Calendar / Notion inspired                    */
@@ -1464,7 +1497,11 @@ button,input,select,textarea{
   flex-direction:column;
   border-bottom:1px solid var(--border);
   box-sizing:border-box;
-  overflow:hidden;
+  /* ★ overflow:visible に変更 — hcat-dropdown が外にはみ出せるようにする */
+  overflow:visible;
+  /* z-index スタッキングコンテキストを作らない（dropdownがクリップされないよう） */
+  position:relative;
+  z-index:10;
 }
 /* 横スクロールレール */
 .filter-scroll-rail{
@@ -1517,6 +1554,10 @@ button,input,select,textarea{
   padding: 6px 16px 10px;
   background: #fff;
   position: relative;
+  /* ★ dropdownを親のborder-bottomより上に出すためz-indexを設定 */
+  z-index:20;
+  /* overflow:visible でドロップダウンがはみ出せるようにする */
+  overflow:visible;
 }
 :root[data-theme="dark"] .hcat-select-wrap{
   background: var(--card-bg);
@@ -1538,7 +1579,7 @@ button,input,select,textarea{
   -webkit-tap-highlight-color: transparent;
   transition: background .15s, border-color .15s, box-shadow .15s;
   position: relative;
-  overflow: hidden;
+  overflow:visible;
   box-sizing: border-box;
 }
 :root[data-theme="dark"] .hcat-select-btn{
@@ -1618,7 +1659,22 @@ button,input,select,textarea{
   gap: 2px;
   padding: 4px 0 6px;
   animation: hcatDropIn .22s cubic-bezier(.34,1.2,.64,1);
-  overflow: hidden;
+  /* ★ overflow:hidden → visible: アイテムがクリップされないよう */
+  overflow: visible;
+  /* ★ absolute配置でボタン直下に展開 */
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.08);
+  border: 1px solid rgba(0,0,0,.06);
+  z-index: 200;
+  /* iOSでスクロール可能に */
+  max-height: 50vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .hcat-dropdown.is-open{
   display: flex;
@@ -1804,7 +1860,9 @@ button,input,select,textarea{
   filter:brightness(.65) saturate(1.1);
   color:#fff;
 }
-.result-meta{padding:5px 14px 3px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg);}
+.result-meta{padding:5px 14px 3px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg);  position:relative;
+  z-index:5;
+}
 .result-meta.is-hidden{display:none;}
 .result-count{font-size:10.5px;color:var(--text-secondary);font-weight:600;}
 .sort-btn{font-size:11px;color:var(--green-main);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;font-weight:600;}
@@ -1841,9 +1899,12 @@ button,input,select,textarea{
 
 /* ===== フィルターボトムシート ===== */
 .fbs-overlay{
-  position:absolute;inset:0;
+  /* ★ FIX: absolute → fixed で page-search の overflow に依存しない */
+  position:fixed;
+  inset:0;
   background:rgba(5,20,14,.52);
-  z-index:120;
+  /* ★ FIX: z-index を上げて bottom-nav より確実に上に */
+  z-index:150;
   display:flex;align-items:flex-end;
   opacity:0;pointer-events:none;
   transition:opacity .22s;
@@ -2027,7 +2088,9 @@ button,input,select,textarea{
 
 
 
-.search-scroll{flex:1;overflow-y:auto;background:var(--bg);min-height:0;}
+.search-scroll{flex:1;overflow-y:auto;background:var(--bg);min-height:0;  position:relative;
+  z-index:1;
+}
 .search-scroll::-webkit-scrollbar{display:none;}
 
 /* =====================================================================
@@ -5695,6 +5758,86 @@ body.is-admin .admin-badge{display:block;}
 .sort-chip{display:inline-flex;align-items:center;gap:3px;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid rgba(0,0,0,.1);background:#f2f2f7;color:#636366;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;transition:background .15s,color .15s,border-color .15s;flex-shrink:0;}
 .sort-chip.active{background:#1d1d1f;color:#fff;border-color:transparent;}
 .sort-chip:active{transform:scale(.92);}
+
+/* ================================================================
+   ★★★ FIX: 検索画面タッチ問題 完全修正 CSS ★★★
+   
+   問題: カレンダー系の absolute/fixed レイヤーが
+        search page 上に残留してタッチを奪う
+   
+   修正:
+   1. #page-calendar 非アクティブ時: visibility:hidden + pointer-events:none
+   2. #page-search アクティブ時: z-index 階層を確立
+   3. hcat-dropdown: absolute 配置で filter-grid の overflow:hidden を回避
+   4. カレンダー系レイヤーの pointer-events を page 外で無効化
+   ================================================================ */
+
+/* ① カレンダーページ非アクティブ時 — 全子要素のタッチを無効 */
+#page-calendar:not(.active){
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* ② 検索ページアクティブ時 — z-index 階層を明確化 */
+#page-search.active{
+  position: relative;
+  isolation: isolate;  /* 新しいスタッキングコンテキストを作成 */
+}
+
+/* ③ 検索ページ内の各レイヤーの z-index 階層 */
+#page-search.active .search-header       { position:relative; z-index:30; }
+#page-search.active .search-mode-tabs    { position:relative; z-index:25; }
+#page-search.active .filter-grid         { position:relative; z-index:20; overflow:visible; }
+#page-search.active .hcat-select-wrap    { position:relative; z-index:21; overflow:visible; }
+#page-search.active .hcat-dropdown       { z-index:200; }
+#page-search.active .result-meta         { position:relative; z-index:15; }
+#page-search.active .sort-bar            { position:relative; z-index:14; }
+#page-search.active .search-scroll       { position:relative; z-index:10; }
+#page-search.active .sq-suggest          { z-index:300; }
+#page-search.active .fbs-overlay         { z-index:150; }
+
+/* ④ カレンダー系 absolute レイヤー — search が active の時は確実に無効 */
+#page-calendar:not(.active) .cal-multiday-layer,
+#page-calendar:not(.active) .cal-slide-container,
+#page-calendar:not(.active) .cal-swipe-wrap,
+#page-calendar:not(.active) .cal-panel,
+#page-calendar:not(.active) .cal-row{
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* ⑤ filter-chip タッチエリア確保 */
+#page-search .filter-chip,
+#page-search .hcat-group-chip,
+#page-search .hcat-dropdown-item,
+#page-search .hcat-select-btn{
+  -webkit-tap-highlight-color: rgba(57,200,146,.15);
+  touch-action: manipulation;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+/* ⑥ hcat-dropdown open 状態のタッチエリア確保 */
+#page-search .hcat-dropdown.is-open{
+  pointer-events: auto !important;
+}
+#page-search .hcat-dropdown.is-open .hcat-dropdown-item{
+  pointer-events: auto !important;
+  -webkit-tap-highlight-color: rgba(57,200,146,.15);
+}
+
+/* ⑦ search-scroll 内の大会カードのタッチエリア */
+#page-search .search-scroll *{
+  pointer-events: auto;
+}
+
+/* ⑧ bottom-nav は全ページで常に最上位 */
+.bottom-nav{
+  position: relative;
+  z-index: 100;
+}
+
 </style>
 
 
@@ -7877,8 +8020,26 @@ const CELL_DRAG_LP_MS=350;   // セル長押し閾値（誤操作防止：350ms�
 const CELL_DRAG_THRESHOLD=8;
 
 function switchPage(page){
+  // ── ページ切替の基本処理 ──
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
+
+  // ★ FIX: カレンダーページが非アクティブのとき
+  //    visibility:hidden + pointer-events:none を適用。
+  //    position:fixed / position:absolute の子要素が
+  //    他ページ（特に検索画面）を覆う問題を防ぐ。
+  const calPage = document.getElementById('page-calendar');
+  if(calPage){
+    if(page === 'calendar'){
+      calPage.style.visibility = '';
+      calPage.style.pointerEvents = '';
+    } else {
+      calPage.style.visibility = 'hidden';
+      calPage.style.pointerEvents = 'none';
+    }
+  }
+
+  // ── ナビゲーションボタン状態更新 ──
   ['calendar','search','finance','mypage'].forEach(key=>{
     const btn=document.getElementById('nav-'+key),icon=document.getElementById('icon-'+key);
     const lbl=btn.querySelector('.bnav-label');btn.classList.remove('active');
@@ -7887,17 +8048,21 @@ function switchPage(page){
   });
   const activeBtn=document.getElementById('nav-'+page),activeIcon=document.getElementById('icon-'+page);
   if(activeBtn){activeBtn.classList.add('active');const lbl=activeBtn.querySelector('.bnav-label');lbl.style.color='#1AAF7A';lbl.style.fontWeight='600';if(activeIcon&&NAV_ICONS[page])activeIcon.innerHTML=NAV_ICONS[page].active;}
+
+  // ── ページ別処理 ──
   if(page==='search'){
     applySearchFilters();
-    // ★ 検索画面切替時：モーダルを確実に閉じてstateリセット
-    // （let変数のTDZを避けDOM操作のみで完結させる）
+    // 検索画面切替時：モーダルを確実に閉じてstateリセット
     const _s = document.getElementById('tdm-sheet');
     const _o = document.getElementById('tdm-overlay');
     if(_s){ _s.classList.remove('show','is-dragging'); _s.style.transform=''; _s.style.transition=''; }
     if(_o){ _o.classList.remove('show'); }
     if(typeof closeTournamentModal === 'function' && typeof _tdmCurrentId !== 'undefined' && _tdmCurrentId){ closeTournamentModal(); }
   }
-  if(page==='calendar'){renderAllPanels();renderCalList();}
+  if(page==='calendar'){
+    // カレンダーに戻った時: visibility を確実に解除してから再描画
+    renderAllPanels();renderCalList();
+  }
 }
 
 function todayStr(){const t=new Date();return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;}
