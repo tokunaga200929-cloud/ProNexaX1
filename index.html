@@ -6123,6 +6123,11 @@ body.is-admin .admin-badge{display:block;}
         </div>
       </div>
     </div>
+    <!-- ★ Firestore ステータスバナー（loading/live/error） -->
+    <div id="fs-status-banner" aria-live="polite">
+      <span class="fs-status-dot loading"></span>
+      <span class="fs-status-text">大会データを取得中…</span>
+    </div>
     <div class="search-scroll"><div class="search-list-top-pad"></div><div id="search-list"></div><div style="height:20px;"></div></div>
   </div>
 
@@ -6923,7 +6928,15 @@ function _initFirebaseAuth() {
   }
 
   const FB_VER = '10.8.0';
-  const _fallback = () => { _fbAuthReady = true; _onAuthStateChangedGuest(); };
+  const _fallback = () => {
+    _fbAuthReady = true;
+    _onAuthStateChangedGuest();
+    // Firestore SDK が部分的にロード済みの場合は起動を試みる
+    if (typeof firebase !== 'undefined' && firebase.apps?.length &&
+        typeof firebase.firestore === 'function') {
+      setTimeout(_initFirestore, 500);
+    }
+  };
 
   _loadScript(
     `https://www.gstatic.com/firebasejs/${FB_VER}/firebase-app-compat.js`,
@@ -15674,15 +15687,20 @@ window.ProNexaX = Object.assign(window.ProNexaX || {}, {
 
 /* ── Firestore ステータスバナー ── */
 #fs-status-banner {
-  display: none;
+  display: flex;  /* デフォルト表示（Firestore接続前から見える） */
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 6px 16px 4px;
   font-size: 11px;
   font-weight: 600;
   flex-shrink: 0;
+  color: var(--text-tertiary);
+  min-height: 26px;
 }
+/* show クラスは後方互換のため残す */
 #fs-status-banner.show { display: flex; }
+/* live 後に自動非表示（JS から classList.remove('show') で隠す） */
+#fs-status-banner.hidden { display: none; }
 #fs-status-banner.loading { color: var(--text-tertiary); }
 #fs-status-banner.error   { color: #E05555; background: #FFF0F0; border-radius: 10px; margin: 6px 12px; }
 #fs-status-banner.live    { color: var(--green-dark); }
@@ -15738,17 +15756,63 @@ const FirestoreDB = (function() {
     if (txt) txt.textContent = msg || '';
     if (status === 'live') {
       // 取得成功後 3 秒でバナーを隠す
-      setTimeout(() => { banner.classList.remove('show'); }, 3000);
+      setTimeout(() => {
+        banner.classList.add('hidden');
+        banner.classList.remove('show');
+      }, 3000);
+    } else {
+      banner.classList.remove('hidden');
     }
   }
 
   // ── Firestore ドキュメント → TOURNAMENTS_FLAT 互換フラット形式 ──
   function _fsDocToFlat(doc) {
     const d = doc.data();
+    const docId = doc.id;
+
+    // Firestoreのフィールド名は柔軟に受け入れる
+    // (title/name, startDate/start, category/cat など両方対応)
+    const normalized_input = {
+      id:             d.id || docId,
+      title:          d.title || d.name || '',
+      category:       d.category || d.cat || '',
+      subCategory:    d.subCategory || '',
+      gender:         d.gender || 'mens',
+      region:         d.region || 'domestic',
+      area:           d.area || '',
+      prefecture:     d.prefecture || '',
+      country:        d.country || 'japan',
+      startDate:      d.startDate || d.start || null,
+      endDate:        d.endDate || d.end || null,
+      entryDeadline:  d.entryDeadline || null,
+      cancelDeadline: d.cancelDeadline || null,
+      course:         d.course || d.courseName || '',
+      organizer:      d.organizer || '',
+      prize:          d.prize || '',
+      prizeWinner:    d.prizeWinner || d.winnerPrize || '',
+      entryFee:       d.entryFee || '',
+      practiceRoundFee: d.practiceRoundFee || '',
+      entryMethod:    d.entryMethod || '',
+      qualification:  d.qualification || '',
+      capacity:       d.capacity || '',
+      tags:           d.tags || [],
+      status:         d.status || 'tbd',
+      sourceType:     d.sourceType || 'firestore',
+      sourceUrl:      d.sourceUrl || '',
+      links: {
+        website:   d.links?.website   || d.links?.official || d.officialUrl || '',
+        instagram: d.links?.instagram || d.igUrl || '',
+        entry:     d.links?.entry     || d.entryUrl || '',
+        pairing:   d.links?.pairing   || d.links?.pairs || d.pairUrl || '',
+        result:    d.links?.result    || d.resultUrl || '',
+      },
+      notes:          d.notes || '',
+    };
+
     // _tdbTemplate でフィールドを正規化してから _tdbToFlat へ
     const normalized = typeof _tdbTemplate === 'function'
-      ? _tdbTemplate({ ...d, id: d.id || doc.id })
-      : { ...d, id: d.id || doc.id };
+      ? _tdbTemplate(normalized_input)
+      : normalized_input;
 
     if (typeof _tdbToFlat === 'function') {
       return _tdbToFlat(normalized);
@@ -15817,8 +15881,14 @@ const FirestoreDB = (function() {
     }
 
     // ④ TOURNAMENTS_FLAT を破壊的更新（参照を維持）
+    // クライアント側で startDate 昇順にソート（orderBy を外したため）
+    const sorted = [...staticMap.values()].sort((a, b) => {
+      const sa = a.start || '9999-99-99';
+      const sb = b.start || '9999-99-99';
+      return sa < sb ? -1 : sa > sb ? 1 : 0;
+    });
     TOURNAMENTS_FLAT.length = 0;
-    staticMap.forEach(v => TOURNAMENTS_FLAT.push(v));
+    sorted.forEach(v => TOURNAMENTS_FLAT.push(v));
 
     // ⑤ DB 互換レイヤー再構築
     if (typeof DB !== 'undefined') {
@@ -15878,29 +15948,31 @@ const FirestoreDB = (function() {
     try {
       const db = firebase.firestore();
 
-      // 接続設定（オフライン対応）
-      db.settings({ merge: true });
-
       _setStatus('loading', '大会データを取得中…');
 
       // 現在の検索画面かどうかに関わらず取得開始（データは常に最新を保つ）
       _unsubscribe = db.collection('tournaments')
-        .orderBy('startDate', 'asc')
         .onSnapshot(
           _onSnapshot,
           (err) => {
             console.error('[Firestore] onSnapshot error:', err);
             _setStatus('error', 'データ取得エラー — 静的データで表示中');
-            // 5 秒後にリトライ
+            if (typeof showToast === 'function') showToast('Firestore接続エラー。静的データで表示します。');
+            // 10 秒後にリトライ（エラー多発を防ぐ）
             if (_retryTimer) clearTimeout(_retryTimer);
-            _retryTimer = setTimeout(_subscribe, 5000);
+            _retryTimer = setTimeout(_subscribe, 10000);
           }
         );
 
-      console.info('[Firestore] tournaments コレクションの購読を開始');
+      console.info(
+        '%c[Firestore]%c tournaments コレクション購読開始',
+        'background:#39C892;color:#fff;padding:1px 5px;border-radius:2px;font-weight:700;',
+        'color:#3A5C52;'
+      );
     } catch(e) {
       console.error('[Firestore] subscribe error:', e);
       _setStatus('error', '接続エラー');
+      if (typeof showToast === 'function') showToast('Firestore接続に失敗しました');
     }
   }
 
@@ -15935,20 +16007,20 @@ const FirestoreDB = (function() {
 // 検索画面に Firestore ステータスバナーを挿入
 // ================================================================
 (function insertStatusBanner() {
+  // バナーは HTML に直接記述済み。JS 挿入は不要。
+  // (念のため、未挿入の場合のみ動的挿入)
   function insert() {
-    const searchHeader = document.querySelector('#page-search .search-header');
-    if (!searchHeader || document.getElementById('fs-status-banner')) return;
-
+    if (document.getElementById('fs-status-banner')) return;
+    const wrap = document.querySelector('#page-search .search-scroll');
+    if (!wrap) return;
     const banner = document.createElement('div');
     banner.id = 'fs-status-banner';
-    banner.innerHTML = `
-      <span class="fs-status-dot loading"></span>
-      <span class="fs-status-text">大会データを取得中…</span>
-    `;
-    // search-header の末尾に挿入
-    searchHeader.appendChild(banner);
+    banner.setAttribute('aria-live', 'polite');
+    banner.innerHTML =
+      '<span class="fs-status-dot loading"></span>' +
+      '<span class="fs-status-text">大会データを取得中…</span>';
+    wrap.parentNode.insertBefore(banner, wrap);
   }
-
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', insert, { once: true });
   } else {
@@ -15960,26 +16032,43 @@ const FirestoreDB = (function() {
 // _initFirestore — Firebase Auth ロード後に呼ばれる
 // ================================================================
 function _initFirestore() {
-  // 検索画面なら即 Skeleton を表示
-  const searchPage = document.getElementById('page-search');
-  const isSearchActive = searchPage && searchPage.classList.contains('active');
-  if (isSearchActive) {
-    FirestoreDB['_showSkel'] = function() {};  // no-op guard
-    // applySearchFilters が Skeleton 表示と競合しないよう
-    // 一時的に list を Skeleton で埋める
-    const list = document.getElementById('search-list');
-    if (list && !list.innerHTML.trim()) {
-      list.innerHTML = Array.from({ length: 5 }, () => `
-        <div class="skel-card">
-          <div class="skel-line skel-line-title"></div>
-          <div class="skel-line skel-line-sub"></div>
-          <div class="skel-line skel-line-badge"></div>
-        </div>`).join('');
-    }
+  // Firebase SDK が未ロードなら何もしない
+  if (typeof firebase === 'undefined') {
+    console.warn('[Firestore] Firebase SDK 未ロード — スキップ');
+    return;
   }
+  if (!firebase.apps?.length) {
+    console.warn('[Firestore] Firebase 未初期化 — スキップ');
+    return;
+  }
+  if (typeof firebase.firestore !== 'function') {
+    console.warn('[Firestore] Firestore SDK 未ロード — スキップ');
+    if (typeof showToast === 'function') showToast('Firestore SDKの読み込みに失敗しました');
+    return;
+  }
+
+  // 検索画面が active なら即 Skeleton 表示
+  function _showSkeletonIfSearch() {
+    const searchPage = document.getElementById('page-search');
+    if (!searchPage || !searchPage.classList.contains('active')) return;
+    const list = document.getElementById('search-list');
+    if (!list) return;
+    // 既に大会カードがあれば上書きしない
+    if (list.querySelector('.search-card, .skel-card')) return;
+    list.innerHTML = Array.from({ length: 5 }, () =>
+      '<div class="skel-card">' +
+        '<div class="skel-line skel-line-title"></div>' +
+        '<div class="skel-line skel-line-sub"></div>' +
+        '<div class="skel-line skel-line-badge"></div>' +
+      '</div>'
+    ).join('');
+  }
+
+  _showSkeletonIfSearch();
 
   // Firestore 購読を開始
   FirestoreDB.start();
+  console.info('[Firestore] 起動完了');
 }
 
 // ProNexaX API に Firestore を追加
