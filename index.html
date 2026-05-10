@@ -3204,10 +3204,46 @@ button,input,select,textarea{
   color:var(--green-dark);
 }
 .empty-search{text-align:center;padding:32px 14px;color:var(--text-tertiary);font-size:11px;font-weight:500;}
-.modal-overlay{position:fixed;inset:0;background:rgba(5,20,14,.5);z-index:100;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s;}
-.modal-overlay.show{opacity:1;pointer-events:all;}
-.modal-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);max-height:88%;display:flex;flex-direction:column;box-shadow:0 -4px 24px rgba(0,0,0,.12);}
-.modal-overlay.show .modal-sheet{transform:translateY(0);}
+/* BottomSheet 初期状態: 完全非表示（Safari PWA対応） */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(5,20,14,.5);
+  z-index:100;
+  display:none;          /* Safari PWA対策：初期はdisplay:none */
+  align-items:flex-end;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .25s;
+}
+.modal-overlay.show{
+  display:flex;          /* 表示時のみflexに */
+  opacity:1;
+  visibility:visible;
+  pointer-events:all;
+}
+/* BottomSheet本体 初期状態 */
+.modal-sheet{
+  background:#fff;
+  border-radius:20px 20px 0 0;
+  width:100%;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(110%);  /* 画面外に完全退避 */
+  transition:transform .3s cubic-bezier(.32,.72,0,1), opacity .3s ease, visibility .3s ease;
+  max-height:88%;
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 -4px 24px rgba(0,0,0,.12);
+}
+/* 表示時のみアニメーションで出現 */
+.modal-overlay.show .modal-sheet{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0);
+}
 .modal-handle{width:38px;height:4px;background:#DDE8E4;border-radius:2px;margin:10px auto 12px;flex-shrink:0;}
 .modal-title{font-size:14px;font-weight:700;color:var(--text-primary);padding:0 16px 9px;border-bottom:1px solid #EEF5F2;flex-shrink:0;}
 .modal-title.edit-mode{background:linear-gradient(90deg,var(--green-chip) 0%,transparent 100%);border-left:3px solid var(--green-main);padding-left:13px;}
@@ -4797,10 +4833,14 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
   /* contain: layout style; ← Safari bug: 親のflex height計算を壊すため使用禁止 */
 }
 
-/* モーダルシート：合成レイヤー（tdm-sheetはtransformで開閉するため除外） */
-.modal-sheet, .fbs-sheet, .remind-sheet {
+/* モーダルシート：合成レイヤー（modal-sheetはtransformで開閉するため translateZ除外） */
+.fbs-sheet, .remind-sheet {
   will-change: transform;
   transform: translateZ(0);
+}
+.modal-sheet {
+  will-change: transform, opacity;
+  /* translateZ(0) は適用しない（translateY(110%)初期値を保護） */
 }
 /* tdm-sheetは translateY(100%) 初期値を保護するため will-change のみ */
 .tdm-sheet {
@@ -6385,6 +6425,7 @@ body.is-admin .admin-badge{display:block;}
       </div>
     </div>
   </div>
+  <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-title" id="modal-title">予定を追加</div>
@@ -6453,7 +6494,7 @@ body.is-admin .admin-badge{display:block;}
         <button class="btn-secondary" onclick="closeModal()">キャンセル</button>
       </div>
     </div>
-  </div>
+  </div><!-- /.modal-overlay -->
 
   <!-- ★★★ iOSホイールピッカー v2（Apple純正カレンダー風） ★★★ -->
   <div class="wp-overlay" id="wp-overlay" onclick="if(event.target===this)wpClose()">
