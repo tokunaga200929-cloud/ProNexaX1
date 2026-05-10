@@ -5575,107 +5575,6 @@ body{
       </div>
     </div>
     <div class="search-scroll"><div class="search-list-top-pad"></div><div id="search-list"></div><div style="height:20px;"></div></div>
-
-    <!-- ★★★ Phase2: 大会詳細モーダル ★★★ -->
-    <div class="tdm-overlay" id="tdm-overlay" onclick="closeTournamentModal()"></div>
-    <div class="tdm-sheet" id="tdm-sheet">
-      <!-- グラバーバー -->
-      <div class="tdm-grabber" id="tdm-grabber"></div>
-
-      <!-- ヘッダー：大会名＋カテゴリ -->
-      <div class="tdm-header">
-        <div class="tdm-header-left">
-          <div class="tdm-cat-row" id="tdm-cat-row"></div>
-          <div class="tdm-title" id="tdm-title">大会名</div>
-        </div>
-        <button class="tdm-close-btn" id="tdm-close-btn" onclick="closeTournamentModal()" aria-label="閉じる">✕</button>
-      </div>
-
-      <!-- アクションボタン群 -->
-      <div class="tdm-actions" id="tdm-actions"></div>
-
-      <!-- スクロールエリア -->
-      <div class="tdm-scroll" id="tdm-scroll">
-        <!-- 基本情報 -->
-        <div class="tdm-section">
-          <div class="tdm-section-title">基本情報</div>
-          <div id="tdm-basic-rows"></div>
-        </div>
-
-        <!-- 金額情報 -->
-        <div class="tdm-section">
-          <div class="tdm-section-title">賞金・費用</div>
-          <div id="tdm-money-rows"></div>
-        </div>
-
-        <!-- エントリー情報 -->
-        <div class="tdm-section">
-          <div class="tdm-section-title">エントリー</div>
-          <div id="tdm-entry-rows"></div>
-        </div>
-
-        <!-- リンク -->
-        <div class="tdm-section">
-          <div class="tdm-section-title">リンク</div>
-        </div>
-        <div class="tdm-link-grid" id="tdm-link-grid"></div>
-
-        <div style="height:8px;"></div>
-      </div>
-
-      <!-- フッター：主要CTA -->
-      <div class="tdm-footer" id="tdm-footer">
-        <button class="tdm-footer-cal" id="tdm-footer-cal" onclick="_tdmAddToCalendar()">
-          <svg width="15" height="15" viewBox="0 0 22 22" fill="none">
-            <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/>
-            <line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            <line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            <line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/>
-          </svg>
-          カレンダーに追加
-        </button>
-        <button class="tdm-footer-entry" id="tdm-footer-entry" onclick="_tdmOpenEntry()">
-          <svg width="14" height="14" viewBox="0 0 22 22" fill="none">
-            <path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
-            <path d="M9 11l2 2 4-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="8" y="1" width="6" height="4" rx="1" stroke="#fff" stroke-width="1.7"/>
-          </svg>
-          エントリーへ
-        </button>
-      </div>
-    </div>
-    <!-- ★ リマインド：時間選択シート -->
-    <div class="remind-overlay" id="remind-overlay" onclick="if(event.target===this)closeRemindSheet()">
-      <div class="remind-sheet" onclick="event.stopPropagation()">
-        <div class="remind-handle"></div>
-        <div class="remind-sheet-header">
-          <span class="remind-sheet-title" id="remind-sheet-name">通知タイミング</span>
-          <button class="remind-sheet-cancel" onclick="closeRemindSheet()">キャンセル</button>
-        </div>
-        <div class="remind-option-list">
-          <div class="remind-option" id="ropt-30min"   onclick="_selectRemindOption('30min')">
-            <span class="remind-option-label">30分前</span>
-            <span class="remind-option-check"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="3,8.5 6.5,12 13,5" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          </div>
-          <div class="remind-option" id="ropt-1hour"   onclick="_selectRemindOption('1hour')">
-            <span class="remind-option-label">1時間前</span>
-            <span class="remind-option-check"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="3,8.5 6.5,12 13,5" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          </div>
-          <div class="remind-option" id="ropt-sameDay" onclick="_selectRemindOption('sameDay')">
-            <span class="remind-option-label">当日朝</span>
-            <span class="remind-option-check"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="3,8.5 6.5,12 13,5" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          </div>
-          <div class="remind-option" id="ropt-dayBefore" onclick="_selectRemindOption('dayBefore')">
-            <span class="remind-option-label">前日</span>
-            <span class="remind-option-check"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="3,8.5 6.5,12 13,5" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          </div>
-          <div class="remind-option" id="ropt-weekBefore" onclick="_selectRemindOption('weekBefore')">
-            <span class="remind-option-label">1週間前</span>
-            <span class="remind-option-check"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="3,8.5 6.5,12 13,5" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- ================================================================ -->
@@ -6131,6 +6030,108 @@ body{
     <div class="add-cat-manage-section" id="add-cat-manage-section" style="display:none;">
       <div class="add-cat-section-label" style="margin-top:18px;">追加済みカテゴリ</div>
       <div class="add-cat-manage-list" id="add-cat-manage-list"></div>
+    </div>
+  </div>
+
+  <!-- ★★★ 大会詳細モーダル (phone-inner直下 / position:fixed正常動作) ★★★ -->
+  <div class="tdm-overlay" id="tdm-overlay" onclick="closeTournamentModal()"></div>
+  <div class="tdm-sheet" id="tdm-sheet">
+    <!-- グラバーバー -->
+    <div class="tdm-grabber" id="tdm-grabber"></div>
+
+    <!-- ヘッダー：大会名＋カテゴリ -->
+    <div class="tdm-header">
+      <div class="tdm-header-left">
+        <div class="tdm-cat-row" id="tdm-cat-row"></div>
+        <div class="tdm-title" id="tdm-title">大会名</div>
+      </div>
+      <button class="tdm-close-btn" id="tdm-close-btn" onclick="closeTournamentModal()" aria-label="閉じる">✕</button>
+    </div>
+
+    <!-- アクションボタン群 -->
+    <div class="tdm-actions" id="tdm-actions"></div>
+
+    <!-- スクロールエリア -->
+    <div class="tdm-scroll" id="tdm-scroll">
+      <!-- 基本情報 -->
+      <div class="tdm-section">
+        <div class="tdm-section-title">基本情報</div>
+        <div id="tdm-basic-rows"></div>
+      </div>
+
+      <!-- 金額情報 -->
+      <div class="tdm-section">
+        <div class="tdm-section-title">賞金・費用</div>
+        <div id="tdm-money-rows"></div>
+      </div>
+
+      <!-- エントリー情報 -->
+      <div class="tdm-section">
+        <div class="tdm-section-title">エントリー</div>
+        <div id="tdm-entry-rows"></div>
+      </div>
+
+      <!-- リンク -->
+      <div class="tdm-section">
+        <div class="tdm-section-title">リンク</div>
+      </div>
+      <div class="tdm-link-grid" id="tdm-link-grid"></div>
+
+      <div style="height:8px;"></div>
+    </div>
+
+    <!-- フッター：主要CTA -->
+    <div class="tdm-footer" id="tdm-footer">
+      <button class="tdm-footer-cal" id="tdm-footer-cal" onclick="_tdmAddToCalendar()">
+        <svg width="15" height="15" viewBox="0 0 22 22" fill="none">
+          <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/>
+          <line x1="7" y1="2" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          <line x1="15" y1="2" x2="15" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          <line x1="3" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.7"/>
+        </svg>
+        カレンダーに追加
+      </button>
+      <button class="tdm-footer-entry" id="tdm-footer-entry" onclick="_tdmOpenEntry()">
+        <svg width="14" height="14" viewBox="0 0 22 22" fill="none">
+          <path d="M14 3H18a1 1 0 011 1v15a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
+          <path d="M9 11l2 2 4-4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="8" y="1" width="6" height="4" rx="1" stroke="#fff" stroke-width="1.7"/>
+        </svg>
+        エントリーへ
+      </button>
+    </div>
+  </div>
+
+  <!-- ★ リマインド：時間選択シート (phone-inner直下) -->
+  <div class="remind-overlay" id="remind-overlay" onclick="if(event.target===this)closeRemindSheet()">
+    <div class="remind-sheet" onclick="event.stopPropagation()">
+      <div class="remind-handle"></div>
+      <div class="remind-sheet-header">
+        <span class="remind-sheet-title" id="remind-sheet-name">通知タイミング</span>
+        <button class="remind-sheet-cancel" onclick="closeRemindSheet()">キャンセル</button>
+      </div>
+      <div class="remind-option-list">
+        <div class="remind-option" id="ropt-30min"   onclick="_selectRemindOption('30min')">
+          <span class="remind-option-label">30分前</span>
+          <span class="remind-option-check"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="3,8.5 6.5,12 13,5" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+        <div class="remind-option" id="ropt-1hour"   onclick="_selectRemindOption('1hour')">
+          <span class="remind-option-label">1時間前</span>
+          <span class="remind-option-check"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="3,8.5 6.5,12 13,5" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+        <div class="remind-option" id="ropt-sameDay" onclick="_selectRemindOption('sameDay')">
+          <span class="remind-option-label">当日朝</span>
+          <span class="remind-option-check"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="3,8.5 6.5,12 13,5" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+        <div class="remind-option" id="ropt-dayBefore" onclick="_selectRemindOption('dayBefore')">
+          <span class="remind-option-label">前日</span>
+          <span class="remind-option-check"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="3,8.5 6.5,12 13,5" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+        <div class="remind-option" id="ropt-weekBefore" onclick="_selectRemindOption('weekBefore')">
+          <span class="remind-option-label">1週間前</span>
+          <span class="remind-option-check"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polyline points="3,8.5 6.5,12 13,5" stroke="var(--green-main)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+      </div>
     </div>
   </div>
 
