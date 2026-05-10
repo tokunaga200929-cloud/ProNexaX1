@@ -34,9 +34,159 @@
   <link rel="apple-touch-startup-image" media="(device-width:375px)and(device-height:812px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
   <link rel="apple-touch-startup-image" media="(device-width:430px)and(device-height:932px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
   <title>ProNexaX</title>
+  <style>
+  /* ============================================================
+     ProNexaX Splash Screen
+     ============================================================ */
+  #pnx-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #FFFFFF;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  #pnx-splash.pnx-fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .pnx-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    transform: scale(0.93);
+    animation: pnx-reveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+  }
+  @keyframes pnx-reveal {
+    to { opacity: 1; transform: scale(1); }
+  }
+  .pnx-lines {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 28px;
+  }
+  .pnx-line {
+    width: 52px;
+    height: 1px;
+    background: #E0E0E0;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+  .pnx-logo-wrap {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+  }
+  .pnx-logo-wrap img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+  }
+  .pnx-name {
+    font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.6px;
+    color: #1d1d1f;
+    line-height: 1;
+    margin-bottom: 9px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .pnx-name .pnx-x { color: #39C892; }
+  .pnx-tagline {
+    font-family: -apple-system, "SF Pro Text", "SF Pro Display", "Helvetica Neue", sans-serif;
+    font-size: 12.5px;
+    font-weight: 400;
+    letter-spacing: 0.2px;
+    color: #A0A0A0;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+  }
+  .pnx-bottom {
+    position: absolute;
+    bottom: calc(env(safe-area-inset-bottom) + 48px);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    animation: pnx-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+  }
+  .pnx-bar-track {
+    width: 96px;
+    height: 3px;
+    background: #EBEBEB;
+    border-radius: 100px;
+    overflow: hidden;
+    position: relative;
+  }
+  .pnx-bar-fill {
+    position: absolute;
+    left: 0; top: 0;
+    height: 100%;
+    width: 0%;
+    background: #39C892;
+    border-radius: 100px;
+    animation: pnx-load 1.6s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+  }
+  @keyframes pnx-load {
+    0%   { width: 0%; }
+    60%  { width: 72%; }
+    85%  { width: 88%; }
+    100% { width: 96%; }
+  }
+  .pnx-loading-label {
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.15px;
+    color: #C0C0C0;
+    -webkit-font-smoothing: antialiased;
+    white-space: nowrap;
+  }
+  </style>
 </head>
 <body>
 
+<!-- ============================================================
+     ProNexaX Splash Screen
+     ============================================================ -->
+<div id="pnx-splash" role="presentation" aria-hidden="true">
+  <div class="pnx-center">
+    <div class="pnx-lines">
+      <div class="pnx-line"></div>
+      <div class="pnx-logo-wrap">
+        <img src="pronexaX_logo.png" alt="ProNexaX">
+      </div>
+      <div class="pnx-line"></div>
+    </div>
+    <div class="pnx-name">ProNex<span class="pnx-x">X</span></div>
+    <div class="pnx-tagline">Tournament &amp; Career Management</div>
+  </div>
+  <div class="pnx-bottom">
+    <div class="pnx-bar-track">
+      <div class="pnx-bar-fill"></div>
+    </div>
+    <div class="pnx-loading-label">Loading...</div>
+  </div>
+</div>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -6507,12 +6657,14 @@ function _onAuthStateChanged(user) {
 }
 
 function _showAuthScreen() {
+  if (typeof window.pnxSplashReady === 'function') window.pnxSplashReady();
   document.getElementById('auth-screen')?.classList.remove('hidden');
   document.getElementById('auth-loading')?.classList.add('hidden');
   document.body.classList.add('auth-guest');
 }
 
 function _showApp(user) {
+  if (typeof window.pnxSplashReady === 'function') window.pnxSplashReady();
   _currentUser = user;
   document.getElementById('auth-screen')?.classList.add('hidden');
   document.body.classList.remove('auth-guest');
@@ -13460,6 +13612,46 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     });
   });
 })();
+</script>
+
+<script>
+/* ============================================================
+   ProNexaX Splash — dismiss controller
+   ============================================================ */
+(function () {
+  'use strict';
+  var splash = document.getElementById('pnx-splash');
+  if (!splash) return;
+
+  var DISPLAY_MIN_MS = 1800;
+  var timerDone = false;
+  var authDone  = false;
+
+  setTimeout(function () {
+    timerDone = true;
+    if (authDone) dismiss();
+  }, DISPLAY_MIN_MS);
+
+  /* 認証完了後に呼ばれる (_showApp / _showAuthScreen から) */
+  window.pnxSplashReady = function () {
+    authDone = true;
+    if (timerDone) dismiss();
+  };
+
+  /* 最大 5s のフェールセーフ */
+  setTimeout(dismiss, 5000);
+
+  function dismiss() {
+    if (!splash || splash._dismissed) return;
+    splash._dismissed = true;
+    splash.classList.add('pnx-fade-out');
+    var done = function () {
+      if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+    };
+    splash.addEventListener('transitionend', done, { once: true });
+    setTimeout(done, 700);
+  }
+}());
 </script>
 
 </body>
