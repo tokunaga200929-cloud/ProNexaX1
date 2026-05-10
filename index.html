@@ -58,10 +58,15 @@ html,body{
   padding:0;
   background:#ffffff;
   overflow:hidden;
+  /* Phase3: iPhone縦固定 */
+  touch-action:pan-y;
 }
 body{
   position:relative;
   overscroll-behavior-x:none;
+  overscroll-behavior-y:none;
+  /* Phase3: タッチ遅延ゼロ化 */
+  touch-action:manipulation;
 }
 *,*::before,*::after{
   font-family:inherit;
@@ -4474,6 +4479,103 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
   overscroll-behavior:contain !important;
 }
 
+/* ================================================================
+   ★★★ Phase3: パフォーマンス最適化CSS ★★★
+   ================================================================ */
+
+/* スクロール要素：GPU加速・Jank削減 */
+.search-scroll, .tdm-scroll, .cal-scroll, .drawer-scroll, .fbs-scroll {
+  will-change: scroll-position;
+  transform: translateZ(0);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* カード：GPU合成レイヤー */
+.t-card {
+  will-change: transform;
+  contain: layout style;
+}
+
+/* モーダルシート：合成レイヤー */
+.tdm-sheet, .modal-sheet, .fbs-sheet, .remind-sheet {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* オーバーレイ：GPUへオフロード */
+.tdm-overlay, .fbs-overlay, .drawer-overlay, .modal-overlay {
+  will-change: opacity;
+}
+
+/* タップ時のハイライト完全ゼロ（Safari） */
+button, a, [onclick], .filter-chip, .t-card, .drawer-item,
+.tdm-action-btn, .tdm-link-btn, .add-btn, .t-fav-btn {
+  -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* タップ反応速度ゼロ（UIインタラクション要素） */
+button, .filter-chip, .t-cat-badge, .search-gender-btn,
+.search-region-tab, .search-mode-tab, .bnav-btn {
+  touch-action: manipulation !important;
+}
+
+/* カード入れ替え時のアニメーション */
+@keyframes cardFadeIn {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.t-card {
+  animation: cardFadeIn .18s ease both;
+}
+
+/* フィルターチップ切り替えアニメーション */
+@keyframes chipPop {
+  0%   { transform:scale(1); }
+  40%  { transform:scale(.88); }
+  70%  { transform:scale(1.06); }
+  100% { transform:scale(1); }
+}
+.filter-chip.active {
+  animation: chipPop .22s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* スクロール慣性の滑らかさ向上 */
+.search-scroll {
+  scroll-behavior: auto; /* smooth はiOSで重い */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 縦向き固定（横向き時でもUI崩れ防止） */
+@media (orientation: landscape) and (max-height: 500px) {
+  .app-frame {
+    height: 100dvh !important;
+  }
+  .bottom-nav {
+    display: none !important;
+  }
+}
+
+/* iOS Safari アドレスバー伸縮対応 */
+@supports (height: 100svh) {
+  .app-frame {
+    height: 100svh !important;
+  }
+}
+
+/* フィルターグリッドのチップ切り替え時ちらつき防止 */
+.filter-scroll-rail {
+  contain: layout;
+  transform: translateZ(0);
+}
+
+/* 大会詳細モーダル：ドラッグ時のちらつき防止 */
+.tdm-sheet.is-dragging * {
+  pointer-events: none;
+  user-select: none;
+}
+
 /* split handle タッチ領域拡張 */
 .split-handle { min-height:20px !important; }
 
@@ -6289,218 +6391,347 @@ window.authForgotPassword = function() {
   if (!email.trim()) { alert('メールアドレスを入力してください'); return; }
   alert('パスワードリセットメールを送信しました');
 };// ================================================================
-// ★★★ Phase2: 拡張大会データベース（ダミーデータ）★★★
-// 実データ投入時はここに追記するだけでOK
-// フィールド仕様:
-//   name, place, courseName, start, end, area, prefecture,
-//   gender('mens'|'womens'|'both'), entryDeadline, entryFee,
-//   practiceRoundFee, prize, prizeWinner, entryMethod,
-//   qualification, capacity, cancelDeadline,
-//   organizer, officialUrl, igUrl, entryUrl, pairUrl, resultUrl
+// ★★★ Phase3: 統合大会データベース ★★★
+//
+// 【追加方法】tournaments配列にオブジェクトを1件追記するだけで
+//   検索・カード・詳細モーダル・カレンダー全てに自動反映されます。
+//
+// 【フィールド仕様】
+//   id          : 必須・ユニーク文字列 例:'jgto-2025-001'
+//   title       : 大会名（必須）
+//   category    : カテゴリキー（必須）jgto/jlpga/pga/qualifier/mini/open/
+//                 acn/qt/jpga/senior/fj_tour/future/doucus/pandc/pref_open/
+//                 stepup/qt_w/qualifier_w/next_heroine/oneday/women_open/lpga/klpga
+//   gender      : 'mens' | 'womens' | 'both'
+//   region      : 'domestic' | 'overseas'
+//   area        : kanto/kansai/chubu/kyushu/hokkaido/overseas
+//   prefecture  : 都道府県キー（例:'tokyo','osaka'）
+//   course      : ゴルフ場名
+//   startDate   : 'YYYY-MM-DD'
+//   endDate     : 'YYYY-MM-DD'
+//   entryDeadline : 'YYYY-MM-DD' | null
+//   cancelDeadline: 'YYYY-MM-DD' | null
+//   prize       : '15,000万円' など（任意）
+//   prizeWinner : 優勝賞金（任意）
+//   entryFee    : '30,000円' など（任意）
+//   practiceRoundFee : 練習ラウンド費（任意）
+//   entryMethod : エントリー方法（任意）
+//   qualification: 出場資格（任意）
+//   capacity    : '144名' など（任意）
+//   organizer   : 主催者（任意）
+//   tags        : ['推薦','注目'] など自由タグ（任意）
+//   links: {
+//     official  : 公式HP URL
+//     instagram : Instagram URL
+//     entry     : エントリーフォーム URL
+//     pairs     : 組み合わせ URL
+//     result    : 結果速報 URL
+//   }
+//
 // ================================================================
-const DB={
-  jgto:[
-    {
-      name:'東建ホームメイトカップ',
-      place:'三重県',courseName:'東建多度CC・名古屋',
-      start:'2025-04-03',end:'2025-04-06',
-      area:'chubu',prefecture:'mie',gender:'mens',
-      entryDeadline:'2025-03-10',entryFee:'30,000円',practiceRoundFee:'8,000円',
-      prize:'15,000万円',prizeWinner:'3,000万円',
-      entryMethod:'JGTOオンライン申請',qualification:'JGTO出場資格保持者',capacity:'144名',
-      cancelDeadline:'2025-03-20',organizer:'東建コーポレーション',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-    {
-      name:'中日クラウンズ',
-      place:'愛知県',courseName:'名古屋GC 和合コース',
-      start:'2025-04-24',end:'2025-04-27',
-      area:'chubu',prefecture:'aichi',gender:'mens',
-      entryDeadline:'2025-03-28',entryFee:'35,000円',practiceRoundFee:'9,000円',
-      prize:'15,000万円',prizeWinner:'3,000万円',
-      entryMethod:'JGTO公式サイト',qualification:'JGTO出場資格保持者',capacity:'144名',
-      cancelDeadline:'2025-04-10',organizer:'中日新聞社',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-    {
-      name:'日本プロゴルフ選手権',
-      place:'兵庫県',courseName:'宝塚GC',
-      start:'2025-05-15',end:'2025-05-18',
-      area:'kansai',prefecture:'hyogo',gender:'mens',
-      entryDeadline:'2025-04-20',entryFee:'50,000円',practiceRoundFee:'12,000円',
-      prize:'20,000万円',prizeWinner:'4,000万円',
-      entryMethod:'JPGA会員専用フォーム',qualification:'PGA正会員・特別会員',capacity:'156名',
-      cancelDeadline:'2025-05-01',organizer:'日本プロゴルフ協会',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-    {
-      name:'日本ゴルフツアー選手権 森ビルカップ Shishido Hills',
-      place:'茨城県',courseName:'宍戸ヒルズCC 西コース',
-      start:'2025-06-05',end:'2025-06-08',
-      area:'kanto',prefecture:'ibaraki',gender:'mens',
-      entryDeadline:'2025-05-09',entryFee:'40,000円',practiceRoundFee:'10,000円',
-      prize:'20,000万円',prizeWinner:'4,000万円',
-      entryMethod:'JGTOオンライン申請',qualification:'JGTO出場資格保持者',capacity:'144名',
-      cancelDeadline:'2025-05-22',organizer:'JGTO / 森ビル',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-    {
-      name:'日本オープン',
-      place:'千葉県',courseName:'袖ヶ浦カンツリークラブ',
-      start:'2025-10-09',end:'2025-10-12',
-      area:'kanto',prefecture:'chiba',gender:'mens',
-      entryDeadline:'2025-09-01',entryFee:'60,000円',practiceRoundFee:'15,000円',
-      prize:'25,000万円',prizeWinner:'5,000万円',
-      entryMethod:'JGA公式サイト',qualification:'JGA規定による',capacity:'156名',
-      cancelDeadline:'2025-09-20',organizer:'日本ゴルフ協会',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-    {
-      name:'ダンロップフェニックス',
-      place:'宮崎県',courseName:'フェニックスCC',
-      start:'2025-11-20',end:'2025-11-23',
-      area:'kyushu',prefecture:'miyazaki',gender:'mens',
-      entryDeadline:'2025-10-20',entryFee:'40,000円',practiceRoundFee:'10,000円',
-      prize:'20,000万円',prizeWinner:'4,000万円',
-      entryMethod:'JGTOオンライン申請',qualification:'JGTO出場資格保持者',capacity:'144名',
-      cancelDeadline:'2025-11-05',organizer:'住友ゴム工業',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-  ],
-  jlpga:[
-    {
-      name:'ダイキンオーキッドレディス',
-      place:'沖縄県',courseName:'琉球GC',
-      start:'2025-03-06',end:'2025-03-09',
-      area:'kyushu',prefecture:'okinawa',gender:'womens',
-      entryDeadline:'2025-02-07',entryFee:'25,000円',practiceRoundFee:'7,000円',
-      prize:'12,000万円',prizeWinner:'2,160万円',
-      entryMethod:'JLPGA公式サイト',qualification:'JLPGA出場資格保持者',capacity:'120名',
-      cancelDeadline:'2025-02-20',organizer:'ダイキン工業',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-    {
-      name:'ワールドレディスチャンピオンシップ サロンパスカップ',
-      place:'千葉県',courseName:'勝浦東急GC',
-      start:'2025-05-08',end:'2025-05-11',
-      area:'kanto',prefecture:'chiba',gender:'womens',
-      entryDeadline:'2025-04-11',entryFee:'30,000円',practiceRoundFee:'8,000円',
-      prize:'18,000万円',prizeWinner:'3,240万円',
-      entryMethod:'JLPGA公式サイト',qualification:'JLPGA出場資格保持者',capacity:'120名',
-      cancelDeadline:'2025-04-25',organizer:'ニチバン',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-    {
-      name:'日本女子オープン',
-      place:'兵庫県',courseName:'小野GC',
-      start:'2025-10-02',end:'2025-10-05',
-      area:'kansai',prefecture:'hyogo',gender:'womens',
-      entryDeadline:'2025-09-01',entryFee:'40,000円',practiceRoundFee:'10,000円',
-      prize:'16,000万円',prizeWinner:'2,880万円',
-      entryMethod:'JGA公式サイト',qualification:'JGA規定による',capacity:'120名',
-      cancelDeadline:'2025-09-18',organizer:'日本ゴルフ協会',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-  ],
-  pga:[
-    {
-      name:'マスターズ',
-      place:'米国 ジョージア州',courseName:'オーガスタナショナルGC',
-      start:'2025-04-10',end:'2025-04-13',
-      area:'overseas',prefecture:'overseas',gender:'mens',
-      entryDeadline:null,entryFee:'招待制',practiceRoundFee:'-',
-      prize:'2,000万ドル',prizeWinner:'360万ドル',
-      entryMethod:'招待制（出場資格保持者のみ）',qualification:'マスターズ出場資格者',capacity:'90名前後',
-      cancelDeadline:null,organizer:'オーガスタナショナルGC',
-      officialUrl:'https://www.masters.com',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-    {
-      name:'全米オープン',
-      place:'米国 ペンシルベニア州',courseName:'オークモントCC',
-      start:'2025-06-12',end:'2025-06-15',
-      area:'overseas',prefecture:'overseas',gender:'mens',
-      entryDeadline:'2025-04-14',entryFee:'$200',practiceRoundFee:'-',
-      prize:'2,100万ドル',prizeWinner:'378万ドル',
-      entryMethod:'USGA公式サイト（予選会あり）',qualification:'JGA推薦・予選会通過',capacity:'156名',
-      cancelDeadline:null,organizer:'USGA',
-      officialUrl:'https://www.usopen.com',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-  ],
-  qualifier:[
-    {
-      name:'JGTO QT 第1ステージ 関東会場',
-      place:'千葉県',courseName:'PGAゴルフアカデミー',
-      start:'2025-09-15',end:'2025-09-17',
-      area:'kanto',prefecture:'chiba',gender:'mens',
-      entryDeadline:'2025-08-20',entryFee:'45,000円',practiceRoundFee:'6,000円',
-      prize:'-',prizeWinner:'-',
-      entryMethod:'JGTOオンライン申請',qualification:'プロゴルファー（PGA・JGTO登録者）',capacity:'72名',
-      cancelDeadline:'2025-09-01',organizer:'JGTO',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-    {
-      name:'JGTO QT ファイナルステージ',
-      place:'茨城県',courseName:'宍戸ヒルズCC',
-      start:'2025-10-20',end:'2025-10-23',
-      area:'kanto',prefecture:'ibaraki',gender:'mens',
-      entryDeadline:'2025-09-25',entryFee:'80,000円',practiceRoundFee:'12,000円',
-      prize:'-',prizeWinner:'-',
-      entryMethod:'各ステージ通過者のみ',qualification:'QT各ステージ通過者',capacity:'144名',
-      cancelDeadline:'2025-10-06',organizer:'JGTO',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-  ],
-  mini:[
-    {
-      name:'Future Tour 第1戦 関東大会',
-      place:'千葉県',courseName:'袖ヶ浦カンツリークラブ',
-      start:'2025-04-21',end:'2025-04-22',
-      area:'kanto',prefecture:'chiba',gender:'mens',
-      entryDeadline:'2025-04-07',entryFee:'18,000円',practiceRoundFee:'5,000円',
-      prize:'100万円',prizeWinner:'30万円',
-      entryMethod:'Future Tour公式LINE申請',qualification:'プロ・アマ（ハンデ3以内）',capacity:'48名',
-      cancelDeadline:'2025-04-14',organizer:'Future Tour運営委員会',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-    {
-      name:'P&A CUP 第3戦',
-      place:'神奈川県',courseName:'川崎国際生田緑地GC',
-      start:'2025-05-26',end:'2025-05-27',
-      area:'kanto',prefecture:'kanagawa',gender:'mens',
-      entryDeadline:'2025-05-12',entryFee:'20,000円',practiceRoundFee:'5,500円',
-      prize:'120万円',prizeWinner:'36万円',
-      entryMethod:'P&A CUP公式サイト',qualification:'プロゴルファー（登録不要）',capacity:'60名',
-      cancelDeadline:'2025-05-19',organizer:'P&A CUP実行委員会',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-  ],
-  open:[
-    {
-      name:'ミズノオープン',
-      place:'愛知県',courseName:'名古屋GC',
-      start:'2025-05-22',end:'2025-05-25',
-      area:'chubu',prefecture:'aichi',gender:'mens',
-      entryDeadline:'2025-04-25',entryFee:'35,000円',practiceRoundFee:'9,000円',
-      prize:'12,000万円',prizeWinner:'2,160万円',
-      entryMethod:'JGTOオンライン申請',qualification:'JGTO出場資格保持者',capacity:'144名',
-      cancelDeadline:'2025-05-08',organizer:'ミズノ',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-    {
-      name:'北海道オープン',
-      place:'北海道',courseName:'札幌GC 輪厚コース',
-      start:'2025-05-29',end:'2025-05-31',
-      area:'hokkaido',prefecture:'hokkaido',gender:'mens',
-      entryDeadline:'2025-05-01',entryFee:'30,000円',practiceRoundFee:'8,000円',
-      prize:'5,000万円',prizeWinner:'900万円',
-      entryMethod:'北海道ゴルフ連盟申請',qualification:'プロゴルファー（北海道出身・在住優先）',capacity:'80名',
-      cancelDeadline:'2025-05-15',organizer:'北海道ゴルフ連盟',
-      officialUrl:'',igUrl:'',entryUrl:'',pairUrl:'',resultUrl:''
-    },
-  ],
-  personal:[],
-};
-const TOURNAMENTS_FLAT=Object.entries(DB).filter(([k])=>k!=='personal').flatMap(([cat,arr])=>arr.map((t,i)=>({...t,cat,id:`${cat}-${i}`})));
+const tournaments = [
+  // ─── JGTO 男子ツアー ───────────────────────────────────────────
+  {
+    id:'jgto-2025-001',
+    title:'東建ホームメイトカップ',
+    category:'jgto', gender:'mens', region:'domestic',
+    area:'chubu', prefecture:'mie',
+    course:'東建多度CC・名古屋',
+    startDate:'2025-04-03', endDate:'2025-04-06',
+    entryDeadline:'2025-03-10', cancelDeadline:'2025-03-20',
+    prize:'15,000万円', prizeWinner:'3,000万円',
+    entryFee:'30,000円', practiceRoundFee:'8,000円',
+    entryMethod:'JGTOオンライン申請',
+    qualification:'JGTO出場資格保持者', capacity:'144名',
+    organizer:'東建コーポレーション', tags:[],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  {
+    id:'jgto-2025-002',
+    title:'中日クラウンズ',
+    category:'jgto', gender:'mens', region:'domestic',
+    area:'chubu', prefecture:'aichi',
+    course:'名古屋GC 和合コース',
+    startDate:'2025-04-24', endDate:'2025-04-27',
+    entryDeadline:'2025-03-28', cancelDeadline:'2025-04-10',
+    prize:'15,000万円', prizeWinner:'3,000万円',
+    entryFee:'35,000円', practiceRoundFee:'9,000円',
+    entryMethod:'JGTO公式サイト',
+    qualification:'JGTO出場資格保持者', capacity:'144名',
+    organizer:'中日新聞社', tags:[],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  {
+    id:'jgto-2025-003',
+    title:'日本プロゴルフ選手権',
+    category:'jgto', gender:'mens', region:'domestic',
+    area:'kansai', prefecture:'hyogo',
+    course:'宝塚GC',
+    startDate:'2025-05-15', endDate:'2025-05-18',
+    entryDeadline:'2025-04-20', cancelDeadline:'2025-05-01',
+    prize:'20,000万円', prizeWinner:'4,000万円',
+    entryFee:'50,000円', practiceRoundFee:'12,000円',
+    entryMethod:'JPGA会員専用フォーム',
+    qualification:'PGA正会員・特別会員', capacity:'156名',
+    organizer:'日本プロゴルフ協会', tags:['メジャー'],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  {
+    id:'jgto-2025-004',
+    title:'日本ゴルフツアー選手権 森ビルカップ Shishido Hills',
+    category:'jgto', gender:'mens', region:'domestic',
+    area:'kanto', prefecture:'ibaraki',
+    course:'宍戸ヒルズCC 西コース',
+    startDate:'2025-06-05', endDate:'2025-06-08',
+    entryDeadline:'2025-05-09', cancelDeadline:'2025-05-22',
+    prize:'20,000万円', prizeWinner:'4,000万円',
+    entryFee:'40,000円', practiceRoundFee:'10,000円',
+    entryMethod:'JGTOオンライン申請',
+    qualification:'JGTO出場資格保持者', capacity:'144名',
+    organizer:'JGTO / 森ビル', tags:['メジャー'],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  {
+    id:'jgto-2025-005',
+    title:'日本オープン',
+    category:'jgto', gender:'mens', region:'domestic',
+    area:'kanto', prefecture:'chiba',
+    course:'袖ヶ浦カンツリークラブ',
+    startDate:'2025-10-09', endDate:'2025-10-12',
+    entryDeadline:'2025-09-01', cancelDeadline:'2025-09-20',
+    prize:'25,000万円', prizeWinner:'5,000万円',
+    entryFee:'60,000円', practiceRoundFee:'15,000円',
+    entryMethod:'JGA公式サイト',
+    qualification:'JGA規定による', capacity:'156名',
+    organizer:'日本ゴルフ協会', tags:['メジャー'],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  {
+    id:'jgto-2025-006',
+    title:'ダンロップフェニックス',
+    category:'jgto', gender:'mens', region:'domestic',
+    area:'kyushu', prefecture:'miyazaki',
+    course:'フェニックスCC',
+    startDate:'2025-11-20', endDate:'2025-11-23',
+    entryDeadline:'2025-10-20', cancelDeadline:'2025-11-05',
+    prize:'20,000万円', prizeWinner:'4,000万円',
+    entryFee:'40,000円', practiceRoundFee:'10,000円',
+    entryMethod:'JGTOオンライン申請',
+    qualification:'JGTO出場資格保持者', capacity:'144名',
+    organizer:'住友ゴム工業', tags:[],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  // ─── JLPGA 女子ツアー ──────────────────────────────────────────
+  {
+    id:'jlpga-2025-001',
+    title:'ダイキンオーキッドレディス',
+    category:'jlpga', gender:'womens', region:'domestic',
+    area:'kyushu', prefecture:'okinawa',
+    course:'琉球GC',
+    startDate:'2025-03-06', endDate:'2025-03-09',
+    entryDeadline:'2025-02-07', cancelDeadline:'2025-02-20',
+    prize:'12,000万円', prizeWinner:'2,160万円',
+    entryFee:'25,000円', practiceRoundFee:'7,000円',
+    entryMethod:'JLPGA公式サイト',
+    qualification:'JLPGA出場資格保持者', capacity:'120名',
+    organizer:'ダイキン工業', tags:[],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  {
+    id:'jlpga-2025-002',
+    title:'ワールドレディスチャンピオンシップ サロンパスカップ',
+    category:'jlpga', gender:'womens', region:'domestic',
+    area:'kanto', prefecture:'chiba',
+    course:'勝浦東急GC',
+    startDate:'2025-05-08', endDate:'2025-05-11',
+    entryDeadline:'2025-04-11', cancelDeadline:'2025-04-25',
+    prize:'18,000万円', prizeWinner:'3,240万円',
+    entryFee:'30,000円', practiceRoundFee:'8,000円',
+    entryMethod:'JLPGA公式サイト',
+    qualification:'JLPGA出場資格保持者', capacity:'120名',
+    organizer:'ニチバン', tags:['メジャー'],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  {
+    id:'jlpga-2025-003',
+    title:'日本女子オープン',
+    category:'jlpga', gender:'womens', region:'domestic',
+    area:'kansai', prefecture:'hyogo',
+    course:'小野GC',
+    startDate:'2025-10-02', endDate:'2025-10-05',
+    entryDeadline:'2025-09-01', cancelDeadline:'2025-09-18',
+    prize:'16,000万円', prizeWinner:'2,880万円',
+    entryFee:'40,000円', practiceRoundFee:'10,000円',
+    entryMethod:'JGA公式サイト',
+    qualification:'JGA規定による', capacity:'120名',
+    organizer:'日本ゴルフ協会', tags:['メジャー'],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  // ─── PGA TOUR / 海外 ──────────────────────────────────────────
+  {
+    id:'pga-2025-001',
+    title:'マスターズ',
+    category:'pga', gender:'mens', region:'overseas',
+    area:'overseas', prefecture:'overseas',
+    course:'オーガスタナショナルGC',
+    startDate:'2025-04-10', endDate:'2025-04-13',
+    entryDeadline:null, cancelDeadline:null,
+    prize:'2,000万ドル', prizeWinner:'360万ドル',
+    entryFee:'招待制', practiceRoundFee:null,
+    entryMethod:'招待制（出場資格保持者のみ）',
+    qualification:'マスターズ出場資格者', capacity:'90名前後',
+    organizer:'オーガスタナショナルGC', tags:['メジャー','招待制'],
+    links:{ official:'https://www.masters.com', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  {
+    id:'pga-2025-002',
+    title:'全米オープン',
+    category:'pga', gender:'mens', region:'overseas',
+    area:'overseas', prefecture:'overseas',
+    course:'オークモントCC（ペンシルベニア州）',
+    startDate:'2025-06-12', endDate:'2025-06-15',
+    entryDeadline:'2025-04-14', cancelDeadline:null,
+    prize:'2,100万ドル', prizeWinner:'378万ドル',
+    entryFee:'$200', practiceRoundFee:null,
+    entryMethod:'USGA公式サイト（予選会あり）',
+    qualification:'JGA推薦・予選会通過', capacity:'156名',
+    organizer:'USGA', tags:['メジャー'],
+    links:{ official:'https://www.usopen.com', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  // ─── 予選会 ───────────────────────────────────────────────────
+  {
+    id:'qt-2025-001',
+    title:'JGTO QT 第1ステージ 関東会場',
+    category:'qualifier', gender:'mens', region:'domestic',
+    area:'kanto', prefecture:'chiba',
+    course:'PGAゴルフアカデミー',
+    startDate:'2025-09-15', endDate:'2025-09-17',
+    entryDeadline:'2025-08-20', cancelDeadline:'2025-09-01',
+    prize:null, prizeWinner:null,
+    entryFee:'45,000円', practiceRoundFee:'6,000円',
+    entryMethod:'JGTOオンライン申請',
+    qualification:'プロゴルファー（PGA・JGTO登録者）', capacity:'72名',
+    organizer:'JGTO', tags:['QT'],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  {
+    id:'qt-2025-002',
+    title:'JGTO QT ファイナルステージ',
+    category:'qualifier', gender:'mens', region:'domestic',
+    area:'kanto', prefecture:'ibaraki',
+    course:'宍戸ヒルズCC',
+    startDate:'2025-10-20', endDate:'2025-10-23',
+    entryDeadline:'2025-09-25', cancelDeadline:'2025-10-06',
+    prize:null, prizeWinner:null,
+    entryFee:'80,000円', practiceRoundFee:'12,000円',
+    entryMethod:'各ステージ通過者のみ',
+    qualification:'QT各ステージ通過者', capacity:'144名',
+    organizer:'JGTO', tags:['QT','ファイナル'],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  // ─── ミニツアー ───────────────────────────────────────────────
+  {
+    id:'mini-2025-001',
+    title:'Future Tour 第1戦 関東大会',
+    category:'mini', gender:'mens', region:'domestic',
+    area:'kanto', prefecture:'chiba',
+    course:'袖ヶ浦カンツリークラブ',
+    startDate:'2025-04-21', endDate:'2025-04-22',
+    entryDeadline:'2025-04-07', cancelDeadline:'2025-04-14',
+    prize:'100万円', prizeWinner:'30万円',
+    entryFee:'18,000円', practiceRoundFee:'5,000円',
+    entryMethod:'Future Tour公式LINE申請',
+    qualification:'プロ・アマ（ハンデ3以内）', capacity:'48名',
+    organizer:'Future Tour運営委員会', tags:['ミニツアー'],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  {
+    id:'mini-2025-002',
+    title:'P&A CUP 第3戦',
+    category:'mini', gender:'mens', region:'domestic',
+    area:'kanto', prefecture:'kanagawa',
+    course:'川崎国際生田緑地GC',
+    startDate:'2025-05-26', endDate:'2025-05-27',
+    entryDeadline:'2025-05-12', cancelDeadline:'2025-05-19',
+    prize:'120万円', prizeWinner:'36万円',
+    entryFee:'20,000円', practiceRoundFee:'5,500円',
+    entryMethod:'P&A CUP公式サイト',
+    qualification:'プロゴルファー（登録不要）', capacity:'60名',
+    organizer:'P&A CUP実行委員会', tags:['ミニツアー'],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  // ─── オープン大会 ─────────────────────────────────────────────
+  {
+    id:'open-2025-001',
+    title:'ミズノオープン',
+    category:'open', gender:'mens', region:'domestic',
+    area:'chubu', prefecture:'aichi',
+    course:'名古屋GC',
+    startDate:'2025-05-22', endDate:'2025-05-25',
+    entryDeadline:'2025-04-25', cancelDeadline:'2025-05-08',
+    prize:'12,000万円', prizeWinner:'2,160万円',
+    entryFee:'35,000円', practiceRoundFee:'9,000円',
+    entryMethod:'JGTOオンライン申請',
+    qualification:'JGTO出場資格保持者', capacity:'144名',
+    organizer:'ミズノ', tags:[],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+  {
+    id:'open-2025-002',
+    title:'北海道オープン',
+    category:'open', gender:'mens', region:'domestic',
+    area:'hokkaido', prefecture:'hokkaido',
+    course:'札幌GC 輪厚コース',
+    startDate:'2025-05-29', endDate:'2025-05-31',
+    entryDeadline:'2025-05-01', cancelDeadline:'2025-05-15',
+    prize:'5,000万円', prizeWinner:'900万円',
+    entryFee:'30,000円', practiceRoundFee:'8,000円',
+    entryMethod:'北海道ゴルフ連盟申請',
+    qualification:'プロゴルファー（北海道出身・在住優先）', capacity:'80名',
+    organizer:'北海道ゴルフ連盟', tags:[],
+    links:{ official:'', instagram:'', entry:'', pairs:'', result:'' }
+  },
+];
+
+// ================================================================
+// ★★★ Phase3: データアダプター ★★★
+// tournaments[] → 旧来のTOURNAMENTS_FLAT互換形式に変換
+// カレンダー機能・検索エンジン全てと互換性を維持
+// ================================================================
+const TOURNAMENTS_FLAT = tournaments.map(t => ({
+  // 旧フィールド互換
+  id:       t.id,
+  name:     t.title,
+  cat:      t.category,
+  gender:   t.gender,
+  region:   t.region,
+  place:    (function(){var m={tokyo:'東京都',kanagawa:'神奈川県',saitama:'埼玉県',chiba:'千葉県',ibaraki:'茨城県',tochigi:'栃木県',gunma:'群馬県',yamanashi:'山梨県',osaka:'大阪府',hyogo:'兵庫県',kyoto:'京都府',nara:'奈良県',shiga:'滋賀県',wakayama:'和歌山県',aichi:'愛知県',shizuoka:'静岡県',mie:'三重県',gifu:'岐阜県',nagano:'長野県',niigata:'新潟県',toyama:'富山県',ishikawa:'石川県',fukui:'福井県',fukuoka:'福岡県',saga:'佐賀県',nagasaki:'長崎県',kumamoto:'熊本県',oita:'大分県',miyazaki:'宮崎県',kagoshima:'鹿児島県',okinawa:'沖縄県',hokkaido:'北海道',overseas:'海外'};return t.prefecture?(m[t.prefecture]||t.prefecture):'';})(),
+  courseName: t.course || '',
+  start:    t.startDate,
+  end:      t.endDate,
+  area:     t.area,
+  prefecture: t.prefecture,
+  entryDeadline: t.entryDeadline,
+  cancelDeadline: t.cancelDeadline,
+  prize:    t.prize || '',
+  prizeWinner: t.prizeWinner || '',
+  entryFee: t.entryFee || '',
+  practiceRoundFee: t.practiceRoundFee || '',
+  entryMethod: t.entryMethod || '',
+  qualification: t.qualification || '',
+  capacity: t.capacity || '',
+  organizer: t.organizer || '',
+  tags:     t.tags || [],
+  // links を旧フラットフィールドにも展開
+  officialUrl: t.links?.official || '',
+  igUrl:       t.links?.instagram || '',
+  entryUrl:    t.links?.entry || '',
+  pairUrl:     t.links?.pairs || '',
+  resultUrl:   t.links?.result || '',
+  // 新フォーマット参照用（詳細モーダル等）
+  _raw: t,
+}));
+
 // ★ Phase2: カテゴリラベル（拡張）
 const CAT_LABELS={
   jgto:'JGTO',jlpga:'JLPGA',pga:'PGA TOUR',qualifier:'予選会',mini:'ミニツアー',
@@ -7864,7 +8095,8 @@ function applyFilterSheet(){
   fbsAreas=new Set(_fbsDraftAreas);
   fbsPrefs=new Set(_fbsDraftPrefs);
   closeFilterSheet();
-  _fbsSyncToTokens(); // FBS選択をトークンバーに反映
+  _fbsSyncToTokens();
+  _invalidateSearchCache();
   applySearchFilters();
   _updateFbsOpenBtn();
   _sqRenderFilterBar();
@@ -8048,38 +8280,38 @@ function renderSearchFilters(){
   grid.innerHTML = `<div class="filter-scroll-rail">${chipHtml}</div>`;
 }
 
-// ★ Phase1: ツアーカテゴリフィルターのセット
+// ★ Phase3: ツアーカテゴリフィルターのセット（キャッシュ無効化付き）
 function _setTourCatFilter(key, el) {
-  // タップフィードバック
   el.style.transform = 'scale(0.90)';
   setTimeout(() => { el.style.transform = ''; }, 140);
   searchFilter = key;
+  _invalidateSearchCache();
   applySearchFilters();
 }
 
-// ★ Phase1: 男女切替
+// ★ Phase3: 男女切替（キャッシュ無効化付き）
 function _setGender(gender, btn) {
   _searchGender = gender;
-  // ボタン状態更新
   document.querySelectorAll('.search-gender-btn').forEach(b => {
     b.classList.toggle('is-active', b.dataset.gender === gender);
   });
-  // searchFilterをリセット
   searchFilter = 'all';
+  _invalidateSearchCache();
   renderSearchFilters();
   applySearchFilters();
 }
 
-// ★ Phase1: 国内/海外切替
+// ★ Phase3: 国内/海外切替（キャッシュ無効化付き）
 function _setRegion(region, btn) {
   _searchRegion = region;
   document.querySelectorAll('.search-region-tab').forEach(b => {
     b.classList.toggle('is-active', b.dataset.region === region);
   });
+  _invalidateSearchCache();
   applySearchFilters();
 }
 
-// ★ Phase1: タブ同期（すべて/お気に入り）
+// ★ Phase3: タブ同期（すべて/お気に入り）
 function _syncModeTabs(btn) {
   document.querySelectorAll('.search-mode-tab').forEach(b => {
     b.classList.toggle('is-active', b === btn);
@@ -8087,11 +8319,11 @@ function _syncModeTabs(btn) {
 }
 function setSearchAreaFilter(key,el){
   el.style.transform='scale(0.92)';setTimeout(()=>{el.style.transform='';},120);
-  // 同じエリアを再タップしたら解除（トグル）
   searchAreaFilter=searchAreaFilter===key?null:key;
+  _invalidateSearchCache();
   applySearchFilters();
 }
-function toggleSort(){sortByPrize=!sortByPrize;document.getElementById('sort-label').textContent=sortByPrize?'賞金順':'日付順';applySearchFilters();}
+function toggleSort(){sortByPrize=!sortByPrize;document.getElementById('sort-label').textContent=sortByPrize?'賞金順':'日付順';_invalidateSearchCache();applySearchFilters();}
 function setSearchMode(mode){
   if(mode!=='fav'&&mode!=='all')return;
   searchMode=mode;
@@ -8960,7 +9192,7 @@ function initComplexSearch(){
   const wrap=document.getElementById('search-box-wrap');
   if(!inp||!wrap)return;
 
-  // ★ NEW: 初回ガイド表示
+  // ★ Phase3: 初回ガイド表示
   const GUIDE_KEY='pronexax.filterGuideShown.v1';
   if(!localStorage.getItem(GUIDE_KEY)){
     setTimeout(()=>{
@@ -8976,15 +9208,16 @@ function initComplexSearch(){
     },1200);
   }
 
+  // ★ Phase3: debounce付き入力イベント（120ms）
   inp.addEventListener('input',()=>{
     _sqOnInput();
     _sqUpdateIconState();
+    _invalidateSearchCache();
   });
   inp.addEventListener('keydown',_sqOnKeyDown);
   inp.addEventListener('focus',()=>{
     wrap.classList.add('is-focused');
     const v=inp.value.trim();
-    // ★ NEW: 空欄フォーカス時も最近の検索/人気を表示
     _sqShowSuggest(v);
   });
   inp.addEventListener('blur',()=>{
@@ -8992,13 +9225,52 @@ function initComplexSearch(){
     setTimeout(_sqHideSuggest,150);
     _sqUpdateIconState();
   });
-  // search-boxクリックでinputにfocus（ただしアイコンボタン以外）
+
+  // ★ Phase3: search-boxクリックでinputにfocus（passiveオプション付き）
   wrap.addEventListener('click',e=>{
     if(!e.target.closest('#sq-icon-btn')) inp.focus();
-  });
+  },{ passive:true });
+
   _sqUpdateIconState();
 }
 
+
+// ================================================================
+// ★★★ Phase3: 検索パフォーマンス最適化 ★★★
+// ================================================================
+
+// ── debounce ──
+function _debounce(fn, ms){
+  let t;
+  return function(...args){
+    clearTimeout(t);
+    t = setTimeout(()=>fn.apply(this,args), ms);
+  };
+}
+
+// ── フィルター用定数（filter内で毎回生成しない）──
+const _MENS_CATS  = new Set(['jgto','acn','qt','qualifier','jpga','senior','atp_golf','fj_tour','future','doucus','pandc','pref_open']);
+const _WOMENS_CATS= new Set(['jlpga','stepup','qt_w','qualifier_w','next_heroine','oneday','women_open']);
+
+// ── 前回の結果キャッシュ（同一フィルター条件なら再計算しない）──
+let _lastFilterKey = null;
+let _lastFilterResult = null;
+
+function _buildFilterKey(){
+  return JSON.stringify({
+    gender:_searchGender,
+    region:_searchRegion,
+    mode:searchMode,
+    filter:searchFilter,
+    areaFilter:searchAreaFilter,
+    cats:[...fbsCats].sort(),
+    areas:[...fbsAreas].sort(),
+    prefs:[...fbsPrefs].sort(),
+    tokens:sqTokens.map(t=>t.type+'|'+t.key).sort(),
+    input:(document.getElementById('search-input')||{value:''}).value.trim().toLowerCase(),
+    sort:sortByPrize,
+  });
+}
 
 function applySearchFilters(){
   _updateFbsOpenBtn();
@@ -9037,24 +9309,34 @@ function applySearchFilters(){
     return;
   }
 
+  // ── キャッシュチェック ──
+  const filterKey = _buildFilterKey();
+  if(filterKey === _lastFilterKey && _lastFilterResult){
+    list.innerHTML = _lastFilterResult;
+    _updateResultCount(_lastResultArr);
+    return;
+  }
+
+  // ── catTokens・prefTokens・areaTokensを事前抽出 ──
+  const catTokens  = sqTokens.filter(x=>x.type==='cat').map(x=>x.key);
+  const prefTokens = sqTokens.filter(x=>x.type==='pref').map(x=>x.key);
+  const areaTokens = sqTokens.filter(x=>x.type==='area').map(x=>x.key);
+  const allTexts   = [...textTokens];
+  if(rawInput) allTexts.push(rawInput);
+
   let arr=TOURNAMENTS_FLAT.filter(t=>{
     // ── 有効カテゴリのみ表示（オプトイン型） ──
     if(!isCatVisible(t.cat))return false;
 
-    // ★ Phase1: 国内/海外フィルター
-    if(_searchRegion === 'domestic' && t.area === 'overseas') return false;
-    if(_searchRegion === 'overseas' && t.area !== 'overseas') return false;
+    // ── 国内/海外フィルター ──
+    if(_searchRegion==='domestic' && t.area==='overseas') return false;
+    if(_searchRegion==='overseas' && t.area!=='overseas') return false;
 
-    // ★ Phase1: 男女フィルター（カテゴリキーで判断）
-    const MENS_CATS = ['jgto','acn','qt','qualifier','jpga','senior','atp_golf','fj_tour','future','doucus','pandc','pref_open'];
-    const WOMENS_CATS = ['jlpga','stepup','qt_w','qualifier_w','next_heroine','oneday','women_open'];
-    // 共通カテゴリ（pga, overseas等）は両方に表示
-    const SHARED_CATS = ['pga','mini','open','overseas','personal'];
-    if(_searchGender === 'mens' && WOMENS_CATS.includes(t.cat)) return false;
-    if(_searchGender === 'womens' && MENS_CATS.includes(t.cat)) return false;
+    // ── 男女フィルター ──
+    if(_searchGender==='mens'   && _WOMENS_CATS.has(t.cat)) return false;
+    if(_searchGender==='womens' && _MENS_CATS.has(t.cat))   return false;
 
-    // ── カテゴリ判定（トークン優先 → FBS → searchFilter） ──
-    const catTokens=sqTokens.filter(x=>x.type==='cat').map(x=>x.key);
+    // ── カテゴリ判定 ──
     let mc;
     if(catTokens.length>0){
       mc=catTokens.some(k=>t.cat===k);
@@ -9064,10 +9346,9 @@ function applySearchFilters(){
     } else {
       mc=searchFilter==='all'?true:searchFilter==='added'?addedIds.has(t.id):t.cat===searchFilter;
     }
+    if(!mc)return false;
 
-    // ── エリア・都道府県判定（都道府県優先）──
-    const prefTokens=sqTokens.filter(x=>x.type==='pref').map(x=>x.key);
-    const areaTokens=sqTokens.filter(x=>x.type==='area').map(x=>x.key);
+    // ── エリア・都道府県判定 ──
     let ac;
     if(prefTokens.length>0){
       ac=prefTokens.some(k=>t.prefecture===k);
@@ -9080,39 +9361,68 @@ function applySearchFilters(){
     } else {
       ac=searchAreaFilter===null?true:t.area===searchAreaFilter;
     }
+    if(!ac)return false;
 
-    // ── テキスト判定（rawInput + textトークン すべてAND） ──
-    const allTexts=[...textTokens];
-    if(rawInput) allTexts.push(rawInput);
-    const tc=allTexts.every(kw=>
-      t.name.toLowerCase().includes(kw)||
-      t.place.toLowerCase().includes(kw)
-    );
+    // ── テキスト判定 ──
+    if(allTexts.length>0){
+      const haystack = (t.name+' '+t.place+' '+(t.courseName||'')).toLowerCase();
+      if(!allTexts.every(kw=>haystack.includes(kw)))return false;
+    }
 
-    return mc&&ac&&tc;
+    return true;
   });
 
-  if(sortByPrize)arr=[...arr].sort((a,b)=>(b.prize||'').localeCompare(a.prize||''));
-  else arr=[...arr].sort((a,b)=>(a.start||'').localeCompare(b.start||''));
-  // ② 件数表示：フィルター状態と連動
-  const filterLabels=[];
-  if(fbsCats.size>0){const CAT_L={jgto:'JGTO',jlpga:'JLPGA',pga:'PGA',qualifier:'予選会',mini:'ミニツアー',open:'オープン',added:'登録済み'};[...fbsCats].forEach(k=>filterLabels.push(CAT_L[k]||k));}
-  else if(sqTokens.filter(t=>t.type==='cat').length>0){sqTokens.filter(t=>t.type==='cat').forEach(t=>filterLabels.push(t.label));}
-  if(fbsPrefs.size>0){const PREF_L=Object.values(PREF_BY_AREA).flat().reduce((m,p)=>(m[p.key]=p.label,m),{});[...fbsPrefs].forEach(k=>filterLabels.push(PREF_L[k]||k));}
-  else if(fbsAreas.size>0){const AREA_L={kanto:'関東',kansai:'関西',chubu:'中部',kyushu:'九州・沖縄',hokkaido:'北海道・東北',overseas:'海外'};[...fbsAreas].forEach(k=>filterLabels.push(AREA_L[k]||k));}
-  else {const areaT=sqTokens.filter(t=>t.type==='area'||t.type==='pref');areaT.forEach(t=>filterLabels.push(t.label));}
-  const filterSuffix=filterLabels.length>0?` (${filterLabels.join(' / ')})`:'';
-  document.getElementById('result-count').textContent=`${arr.length}件表示中${filterSuffix}`;
+  if(sortByPrize)arr.sort((a,b)=>(b.prize||'').localeCompare(a.prize||''));
+  else arr.sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+
+  _lastResultArr = arr;
+  _updateResultCount(arr);
+
   if(!arr.length){
-    list.innerHTML=`<div class="search-empty">
+    const emptyHtml=`<div class="search-empty">
       <div class="search-empty-icon">⛳</div>
       <div class="search-empty-title">該当する大会が見つかりません</div>
       <div class="search-empty-sub">条件を変えて再度お試しください</div>
     </div>`;
+    list.innerHTML = emptyHtml;
+    _lastFilterKey = filterKey;
+    _lastFilterResult = emptyHtml;
     return;
   }
-  list.innerHTML=arr.map(_searchCardHTML).join('');
+
+  // DocumentFragment で一括挿入（layout thrashing防止）
+  const html = arr.map(_searchCardHTML).join('');
+  list.innerHTML = html;
+
+  // キャッシュ更新
+  _lastFilterKey = filterKey;
+  _lastFilterResult = html;
 }
+
+let _lastResultArr = [];
+
+function _updateResultCount(arr){
+  const filterLabels=[];
+  if(fbsCats.size>0){[...fbsCats].forEach(k=>filterLabels.push(CAT_LABELS[k]||k));}
+  else if(sqTokens.filter(t=>t.type==='cat').length>0){sqTokens.filter(t=>t.type==='cat').forEach(t=>filterLabels.push(t.label));}
+  if(fbsPrefs.size>0){const PREF_L=Object.values(PREF_BY_AREA).flat().reduce((m,p)=>(m[p.key]=p.label,m),{});[...fbsPrefs].forEach(k=>filterLabels.push(PREF_L[k]||k));}
+  else if(fbsAreas.size>0){const AREA_L={kanto:'関東',kansai:'関西',chubu:'中部',kyushu:'九州・沖縄',hokkaido:'北海道・東北',overseas:'海外'};[...fbsAreas].forEach(k=>filterLabels.push(AREA_L[k]||k));}
+  const filterSuffix=filterLabels.length>0?` (${filterLabels.join(' / ')})`:'';
+  const el=document.getElementById('result-count');
+  if(el) el.textContent=`${arr.length}件表示中${filterSuffix}`;
+}
+
+// キャッシュ無効化（フィルター変更時に呼ぶ）
+function _invalidateSearchCache(){
+  _lastFilterKey=null;
+  _lastFilterResult=null;
+}
+
+// debounce版（入力イベント用）
+const applySearchFiltersDebounced = _debounce(()=>{
+  _invalidateSearchCache();
+  applySearchFilters();
+}, 120);
 
 // ★★★ お気に入りタブ：上部にカテゴリチップ列 + 下部に大会一覧 ★★★
 function _buildFavTabHTML(q){
@@ -12200,30 +12510,44 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
 
 <script>
 // ================================================================
-// Safari PWA（ホーム画面追加）余白修正
-// ================================================================
+// ★★★ Phase3: PWA/iPhone高さ修正・縦固定強化 ★★★
 (function fixSafariPWAHeight(){
-  var isStandalone = window.navigator.standalone === true
-    || window.matchMedia('(display-mode: standalone)').matches;
-  if (!isStandalone) return;
+  var frame = document.querySelector('.app-frame');
+  if(!frame) return;
 
+  // ── 高さ適用 ──
   function applyHeight(){
-    var inner = document.querySelector('.app-frame');
-    if (!inner) return;
-    inner.style.height = window.innerHeight + 'px';
+    // svhが使えれば不要、フォールバックとして window.innerHeight を使う
+    var h = window.innerHeight;
+    frame.style.height = h + 'px';
+    // phone-inner も同期
+    var inner = document.querySelector('.phone-inner');
+    if(inner) inner.style.height = h + 'px';
   }
 
+  // ── 初回適用 ──
   applyHeight();
 
+  // ── resize: passive + requestAnimationFrame でjank防止 ──
+  var rafId = 0;
   window.addEventListener('resize', function(){
-    applyHeight();
-  });
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(applyHeight);
+  }, { passive: true });
 
+  // ── orientationchange: 300ms後 + 600ms後の二段構え（Safari対策） ──
   window.addEventListener('orientationchange', function(){
-    setTimeout(function(){
-      applyHeight();
-    }, 300);
-  });
+    setTimeout(applyHeight, 300);
+    setTimeout(applyHeight, 600);
+  }, { passive: true });
+
+  // ── visual viewport変化（Safariキーボード対応） ──
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize', function(){
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(applyHeight);
+    }, { passive: true });
+  }
 })();
 </script>
 
@@ -12351,3 +12675,16 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
 
 </body>
 </html>
+// 都道府県キー→表示名マップ
+const PREF_LABEL_MAP = {
+  tokyo:'東京都',kanagawa:'神奈川県',saitama:'埼玉県',chiba:'千葉県',
+  ibaraki:'茨城県',tochigi:'栃木県',gunma:'群馬県',yamanashi:'山梨県',
+  osaka:'大阪府',hyogo:'兵庫県',kyoto:'京都府',nara:'奈良県',
+  shiga:'滋賀県',wakayama:'和歌山県',
+  aichi:'愛知県',shizuoka:'静岡県',mie:'三重県',gifu:'岐阜県',
+  nagano:'長野県',niigata:'新潟県',toyama:'富山県',ishikawa:'石川県',fukui:'福井県',
+  fukuoka:'福岡県',saga:'佐賀県',nagasaki:'長崎県',kumamoto:'熊本県',
+  oita:'大分県',miyazaki:'宮崎県',kagoshima:'鹿児島県',okinawa:'沖縄県',
+  hokkaido:'北海道',overseas:'海外',
+};
+
