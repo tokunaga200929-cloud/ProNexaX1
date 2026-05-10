@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "calendarEvents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "date",   "order": "ASCENDING" },
+        { "fieldPath": "cat",    "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "savedTournaments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "savedAt",   "order": "DESCENDING" },
+        { "fieldPath": "category",  "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
