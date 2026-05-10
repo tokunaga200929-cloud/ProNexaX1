@@ -36,7 +36,7 @@
   <title>ProNexaX</title>
   <style>
   /* ============================================================
-     ProNexaX Splash Screen — Pattern 5 / Apple-grade minimal
+     ProNexaX Splash Screen — Apple-grade / ultra minimal
      ============================================================ */
   #pnx-splash {
     position: fixed;
@@ -50,7 +50,7 @@
     align-items: center;
     justify-content: center;
     opacity: 1;
-    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1);
     -webkit-user-select: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
@@ -67,62 +67,76 @@
     flex-direction: column;
     align-items: center;
     opacity: 0;
-    transform: scale(0.94) translateY(-20px);
-    animation: pnx-reveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards;
+    transform: scale(0.95) translateY(-20px);
+    animation: pnx-reveal 0.95s cubic-bezier(0.22, 1, 0.36, 1) 0.05s forwards;
   }
   @keyframes pnx-reveal {
     to { opacity: 1; transform: scale(1) translateY(-20px); }
   }
 
-  /* ── 円エフェクト付きロゴラッパー ── */
-  /* 旧 .pnx-lines は使わず .pnx-logo-wrap に円を内包 */
+  /* ── ロゴラッパー（① 白枠・カード・shadow を完全廃止） ── */
   .pnx-lines {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 32px; /* 【3】logo↓32px→ProNexaX */
+    margin-bottom: 32px;
   }
-  .pnx-line { display: none; } /* 横線は非表示（円エフェクトに置換） */
+  .pnx-line { display: none; }
 
   .pnx-logo-wrap {
-    /* 【1】132px → 約148px（+12%）*/
     width: 148px;
     height: 148px;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    /* ① 白枠・背景・ボーダー・シャドウ — 一切なし */
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
   }
 
-  /* 【2】薄い円エフェクト — opacity 0.10 */
+  /* 極薄グリーングロー（存在を感じさせない程度） */
   .pnx-logo-wrap::before {
     content: '';
     position: absolute;
-    inset: -22px;
+    inset: -28px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(57,200,146,0.10) 0%, rgba(57,200,146,0.00) 70%);
-    opacity: 1;
+    background: radial-gradient(circle,
+      rgba(57,200,146,0.08) 0%,
+      rgba(57,200,146,0.00) 68%
+    );
     pointer-events: none;
   }
-  /* アウターリング：極細、ごく薄 */
+  /* アウターリング — 極細・極薄 */
   .pnx-logo-wrap::after {
     content: '';
     position: absolute;
-    inset: -18px;
+    inset: -20px;
     border-radius: 50%;
-    border: 1px solid rgba(57,200,146,0.10);
+    border: 0.5px solid rgba(57,200,146,0.09);
     pointer-events: none;
   }
 
+  /* ① img 自体も完全にクリーン */
   .pnx-logo-wrap img {
     width: 148px;
     height: 148px;
     object-fit: contain;
+    display: block;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
     position: relative;
     z-index: 1;
+    /* PNG透明背景をそのまま活かす */
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
-  /* ── テキスト ── */
+  /* ── アプリ名 ── */
   .pnx-name {
     font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
     font-size: 28px;
@@ -130,8 +144,9 @@
     letter-spacing: -0.6px;
     color: #1d1d1f;
     line-height: 1;
-    margin-bottom: 14px; /* 【3】ProNexaX↓14px→tagline */
+    margin-bottom: 12px;
     -webkit-font-smoothing: antialiased;
+    text-align: center;
   }
   .pnx-name .pnx-x { color: #39C892; }
 
@@ -140,32 +155,47 @@
     font-size: 12px;
     font-weight: 400;
     letter-spacing: 0.3px;
-    color: #B0B0B0;
+    color: #B8B8B8;
     line-height: 1;
     -webkit-font-smoothing: antialiased;
+    text-align: center;
   }
 
-  /* ── Loading エリア — 【4】さらに下に */
+  /* ── 下部エリア ── */
   .pnx-bottom {
     position: absolute;
-    bottom: calc(env(safe-area-inset-bottom) + 44px);
+    bottom: calc(env(safe-area-inset-bottom) + 52px);
     left: 0;
     right: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 14px;
     opacity: 0;
-    animation: pnx-bottom-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
+    animation: pnx-bottom-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.45s forwards;
   }
   @keyframes pnx-bottom-in {
-    to { opacity: 1; }
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* 【5】バーを細く height:2px */
+  /* ② ③ キャッチコピーテキスト */
+  .pnx-loading-label {
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    line-height: 1.7;
+    color: #A0A0A0;
+    -webkit-font-smoothing: antialiased;
+    text-align: center;
+    white-space: pre-line;
+  }
+
+  /* Loadingバー（極細・角丸維持） */
   .pnx-bar-track {
-    width: 100px;
+    width: 88px;
     height: 2px;
     background: #EFEFEF;
     border-radius: 100px;
@@ -179,23 +209,13 @@
     width: 0%;
     background: #39C892;
     border-radius: 100px;
-    animation: pnx-load 1.8s cubic-bezier(0.4, 0, 0.2, 1) 0.45s forwards;
+    animation: pnx-load 1.8s cubic-bezier(0.4, 0, 0.2, 1) 0.5s forwards;
   }
   @keyframes pnx-load {
     0%   { width: 0%; }
-    55%  { width: 68%; }
-    80%  { width: 86%; }
-    100% { width: 96%; }
-  }
-
-  .pnx-loading-label {
-    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
-    font-size: 10.5px;
-    font-weight: 400;
-    letter-spacing: 0.2px;
-    color: #C8C8C8;
-    -webkit-font-smoothing: antialiased;
-    white-space: nowrap;
+    55%  { width: 66%; }
+    80%  { width: 84%; }
+    100% { width: 95%; }
   }
   </style>
 </head>
@@ -215,10 +235,10 @@
     <div class="pnx-tagline">Tournament &amp; Career Management</div>
   </div>
   <div class="pnx-bottom">
+    <div class="pnx-loading-label">あなたのゴルフを、<br>もっとスマートに。</div>
     <div class="pnx-bar-track">
       <div class="pnx-bar-fill"></div>
     </div>
-    <div class="pnx-loading-label">Loading...</div>
   </div>
 </div>
 
