@@ -1,0 +1,107 @@
+rules_version = '2';
+
+// ================================================================
+// ProNexaX — Firestore Security Rules
+//
+// 構造:
+//   tournaments/{tournamentId}          — 大会データ
+//   users/{userId}                      — ユーザープロフィール
+//   users/{userId}/favorites/{favId}    — お気に入り（本人のみ）
+//
+// 管理者判定:
+//   現在 → クライアント側 ADMIN_EMAILS で判定
+//   将来 → users/{uid}.isAdmin を Rules 内で参照できる構造にしておく
+//          例: get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+// ================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================================
+    // ヘルパー関数
+    // ============================================================
+
+    // ログイン済みか
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // 本人か（users / favorites）
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // users コレクションの isAdmin フィールドを参照して管理者判定
+    // （将来: クライアント側 ADMIN_EMAILS に加えてサーバー側でも検証）
+    function isAdminUser() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // ============================================================
+    // tournaments コレクション
+    //   read  : 誰でも可（未ログインユーザーも大会を閲覧できる）
+    //   write : ログイン済みユーザーのみ
+    //           ※ 将来 isAdminUser() に絞ることで管理者専用にできる
+    // ============================================================
+    match /tournaments/{tournamentId} {
+
+      // 誰でも読み取り可
+      allow read: if true;
+
+      // ログイン済みユーザーのみ作成・更新・削除
+      // 将来的に管理者のみにする場合: if isAdminUser();
+      allow create, update, delete: if isAuthenticated();
+    }
+
+    // ============================================================
+    // users コレクション
+    //   read  : 本人のみ
+    //   write : 本人のみ（isAdmin フィールドの改ざん防止含む）
+    //
+    //   ※ isAdmin は _saveUserToFirestore でサーバー側から書き込まれるが、
+    //      クライアントが isAdmin:true に自己書き込みする攻撃を防ぐには
+    //      将来 Cloud Functions / Admin SDK 経由での書き込みを推奨
+    // ============================================================
+    match /users/{userId} {
+
+      // 本人のみ読み取り
+      allow read: if isOwner(userId);
+
+      // 本人のみ書き込み
+      // ただし isAdmin フィールドの改ざんを防ぐバリデーションを追加
+      allow create: if isOwner(userId)
+        && !('isAdmin' in request.resource.data);  // 初回作成時は isAdmin 不可
+
+      allow update: if isOwner(userId)
+        // isAdmin フィールドを自分で変更不可
+        && (!('isAdmin' in request.resource.data)
+            || request.resource.data.isAdmin == resource.data.isAdmin);
+
+      allow delete: if isOwner(userId);
+    }
+
+    // ============================================================
+    // favorites サブコレクション
+    //   favorites/{uid}/saved/{tournamentId}
+    //   本人のみ読み書き可
+    // ============================================================
+    match /favorites/{userId}/saved/{tournamentId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ============================================================
+    // favorites ドキュメント自体（コレクショングループ対応）
+    // ============================================================
+    match /favorites/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ============================================================
+    // その他のコレクションはデフォルト拒否
+    // ============================================================
+    // （rules_version '2' では match 外は自動的に deny）
+
+  }
+}
