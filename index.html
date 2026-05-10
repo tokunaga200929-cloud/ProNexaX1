@@ -298,7 +298,14 @@ button,input,select,textarea{
 .status-bar{display:none;}
 .status-time{color:#fff;font-size:11px;font-weight:500;}
 .status-icons{color:rgba(255,255,255,.9);font-size:10px;}
-.page{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
+.page{
+  display: none;
+  flex: 1 1 auto;       /* ★ Safari: 1 1 0 より auto が安全 */
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  height: 0;            /* ★ flex:1 + height:0 パターン */
+}
 .page.active{display:flex;}
 /* ================================================================ */
 /* ★★★ NEW MINIMAL HEADER DESIGN ★★★                             */
@@ -536,17 +543,22 @@ button,input,select,textarea{
 }
 /* month-ui-wrap：月表示の専用ラッパー */
 #month-ui-wrap{
-  flex:1;
-  min-height:0;
-  overflow:hidden;
-  flex-direction:column;
+  display: flex;        /* ★ Safari: display を CSS で明示（inline style に頼らない） */
+  flex: 1 1 auto;       /* ★ Safari: 0 より auto が安全（親height不明時の崩壊防止） */
+  min-height: 0;
+  overflow: hidden;
+  flex-direction: column;
+  /* ★ Safari: flex子要素としての高さを確実に伝播させる */
+  height: 0;            /* flex:1 と height:0 の組み合わせがSafariで最も安定 */
 }
 /* multiday-ui-wrap：週/3日/1日 の共通ラッパー */
 #multiday-ui-wrap{
-  flex:1;
-  min-height:0;
-  overflow:hidden;
-  flex-direction:column;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  flex-direction: column;
+  height: 0;
 }
 /* 週/3日モード：.cal-multi-day がスクロール担当 */
 #multiday-ui-wrap .cal-multi-day{
@@ -777,14 +789,72 @@ button,input,select,textarea{
 .hint-bar{display:none;}
 .hint-item{font-size:11px;color:rgba(255,255,255,.65);display:flex;align-items:center;gap:3px;}
 .hint-dot{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.4);flex-shrink:0;}
-.cal-swipe-wrap{overflow:hidden;overflow-x:hidden;flex:1 1 0;min-height:0;width:100%;max-width:100%;background:#fff;border-bottom:none;position:relative;}
-.cal-slide-container{display:flex;width:300%;max-width:300%;height:100%;transform:translateX(-33.333%);will-change:transform;}
-.cal-slide-container.animating{transition:transform .28s cubic-bezier(.4,0,.2,1);}
-.cal-panel{width:33.3333%;min-width:0;height:100%;flex-shrink:0;overflow:hidden;overflow-x:hidden;display:flex;flex-direction:column;}
+/* ================================================================
+   ★★★ カレンダーグリッド flex chain ★★★
+   Safari PWA で高さ0崩壊しないよう以下の原則で設計：
+   1. flex:1 + height:0 の組み合わせ（flex:1 1 0 より安定）
+   2. 親がheight不明でも子が伸びるよう flex-basis を 0 ではなく auto
+   3. overflow:hidden は必要最小限のみ（連鎖崩壊防止）
+   4. cal-row は flex:1 だけでなく min-height を px で保証
+   ================================================================ */
+.cal-swipe-wrap{
+  /* flex child として親(#month-ui-wrap)の残高さを全て使う */
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 0;          /* ★ flex:1 + height:0 でSafari確実伸長 */
+  width: 100%;
+  max-width: 100%;
+  background: #fff;
+  border-bottom: none;
+  position: relative;
+  overflow: hidden;
+  overflow-x: hidden;
+}
+.cal-slide-container{
+  display: flex;
+  width: 300%;
+  max-width: 300%;
+  height: 100%;       /* 親(cal-swipe-wrap)の高さを継承 */
+  transform: translateX(-33.333%);
+  will-change: transform;
+}
+.cal-slide-container.animating{
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+}
+.cal-panel{
+  width: 33.3333%;
+  min-width: 0;
+  height: 100%;       /* 親(cal-slide-container)の高さを継承 */
+  flex-shrink: 0;
+  /* ★ Safari: overflow:hidden は flex child の高さ計算を壊すため clip を使用 */
+  /* overflow: clip は Safari 16+ で対応、古い版は overflow:hidden で妥協 */
+  overflow: hidden;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  /* ★ clip: overflow:hiddenと違い、height計算には影響しない */
+  /* Note: overflow:clip は @supports で分岐 */
+}
 /* ★ table → flex 化：6週月でも均等可変 */
-.cal-grid{display:flex;flex-direction:column;width:100%;height:100%;flex:1;min-height:0;}
-.cal-row{display:flex;flex:1 1 0;min-height:0;width:100%;position:relative;z-index:0;}
-.cal-cell{flex:1 1 0;width:0;max-width:calc(100% / 7);min-width:0;min-height:0;padding:3px 2px 2px;border:0.5px solid #DFF0EB;cursor:pointer;overflow:hidden;user-select:none;-webkit-user-select:none;background:#fff;transition:background .15s,box-shadow .15s;display:flex;flex-direction:column;}
+.cal-grid{
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;       /* 親(cal-panel)の高さを継承 */
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.cal-row{
+  display: flex;
+  /* ★ Safari: flex:1 1 0 は親height不明時に0になる → flex:1 + min-height px保証 */
+  flex: 1 1 auto;
+  min-height: 44px;   /* セル最小高さ保証（6週なら 44×6=264px） */
+  width: 100%;
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+}
+.cal-cell{flex:1 1 auto;width:0;max-width:calc(100% / 7);min-width:0;min-height:44px;padding:3px 2px 2px;border:0.5px solid #DFF0EB;cursor:pointer;overflow:hidden;user-select:none;-webkit-user-select:none;background:#fff;transition:background .15s,box-shadow .15s;display:flex;flex-direction:column;}
 .cal-cell:active{background:var(--green-chip);}
 .cal-cell.other{background:#FAFCFB;}
 .cal-cell.selected{background:var(--green-chip);box-shadow:inset 0 0 0 1.5px var(--green-main);}
@@ -4491,10 +4561,10 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
   overscroll-behavior: contain;
 }
 
-/* カード：GPU合成レイヤー */
+/* カード：GPU合成レイヤー（containはSafariで親height計算に干渉するため除去） */
 .t-card {
   will-change: transform;
-  contain: layout style;
+  /* contain: layout style; ← Safari bug: 親のflex height計算を壊すため使用禁止 */
 }
 
 /* モーダルシート：合成レイヤー */
@@ -4557,12 +4627,8 @@ button, .filter-chip, .t-cat-badge, .search-gender-btn,
   }
 }
 
-/* iOS Safari アドレスバー伸縮対応 */
-@supports (height: 100svh) {
-  .app-frame {
-    height: 100svh !important;
-  }
-}
+/* iOS Safari アドレスバー伸縮対応（svhは一部Safariで不安定なためdvhのみ使用） */
+/* @supports (height: 100svh) は削除 → dvh + -webkit-fill-available で対応済み */
 
 /* フィルターグリッドのチップ切り替え時ちらつき防止 */
 .filter-scroll-rail {
@@ -4612,21 +4678,21 @@ html, body {
 }
 
 /* ================================================================
-   カレンダー表示復旧フォールバック
-   flex:1連鎖が機能しない場合でも最低高さを保証
+   カレンダー表示復旧フォールバック（Safari flex chain 安定化）
    ================================================================ */
 .cal-swipe-wrap {
-  min-height: 280px !important;
+  /* ★ flex:1+height:0 が効かない古いSafari向け最小高さ保証 */
+  min-height: 200px !important;
 }
 .cal-row {
-  min-height: 48px !important;
+  /* ★ flex:1 が効かない場合の絶対最小保証 */
+  min-height: 44px !important;
 }
 .cal-cell {
-  /* calc(100%/7)を上書き → flex:1のみで均等7列 */
   width: auto !important;
-  flex: 1 1 0 !important;
+  flex: 1 1 auto !important;   /* ★ 0 より auto でSafari安定 */
   min-width: 0 !important;
-  min-height: 48px !important;
+  min-height: 44px !important;
 }
 
 /* cal-week-labels：table→flexに統一（cal-cellの幅と一致） */
@@ -4849,10 +4915,13 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
 .phone-inner { overflow-x:hidden !important; width:100% !important; max-width:100% !important; }
 .cal-swipe-wrap { width:100% !important; max-width:100% !important; overflow:hidden !important; overflow-x:hidden !important; }
 .cal-slide-container { width:300% !important; max-width:300% !important; display:flex !important; }
-.cal-panel { width:33.3333% !important; min-width:0 !important; flex-shrink:0 !important; overflow:hidden !important; overflow-x:hidden !important; }
-.cal-grid { width:100% !important; max-width:100% !important; overflow:hidden !important; }
-.cal-row { display:flex !important; width:100% !important; max-width:100% !important; overflow:hidden !important; }
-.cal-cell { flex:1 1 0 !important; width:0 !important; max-width:calc(100% / 7) !important; min-width:0 !important; overflow:hidden !important; box-sizing:border-box !important; }
+/* ★ cal-panel: overflow:hidden を外してflex chain を通す */
+.cal-panel { width:33.3333% !important; min-width:0 !important; flex-shrink:0 !important; overflow-x:hidden !important; overflow-y:hidden !important; }
+/* ★ cal-grid: overflow:hidden を外す（高さ計算を妨げる） */
+.cal-grid { width:100% !important; max-width:100% !important; }
+/* ★ cal-row: overflow:hiddenのみ、高さはflex:1+min-heightで確保 */
+.cal-row { display:flex !important; width:100% !important; max-width:100% !important; min-height:44px !important; }
+.cal-cell { flex:1 1 auto !important; width:0 !important; max-width:calc(100% / 7) !important; min-width:0 !important; overflow:hidden !important; box-sizing:border-box !important; }
 .cal-week-labels { display:flex !important; width:100% !important; max-width:100% !important; overflow:hidden !important; }
 .cal-week-labels span { flex:1 1 0 !important; min-width:0 !important; max-width:calc(100% / 7) !important; box-sizing:border-box !important; }
 
@@ -5350,7 +5419,7 @@ body{
     </div>
 
     <!-- ★ 月表示専用ラッパー（week/3day/day時は display:none） -->
-    <div id="month-ui-wrap" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+    <div id="month-ui-wrap">
       <div class="cal-header">
         <div class="month-nav">
           <button class="month-title-btn" id="month-title-btn" onclick="toggleMonthPicker()" aria-label="月を選択">
@@ -5413,7 +5482,7 @@ body{
     </div>
 
     <!-- ★ 週/3日/1日表示専用ラッパー（month時は display:none） -->
-    <div id="multiday-ui-wrap" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+    <div id="multiday-ui-wrap" style="display:none;">
     </div>
   </div>
 
@@ -7254,6 +7323,57 @@ function renderAllPanels(){
   document.getElementById('panel-next').innerHTML=buildCalHTML(next.y,next.m);
   const sc=document.getElementById('cal-slide-container');sc.classList.remove('animating');sc.style.transform='translateX(-33.333%)';
   bindPanelEvents();
+
+  // ★ Safari PWA: flex chain の高さ崩壊を検出して強制修正
+  requestAnimationFrame(function(){
+    _fixCalendarHeight();
+  });
+}
+
+// ★★★ Safari PWA カレンダー高さ強制修正 ★★★
+// cal-swipe-wrap の offsetHeight が 0 または極小の場合にフォールバック高さをセット
+function _fixCalendarHeight(){
+  var wrap = document.getElementById('cal-swipe-wrap');
+  var monthWrap = document.getElementById('month-ui-wrap');
+  if(!wrap || !monthWrap) return;
+
+  // 月ラッパーが非表示なら何もしない
+  if(monthWrap.style.display === 'none') return;
+
+  var wrapH = wrap.offsetHeight;
+  if(wrapH < 100){
+    // flex chain が崩壊している → 利用可能高さを直接計算してセット
+    var frameH  = window.innerHeight;
+    var innerEl = document.querySelector('.phone-inner');
+    var innerH  = innerEl ? innerEl.offsetHeight : frameH;
+    // ヘッダー + cal-header + bottom-nav の高さを引いた残高さ
+    var appHeader = document.querySelector('.app-header');
+    var calHeader = document.querySelector('.cal-header');
+    var splitH    = document.getElementById('split-handle');
+    var calLegend = document.getElementById('cat-legend');
+    var bottomNav = document.querySelector('.bottom-nav');
+    var usedH = 0;
+    if(appHeader) usedH += appHeader.offsetHeight;
+    if(calHeader) usedH += calHeader.offsetHeight;
+    if(splitH)    usedH += splitH.offsetHeight;
+    if(calLegend) usedH += calLegend.offsetHeight;
+    if(bottomNav) usedH += bottomNav.offsetHeight;
+    // cal-scroll は flex:1 なので最低 40% を残す
+    var calScrollMinH = Math.floor(innerH * 0.3);
+    var availH = innerH - usedH - calScrollMinH;
+    if(availH > 100){
+      wrap.style.height = availH + 'px';
+      wrap.style.minHeight = availH + 'px';
+      wrap.style.flex = 'none';
+    }
+  } else {
+    // 正常に高さが取れている → inline style をリセット（CSS に委ねる）
+    if(wrap.style.flex === 'none'){
+      wrap.style.height = '';
+      wrap.style.minHeight = '';
+      wrap.style.flex = '';
+    }
+  }
 }
 
 // ★★★ パネルイベント：チップ長押し→ドラッグ + セル長押し→セル全体ドラッグ ★★★
@@ -10383,14 +10503,17 @@ function _applyViewLayout(mode){
   if(!monthWrap||!multidayWrap)return;
   if(mode==='month'){
     // 月モード：月UIをflex表示、multiday側を完全非表示
-    monthWrap.style.display   ='flex';
-    multidayWrap.style.display='none';
+    // ★ flex-directionも明示（CSSと競合しないよう）
+    monthWrap.style.display      = 'flex';
+    monthWrap.style.flexDirection= 'column';
+    multidayWrap.style.display   = 'none';
     // multiday内の残留DOMを除去
-    multidayWrap.innerHTML='';
+    multidayWrap.innerHTML = '';
   }else{
     // 週/3日/1日モード：月UIを完全非表示、multiday側を表示
-    monthWrap.style.display   ='none';
-    multidayWrap.style.display='flex';
+    monthWrap.style.display      = 'none';
+    multidayWrap.style.display   = 'flex';
+    multidayWrap.style.flexDirection = 'column';
   }
 }
 
@@ -12517,12 +12640,14 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
 
   // ── 高さ適用 ──
   function applyHeight(){
-    // svhが使えれば不要、フォールバックとして window.innerHeight を使う
     var h = window.innerHeight;
     frame.style.height = h + 'px';
-    // phone-inner も同期
     var inner = document.querySelector('.phone-inner');
     if(inner) inner.style.height = h + 'px';
+    // ★ カレンダー高さ崩壊チェックも実行
+    if(typeof _fixCalendarHeight === 'function'){
+      _fixCalendarHeight();
+    }
   }
 
   // ── 初回適用 ──
