@@ -9850,57 +9850,15 @@ function _tdmOpenEntry(){
 
 // ── ドラッグで閉じる ──
 function _tdmInitDrag(){
-  const sheet = document.getElementById('tdm-sheet');
-  const grabber = document.getElementById('tdm-grabber');
-  if(!sheet||!grabber) return;
-
-  let _didDrag = false; // drag移動量チェック用フラグ
-
-  const onStart = (e)=>{
-    // ✕ボタン上からのタッチはdragを開始しない
-    if(e.target && e.target.closest && e.target.closest('.tdm-close-btn')) return;
-    _tdmIsDragging = true;
-    _didDrag = false;
-    _tdmDragStartY = (e.touches?e.touches[0].clientY:e.clientY);
-    _tdmDragCurrentY = 0;
-    sheet.classList.add('is-dragging');
-  };
-  const onMove = (e)=>{
-    if(!_tdmIsDragging) return;
-    const y = (e.touches?e.touches[0].clientY:e.clientY);
-    const dy = y - _tdmDragStartY;
-    if(dy < 0) return; // 上方向は無視
-    if(dy > 4) _didDrag = true; // 実際に動いた
-    _tdmDragCurrentY = dy;
-    sheet.style.transform = `translateY(${dy}px)`;
-  };
-  const onEnd = (e)=>{
-    if(!_tdmIsDragging) return;
-    _tdmIsDragging = false;
-    sheet.classList.remove('is-dragging');
-    // ✕ボタンへのタップはdragEndで処理しない（clickに任せる）
-    if(e && e.target && e.target.closest && e.target.closest('.tdm-close-btn')){
-      sheet.style.transform = '';
-      return;
-    }
-    if(_tdmDragCurrentY > 120){
-      sheet.style.transform = '';
-      closeTournamentModal();
-    } else {
-      sheet.style.transform = '';
-      sheet.style.transition = 'transform .35s cubic-bezier(.32,.72,.25,1)';
-      setTimeout(()=>{ sheet.style.transition=''; }, 350);
-    }
-    _didDrag = false;
-  };
-
-  // 既存リスナー削除
-  grabber.ontouchstart = onStart;
-  grabber.ontouchmove = onMove;
-  grabber.ontouchend = onEnd;
-  grabber.onmousedown = onStart;
-  document.onmouseup = ()=>{ if(_tdmIsDragging) onEnd(); };
-  document.onmousemove = (e)=>{ if(_tdmIsDragging) onMove(e); };
+  /* ★ BottomSheetDrag（Phase8）が全シートのドラッグを管理するため、
+     この関数は BottomSheetDrag 初期化後には不要。
+     互換性のため関数は残すが中身はno-op。
+     ✕ボタンの設定のみ残す。 */
+  const closeBtn = document.getElementById('tdm-close-btn');
+  if(closeBtn){
+    closeBtn.ontouchstart = function(e){ e.stopPropagation(); };
+    closeBtn.ontouchend   = function(e){ e.preventDefault(); e.stopPropagation(); closeTournamentModal(); };
+  }
 }
 
 // ★ Phase2: 日付をフォーマット（YYYY-MM-DD → M/D）
@@ -15653,6 +15611,480 @@ window.ProNexaX = Object.assign(window.ProNexaX || {}, {
   } else {
     setTimeout(init, 180);
   }
+})();
+
+</script>
+
+<script>
+/* ================================================================
+   ★★★ BottomSheet 下スワイプで閉じる — 完全修正 ★★★
+
+   修正する問題:
+   1. modal-sheet (カレンダー予定追加) — ドラッグ未実装
+   2. day-modal-sheet (Day View予定一覧) — ドラッグ未実装
+   3. tdm-sheet (大会詳細) — grabberのみ・body全体でのドラッグ不可
+   4. fbs-sheet (絞り込みフィルター) — ドラッグ未実装
+   5. add-cat-sheet (カテゴリ追加) — ドラッグ未実装
+
+   設計:
+   - handle のみで drag 開始（内部スクロールと競合しない）
+   - scrollTop === 0 の時だけ下ドラッグで閉じる
+   - touch-action:none を handle に設定（body の manipulation を上書き）
+   - passive:false で e.preventDefault() を確実に実行
+   - 120px 以上 or 速度 0.5px/ms 以上で閉じる
+   ================================================================ */
+'use strict';
+
+/**
+ * BottomSheetDrag
+ * 汎用BottomSheet下スワイプクローズマネージャー
+ *
+ * @param {object} config
+ *   sheetEl      : シート要素（transform でアニメーション）
+ *   handleEl     : ドラッグ開始ハンドル要素
+ *   scrollEl     : 内部スクロール要素（null可）
+ *   closeFn      : 閉じる関数
+ *   threshold    : 閉じる距離 px (default 120)
+ *   velThreshold : 閉じる速度 px/ms (default 0.5)
+ */
+function BottomSheetDrag(config) {
+  const {
+    sheetEl,
+    handleEl,
+    scrollEl,
+    closeFn,
+    threshold    = 120,
+    velThreshold = 0.5,
+  } = config;
+
+  if (!sheetEl || !handleEl) return;
+
+  // ── 状態 ──
+  let startY    = 0;
+  let startTime = 0;
+  let curY      = 0;
+  let dragging  = false;
+  let lastY     = 0;
+  let lastTime  = 0;
+  let velocity  = 0;
+
+  // ── handle に touch-action:none を設定 ──
+  // body の touch-action:manipulation を上書きして
+  // touchmove が preventDefault できるようにする
+  handleEl.style.touchAction = 'none';
+  handleEl.style.cursor      = 'grab';
+  handleEl.style.userSelect  = 'none';
+  // タップエリア拡大（最低44pxのタッチターゲット）
+  handleEl.style.padding     = '12px 0';
+  handleEl.style.margin      = '0 auto -8px';
+
+  // ── touchstart ──
+  function onStart(e) {
+    const touch = e.touches ? e.touches[0] : e;
+    startY    = touch.clientY;
+    lastY     = touch.clientY;
+    startTime = Date.now();
+    lastTime  = startTime;
+    curY      = 0;
+    velocity  = 0;
+    dragging  = true;
+    // transition を無効化してリアルタイム追従
+    sheetEl.style.transition = 'none';
+    sheetEl.classList.add('is-dragging');
+  }
+
+  // ── touchmove ──
+  function onMove(e) {
+    if (!dragging) return;
+    const touch = e.touches ? e.touches[0] : e;
+    const dy = touch.clientY - startY;
+
+    // 上方向は無視（シートを引き上げない）
+    if (dy < 0) { curY = 0; return; }
+
+    // scrollEl がある場合: scrollTop > 0 ならスクロール優先
+    if (scrollEl && scrollEl.scrollTop > 2) {
+      dragging = false;
+      sheetEl.style.transition = '';
+      sheetEl.style.transform  = '';
+      sheetEl.classList.remove('is-dragging');
+      return;
+    }
+
+    // スクロールを防いでドラッグ
+    e.preventDefault();
+
+    curY = dy;
+    // 速度計算
+    const now  = Date.now();
+    const dt   = now - lastTime;
+    if (dt > 0) velocity = (touch.clientY - lastY) / dt;
+    lastY    = touch.clientY;
+    lastTime = now;
+
+    // シートをリアルタイム移動
+    sheetEl.style.transform = `translateY(${curY}px)`;
+  }
+
+  // ── touchend ──
+  function onEnd(e) {
+    if (!dragging) return;
+    dragging = false;
+    sheetEl.classList.remove('is-dragging');
+
+    const shouldClose = curY > threshold || velocity > velThreshold;
+
+    if (shouldClose) {
+      // 閉じるアニメーション
+      sheetEl.style.transition = 'transform .28s cubic-bezier(.32,.72,.25,1)';
+      sheetEl.style.transform  = 'translateY(110%)';
+      setTimeout(() => {
+        sheetEl.style.transform  = '';
+        sheetEl.style.transition = '';
+        if (typeof closeFn === 'function') closeFn();
+      }, 280);
+    } else {
+      // 元に戻す
+      sheetEl.style.transition = 'transform .32s cubic-bezier(.32,.72,0,1)';
+      sheetEl.style.transform  = 'translateY(0)';
+      setTimeout(() => {
+        sheetEl.style.transition = '';
+        sheetEl.style.transform  = '';
+      }, 320);
+    }
+    curY = 0;
+  }
+
+  // ── イベント登録（passive:false で preventDefault 可能に）──
+  // handleEl 単体に登録 → 内部スクロールと競合しない
+  handleEl.addEventListener('touchstart',  onStart, { passive: true });
+  handleEl.addEventListener('touchmove',   onMove,  { passive: false });
+  handleEl.addEventListener('touchend',    onEnd,   { passive: true });
+  handleEl.addEventListener('touchcancel', onEnd,   { passive: true });
+
+  // マウス対応（デスクトップテスト用）
+  handleEl.addEventListener('mousedown', (e) => {
+    onStart(e);
+    const onMm = (e2) => onMove(e2);
+    const onMu = ()   => { onEnd(); document.removeEventListener('mousemove', onMm); document.removeEventListener('mouseup', onMu); };
+    document.addEventListener('mousemove', onMm);
+    document.addEventListener('mouseup',   onMu);
+  });
+
+  // ── scrollEl のスクロール／ドラッグ競合防止 ──
+  if (scrollEl) {
+    // scrollEl に touch-action:pan-y を設定（縦スクロール許可）
+    scrollEl.style.touchAction         = 'pan-y';
+    scrollEl.style.overscrollBehavior  = 'contain';
+    scrollEl.style.webkitOverflowScrolling = 'touch';
+  }
+
+  // 公開: 再初期化用
+  return { destroy() {
+    handleEl.removeEventListener('touchstart',  onStart);
+    handleEl.removeEventListener('touchmove',   onMove);
+    handleEl.removeEventListener('touchend',    onEnd);
+    handleEl.removeEventListener('touchcancel', onEnd);
+  }};
+}
+
+// ================================================================
+// 各シートに BottomSheetDrag を適用
+// ================================================================
+(function initAllBottomSheetDrags() {
+
+  function init() {
+
+    // ── ① メインモーダル（カレンダー予定追加）──
+    (function initMainModal() {
+      // modal-handle が複数ある（予定追加 + DayView）ので
+      // 親 overlay で識別する
+      const overlay  = document.getElementById('modal-overlay');
+      if (!overlay) return;
+      const sheet    = overlay.querySelector('.modal-sheet');
+      const handle   = sheet  && sheet.querySelector('.modal-handle');
+      const scroll   = document.getElementById('modal-scroll');
+      if (!sheet || !handle) return;
+
+      // handle の高さを拡大（視覚は変えず、タッチエリアのみ）
+      handle.style.cursor  = 'grab';
+
+      BottomSheetDrag({
+        sheetEl:  sheet,
+        handleEl: handle,
+        scrollEl: scroll,
+        closeFn:  () => {
+          if (typeof closeModal === 'function') closeModal();
+        },
+      });
+    })();
+
+    // ── ② Day View モーダル（予定一覧）──
+    (function initDayModal() {
+      const overlay  = document.getElementById('day-modal-overlay');
+      if (!overlay) return;
+      const sheet    = overlay.querySelector('.modal-sheet');
+      const handle   = sheet  && sheet.querySelector('.modal-handle');
+      const scroll   = document.getElementById('day-modal-list');
+      if (!sheet || !handle) return;
+
+      BottomSheetDrag({
+        sheetEl:  sheet,
+        handleEl: handle,
+        scrollEl: scroll,
+        closeFn:  () => {
+          if (typeof closeDayModal === 'function') closeDayModal();
+          else overlay.classList.remove('show');
+        },
+      });
+    })();
+
+    // ── ③ 大会詳細モーダル（TDM）──
+    // 既存の _tdmInitDrag を拡張版で置き換え
+    (function initTdmSheet() {
+      const sheet    = document.getElementById('tdm-sheet');
+      const grabber  = document.getElementById('tdm-grabber');
+      const scroll   = document.querySelector('.tdm-scroll') || sheet && sheet.querySelector('.tdm-body');
+      if (!sheet || !grabber) return;
+
+      // grabber のサイズを拡大（44px 以上のタッチターゲット）
+      grabber.style.padding    = '14px 0 10px';
+      grabber.style.margin     = '0 auto';
+      grabber.style.width      = '100%';
+      grabber.style.cursor     = 'grab';
+      grabber.style.flexShrink = '0';
+
+      // 既存の ontouchstart を削除して新実装に統一
+      grabber.ontouchstart = null;
+      grabber.ontouchmove  = null;
+      grabber.ontouchend   = null;
+
+      BottomSheetDrag({
+        sheetEl:  sheet,
+        handleEl: grabber,
+        scrollEl: scroll,
+        closeFn:  () => {
+          if (typeof closeTournamentModal === 'function') closeTournamentModal();
+        },
+        threshold:    100,
+        velThreshold: 0.4,
+      });
+    })();
+
+    // ── ④ フィルターボトムシート（FBS）──
+    (function initFbsSheet() {
+      const overlay  = document.getElementById('fbs-overlay');
+      const sheet    = overlay && overlay.querySelector('.fbs-sheet');
+      const scroll   = document.getElementById('fbs-scroll-body') ||
+                       sheet && sheet.querySelector('.fbs-scroll');
+      if (!overlay || !sheet) return;
+
+      // fbs-sheet にグラブハンドルが無いので作成
+      let grip = sheet.querySelector('.fbs-drag-handle');
+      if (!grip) {
+        grip = document.createElement('div');
+        grip.className = 'fbs-drag-handle';
+        // グラブバー（iOS風 pill）
+        grip.innerHTML = '<div class="fbs-drag-pip"></div>';
+        grip.style.cssText = [
+          'width:100%',
+          'padding:10px 0 6px',
+          'display:flex',
+          'align-items:center',
+          'justify-content:center',
+          'flex-shrink:0',
+          'cursor:grab',
+        ].join(';');
+        const pip = grip.querySelector('.fbs-drag-pip');
+        if (pip) pip.style.cssText = 'width:36px;height:4px;background:rgba(0,0,0,.18);border-radius:2px;';
+        // border-radius を持つ sheet の最初の子として挿入
+        sheet.insertBefore(grip, sheet.firstChild);
+      }
+
+      BottomSheetDrag({
+        sheetEl:  sheet,
+        handleEl: grip,
+        scrollEl: scroll,
+        closeFn:  () => {
+          if (typeof closeFilterSheet === 'function') closeFilterSheet();
+          else overlay.classList.remove('show');
+        },
+      });
+    })();
+
+    // ── ⑤ カテゴリ追加シート（add-cat）──
+    (function initAddCatSheet() {
+      const sheet    = document.getElementById('add-cat-sheet');
+      const grip     = sheet && (sheet.querySelector('.add-cat-grip') ||
+                                  sheet.querySelector('[class*="grip"]'));
+      const scroll   = sheet && sheet.querySelector('[class*="scroll"], [class*="list"]');
+      if (!sheet || !grip) return;
+
+      BottomSheetDrag({
+        sheetEl:  sheet,
+        handleEl: grip,
+        scrollEl: scroll,
+        closeFn:  () => {
+          if (typeof closeAddCatSheet === 'function') closeAddCatSheet();
+          else sheet.classList.remove('show');
+        },
+      });
+    })();
+
+    // ── ⑥ tdm-sheet の ✕ボタンを再設定（競合防止）──
+    (function fixTdmCloseBtn() {
+      const closeBtn = document.getElementById('tdm-close-btn');
+      if (!closeBtn) return;
+      // ontouchstart/ontouchend のみで完結（clickイベントは通常動作）
+      closeBtn.ontouchstart = (e) => { e.stopPropagation(); };
+      closeBtn.ontouchend   = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof closeTournamentModal === 'function') closeTournamentModal();
+      };
+    })();
+
+    console.info(
+      '%c[BottomSheetDrag]%c 全シートドラッグ初期化完了',
+      'background:#39C892;color:#fff;padding:1px 5px;border-radius:2px;font-weight:700;',
+      'color:#3A5C52;'
+    );
+  }
+
+  // DOM 準備後に実行
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(init, 400), { once: true });
+  } else {
+    setTimeout(init, 400);
+  }
+
+  // openTournamentModal をフックして毎回 drag を再初期化
+  // （シートが再表示される度にリスナーが正しく設定されるよう）
+  (function hookTdmOpen() {
+    function patch() {
+      if (typeof openTournamentModal !== 'function') return;
+      const _orig = window.openTournamentModal;
+      window.openTournamentModal = function(tid) {
+        if (typeof _orig === 'function') _orig(tid);
+        // ドラッグは BottomSheetDrag で初期化済みなので _tdmInitDrag は不要
+        // （grabber に ontouchstart が残っている場合は削除）
+        setTimeout(() => {
+          const grabber = document.getElementById('tdm-grabber');
+          if (grabber) {
+            grabber.ontouchstart = null;
+            grabber.ontouchmove  = null;
+            grabber.ontouchend   = null;
+          }
+        }, 50);
+      };
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 500), { once: true });
+    } else {
+      setTimeout(patch, 500);
+    }
+  })();
+
+})();
+
+// ================================================================
+// CSS パッチ: touch-action と overflow の修正
+// （JS から動的に挿入して既存 CSS を上書き）
+// ================================================================
+(function injectSwipeCSSPatch() {
+  const style = document.createElement('style');
+  style.id = 'bottom-sheet-swipe-patch';
+  style.textContent = `
+/* ★★★ BottomSheet スワイプ閉じ CSS パッチ ★★★ */
+
+/* ① ハンドル: touch-action:none でジェスチャー完全制御 */
+.modal-handle,
+.tdm-grabber,
+.add-cat-grip,
+.fbs-drag-handle {
+  touch-action: none !important;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: grab;
+  /* タップターゲット最小44px確保 */
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ② 内部スクロールエリア: touch-action:pan-y でスクロール優先 */
+.modal-scroll,
+.tdm-scroll,
+.tdm-body,
+.fbs-scroll-body,
+.fbs-scroll {
+  touch-action: pan-y !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ③ シート本体: is-dragging 中は transition を切る */
+.modal-sheet.is-dragging,
+.tdm-sheet.is-dragging,
+.fbs-sheet.is-dragging,
+.add-cat-sheet.is-dragging {
+  transition: none !important;
+  will-change: transform;
+}
+
+/* ④ modal-overlay: pointer-events を show 時のみ有効 */
+/* （既存の .modal-overlay.show { pointer-events:all } を補強） */
+.modal-overlay:not(.show) {
+  pointer-events: none !important;
+}
+
+/* ⑤ ハンドルの視覚的な pill スタイルを統一 */
+.modal-handle {
+  width: 38px !important;
+  height: 4px !important;
+  background: rgba(0,0,0,.15) !important;
+  border-radius: 2px !important;
+  flex-shrink: 0 !important;
+  /* padding は JS で設定 */
+}
+
+/* ⑥ grabber のサイズ確保 */
+.tdm-grabber {
+  width: 36px;
+  height: 4px;
+  background: rgba(0,0,0,.18);
+  border-radius: 2px;
+  margin: 0 auto;
+}
+
+/* ⑦ fbs-drag-handle pip スタイル */
+.fbs-drag-pip {
+  width: 36px;
+  height: 4px;
+  background: rgba(0,0,0,.18);
+  border-radius: 2px;
+}
+:root[data-theme="dark"] .fbs-drag-pip,
+:root[data-theme="dark"] .modal-handle,
+:root[data-theme="dark"] .tdm-grabber {
+  background: rgba(255,255,255,.2) !important;
+}
+
+/* ⑧ modal-sheet の overflow を制御 */
+/* max-height で内部コンテンツを制御し、シート自体はoverflowしない */
+.modal-sheet {
+  overflow: hidden;
+}
+/* スクロールは modal-scroll が担当 */
+.modal-scroll {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+`;
+  // <head> の末尾に挿入（既存スタイルを上書き）
+  document.head.appendChild(style);
 })();
 
 </script>
