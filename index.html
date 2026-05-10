@@ -4404,294 +4404,21 @@ button,input,select,textarea{
 }
 
 /* ================================================================
-   Firebase Auth - Phase4 Redesign (Apple-native style)
+   Firebase Auth - ログイン画面 v2 (ProNexaX Redesign)
    ================================================================ */
-
-/* ── auth-screen コンテナ ── */
 #auth-screen {
   position: fixed; inset: 0; z-index: 9999;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  overflow-x: hidden; overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* カード上角が切れないよう overflow は hidden にしない */
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  background: #ffffff;
   font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  transition: opacity .28s ease;
 }
 #auth-screen.hidden { display: none !important; }
-
-/* 背景：極めて淡いグリーン */
-.auth-bg {
-  position: absolute; inset: 0; pointer-events: none;
-  background:
-    radial-gradient(ellipse 140% 60% at 50% -5%, rgba(57,200,146,.09) 0%, transparent 65%),
-    #ffffff;
-}
-
-/* ── ラッパー ── */
-.auth-wrap {
-  position: relative; z-index: 10;
-  width: 100%; max-width: 390px;
-  padding:
-    max(env(safe-area-inset-top, 48px), 48px)
-    24px
-    max(env(safe-area-inset-bottom, 32px), 32px);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  min-height: 100%;
-}
-
-/* ── カード ── */
-.auth-card {
-  width: 100%;
-  background: #ffffff;
-  border-radius: 24px;
-  border: 0.5px solid rgba(0,0,0,.07);
-  padding: 36px 26px 28px;
-  box-shadow:
-    0 1px 3px rgba(0,0,0,.04),
-    0 8px 28px rgba(0,0,0,.08);
-  animation: authCardIn .55s cubic-bezier(.32,.72,.25,1) both;
-}
-@keyframes authCardIn {
-  from { opacity: 0; transform: translateY(20px) scale(.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* ── ロゴエリア ── */
-.auth-logo-area {
-  display: flex; flex-direction: column;
-  align-items: center; text-align: center;
-  margin-bottom: 32px; gap: 12px;
-}
-.auth-icon-wrap {
-  width: 64px; height: 64px;
-  background: #f5fdf9;
-  border-radius: 16px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 12px rgba(57,200,146,.14);
-  flex-shrink: 0;
-}
-.auth-logo {
-  font-size: 28px; font-weight: 700;
-  letter-spacing: -.6px; color: #1d1d1f; line-height: 1;
-}
-.auth-logo span { color: #39C892; }
-.auth-tagline {
-  font-size: 13px; color: #a0a0a0;
-  font-weight: 500; line-height: 1.5;
-  max-width: 240px;
-}
-
-/* ── デモバナー ── */
-.auth-demo-inner {
-  background: rgba(255,200,60,.08);
-  border: 1px solid rgba(200,150,0,.2);
-  border-radius: 10px;
-  padding: 10px 14px;
-  margin-bottom: 16px;
-  font-size: 11.5px; color: #8a6600;
-  text-align: center; line-height: 1.5;
-}
-
-/* ── ソーシャルボタンスタック ── */
-.auth-social-stack {
-  display: flex; flex-direction: column; gap: 10px;
-}
-
-/* Apple ボタン */
-.auth-social-btn {
-  width: 100%; height: 52px;
-  display: flex; align-items: center; justify-content: center;
-  gap: 10px;
-  border-radius: 14px;
-  border: none;
-  font-size: 15px; font-weight: 600;
-  font-family: inherit;
-  letter-spacing: -.1px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  touch-action: manipulation;
-  transition:
-    opacity .1s linear,
-    transform .12s cubic-bezier(0,0,.2,1);
-}
-.auth-social-btn:active {
-  opacity: .72;
-  transform: scale(.972);
-}
-.auth-apple-btn {
-  background: #1d1d1f;
-  color: #ffffff;
-}
-.auth-google-btn {
-  background: #f7f8fa;
-  color: #1d1d1f;
-  border: 0.5px solid rgba(0,0,0,.1);
-}
-.auth-social-icon { flex-shrink: 0; }
-
-/* ── 区切り ── */
-.auth-sep {
-  display: flex; align-items: center; gap: 12px;
-  margin: 4px 0;
-  color: #c0c0c0; font-size: 11.5px; font-weight: 500;
-}
-.auth-sep::before, .auth-sep::after {
-  content: ''; flex: 1; height: 0.5px; background: rgba(0,0,0,.1);
-}
-
-/* ── メールフォーム（折りたたみ式） ── */
-.auth-email-collapsed {
-  display: none; flex-direction: column; gap: 0;
-  overflow: hidden;
-  animation: authFormIn .28s cubic-bezier(.32,.72,.25,1) both;
-}
-.auth-email-collapsed.open { display: flex; }
-@keyframes authFormIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* メールで続けるボタン */
-.auth-email-toggle-btn {
-  width: 100%; height: 50px;
-  display: flex; align-items: center; justify-content: center;
-  gap: 8px;
-  background: transparent;
-  border: 0.5px solid rgba(0,0,0,.14);
-  border-radius: 14px;
-  font-size: 14px; font-weight: 600;
-  color: #3a3a3a;
-  font-family: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  touch-action: manipulation;
-  transition: opacity .1s linear, transform .12s cubic-bezier(0,0,.2,1);
-}
-.auth-email-toggle-btn:active { opacity: .6; transform: scale(.972); }
-.auth-email-toggle-btn.open { display: none; }
-
-/* タブ */
-.auth-tab-row {
-  display: flex; background: rgba(0,0,0,.05);
-  border-radius: 10px; padding: 3px; gap: 3px;
-  margin-bottom: 16px; margin-top: 4px;
-}
-.auth-tab {
-  flex: 1; padding: 9px; border-radius: 8px; border: none;
-  font-size: 13px; font-weight: 600; cursor: pointer;
-  background: transparent; color: #999;
-  transition: background .18s, color .18s, box-shadow .18s;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  font-family: inherit;
-}
-.auth-tab.is-active {
-  background: #fff; color: #1d1d1f;
-  box-shadow: 0 1px 5px rgba(0,0,0,.1);
-}
-
-/* 入力フィールド */
-.auth-input-wrap { margin-bottom: 12px; position: relative; }
-.auth-input-icon {
-  position: absolute; left: 16px; top: 50%;
-  transform: translateY(-50%);
-  width: 16px; height: 16px; color: #c8c8c8; pointer-events: none;
-}
-.auth-input {
-  width: 100%; height: 52px;
-  background: #f5f5f7;
-  border: 1.5px solid transparent;
-  border-radius: 12px;
-  padding: 0 16px 0 42px;
-  font-size: 15px; font-family: inherit; color: #1d1d1f;
-  outline: none;
-  transition: border-color .2s, box-shadow .2s, background .2s;
-  -webkit-appearance: none;
-  box-sizing: border-box;
-}
-.auth-input:focus {
-  border-color: #39C892;
-  box-shadow: 0 0 0 3px rgba(57,200,146,.14);
-  background: #fff;
-}
-.auth-input::placeholder { color: #c0c0c0; }
-.auth-eye-btn {
-  position: absolute; right: 12px; top: 50%;
-  transform: translateY(-50%);
-  background: none; border: none; cursor: pointer;
-  color: #b0b0b0; padding: 6px;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-}
-.auth-eye-btn:active { opacity: .5; }
-
-/* メタ行 */
-.auth-meta {
-  display: flex; align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px; margin-top: 2px;
-  font-size: 12px;
-}
-.auth-remember {
-  display: flex; align-items: center; gap: 6px;
-  cursor: pointer; user-select: none; color: #666;
-}
-.auth-remember input[type="checkbox"] {
-  width: 16px; height: 16px;
-  accent-color: #39C892;
-}
-.auth-forgot-btn {
-  background: none; border: none; cursor: pointer;
-  color: #39C892; font-size: 12px; font-weight: 600;
-  font-family: inherit; padding: 0;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-}
-.auth-forgot-btn:active { opacity: .6; }
-
-/* メインボタン */
-.auth-submit-btn {
-  width: 100%; height: 52px;
-  background: linear-gradient(135deg, #39C892, #22A874);
-  color: #fff; border: none; border-radius: 14px;
-  font-size: 15px; font-weight: 700; font-family: inherit;
-  letter-spacing: -.1px; cursor: pointer;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  touch-action: manipulation;
-  box-shadow: 0 4px 16px rgba(34,168,116,.3);
-  transition: opacity .1s linear, transform .12s ease, box-shadow .12s ease;
-  margin-bottom: 4px;
-}
-.auth-submit-btn:active {
-  opacity: .8; transform: scale(.974);
-  box-shadow: 0 2px 8px rgba(34,168,116,.2);
-}
-.auth-submit-btn:disabled {
-  opacity: .5; cursor: not-allowed;
-}
-
-/* ローダー・エラー */
-.auth-loader {
-  display: none; width: 22px; height: 22px;
-  border: 2.5px solid rgba(57,200,146,.2);
-  border-top-color: #39C892;
-  border-radius: 50%;
-  animation: authSpin .8s linear infinite;
-  margin: 10px auto 0;
-}
-@keyframes authSpin { to { transform: rotate(360deg); } }
-.auth-error {
-  font-size: 12px; color: #D03030;
-  text-align: center; margin-top: 8px;
-  min-height: 18px; font-weight: 500;
-}
-
-/* 利用規約 */
-.auth-terms {
-  font-size: 11px; color: #b0b0b0;
-  text-align: center; margin-top: 20px;
-  line-height: 1.6;
-}
-.auth-terms a { color: #39C892; text-decoration: none; font-weight: 500; }
 
 /* ── 背景：Apple風 ミントグリーン グラデーション ── */
 .auth-bg {
@@ -5797,141 +5524,119 @@ body{
 
 
 <!-- ★★★ Firebase Auth ログイン画面 ★★★ -->
-<!-- ================================================================ -->
-<!-- ★★★ Phase4: スプラッシュ画面（チラ見え完全防止）★★★              -->
-<!-- ================================================================ -->
-<div id="pnx-splash" style="
-  position:fixed;inset:0;z-index:99999;
-  background:#ffffff;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
-  transition:opacity .3s ease;
-">
-  <div style="display:flex;flex-direction:column;align-items:center;gap:20px;animation:pnxSplashIn .55s cubic-bezier(.32,.72,.25,1) both;">
-    <!-- ミニマルロゴ -->
-    <div style="width:72px;height:72px;border-radius:18px;background:#f5fdf9;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 16px rgba(57,200,146,.14);">
-      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-        <line x1="9" y1="33" x2="9" y2="8"  stroke="#1d1d1f" stroke-width="3" stroke-linecap="round"/>
-        <line x1="9" y1="8"  x2="31" y2="33" stroke="#1d1d1f" stroke-width="3" stroke-linecap="round"/>
-        <line x1="31" y1="33" x2="31" y2="8" stroke="#1d1d1f" stroke-width="3" stroke-linecap="round"/>
-        <circle cx="31" cy="8" r="5" fill="#39C892"/>
-      </svg>
-    </div>
-    <div style="text-align:center;">
-      <div style="font-size:24px;font-weight:700;letter-spacing:-.5px;color:#1d1d1f;line-height:1;">ProNexa<span style="color:#39C892;">X</span></div>
-      <div style="font-size:12px;color:#a0a0a0;font-weight:500;margin-top:5px;letter-spacing:.1px;">Pro Golf Management</div>
-    </div>
-  </div>
-  <!-- ローディングドット -->
-  <div style="position:absolute;bottom:max(env(safe-area-inset-bottom,0px),52px);display:flex;gap:6px;opacity:.5;">
-    <div style="width:5px;height:5px;border-radius:50%;background:#39C892;animation:pnxDot 1.2s ease-in-out infinite;"></div>
-    <div style="width:5px;height:5px;border-radius:50%;background:#39C892;animation:pnxDot 1.2s .2s ease-in-out infinite;"></div>
-    <div style="width:5px;height:5px;border-radius:50%;background:#39C892;animation:pnxDot 1.2s .4s ease-in-out infinite;"></div>
-  </div>
-</div>
-<style>
-@keyframes pnxSplashIn{from{opacity:0;transform:scale(.93) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
-@keyframes pnxDot{0%,100%{opacity:.3;transform:scale(.8);}50%{opacity:1;transform:scale(1.3);}}
-</style>
-
-<!-- ================================================================ -->
-<!-- ★★★ Phase4: 認証画面 — Apple純正風・完全刷新 ★★★                  -->
-<!-- ================================================================ -->
-<div id="auth-screen">
-  <!-- 背景：極めて淡いグリーングラデーション -->
+<div id="auth-screen" class="hidden">
   <div class="auth-bg"></div>
+  <div class="auth-blob auth-blob-1"></div>
+  <div class="auth-blob auth-blob-2"></div>
+
+  <div class="auth-grass">
+    <svg viewBox="0 0 390 110" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 72 C48 50,118 88,196 65 C274 42,336 82,390 58 L390 110 L0 110 Z" fill="rgba(80,180,130,0.22)"/>
+      <path d="M0 86 C58 66,148 100,236 76 C306 58,354 92,390 74 L390 110 L0 110 Z" fill="rgba(70,160,115,0.28)"/>
+      <path d="M0 98 C76 82,172 108,272 92 C332 80,364 98,390 92 L390 110 L0 110 Z" fill="rgba(60,148,100,0.32)"/>
+    </svg>
+  </div>
 
   <div class="auth-wrap">
     <div class="auth-card">
 
-      <!-- ロゴエリア -->
       <div class="auth-logo-area">
-        <div class="auth-icon-wrap">
-          <svg width="44" height="44" viewBox="0 0 40 40" fill="none">
-            <line x1="9" y1="33" x2="9" y2="8"  stroke="#1d1d1f" stroke-width="3" stroke-linecap="round"/>
-            <line x1="9" y1="8"  x2="31" y2="33" stroke="#1d1d1f" stroke-width="3" stroke-linecap="round"/>
-            <line x1="31" y1="33" x2="31" y2="8" stroke="#1d1d1f" stroke-width="3" stroke-linecap="round"/>
-            <circle cx="31" cy="8" r="5" fill="#39C892"/>
+        <div class="auth-logo-row">
+          <svg class="auth-logo-icon" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="52" height="52" rx="14" fill="#F0FBF6"/>
+            <rect x="8" y="14" width="28" height="26" rx="4" fill="none" stroke="#1AAF7A" stroke-width="2.2"/>
+            <rect x="8" y="14" width="28" height="8" rx="4" fill="#1AAF7A"/>
+            <line x1="17" y1="10" x2="17" y2="18" stroke="#1AAF7A" stroke-width="2.2" stroke-linecap="round"/>
+            <line x1="27" y1="10" x2="27" y2="18" stroke="#1AAF7A" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="14" cy="27" r="1.8" fill="#1AAF7A"/>
+            <circle cx="22" cy="27" r="1.8" fill="#1AAF7A"/>
+            <circle cx="30" cy="27" r="1.8" fill="#1AAF7A"/>
+            <circle cx="14" cy="34" r="1.8" fill="#1AAF7A"/>
+            <circle cx="22" cy="34" r="1.8" fill="#ddd"/>
+            <circle cx="38" cy="36" r="9" fill="white" stroke="#e8e8e8" stroke-width="1"/>
+            <path d="M33 34 Q38 31 43 34" stroke="#ddd" stroke-width="0.9" fill="none"/>
+            <path d="M32 37 Q38 34 44 37" stroke="#ddd" stroke-width="0.9" fill="none"/>
+            <path d="M33 40 Q38 37 43 40" stroke="#ddd" stroke-width="0.9" fill="none"/>
+            <path d="M8 37 Q18 28 36 34" stroke="#4CAF76" stroke-width="2" fill="none" stroke-linecap="round"/>
           </svg>
+          <div class="auth-logo">ProNexa<span>X</span></div>
         </div>
-        <div class="auth-logo">ProNexa<span>X</span></div>
-        <div class="auth-tagline">プロゴルファーのための大会管理プラットフォーム</div>
+        <div class="auth-tagline">あなたのゴルフを、もっとスマートに。</div>
       </div>
 
-      <!-- デモモードバナー（Firebase未設定時のみ表示） -->
-      <div id="auth-demo-banner" style="display:none;">
-        <div class="auth-demo-inner">🔓 デモモード — 任意のメール/パスワードでログインできます</div>
+      <div id="auth-demo-banner" style="display:none;background:rgba(255,220,80,.1);border:1px solid rgba(200,160,0,.3);border-radius:10px;padding:9px 14px;margin-bottom:14px;text-align:center;font-size:11.5px;color:#886600;line-height:1.5;">
+        🔓 <strong>デモモード</strong> — Firebase未設定<br>任意のメールアドレスとパスワードでログインできます
       </div>
 
-      <!-- ===== ソーシャルログインボタン ===== -->
-      <div class="auth-social-stack">
+      <div class="auth-tab-row">
+        <button class="auth-tab is-active" data-tab="login" onclick="authSwitchTab('login')">ログイン</button>
+        <button class="auth-tab" data-tab="register" onclick="authSwitchTab('register')">新規登録</button>
+      </div>
 
-        <!-- Apple でサインイン（iPhone最優先） -->
-        <button class="auth-social-btn auth-apple-btn" id="btn-apple" onclick="authSignInApple()" type="button">
-          <svg class="auth-social-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+      <div class="auth-input-wrap">
+        <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        <input class="auth-input" id="auth-email" type="email" placeholder="メールアドレス" autocomplete="email" inputmode="email">
+      </div>
+
+      <div class="auth-input-wrap">
+        <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <input class="auth-input" id="auth-password" type="password" placeholder="パスワード（6文字以上）" autocomplete="current-password" style="padding-right:44px">
+        <button class="auth-eye-btn" onclick="authTogglePw()" aria-label="パスワード表示切替" type="button">
+          <svg id="auth-eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
           </svg>
-          <span>Appleでサインイン</span>
         </button>
+      </div>
 
-        <!-- Google でサインイン -->
-        <button class="auth-social-btn auth-google-btn" id="btn-google" onclick="authSignInGoogle()" type="button">
-          <svg class="auth-social-icon" width="20" height="20" viewBox="0 0 24 24">
+      <div id="auth-register-fields" class="hidden"></div>
+
+      <div class="auth-meta">
+        <label class="auth-remember">
+          <input type="checkbox" id="auth-remember-me" checked>
+          <span>ログインしたままにする</span>
+        </label>
+        <button class="auth-forgot-btn" type="button" onclick="authForgotPassword()">パスワードをお忘れの方</button>
+      </div>
+
+      <button class="auth-submit-btn" id="auth-submit-btn" onclick="authSubmit()">ログイン</button>
+      <div id="auth-loader" class="auth-loader"></div>
+      <div id="auth-error" class="auth-error"></div>
+
+      <div class="auth-divider"><span>または</span></div>
+
+      <div class="auth-sns-row">
+        <button class="auth-sns-btn" aria-label="Googleでログイン" type="button" onclick="authSignInGoogle()">
+          <svg width="22" height="22" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
-          <span>Googleでサインイン</span>
         </button>
-
-        <!-- 区切り -->
-        <div class="auth-sep"><span>またはメールで続ける</span></div>
-
-        <!-- メールフォーム（折りたたみ式） -->
-        <div id="auth-email-form" class="auth-email-collapsed">
-          <div class="auth-tab-row">
-            <button class="auth-tab is-active" data-tab="login"    onclick="authSwitchTab('login')">ログイン</button>
-            <button class="auth-tab"           data-tab="register" onclick="authSwitchTab('register')">新規登録</button>
-          </div>
-          <div class="auth-input-wrap">
-            <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <input class="auth-input" id="auth-email" type="email" placeholder="メールアドレス" autocomplete="email" inputmode="email">
-          </div>
-          <div class="auth-input-wrap">
-            <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input class="auth-input" id="auth-password" type="password" placeholder="パスワード（6文字以上）" autocomplete="current-password" style="padding-right:44px">
-            <button class="auth-eye-btn" onclick="authTogglePw()" aria-label="パスワード表示切替" type="button">
-              <svg id="auth-eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-          </div>
-          <div id="auth-register-fields" class="hidden"></div>
-          <div class="auth-meta">
-            <label class="auth-remember"><input type="checkbox" id="auth-remember-me" checked><span>ログイン状態を保持</span></label>
-            <button class="auth-forgot-btn" type="button" onclick="authForgotPassword()">パスワードを忘れた</button>
-          </div>
-          <button class="auth-submit-btn" id="auth-submit-btn" onclick="authSubmit()" type="button">ログイン</button>
-        </div>
-
-        <!-- メールで続けるボタン（折りたたみトリガー） -->
-        <button class="auth-email-toggle-btn" id="auth-email-toggle" onclick="authToggleEmailForm()" type="button">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          メールで続ける
+        <button class="auth-sns-btn" aria-label="Appleでログイン" type="button" onclick="authSignInApple()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#111">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
         </button>
-
+        <button class="auth-sns-btn" aria-label="メールで続ける" type="button" onclick="(function(){document.querySelector('.auth-tab-row').scrollIntoView({behavior:'smooth'});document.getElementById('auth-email')?.focus();})()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1AAF7A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </button>
       </div>
 
-      <!-- ローダー・エラー -->
-      <div id="auth-loader" class="auth-loader"></div>
-      <div id="auth-error" class="auth-error"></div>
-
-      <!-- 利用規約 -->
-      <p class="auth-terms">続行することで<a href="#" onclick="return false;">利用規約</a>と<a href="#" onclick="return false;">プライバシーポリシー</a>に同意します</p>
+      <p class="auth-signup-row">
+        アカウントをお持ちでない方は<a href="#" onclick="authSwitchTab('register');return false;">新規登録</a>
+      </p>
 
     </div>
   </div>
-</div>
+</div></div>
 
 <div class="phone-wrap"><div class="phone"><div class="app-frame"><div class="phone-inner">
   <div class="notch"></div>
@@ -6687,597 +6392,82 @@ if ('serviceWorker' in navigator) {
 }
 
 // ================================================================
+// Firebase Authentication
 // ================================================================
-// ★★★ Phase4: クラウド基盤 ★★★
-// Firebase Authentication + Firestore + スプラッシュ制御
-//
-// 【設定方法】
-//   Firebase Console > プロジェクト設定 > マイアプリ > SDK スニペット
-//   から実際の値を以下に貼り付けてください
-// ================================================================
-
+// NOTE: Firebase設定は以下に実際の値を入れてください
+// Firebase Console > プロジェクト設定 > マイアプリ > SDK スニペット
 const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+  // ★★★ 以下を自分のFirebaseプロジェクト設定に書き換えてください ★★★
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
   messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID",
-  // measurementId: "YOUR_MEASUREMENT_ID", // Analytics（任意）
+  appId: "YOUR_APP_ID"
 };
 
-// ── プレースホルダー判定（デモモード切り替え）──
+// ================================================================
+// デモモード判定：プレースホルダーのままならFirebaseをスキップ
+// ================================================================
 const _FIREBASE_IS_PLACEHOLDER = (
-  !FIREBASE_CONFIG.apiKey ||
+  FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY' ||
   FIREBASE_CONFIG.apiKey.startsWith('YOUR_') ||
-  FIREBASE_CONFIG.projectId.startsWith('YOUR_')
+  !FIREBASE_CONFIG.apiKey ||
+  FIREBASE_CONFIG.projectId === 'YOUR_PROJECT_ID'
 );
 
-// ── グローバル状態 ──
-let _currentUser   = null;
-let _fbAuthReady   = false;
-let _db            = null; // Firestore instance
-let _auth          = null; // Auth instance
+let _fbAuthReady = false;
+let _currentUser = null;
 
-// ================================================================
-// Firestore データ構造設計
-// ================================================================
-// users/{uid}/
-//   profile:   { displayName, email, photoURL, createdAt }
-//   settings:  { theme, colorTheme, viewMode, enabledCategories[] }
-//   favorites: { tournamentIds[], updatedAt }
-//
-// userSchedules/{uid}/events/{eventId}
-//   { id, name, date, end, cat, place, memo, reminders[], ... }
-//
-// tournaments/{id}  ← 将来の公式DBコレクション
-//   { title, category, gender, region, startDate, ... }
-// ================================================================
-
-// ================================================================
-// スプラッシュ制御
-// ================================================================
-let _splashHidden = false;
-
-function _hideSplash(callback) {
-  if (_splashHidden) { if (callback) callback(); return; }
-  _splashHidden = true;
-  const splash = document.getElementById('pnx-splash');
-  if (!splash) { if (callback) callback(); return; }
-  splash.style.opacity = '0';
-  splash.style.pointerEvents = 'none';
-  setTimeout(() => {
-    splash.style.display = 'none';
-    if (callback) callback();
-  }, 320);
-}
-
-// フォールバック：最大4秒でスプラッシュ強制解除
-setTimeout(() => _hideSplash(null), 4000);
-
-// ================================================================
-// Firebase 初期化
-// ================================================================
-function _initFirebase() {
+function _initFirebaseAuth() {
+  // プレースホルダー設定ならFirebase SDK を読み込まずにゲストモードへ
   if (_FIREBASE_IS_PLACEHOLDER) {
-    console.info('[Auth] Firebase未設定 → デモモードで起動');
+    console.info('[Auth] Firebase未設定 → デモ（ゲスト）モードで起動します');
     _fbAuthReady = true;
-    _runAfterDOM(_onAuthStateChangedGuest);
+    _onAuthStateChangedGuest();
     return;
   }
 
-  // Firebase v9 modular SDK を CDN から動的ロード
-  const load = (src) => new Promise((res, rej) => {
-    const s = document.createElement('script');
-    s.src = src; s.type = 'module-shim';
-    s.onload = res; s.onerror = rej;
-    document.head.appendChild(s);
-  });
-
-  // Compat SDK（v8互換・手軽）
-  const BASE = 'https://www.gstatic.com/firebasejs/10.12.0';
-  const loadCompat = (name) => new Promise((res, rej) => {
-    const s = document.createElement('script');
-    s.src = `${BASE}/${name}`;
-    s.onload = res; s.onerror = rej;
-    document.head.appendChild(s);
-  });
-
-  loadCompat('firebase-app-compat.js')
-    .then(() => Promise.all([
-      loadCompat('firebase-auth-compat.js'),
-      loadCompat('firebase-firestore-compat.js'),
-    ]))
-    .then(() => {
+  // Firebase SDK (CDN) — 本番設定が入っている場合のみ読み込む
+  const _fbScript = document.createElement('script');
+  _fbScript.src = 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js';
+  _fbScript.onerror = () => {
+    _fbAuthReady = true;
+    _onAuthStateChangedGuest();
+  };
+  _fbScript.onload = () => {
+    const authScript = document.createElement('script');
+    authScript.src = 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js';
+    authScript.onload = () => {
       try {
         if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-        _auth = firebase.auth();
-        _db   = firebase.firestore();
-
-        // Firestore オフラインキャッシュ有効化
-        _db.enablePersistence({ synchronizeTabs: true })
-          .catch(err => {
-            if (err.code === 'failed-precondition') {
-              // 複数タブ開いている場合はキャッシュ無効
-            } else if (err.code === 'unimplemented') {
-              // ブラウザ非対応（Safari PWA で発生する場合あり）
-            }
-          });
-
-        // セッション永続化（LOCAL = アプリ再起動後も維持）
-        _auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-          .catch(() => {});
-
-        // 認証状態監視
-        _auth.onAuthStateChanged(user => {
-          _fbAuthReady = true;
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        auth.onAuthStateChanged(user => {
           _currentUser = user;
-          _runAfterDOM(() => _onAuthStateChanged(user));
+          _fbAuthReady = true;
+          _onAuthStateChanged(user);
         });
-
       } catch(e) {
-        console.warn('[Auth] Firebase init error:', e);
+        console.warn('[Auth] Firebase init failed:', e);
         _fbAuthReady = true;
-        _runAfterDOM(_onAuthStateChangedGuest);
+        _onAuthStateChangedGuest();
       }
-    })
-    .catch(err => {
-      console.warn('[Auth] Firebase SDK load error:', err);
+    };
+    authScript.onerror = () => {
       _fbAuthReady = true;
-      _runAfterDOM(_onAuthStateChangedGuest);
-    });
+      _onAuthStateChangedGuest();
+    };
+    document.head.appendChild(authScript);
+  };
+  document.head.appendChild(_fbScript);
 }
 
-// DOM構築後に実行
+// デモモードは即時起動、本番はDOM構築後に起動
 function _runAfterDOM(fn) {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', fn, { once: true });
+    document.addEventListener('DOMContentLoaded', fn);
   } else {
-    setTimeout(fn, 0);
-  }
-}
-
-// Firebase 初期化起動
-_initFirebase();
-
-// ================================================================
-// 認証状態ハンドラ
-// ================================================================
-function _onAuthStateChangedGuest() {
-  // localStorage から前回のゲストセッションを復元
-  try {
-    const saved = localStorage.getItem('pronexax.guestUser');
-    if (saved) {
-      const u = JSON.parse(saved);
-      _currentUser = {
-        email: u.email,
-        displayName: u.displayName || u.email.split('@')[0],
-        uid: 'guest-' + btoa(unescape(encodeURIComponent(u.email))),
-        isGuest: true,
-      };
-      _showApp(_currentUser);
-      return;
-    }
-  } catch(e) {}
-  _showAuthScreen();
-}
-
-function _onAuthStateChanged(user) {
-  if (user) {
-    _showApp(user);
-  } else {
-    // Firebase接続済みでログインなし → 認証画面
-    _showAuthScreen();
-  }
-}
-
-// ================================================================
-// 画面表示制御
-// ================================================================
-function _showAuthScreen() {
-  _hideSplash(() => {
-    document.getElementById('auth-screen')?.classList.remove('hidden');
-    document.body.classList.add('auth-guest');
-    // デモモードバナー表示
-    if (_FIREBASE_IS_PLACEHOLDER) {
-      const banner = document.getElementById('auth-demo-banner');
-      if (banner) banner.style.display = 'block';
-    }
-  });
-}
-
-function _showApp(user) {
-  _currentUser = user;
-  document.getElementById('auth-screen')?.classList.add('hidden');
-  document.body.classList.remove('auth-guest');
-
-  // UI更新
-  const initial = (user.displayName || user.email || '?').charAt(0).toUpperCase();
-  document.querySelectorAll('.app-avatar').forEach(el => el.textContent = initial);
-  const nameEl = document.querySelector('.drawer-user-name');
-  const subEl  = document.querySelector('.drawer-user-sub');
-  const avEl   = document.querySelector('.drawer-user-avatar');
-  if (nameEl) nameEl.textContent = user.displayName || user.email || 'ユーザー';
-  if (subEl)  subEl.textContent  = user.email || '';
-  if (avEl)   avEl.textContent   = initial;
-
-  // データ読み込み → スプラッシュ解除
-  _loadUserData(() => {
-    _hideSplash(null);
-    // カレンダー初回描画
-    if (typeof renderAllPanels === 'function') {
-      renderAllPanels();
-      if (typeof renderCalList === 'function') renderCalList();
-    }
-  });
-}
-
-// ================================================================
-// データ読み込み（Firestore優先 → localStorage フォールバック）
-// ================================================================
-function _loadUserData(callback) {
-  const uid = _currentUser?.uid;
-  if (!uid) { if (callback) callback(); return; }
-
-  // Firestore から読み込み
-  if (_db && !_currentUser?.isGuest) {
-    Promise.all([
-      _db.doc(`userSchedules/${uid}`).collection('events').get()
-        .catch(() => null),
-      _db.doc(`users/${uid}/settings/main`).get()
-        .catch(() => null),
-      _db.doc(`users/${uid}/favorites/main`).get()
-        .catch(() => null),
-    ]).then(([eventsSnap, settingsSnap, favSnap]) => {
-      // イベント
-      if (eventsSnap && !eventsSnap.empty) {
-        eventsSnap.forEach(doc => {
-          const ev = doc.data();
-          if (!ev) return;
-          const idx = EVENTS.findIndex(e => e.id === ev.id);
-          if (idx >= 0) EVENTS[idx] = ev;
-          else EVENTS.push(ev);
-        });
-      }
-      // 設定
-      if (settingsSnap?.exists) {
-        const s = settingsSnap.data();
-        if (s.enabledCategories) userEnabledCategories = s.enabledCategories;
-        if (s.theme) document.documentElement.setAttribute('data-theme', s.theme);
-        if (s.colorTheme) document.documentElement.setAttribute('data-color-theme', s.colorTheme);
-      }
-      // お気に入り
-      if (favSnap?.exists) {
-        const f = favSnap.data();
-        if (Array.isArray(f.tournamentIds)) {
-          f.tournamentIds.forEach(id => favTournaments.add(id));
-        }
-      }
-      if (callback) callback();
-    }).catch(() => {
-      // Firestore 失敗 → localStorage フォールバック
-      _loadUserDataLocal();
-      if (callback) callback();
-    });
-  } else {
-    // デモ/ゲストモード → localStorage
-    _loadUserDataLocal();
-    if (callback) callback();
-  }
-}
-
-function _loadUserDataLocal() {
-  const uid = _currentUser?.uid;
-  if (!uid) return;
-  try {
-    const raw = localStorage.getItem('pronexax.events.' + uid);
-    if (raw) {
-      const saved = JSON.parse(raw);
-      if (Array.isArray(saved)) {
-        saved.forEach(ue => {
-          const idx = EVENTS.findIndex(e => e.id === ue.id);
-          if (idx >= 0) EVENTS[idx] = ue;
-          else EVENTS.push(ue);
-        });
-      }
-    }
-    // 設定
-    const settings = localStorage.getItem('pronexax.settings.' + uid);
-    if (settings) {
-      const s = JSON.parse(settings);
-      if (s.enabledCategories) userEnabledCategories = s.enabledCategories;
-    }
-    // お気に入り
-    const favs = localStorage.getItem('pronexax.favorites.' + uid);
-    if (favs) {
-      JSON.parse(favs).forEach(id => favTournaments.add(id));
-    }
-  } catch(e) {}
-}
-
-// ================================================================
-// データ保存（Firestore + localStorage 二重書き）
-// ================================================================
-function _saveUserEvents() {
-  const uid = _currentUser?.uid;
-  if (!uid) return;
-  const userEvs = EVENTS.filter(e => e.id >= 20);
-
-  // localStorage（即時・オフライン対応）
-  try {
-    localStorage.setItem('pronexax.events.' + uid, JSON.stringify(userEvs));
-  } catch(e) {}
-
-  // Firestore（バックグラウンド書き込み）
-  if (_db && !_currentUser?.isGuest) {
-    const batch = _db.batch();
-    userEvs.forEach(ev => {
-      const ref = _db.doc(`userSchedules/${uid}/events/${ev.id}`);
-      batch.set(ref, { ...ev, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    });
-    batch.commit().catch(e => console.warn('[Firestore] save events error:', e));
-  }
-}
-
-// 設定保存
-function _saveUserSettings() {
-  const uid = _currentUser?.uid;
-  if (!uid) return;
-  const settings = {
-    enabledCategories: userEnabledCategories,
-    theme: document.documentElement.getAttribute('data-theme') || 'light',
-    colorTheme: document.documentElement.getAttribute('data-color-theme') || 'green',
-    updatedAt: new Date().toISOString(),
-  };
-
-  try {
-    localStorage.setItem('pronexax.settings.' + uid, JSON.stringify(settings));
-  } catch(e) {}
-
-  if (_db && !_currentUser?.isGuest) {
-    _db.doc(`users/${uid}/settings/main`).set(settings, { merge: true })
-      .catch(e => console.warn('[Firestore] save settings error:', e));
-  }
-}
-
-// お気に入り保存
-function _saveUserFavorites() {
-  const uid = _currentUser?.uid;
-  if (!uid) return;
-  const ids = [...favTournaments];
-
-  try {
-    localStorage.setItem('pronexax.favorites.' + uid, JSON.stringify(ids));
-  } catch(e) {}
-
-  if (_db && !_currentUser?.isGuest) {
-    _db.doc(`users/${uid}/favorites/main`).set({
-      tournamentIds: ids,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true }).catch(e => console.warn('[Firestore] save favorites error:', e));
-  }
-}
-
-// 予定追加・編集前のログインチェック
-function _requireAuth(callback) {
-  if (_currentUser) { callback(); return; }
-  showToast('ログインが必要です');
-  document.getElementById('auth-screen')?.classList.remove('hidden');
-}
-
-// ================================================================
-// ログアウト
-// ================================================================
-window.authLogout = function() {
-  if (!confirm('ログアウトしますか？')) return;
-
-  // ゲストセッション削除
-  localStorage.removeItem('pronexax.guestUser');
-
-  // Firebase サインアウト
-  if (_auth) _auth.signOut().catch(() => {});
-  _currentUser = null;
-
-  document.body.classList.add('auth-guest');
-  if (typeof closeDrawer === 'function') closeDrawer();
-  _showAuthScreen();
-};
-
-// ================================================================
-// ★★★ Google / Apple 認証 ★★★
-// ================================================================
-window.authSignInGoogle = async function() {
-  _setAuthLoading(true);
-  try {
-    if (!_auth) throw new Error('Firebase未設定');
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    await _auth.signInWithPopup(provider);
-    // onAuthStateChanged が _showApp を呼ぶ
-  } catch(err) {
-    _setAuthLoading(false);
-    if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
-    if (err.message === 'Firebase未設定' || _FIREBASE_IS_PLACEHOLDER) {
-      // デモモード：Googleを模擬
-      const fakeUser = { email: 'demo.google@pronexax.app', displayName: 'Google ユーザー', uid: 'demo-google', isGuest: true };
-      localStorage.setItem('pronexax.guestUser', JSON.stringify(fakeUser));
-      _currentUser = fakeUser;
-      _showApp(fakeUser);
-      return;
-    }
-    _showAuthError(_authErrMsg(err.code));
-  }
-};
-
-window.authSignInApple = async function() {
-  _setAuthLoading(true);
-  try {
-    if (!_auth) throw new Error('Firebase未設定');
-    const provider = new firebase.auth.OAuthProvider('apple.com');
-    provider.addScope('email');
-    provider.addScope('name');
-    // iPhoneではsignInWithRedirectの方がiOS Safari安定
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isIOS) {
-      await _auth.signInWithRedirect(provider);
-      // リダイレクト後は onAuthStateChanged が処理
-    } else {
-      await _auth.signInWithPopup(provider);
-    }
-  } catch(err) {
-    _setAuthLoading(false);
-    if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
-    if (err.message === 'Firebase未設定' || _FIREBASE_IS_PLACEHOLDER) {
-      // デモモード：Appleを模擬
-      const fakeUser = { email: 'demo.apple@pronexax.app', displayName: 'Apple ユーザー', uid: 'demo-apple', isGuest: true };
-      localStorage.setItem('pronexax.guestUser', JSON.stringify(fakeUser));
-      _currentUser = fakeUser;
-      _showApp(fakeUser);
-      return;
-    }
-    _showAuthError(_authErrMsg(err.code));
-  }
-};
-
-// リダイレクト結果の処理（Apple Sign In on iOS）
-function _handleRedirectResult() {
-  if (!_auth) return;
-  _auth.getRedirectResult().then(result => {
-    if (result?.user) {
-      // onAuthStateChanged が自動的に _showApp を呼ぶ
-    }
-  }).catch(err => {
-    if (err.code !== 'auth/no-auth-event') {
-      console.warn('[Auth] redirect result error:', err);
-    }
-  });
-}
-
-// ================================================================
-// メール認証
-// ================================================================
-window.authSubmit = async function() {
-  const email = document.getElementById('auth-email')?.value?.trim();
-  const pass  = document.getElementById('auth-password')?.value;
-  const isReg = document.querySelector('.auth-tab.is-active')?.dataset.tab === 'register';
-
-  if (!email || !pass) { _showAuthError('メールアドレスとパスワードを入力してください'); return; }
-  if (pass.length < 6)  { _showAuthError('パスワードは6文字以上にしてください'); return; }
-
-  _setAuthLoading(true);
-  _showAuthError('');
-
-  // デモモード
-  if (_FIREBASE_IS_PLACEHOLDER || !_auth) {
-    await new Promise(r => setTimeout(r, 400));
-    const fakeUser = { email, displayName: email.split('@')[0], uid: 'guest-' + btoa(email), isGuest: true };
-    localStorage.setItem('pronexax.guestUser', JSON.stringify(fakeUser));
-    _currentUser = fakeUser;
-    _setAuthLoading(false);
-    _showApp(fakeUser);
-    return;
-  }
-
-  try {
-    if (isReg) {
-      const cred = await _auth.createUserWithEmailAndPassword(email, pass);
-      await cred.user.updateProfile({ displayName: email.split('@')[0] });
-    } else {
-      await _auth.signInWithEmailAndPassword(email, pass);
-    }
-    // onAuthStateChanged → _showApp
-  } catch(err) {
-    _setAuthLoading(false);
-    // Firebase設定エラーはデモモードにフォールバック
-    if (['auth/api-key-not-valid','auth/invalid-api-key','auth/configuration-not-found'].includes(err.code)) {
-      const fakeUser = { email, displayName: email.split('@')[0], uid: 'guest-' + btoa(email), isGuest: true };
-      localStorage.setItem('pronexax.guestUser', JSON.stringify(fakeUser));
-      _currentUser = fakeUser;
-      _showApp(fakeUser);
-      return;
-    }
-    _showAuthError(_authErrMsg(err.code));
-  }
-};
-
-// ================================================================
-// Auth UI ヘルパー
-// ================================================================
-function _setAuthLoading(on) {
-  const loader = document.getElementById('auth-loader');
-  const btn    = document.getElementById('auth-submit-btn');
-  const bApple = document.getElementById('btn-apple');
-  const bGoogle= document.getElementById('btn-google');
-  if (loader) loader.style.display = on ? 'block' : 'none';
-  if (btn)    btn.disabled  = on;
-  if (bApple) bApple.disabled = on;
-  if (bGoogle)bGoogle.disabled = on;
-}
-
-function _showAuthError(msg) {
-  const el = document.getElementById('auth-error');
-  if (el) el.textContent = msg;
-}
-
-function _authErrMsg(code) {
-  const m = {
-    'auth/user-not-found':      'メールアドレスが登録されていません',
-    'auth/wrong-password':      'パスワードが違います',
-    'auth/email-already-in-use':'このメールは既に使われています',
-    'auth/invalid-email':       'メールアドレスの形式が正しくありません',
-    'auth/weak-password':       'パスワードが弱すぎます（6文字以上）',
-    'auth/network-request-failed':'ネットワークエラーです',
-    'auth/invalid-credential':  'メールアドレスまたはパスワードが違います',
-    'auth/too-many-requests':   'しばらく待ってから再試行してください',
-    'auth/popup-blocked':       'ポップアップがブロックされました。設定を確認してください',
-  };
-  return m[code] || 'エラーが発生しました';
-}
-
-window.authSwitchTab = function(tab) {
-  document.querySelectorAll('.auth-tab').forEach(el => el.classList.toggle('is-active', el.dataset.tab === tab));
-  const regFields = document.getElementById('auth-register-fields');
-  if (regFields) regFields.classList.toggle('hidden', tab !== 'register');
-  _showAuthError('');
-  const btn = document.getElementById('auth-submit-btn');
-  if (btn) btn.textContent = tab === 'register' ? '新規登録' : 'ログイン';
-};
-
-window.authTogglePw = function() {
-  const inp  = document.getElementById('auth-password');
-  const icon = document.getElementById('auth-eye-icon');
-  if (!inp || !icon) return;
-  const hidden = inp.type === 'password';
-  inp.type = hidden ? 'text' : 'password';
-  icon.innerHTML = hidden
-    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
-    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-};
-
-window.authForgotPassword = function() {
-  const email = document.getElementById('auth-email')?.value?.trim();
-  if (!email) { _showAuthError('メールアドレスを入力してください'); return; }
-  if (_auth) {
-    _auth.sendPasswordResetEmail(email)
-      .then(() => { _showAuthError(''); showToast('パスワードリセットメールを送信しました'); })
-      .catch(err => _showAuthError(_authErrMsg(err.code)));
-  } else {
-    showToast('パスワードリセットメールを送信しました（デモ）');
-  }
-};
-
-// メールフォームの折りたたみトグル
-window.authToggleEmailForm = function() {
-  const form   = document.getElementById('auth-email-form');
-  const toggle = document.getElementById('auth-email-toggle');
-  if (!form) return;
-  const isOpen = form.classList.toggle('open');
-  if (toggle) toggle.classList.toggle('open', isOpen);
-  if (isOpen) setTimeout(() => document.getElementById('auth-email')?.focus(), 50);
-};
-
-// DOM準備後にリダイレクト結果を処理
-_runAfterDOM(_handleRedirectResult);
     setTimeout(fn, 0);
   }
 }
@@ -7294,7 +6484,314 @@ if (_FIREBASE_IS_PLACEHOLDER) {
   _runAfterDOM(_initFirebaseAuth);
 }
 
+// ★★★ 認証タイムアウト：3秒以内に認証判定が終わらない場合は認証画面を表示 ★★★
+// Firebase SDK の読み込みが失敗・遅延した場合の保険
+setTimeout(function() {
+  if (!_fbAuthReady && !_currentUser) {
+    console.warn('[Auth] タイムアウト → ゲストモードにフォールバック');
+    _fbAuthReady = true;
+    _onAuthStateChangedGuest();
+  }
+}, 3000);
+
 // ゲストモード（Firebase未設定時）
+function _onAuthStateChangedGuest() {
+  const savedUser = localStorage.getItem('pronexax.guestUser');
+  if (savedUser) {
+    try {
+      const u = JSON.parse(savedUser);
+      _currentUser = { email: u.email, displayName: u.email.split('@')[0], uid: 'guest-'+btoa(u.email) };
+      _showApp(_currentUser);
+      return;
+    } catch(e) {}
+  }
+  // ★ デモモード（Firebase未設定）かつ初回の場合 → 認証画面を表示
+  _showAuthScreen();
+}
+
+function _onAuthStateChanged(user) {
+  if (user) {
+    _showApp(user);
+  } else {
+    _showAuthScreen();
+  }
+}
+
+function _showAuthScreen() {
+  document.getElementById('auth-screen')?.classList.remove('hidden');
+  document.getElementById('auth-loading')?.classList.add('hidden');
+  document.body.classList.add('auth-guest');
+}
+
+function _showApp(user) {
+  _currentUser = user;
+  document.getElementById('auth-screen')?.classList.add('hidden');
+  document.body.classList.remove('auth-guest');
+
+  // アバター・ドロワー表示更新
+  const initial = (user.displayName || user.email || '?').charAt(0).toUpperCase();
+  document.querySelectorAll('.app-avatar').forEach(el => el.textContent = initial);
+  const nameEl = document.querySelector('.drawer-user-name');
+  const subEl  = document.querySelector('.drawer-user-sub');
+  if (nameEl) nameEl.textContent = user.displayName || user.email;
+  if (subEl)  subEl.textContent  = user.email || '';
+  const avatarEl = document.querySelector('.drawer-user-avatar');
+  if (avatarEl) avatarEl.textContent = initial;
+
+  // ユーザーデータ読み込み
+  _loadUserEvents();
+
+  // ★★★ カレンダー・アプリを初期描画（ログイン後に確実に呼ぶ）★★★
+  // 初期描画ブロック（行12562）が先に実行済みの場合は再描画、未実行でも安全
+  try {
+    if (typeof updateMonthLabel === 'function') updateMonthLabel();
+    if (typeof renderAllPanels === 'function') { renderAllPanels(); }
+    if (typeof renderCalList   === 'function') { renderCalList();   }
+    if (typeof syncDrawerState === 'function') { syncDrawerState(); }
+    if (typeof applySearchFilters === 'function') { applySearchFilters(); }
+  } catch(e) { console.warn('[_showApp] 初期描画エラー:', e); }
+}
+
+// ユーザー固有のイベントデータ読み込み
+function _loadUserEvents() {
+  if (!_currentUser) return;
+  const key = 'pronexax.events.' + (_currentUser.uid || 'guest');
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (Array.isArray(saved) && saved.length > 0) {
+        // 既存のデモデータは保持しつつユーザーデータをマージ
+        const demoIds = new Set(EVENTS.filter(e => e.id < 20).map(e => e.id));
+        const userEvs = saved.filter(e => e.id >= 20);
+        // ユーザーが登録したイベントで上書き
+        userEvs.forEach(ue => {
+          const idx = EVENTS.findIndex(e => e.id === ue.id);
+          if (idx >= 0) EVENTS[idx] = ue;
+          else EVENTS.push(ue);
+        });
+      }
+    }
+  } catch(e) {}
+}
+
+// ユーザー固有のイベントデータ保存
+function _saveUserEvents() {
+  if (!_currentUser) return;
+  const key = 'pronexax.events.' + (_currentUser.uid || 'guest');
+  try {
+    // ID 20以上はユーザー追加データ
+    const userEvs = EVENTS.filter(e => e.id >= 20);
+    localStorage.setItem(key, JSON.stringify(userEvs));
+  } catch(e) {}
+}
+
+// 予定追加・編集前のログインチェック
+function _requireAuth(callback) {
+  if (_currentUser) { callback(); return; }
+  showToast('ログインが必要です');
+  document.getElementById('auth-screen')?.classList.remove('hidden');
+}
+
+// ログアウト
+window.authLogout = function() {
+  if (!confirm('ログアウトしますか？')) return;
+  localStorage.removeItem('pronexax.guestUser');
+  if (typeof firebase !== 'undefined' && firebase.apps?.length) {
+    firebase.auth().signOut().catch(()=>{});
+  }
+  _currentUser = null;
+  document.body.classList.add('auth-guest');
+  _showAuthScreen();
+  if (typeof closeDrawer === 'function') closeDrawer();
+};
+
+// ================================================================
+// ★★★ Google / Apple ソーシャルログイン ★★★
+// ================================================================
+window.authSignInGoogle = async function() {
+  const errEl  = document.getElementById('auth-error');
+  const loader = document.getElementById('auth-loader');
+  if (errEl)  errEl.textContent = '';
+  if (loader) loader.style.display = 'block';
+
+  // デモモード or Firebase未ロード → ゲストとして即ログイン
+  if (_FIREBASE_IS_PLACEHOLDER || typeof firebase === 'undefined' || !firebase.apps?.length) {
+    await new Promise(r => setTimeout(r, 400));
+    if (loader) loader.style.display = 'none';
+    const fakeUser = { email: 'demo.google@pronexax.app', displayName: 'Googleユーザー', uid: 'demo-google-' + Date.now() };
+    localStorage.setItem('pronexax.guestUser', JSON.stringify(fakeUser));
+    _currentUser = fakeUser;
+    _showApp(fakeUser);
+    return;
+  }
+
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    await firebase.auth().signInWithPopup(provider);
+    // onAuthStateChanged → _showApp が呼ばれる
+  } catch(err) {
+    if (loader) loader.style.display = 'none';
+    if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+    if (errEl) errEl.textContent = 'Googleログインに失敗しました: ' + (err.message || err.code);
+  }
+};
+
+window.authSignInApple = async function() {
+  const errEl  = document.getElementById('auth-error');
+  const loader = document.getElementById('auth-loader');
+  if (errEl)  errEl.textContent = '';
+  if (loader) loader.style.display = 'block';
+
+  // デモモード → ゲストとして即ログイン
+  if (_FIREBASE_IS_PLACEHOLDER || typeof firebase === 'undefined' || !firebase.apps?.length) {
+    await new Promise(r => setTimeout(r, 400));
+    if (loader) loader.style.display = 'none';
+    const fakeUser = { email: 'demo.apple@pronexax.app', displayName: 'Appleユーザー', uid: 'demo-apple-' + Date.now() };
+    localStorage.setItem('pronexax.guestUser', JSON.stringify(fakeUser));
+    _currentUser = fakeUser;
+    _showApp(fakeUser);
+    return;
+  }
+
+  try {
+    const provider = new firebase.auth.OAuthProvider('apple.com');
+    provider.addScope('email');
+    provider.addScope('name');
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      await firebase.auth().signInWithRedirect(provider);
+    } else {
+      await firebase.auth().signInWithPopup(provider);
+    }
+  } catch(err) {
+    if (loader) loader.style.display = 'none';
+    if (err.code === 'auth/popup-closed-by-user') return;
+    if (errEl) errEl.textContent = 'Appleログインに失敗しました: ' + (err.message || err.code);
+  }
+};
+
+// ================================================================
+// 認証UIのイベントハンドラ
+// ================================================================
+window.authSwitchTab = function(tab) {
+  document.querySelectorAll('.auth-tab').forEach(el => el.classList.toggle('is-active', el.dataset.tab === tab));
+  document.getElementById('auth-register-fields')?.classList.toggle('hidden', tab !== 'register');
+  document.getElementById('auth-error').textContent = '';
+};
+
+window.authSubmit = async function() {
+  const emailEl = document.getElementById('auth-email');
+  const passEl = document.getElementById('auth-password');
+  const email = emailEl?.value?.trim();
+  const pass = passEl?.value;
+  const isRegister = document.querySelector('.auth-tab.is-active')?.dataset.tab === 'register';
+  const errEl = document.getElementById('auth-error');
+  const loader = document.getElementById('auth-loader');
+  const btn = document.getElementById('auth-submit-btn');
+
+  if (!email || !pass) { errEl.textContent = 'メールアドレスとパスワードを入力してください'; return; }
+  if (pass.length < 6) { errEl.textContent = 'パスワードは6文字以上で入力してください'; return; }
+
+  errEl.textContent = '';
+  if (loader) loader.style.display = 'block';
+  if (btn) btn.disabled = true;
+
+  // ================================================================
+  // デモモード判定：プレースホルダー設定 or Firebase未ロード → ゲストログイン
+  // ================================================================
+  const useGuest = _FIREBASE_IS_PLACEHOLDER ||
+                   typeof firebase === 'undefined' ||
+                   !firebase.apps?.length;
+
+  if (useGuest) {
+    // デモ用ゲストログイン（localStorage に保存）
+    await new Promise(r => setTimeout(r, 500));
+    localStorage.setItem('pronexax.guestUser', JSON.stringify({ email }));
+    _currentUser = { email, displayName: email.split('@')[0], uid: 'guest-'+btoa(email) };
+    if (loader) loader.style.display = 'none';
+    if (btn) btn.disabled = false;
+    _showApp(_currentUser);
+    return;
+  }
+
+  // 本番 Firebase 認証
+  try {
+    const auth = firebase.auth();
+    if (isRegister) {
+      await auth.createUserWithEmailAndPassword(email, pass);
+    } else {
+      await auth.signInWithEmailAndPassword(email, pass);
+    }
+    // onAuthStateChanged が _showApp を呼ぶ
+  } catch(err) {
+    if (loader) loader.style.display = 'none';
+    if (btn) btn.disabled = false;
+
+    // Firebase設定エラー（api-key-not-valid 等）はゲストモードへ自動切り替え
+    const configErrors = [
+      'auth/api-key-not-valid',
+      'auth/invalid-api-key',
+      'auth/app-not-authorized',
+      'auth/configuration-not-found',
+    ];
+    if (configErrors.includes(err.code)) {
+      console.warn('[Auth] Firebase設定エラー → デモモードへ切り替え:', err.code);
+      localStorage.setItem('pronexax.guestUser', JSON.stringify({ email }));
+      _currentUser = { email, displayName: email.split('@')[0], uid: 'guest-'+btoa(email) };
+      _showApp(_currentUser);
+      return;
+    }
+
+    const msgs = {
+      'auth/user-not-found': 'メールアドレスが登録されていません',
+      'auth/wrong-password': 'パスワードが違います',
+      'auth/email-already-in-use': 'このメールアドレスは既に使われています',
+      'auth/invalid-email': 'メールアドレスの形式が正しくありません',
+      'auth/weak-password': 'パスワードが弱すぎます（6文字以上）',
+      'auth/network-request-failed': 'ネットワークエラーです',
+      'auth/invalid-credential': 'メールアドレスまたはパスワードが正しくありません',
+    };
+    errEl.textContent = msgs[err.code] || err.message || 'エラーが発生しました';
+  }
+};
+</script>
+
+<script>
+const NAV_ICONS={
+  calendar:{active:`<rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#1AAF7A" stroke-width="1.7"/><line x1="7" y1="2" x2="7" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="#1AAF7A" stroke-width="1.7"/>`,inactive:`<rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#9BB8AE" stroke-width="1.7"/><line x1="7" y1="2" x2="7" y2="6" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="#9BB8AE" stroke-width="1.7"/>`},
+  search:{active:`<circle cx="10" cy="10" r="6" stroke="#1AAF7A" stroke-width="1.7"/><line x1="14.5" y1="14.5" x2="19" y2="19" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>`,inactive:`<circle cx="10" cy="10" r="6" stroke="#9BB8AE" stroke-width="1.7"/><line x1="14.5" y1="14.5" x2="19" y2="19" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>`},
+  finance:{active:`<rect x="3" y="5" width="16" height="12" rx="2" stroke="#1AAF7A" stroke-width="1.7"/><line x1="7" y1="11" x2="15" y2="11" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/><line x1="11" y1="8" x2="11" y2="14" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>`,inactive:`<rect x="3" y="5" width="16" height="12" rx="2" stroke="#9BB8AE" stroke-width="1.7"/><line x1="7" y1="11" x2="15" y2="11" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/><line x1="11" y1="8" x2="11" y2="14" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>`},
+  mypage:{active:`<circle cx="11" cy="8" r="3.5" stroke="#1AAF7A" stroke-width="1.7"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>`,inactive:`<circle cx="11" cy="8" r="3.5" stroke="#9BB8AE" stroke-width="1.7"/><path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>`}
+};
+
+
+// ── 新デザイン用追加関数 ─────────────────────────────────────────
+window.authTogglePw = function() {
+  var inp = document.getElementById('auth-password');
+  var icon = document.getElementById('auth-eye-icon');
+  if (!inp || !icon) return;
+  var hidden = inp.type === 'password';
+  inp.type = hidden ? 'text' : 'password';
+  icon.innerHTML = hidden
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+};
+// タブ切替でボタンラベルも更新
+(function() {
+  var _orig = window.authSwitchTab;
+  window.authSwitchTab = function(tab) {
+    if (_orig) _orig(tab);
+    var btn = document.getElementById('auth-submit-btn');
+    if (btn) btn.textContent = tab === 'register' ? '新規登録' : 'ログイン';
+  };
+})();
+window.authForgotPassword = function() {
+  var email = (document.getElementById('auth-email') || {}).value || '';
+  if (!email.trim()) { alert('メールアドレスを入力してください'); return; }
+  alert('パスワードリセットメールを送信しました');
+};// ================================================================
 // ★★★ 階層型カテゴリーシステム v2 ★★★
 //
 // 構造: gender → region → group → tour
