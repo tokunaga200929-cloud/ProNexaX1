@@ -4431,6 +4431,1312 @@ body{
 }
 
 
+
+/* ================================================================
+   ★★★ Phase1: 大会検索プラットフォーム UI CSS ★★★
+   TDB = Tournament DataBase
+   ================================================================ */
+
+/* ── ヘッダー全体 ── */
+.tdb-header {
+  background: #ffffff;
+  flex-shrink: 0;
+  border-bottom: 1.5px solid var(--green-main);
+  padding-bottom: 0;
+}
+
+/* ── 1行目：ロゴ＋アバター ── */
+.tdb-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: env(safe-area-inset-top, 0px) 16px 10px;
+  padding-top: max(env(safe-area-inset-top, 0px), 8px);
+}
+.tdb-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tdb-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tdb-logo {
+  font-size: 17px;
+  font-weight: 800;
+  color: #1d1d1f;
+  letter-spacing: -0.5px;
+}
+.tdb-logo span {
+  color: var(--green-main);
+}
+
+/* ── 男子/女子 セグメント ── */
+.tdb-gender-seg {
+  display: flex;
+  background: #f2f2f7;
+  border-radius: 10px;
+  padding: 3px;
+  margin: 0 16px 10px;
+  gap: 2px;
+}
+.tdb-gender-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #8e8e93;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+}
+.tdb-gender-btn.is-active {
+  background: #ffffff;
+  color: var(--green-dark);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10), 0 0.5px 1px rgba(0,0,0,0.06);
+}
+.tdb-gender-btn:active {
+  transform: scale(0.96);
+}
+:root[data-theme="dark"] .tdb-gender-seg {
+  background: #1c1c1e;
+}
+:root[data-theme="dark"] .tdb-gender-btn.is-active {
+  background: #2c2c2e;
+  color: var(--green-light);
+}
+
+/* ── 検索バー ── */
+.tdb-search-wrap {
+  position: relative;
+  margin: 0 16px 10px;
+  background: #f2f2f7;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding: 9px 10px;
+  gap: 6px;
+  border: 1.5px solid transparent;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.tdb-search-wrap.is-focused {
+  background: #fff;
+  border-color: var(--green-main);
+  box-shadow: 0 0 0 3px rgba(57,200,146,0.12);
+}
+:root[data-theme="dark"] .tdb-search-wrap {
+  background: #1c1c1e;
+}
+:root[data-theme="dark"] .tdb-search-wrap.is-focused {
+  background: #2c2c2e;
+}
+.tdb-search-icon {
+  flex-shrink: 0;
+  opacity: 0.55;
+}
+.tdb-tokens-inline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.tdb-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: #1d1d1f;
+  font-family: inherit;
+  min-width: 60px;
+  letter-spacing: -0.01em;
+}
+.tdb-search-input::placeholder {
+  color: #8e8e93;
+  font-weight: 400;
+}
+:root[data-theme="dark"] .tdb-search-input {
+  color: #f5f5f7;
+}
+.tdb-search-clear {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: none;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.tdb-search-wrap.has-value .tdb-search-clear {
+  display: flex;
+  opacity: 1;
+}
+
+/* ── 国内/海外 + カテゴリスクロール ── */
+.tdb-filter-area {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding-bottom: 10px;
+  overflow: hidden;
+}
+.tdb-scope-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 8px 0 16px;
+  flex-shrink: 0;
+}
+.tdb-scope-pill {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+  font-family: inherit;
+  letter-spacing: 0.1px;
+}
+.tdb-scope-pill.is-active {
+  background: var(--green-main);
+  border-color: var(--green-dark);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(57,200,146,0.3);
+}
+.tdb-scope-pill:active {
+  transform: scale(0.93);
+}
+:root[data-theme="dark"] .tdb-scope-pill {
+  background: var(--card-bg);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+/* ── カテゴリ横スクロール ── */
+.tdb-cat-scroll-wrap {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.tdb-cat-scroll-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 20px;
+  background: linear-gradient(to right, transparent, #fff);
+  pointer-events: none;
+  z-index: 1;
+}
+:root[data-theme="dark"] .tdb-cat-scroll-wrap::after {
+  background: linear-gradient(to right, transparent, var(--card-bg));
+}
+.tdb-cat-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 2px 20px 2px 4px;
+}
+.tdb-cat-scroll::-webkit-scrollbar { display: none; }
+
+/* カテゴリチップ */
+.tdb-cat-chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 13px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(0,0,0,0.10);
+  background: #fff;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  font-family: inherit;
+  position: relative;
+}
+.tdb-cat-chip:active {
+  transform: scale(0.93);
+}
+.tdb-cat-chip.is-active {
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+/* カテゴリ別の選択時カラー */
+.tdb-cat-chip.is-active[data-cat="all"]        { background: var(--green-dark); }
+.tdb-cat-chip.is-active[data-cat="jgto"]       { background: #1AAF7A; }
+.tdb-cat-chip.is-active[data-cat="acn"]        { background: #2A9D7E; }
+.tdb-cat-chip.is-active[data-cat="qt"]         { background: #A0631A; }
+.tdb-cat-chip.is-active[data-cat="qualifier"]  { background: #B07015; }
+.tdb-cat-chip.is-active[data-cat="jpga"]       { background: #2D7DD2; }
+.tdb-cat-chip.is-active[data-cat="senior"]     { background: #6B4DB5; }
+.tdb-cat-chip.is-active[data-cat="atp"]        { background: #4A7A8A; }
+.tdb-cat-chip.is-active[data-cat="fj"]         { background: #3D7A6E; }
+.tdb-cat-chip.is-active[data-cat="future"]     { background: #7A6040; }
+.tdb-cat-chip.is-active[data-cat="doucus"]     { background: #8A5A30; }
+.tdb-cat-chip.is-active[data-cat="pa"]         { background: #5A6A80; }
+.tdb-cat-chip.is-active[data-cat="pref-open"]  { background: #7B4DB5; }
+.tdb-cat-chip.is-active[data-cat="overseas"]   { background: #3A4A6A; }
+/* 女子 */
+.tdb-cat-chip.is-active[data-cat="jlpga"]      { background: #D0567E; }
+.tdb-cat-chip.is-active[data-cat="stepup"]     { background: #E0688A; }
+.tdb-cat-chip.is-active[data-cat="qt-w"]       { background: #B04070; }
+.tdb-cat-chip.is-active[data-cat="qualifier-w"]{ background: #C05878; }
+.tdb-cat-chip.is-active[data-cat="next-h"]     { background: #C06880; }
+.tdb-cat-chip.is-active[data-cat="oneday"]     { background: #A05068; }
+.tdb-cat-chip.is-active[data-cat="open-w"]     { background: #8A4060; }
+.tdb-cat-chip.is-active[data-cat="lpga"]       { background: #904870; }
+.tdb-cat-chip.is-active[data-cat="klpga"]      { background: #7A3A5E; }
+
+/* 未選択時のカテゴリカラードット */
+.tdb-cat-chip-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.tdb-cat-chip.is-active .tdb-cat-chip-dot {
+  background: rgba(255,255,255,0.7) !important;
+}
+:root[data-theme="dark"] .tdb-cat-chip {
+  background: var(--card-bg);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+/* ── メタバー（件数・ボタン） ── */
+.tdb-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px 6px;
+  background: var(--bg);
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+.tdb-meta-bar.is-hidden { display: none; }
+.tdb-meta-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── 大会カード（新デザイン） ── */
+.tdb-card {
+  background: var(--card-bg);
+  border-radius: 14px;
+  margin: 0 14px 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07), 0 3px 10px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.06);
+  transition: transform 0.12s, box-shadow 0.12s;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tdb-card:active {
+  transform: scale(0.975);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.tdb-card.is-added {
+  border-color: rgba(57,200,146,0.3);
+}
+:root[data-theme="dark"] .tdb-card {
+  background: var(--card-bg);
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+/* カード上部：カラーバー＋コンテンツ ── */
+.tdb-card-body {
+  display: flex;
+  align-items: stretch;
+}
+.tdb-card-stripe {
+  width: 4px;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+/* stripeのカラーマッピング（既存クラスを流用） */
+.tdb-card-stripe.stripe-jgto    { background: linear-gradient(180deg,#1AAF7A,#0E7054); }
+.tdb-card-stripe.stripe-jlpga   { background: linear-gradient(180deg,#E0567E,#9A2555); }
+.tdb-card-stripe.stripe-pga     { background: linear-gradient(180deg,#2D7DD2,#1A5DB0); }
+.tdb-card-stripe.stripe-qualifier{ background: linear-gradient(180deg,#A0631A,#6E4513); }
+.tdb-card-stripe.stripe-mini    { background: linear-gradient(180deg,#D4771A,#7C440F); }
+.tdb-card-stripe.stripe-open    { background: linear-gradient(180deg,#7B4DB5,#502D74); }
+.tdb-card-stripe.stripe-personal{ background: linear-gradient(180deg,#6B6ED4,#4040A0); }
+/* 新カテゴリ用 */
+.tdb-card-stripe.stripe-acn     { background: linear-gradient(180deg,#2A9D7E,#1A6E55); }
+.tdb-card-stripe.stripe-qt      { background: linear-gradient(180deg,#A0631A,#6E4513); }
+.tdb-card-stripe.stripe-jpga    { background: linear-gradient(180deg,#2D7DD2,#1A5DB0); }
+.tdb-card-stripe.stripe-senior  { background: linear-gradient(180deg,#7B4DB5,#502D74); }
+.tdb-card-stripe.stripe-atp     { background: linear-gradient(180deg,#4A7A8A,#2D5566); }
+.tdb-card-stripe.stripe-fj      { background: linear-gradient(180deg,#3D7A6E,#255448); }
+.tdb-card-stripe.stripe-future  { background: linear-gradient(180deg,#7A6040,#4E3D20); }
+.tdb-card-stripe.stripe-doucus  { background: linear-gradient(180deg,#8A5A30,#5A3A18); }
+.tdb-card-stripe.stripe-pa      { background: linear-gradient(180deg,#5A6A80,#3A4A5E); }
+.tdb-card-stripe.stripe-jlpga-stepup{ background: linear-gradient(180deg,#E0688A,#A03060); }
+.tdb-card-stripe.stripe-next-h  { background: linear-gradient(180deg,#C06880,#8A3858); }
+.tdb-card-stripe.stripe-oneday  { background: linear-gradient(180deg,#A05068,#6E2840); }
+.tdb-card-stripe.stripe-open-w  { background: linear-gradient(180deg,#8A4060,#5E2040); }
+.tdb-card-stripe.stripe-lpga    { background: linear-gradient(180deg,#904870,#6A284E); }
+.tdb-card-stripe.stripe-klpga   { background: linear-gradient(180deg,#7A3A5E,#521838); }
+.tdb-card-stripe.stripe-overseas{ background: linear-gradient(180deg,#3A4A6A,#202E4A); }
+
+.tdb-card-main {
+  flex: 1;
+  padding: 11px 12px 10px 11px;
+  min-width: 0;
+}
+.tdb-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.tdb-card-name-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tdb-card-added-check {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--green-main);
+  font-weight: 800;
+}
+.tdb-card-meta {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+  letter-spacing: -0.1px;
+}
+.tdb-card-badges {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+/* ステータスバッジ */
+.tdb-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+}
+.tdb-badge-live    { background: #E8F9F1; color: #0B5234; border: 1px solid rgba(11,82,52,0.15); }
+.tdb-badge-upcoming{ background: #EDF4FF; color: #1A4A8A; border: 1px solid rgba(26,74,138,0.12); }
+.tdb-badge-ended   { background: #F2F4F6; color: #6A7280; border: 1px solid rgba(0,0,0,0.08); }
+.tdb-badge-added   { background: var(--green-chip); color: var(--green-dark); border: 1px solid rgba(57,200,146,0.2); }
+.tdb-badge-cat {
+  background: rgba(0,0,0,0.045);
+  color: var(--text-secondary);
+  border: 1px solid rgba(0,0,0,0.07);
+}
+:root[data-theme="dark"] .tdb-badge-live    { background: #0A2E1C; color: #7DD8B0; }
+:root[data-theme="dark"] .tdb-badge-upcoming{ background: #0A1830; color: #80AADE; }
+:root[data-theme="dark"] .tdb-badge-ended   { background: #1E2228; color: #7A8088; }
+:root[data-theme="dark"] .tdb-badge-cat     { background: rgba(255,255,255,0.07); color: var(--text-secondary); }
+
+/* ── カードアクションエリア ── */
+.tdb-card-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 10px 12px 10px 4px;
+  gap: 8px;
+}
+.tdb-fav-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #d4d4d8;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s, transform 0.12s;
+  padding: 2px;
+  line-height: 1;
+}
+.tdb-fav-btn.is-fav { color: #f59e0b; }
+.tdb-fav-btn:active { transform: scale(0.78); }
+.tdb-add-btn {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1.5px solid var(--green-main);
+  background: transparent;
+  color: var(--green-dark);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+  font-family: inherit;
+  letter-spacing: 0.1px;
+}
+.tdb-add-btn.added {
+  background: var(--green-main);
+  border-color: var(--green-dark);
+  color: #fff;
+}
+.tdb-add-btn:active { transform: scale(0.92); }
+
+/* ── カードリマインドエリア ── */
+.tdb-card-remind {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 9px 15px;
+  border-top: 1px solid var(--border);
+  margin-top: 0;
+}
+
+/* ── セクション見出し ── */
+.tdb-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 16px 14px 8px;
+}
+.tdb-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+.tdb-section-count {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+
+/* ── 空状態 ── */
+.tdb-empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-tertiary);
+}
+.tdb-empty-icon {
+  font-size: 42px;
+  margin-bottom: 12px;
+}
+.tdb-empty-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.tdb-empty-desc {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ── ダークモード調整 ── */
+:root[data-theme="dark"] .tdb-header {
+  background: #1c1c1e;
+  border-bottom-color: var(--green-main);
+}
+:root[data-theme="dark"] .tdb-logo { color: #f5f5f7; }
+:root[data-theme="dark"] .tdb-meta-bar { background: var(--bg); }
+
+/* ── アニメーション ── */
+@keyframes tdbCardIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tdb-card {
+  animation: tdbCardIn 0.18s ease-out both;
+}
+
+/* stagger animation for cards */
+.tdb-card:nth-child(1)  { animation-delay: 0.00s; }
+.tdb-card:nth-child(2)  { animation-delay: 0.03s; }
+.tdb-card:nth-child(3)  { animation-delay: 0.06s; }
+.tdb-card:nth-child(4)  { animation-delay: 0.09s; }
+.tdb-card:nth-child(5)  { animation-delay: 0.12s; }
+.tdb-card:nth-child(n+6){ animation-delay: 0.14s; }
+
+/* PWA standalone対応 */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .tdb-header-row {
+    padding-top: max(env(safe-area-inset-top, 0px), 10px);
+  }
+}
+
+/* ================================================================ */
+/* ★★★ Phase2: 大会カードUI Premium + 詳細モーダル ★★★             */
+/* Apple Maps / Notion / ゴルフツアー管理 風 高級感設計              */
+/* ================================================================ */
+
+/* ─── Phase2 大会カード：プレミアムデザイン ─── */
+.tdb-p2-card {
+  background: #ffffff;
+  border-radius: 16px;
+  margin: 0 14px 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 14px rgba(0,0,0,0.07);
+  border: 1px solid rgba(0,0,0,0.055);
+  transition: transform 0.14s cubic-bezier(.32,.72,.34,1), box-shadow 0.14s;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  animation: tdbCardIn 0.22s ease-out both;
+}
+.tdb-p2-card:active {
+  transform: scale(0.972);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+:root[data-theme="dark"] .tdb-p2-card {
+  background: var(--card-bg);
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+/* カード：左カラーバー */
+.tdb-p2-bar {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  border-radius: 0;
+}
+
+/* カード内部レイアウト */
+.tdb-p2-inner {
+  padding: 14px 14px 0 18px;
+}
+
+/* ─── 上段：大会名 + タグ ─── */
+.tdb-p2-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.tdb-p2-title-block {
+  flex: 1;
+  min-width: 0;
+}
+.tdb-p2-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F1E18;
+  letter-spacing: -0.3px;
+  line-height: 1.35;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:root[data-theme="dark"] .tdb-p2-name { color: #E8F0EC; }
+
+.tdb-p2-tags {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.tdb-p2-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.15px;
+  white-space: nowrap;
+}
+.tdb-p2-tag-cat {
+  background: rgba(57,200,146,0.12);
+  color: #17885E;
+  border: 1px solid rgba(57,200,146,0.22);
+}
+:root[data-theme="dark"] .tdb-p2-tag-cat {
+  background: rgba(57,200,146,0.15);
+  color: #58D6A3;
+}
+.tdb-p2-tag-men {
+  background: rgba(45,125,210,0.10);
+  color: #1A5DB0;
+  border: 1px solid rgba(45,125,210,0.18);
+}
+.tdb-p2-tag-women {
+  background: rgba(208,86,126,0.10);
+  color: #A83060;
+  border: 1px solid rgba(208,86,126,0.18);
+}
+.tdb-p2-tag-status-live {
+  background: #E8F9F1;
+  color: #0B5234;
+  border: 1px solid rgba(11,82,52,0.15);
+}
+.tdb-p2-tag-status-upcoming {
+  background: #EDF4FF;
+  color: #1A4A8A;
+  border: 1px solid rgba(26,74,138,0.12);
+}
+.tdb-p2-tag-status-ended {
+  background: #F2F4F6;
+  color: #6A7280;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+/* お気に入りボタン（右上） */
+.tdb-p2-fav {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #d4d4d8;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s, transform 0.12s;
+  padding: 0;
+  line-height: 1;
+  margin-top: -1px;
+}
+.tdb-p2-fav.is-fav { color: #f59e0b; }
+.tdb-p2-fav:active { transform: scale(0.75); }
+
+/* ─── 中段：情報グリッド ─── */
+.tdb-p2-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+.tdb-p2-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  min-width: 0;
+}
+.tdb-p2-info-icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+  opacity: 0.45;
+  color: #3A5C52;
+}
+:root[data-theme="dark"] .tdb-p2-info-icon { color: #A8BEB4; opacity: 0.6; }
+.tdb-p2-info-text {
+  flex: 1;
+  min-width: 0;
+}
+.tdb-p2-info-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #7A9E94;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 1px;
+}
+:root[data-theme="dark"] .tdb-p2-info-label { color: #7A8E86; }
+.tdb-p2-info-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1E3A30;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+:root[data-theme="dark"] .tdb-p2-info-value { color: #C8D8D0; }
+
+/* 情報区切り線 */
+.tdb-p2-divider {
+  height: 1px;
+  background: #F0F4F2;
+  margin: 0 0 10px;
+}
+:root[data-theme="dark"] .tdb-p2-divider { background: var(--border); }
+
+/* ─── 下段：金額 ─── */
+.tdb-p2-money {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.tdb-p2-money-item {
+  flex: 1;
+}
+.tdb-p2-money-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: #7A9E94;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 2px;
+}
+.tdb-p2-money-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1E3A30;
+  letter-spacing: -0.3px;
+  display: block;
+}
+:root[data-theme="dark"] .tdb-p2-money-value { color: #C8D8D0; }
+.tdb-p2-money-value.is-prize {
+  color: #1A7A50;
+}
+:root[data-theme="dark"] .tdb-p2-money-value.is-prize { color: #58D6A3; }
+.tdb-p2-money-sep {
+  width: 1px;
+  height: 24px;
+  background: #E8EEE8;
+  flex-shrink: 0;
+}
+:root[data-theme="dark"] .tdb-p2-money-sep { background: var(--border); }
+
+/* ─── カードフッター：アクションボタン ─── */
+.tdb-p2-footer {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-top: 1px solid #F0F4F2;
+  background: #FAFCFB;
+}
+:root[data-theme="dark"] .tdb-p2-footer {
+  background: rgba(255,255,255,0.03);
+  border-top-color: var(--border);
+}
+.tdb-p2-action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 6px;
+  border: none;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green-dark);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s, color 0.12s;
+  font-family: inherit;
+  letter-spacing: -0.1px;
+  position: relative;
+}
+.tdb-p2-action::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%; height: 44px;
+}
+.tdb-p2-action:active { background: rgba(57,200,146,0.08); }
+.tdb-p2-action-sep {
+  width: 1px; height: 20px;
+  background: #E8EEE8;
+  flex-shrink: 0;
+}
+:root[data-theme="dark"] .tdb-p2-action-sep { background: var(--border); }
+:root[data-theme="dark"] .tdb-p2-action { color: var(--green-light); }
+.tdb-p2-action.is-entry {
+  color: #1A7A50;
+  font-weight: 700;
+}
+:root[data-theme="dark"] .tdb-p2-action.is-entry { color: #58D6A3; }
+.tdb-p2-action.is-added-cal {
+  color: #7A9E94;
+}
+.tdb-p2-action svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+/* ─── セクションヘッダー（大会リスト上） ─── */
+.tdb-p2-section-hd {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 14px 14px 6px;
+}
+.tdb-p2-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+.tdb-p2-section-count {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* ─── 空状態 ─── */
+.tdb-p2-empty {
+  text-align: center;
+  padding: 56px 28px;
+  color: var(--text-tertiary);
+}
+.tdb-p2-empty-icon {
+  font-size: 46px;
+  margin-bottom: 14px;
+  opacity: 0.6;
+}
+.tdb-p2-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  letter-spacing: -0.2px;
+}
+.tdb-p2-empty-desc {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-tertiary);
+}
+
+/* ================================================================ */
+/* ★★★ Phase2: 大会詳細モーダル（iPhone Apple Maps風 Bottom Sheet）*/
+/* ================================================================ */
+
+/* オーバーレイ */
+.tdm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  z-index: 500;
+  pointer-events: none;
+  transition: background 0.32s cubic-bezier(.32,.72,0,1);
+}
+.tdm-overlay.show {
+  background: rgba(0,0,0,0.38);
+  pointer-events: auto;
+}
+
+/* ボトムシート本体 */
+.tdm-sheet {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 501;
+  background: #ffffff;
+  border-radius: 22px 22px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.42s cubic-bezier(.32,.72,0,1);
+  max-height: 92dvh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -2px 24px rgba(0,0,0,0.13), 0 -1px 4px rgba(0,0,0,0.06);
+  will-change: transform;
+  overflow: hidden;
+}
+.tdm-sheet.show {
+  transform: translateY(0);
+}
+.tdm-sheet.is-dragging {
+  transition: none;
+}
+:root[data-theme="dark"] .tdm-sheet {
+  background: #1c1c1e;
+}
+
+/* グラバーバー */
+.tdm-grabber {
+  width: 38px; height: 5px;
+  background: #D1D1D6;
+  border-radius: 3px;
+  margin: 10px auto 6px;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  cursor: grab;
+}
+:root[data-theme="dark"] .tdm-grabber { background: #48484A; }
+
+/* ヘッダー */
+.tdm-header {
+  flex-shrink: 0;
+  padding: 0 20px 14px;
+}
+.tdm-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.tdm-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0F1E18;
+  letter-spacing: -0.5px;
+  line-height: 1.25;
+  flex: 1;
+}
+:root[data-theme="dark"] .tdm-title { color: #E8F0EC; }
+.tdm-close {
+  width: 30px; height: 30px;
+  border: none;
+  background: #F2F2F7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: background 0.12s;
+  font-family: inherit;
+}
+.tdm-close:active { background: #E5E5EA; }
+:root[data-theme="dark"] .tdm-close {
+  background: #2c2c2e;
+}
+:root[data-theme="dark"] .tdm-close:active { background: #3a3a3c; }
+
+/* ヘッダータグ行 */
+.tdm-header-tags {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.tdm-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+}
+.tdm-tag-cat {
+  background: rgba(57,200,146,0.13);
+  color: #17885E;
+  border: 1px solid rgba(57,200,146,0.25);
+}
+.tdm-tag-men {
+  background: rgba(45,125,210,0.10);
+  color: #1A5DB0;
+  border: 1px solid rgba(45,125,210,0.18);
+}
+.tdm-tag-women {
+  background: rgba(208,86,126,0.10);
+  color: #A83060;
+  border: 1px solid rgba(208,86,126,0.18);
+}
+.tdm-tag-live { background: #E8F9F1; color: #0B5234; border: 1px solid rgba(11,82,52,0.15); }
+.tdm-tag-upcoming { background: #EDF4FF; color: #1A4A8A; border: 1px solid rgba(26,74,138,0.12); }
+.tdm-tag-ended { background: #F2F4F6; color: #6A7280; border: 1px solid rgba(0,0,0,0.08); }
+:root[data-theme="dark"] .tdm-tag-cat { background: rgba(57,200,146,0.15); color: #58D6A3; }
+
+/* ヘッダー下ライン */
+.tdm-header-line {
+  height: 4px;
+  border-radius: 2px;
+  margin-top: 12px;
+  opacity: 0.6;
+}
+
+/* スクロールエリア */
+.tdm-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 0 env(safe-area-inset-bottom, 16px);
+}
+.tdm-scroll::-webkit-scrollbar { display: none; }
+
+/* ─── セクション共通 ─── */
+.tdm-section {
+  padding: 14px 20px;
+  border-bottom: 1px solid #F0F4F2;
+}
+.tdm-section:last-child { border-bottom: none; }
+:root[data-theme="dark"] .tdm-section { border-bottom-color: var(--border); }
+
+.tdm-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7A9E94;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+:root[data-theme="dark"] .tdm-section-title { color: #7A8E86; }
+.tdm-section-title svg { opacity: 0.7; }
+
+/* ─── 情報行 ─── */
+.tdm-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid #F5F7F6;
+}
+.tdm-row:last-child { border-bottom: none; }
+:root[data-theme="dark"] .tdm-row { border-bottom-color: rgba(255,255,255,0.05); }
+.tdm-row-icon {
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7A9E94;
+  margin-top: 1px;
+}
+:root[data-theme="dark"] .tdm-row-icon { color: #7A8E86; }
+.tdm-row-body { flex: 1; min-width: 0; }
+.tdm-row-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #7A9E94;
+  letter-spacing: 0.2px;
+  display: block;
+  margin-bottom: 1px;
+}
+:root[data-theme="dark"] .tdm-row-label { color: #7A8E86; }
+.tdm-row-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E3A30;
+  letter-spacing: -0.1px;
+  display: block;
+  line-height: 1.35;
+  word-break: break-all;
+}
+:root[data-theme="dark"] .tdm-row-value { color: #C8D8D0; }
+.tdm-row-value.is-empty {
+  color: #B0BEB8;
+  font-weight: 400;
+  font-style: italic;
+  font-size: 13px;
+}
+:root[data-theme="dark"] .tdm-row-value.is-empty { color: #48484A; }
+.tdm-row-value.is-prize {
+  color: #1A7A50;
+  font-size: 15px;
+  font-weight: 700;
+}
+:root[data-theme="dark"] .tdm-row-value.is-prize { color: #58D6A3; }
+
+/* ─── 金額グリッド ─── */
+.tdm-money-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.tdm-money-cell {
+  background: #F7FAF8;
+  border-radius: 12px;
+  padding: 11px 12px;
+  border: 1px solid #EBF0EE;
+}
+:root[data-theme="dark"] .tdm-money-cell {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--border);
+}
+.tdm-money-cell-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #7A9E94;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+:root[data-theme="dark"] .tdm-money-cell-label { color: #7A8E86; }
+.tdm-money-cell-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1A7A50;
+  letter-spacing: -0.5px;
+  display: block;
+}
+:root[data-theme="dark"] .tdm-money-cell-value { color: #58D6A3; }
+.tdm-money-cell-value.is-fee {
+  color: #1E3A30;
+  font-size: 14px;
+  font-weight: 700;
+}
+:root[data-theme="dark"] .tdm-money-cell-value.is-fee { color: #C8D8D0; }
+.tdm-money-cell-value.is-empty {
+  color: #B0BEB8;
+  font-size: 13px;
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* ─── リンクボタン ─── */
+.tdm-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tdm-link-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  background: #F7FAF8;
+  border: 1px solid #EBF0EE;
+  border-radius: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+  transition: background 0.12s, transform 0.1s;
+  position: relative;
+}
+.tdm-link-btn:active {
+  background: #EBF2EE;
+  transform: scale(0.97);
+}
+:root[data-theme="dark"] .tdm-link-btn {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--border);
+}
+:root[data-theme="dark"] .tdm-link-btn:active {
+  background: rgba(255,255,255,0.08);
+}
+.tdm-link-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+.tdm-link-text {
+  flex: 1;
+  min-width: 0;
+}
+.tdm-link-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1E3A30;
+  letter-spacing: -0.1px;
+  display: block;
+}
+:root[data-theme="dark"] .tdm-link-label { color: #C8D8D0; }
+.tdm-link-url {
+  font-size: 11px;
+  color: #7A9E94;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tdm-link-arrow {
+  color: #B0BEB8;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.tdm-link-btn.is-empty {
+  opacity: 0.45;
+  cursor: default;
+}
+.tdm-link-btn.is-empty:active { transform: none; }
+
+/* ─── 大きいアクションボタン群 ─── */
+.tdm-cta-area {
+  padding: 14px 20px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tdm-cta-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 15px 20px;
+  border-radius: 14px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s, filter 0.12s;
+  font-family: inherit;
+  letter-spacing: -0.2px;
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+}
+.tdm-cta-btn:active {
+  transform: scale(0.97);
+  filter: brightness(0.93);
+}
+.tdm-cta-primary {
+  background: linear-gradient(135deg, var(--green-main), var(--green-dark));
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(57,200,146,0.35);
+}
+.tdm-cta-secondary {
+  background: #F2F2F7;
+  color: var(--green-dark);
+}
+:root[data-theme="dark"] .tdm-cta-secondary {
+  background: #2c2c2e;
+  color: var(--green-light);
+}
+
+/* ─── モーダルアニメーション ─── */
+@keyframes tdmSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes tdmFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* stagger for p2 cards */
+.tdb-p2-card:nth-child(1)  { animation-delay: 0.00s; }
+.tdb-p2-card:nth-child(2)  { animation-delay: 0.04s; }
+.tdb-p2-card:nth-child(3)  { animation-delay: 0.08s; }
+.tdb-p2-card:nth-child(4)  { animation-delay: 0.12s; }
+.tdb-p2-card:nth-child(5)  { animation-delay: 0.15s; }
+.tdb-p2-card:nth-child(n+6){ animation-delay: 0.17s; }
 </style>
 
 
@@ -4635,48 +5941,101 @@ body{
     </div>
   </div>
 
+  <!-- ================================================================ -->
+  <!-- ★★★ Phase1: 大会検索プラットフォーム UI ★★★                     -->
+  <!-- ================================================================ -->
   <div class="page" id="page-search">
-    <div class="search-header">
-      <div class="search-header-top">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <button class="hamburger-btn" type="button" id="hamburger-btn-2" aria-label="メニュー"><svg viewBox="0 0 24 24" fill="none"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
-          <span class="page-title">ProNexa<span>X</span></span>
+
+    <!-- ── ヘッダー ── -->
+    <div class="tdb-header" id="tdb-header">
+      <div class="tdb-header-row">
+        <div class="tdb-header-left">
+          <button class="hamburger-btn" type="button" id="hamburger-btn-2" aria-label="メニュー">
+            <svg viewBox="0 0 24 24" fill="none"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+          </button>
+          <div class="tdb-logo">大会<span>DB</span></div>
         </div>
-        <div class="app-header-actions"><div class="app-avatar">山田</div></div>
+        <div class="tdb-header-right">
+          <div class="app-avatar" id="tdb-avatar"></div>
+        </div>
       </div>
-      <div class="search-box" id="search-box-wrap">
-        <button class="search-box-icon-btn" id="sq-icon-btn" aria-label="検索 / 絞り込み" onclick="_sqIconTap()">
-          <svg id="sq-icon-svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#3a3a3a" stroke-width="1.4"/><line x1="9.5" y1="9.5" x2="13" y2="13" stroke="#3a3a3a" stroke-width="1.4" stroke-linecap="round"/></svg>
-          <span class="sq-icon-filter-badge"></span>
+
+      <!-- ── 男子/女子 切替 ── -->
+      <div class="tdb-gender-seg">
+        <button class="tdb-gender-btn is-active" id="tdb-gender-men" onclick="_tdbSetGender('men')">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M4 13c0-1.657 1.343-3 3-3s3 1.343 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          男子
         </button>
-        <div id="sq-tokens-inline"></div>
-        <input type="text" id="search-input" placeholder="大会名・エリア・カテゴリで検索 / 絞り込み" autocomplete="off">
-        <!-- サジェストパネル -->
+        <button class="tdb-gender-btn" id="tdb-gender-women" onclick="_tdbSetGender('women')">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M4 13c0-1.657 1.343-3 3-3s3 1.343 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          女子
+        </button>
+      </div>
+
+      <!-- ── 検索バー ── -->
+      <div class="tdb-search-wrap" id="tdb-search-wrap">
+        <svg class="tdb-search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="6" cy="6" r="4.2" stroke="#8e8e93" stroke-width="1.4"/>
+          <line x1="9.5" y1="9.5" x2="13" y2="13" stroke="#8e8e93" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <div id="tdb-tokens-inline" class="tdb-tokens-inline"></div>
+        <input type="text" id="search-input" class="tdb-search-input"
+          placeholder="大会名・エリア・カテゴリで検索" autocomplete="off">
+        <button class="tdb-search-clear" id="tdb-search-clear" onclick="_tdbClearSearch()" aria-label="クリア">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="5" fill="#c7c7cc"/>
+            <line x1="4" y1="4" x2="8" y2="8" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="8" y1="4" x2="4" y2="8" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <!-- サジェストパネル（既存との互換維持） -->
         <div class="sq-suggest" id="sq-suggest"></div>
       </div>
-      <!-- ★ アクティブフィルターチップバー（search-header内） -->
+
+      <!-- ── 国内/海外 + カテゴリ横スクロール ── -->
+      <div class="tdb-filter-area">
+        <!-- 国内/海外ピル -->
+        <div class="tdb-scope-pills">
+          <button class="tdb-scope-pill is-active" id="tdb-scope-domestic" onclick="_tdbSetScope('domestic')">国内</button>
+          <button class="tdb-scope-pill" id="tdb-scope-overseas" onclick="_tdbSetScope('overseas')">海外</button>
+        </div>
+        <!-- カテゴリ横スクロール -->
+        <div class="tdb-cat-scroll-wrap">
+          <div class="tdb-cat-scroll" id="tdb-cat-scroll">
+            <!-- JSで描画 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ── アクティブフィルターバー ── -->
       <div class="sq-filter-bar" id="sq-filter-bar"></div>
     </div>
-    <div class="search-mode-tabs" id="search-mode-tabs">
-      <button class="search-mode-tab is-active" data-mode="all">すべて表示</button>
-      <button class="search-mode-tab" data-mode="fav">⭐ お気に入り</button>
-    </div>
-    <div class="filter-grid" id="filter-grid"></div>
-    <div class="result-meta" id="result-meta">
+
+    <!-- ── result-meta（件数・並び替え・絞り込み）── -->
+    <div class="tdb-meta-bar" id="result-meta">
       <span class="result-count" id="result-count"></span>
-      <div style="display:flex;align-items:center;gap:6px;">
+      <div class="tdb-meta-actions">
         <button class="filter-open-btn" id="fbs-open-btn" onclick="openFilterSheet()">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="1" y1="3" x2="11" y2="3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="2.5" y1="6" x2="9.5" y2="6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="4" y1="9" x2="8" y2="9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <line x1="1" y1="3" x2="11" y2="3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="2.5" y1="6" x2="9.5" y2="6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="4" y1="9" x2="8" y2="9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
           絞り込み
           <span class="filter-open-btn-badge" id="fbs-badge">0</span>
         </button>
         <button class="sort-btn" onclick="toggleSort()">
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><line x1="1" y1="3" x2="10" y2="3" stroke="#1AAF7A" stroke-width="1.3" stroke-linecap="round"/><line x1="1" y1="6" x2="7" y2="6" stroke="#1AAF7A" stroke-width="1.3" stroke-linecap="round"/><line x1="1" y1="9" x2="5" y2="9" stroke="#1AAF7A" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+            <line x1="1" y1="3" x2="10" y2="3" stroke="var(--green-main)" stroke-width="1.3" stroke-linecap="round"/>
+            <line x1="1" y1="6" x2="7" y2="6" stroke="var(--green-main)" stroke-width="1.3" stroke-linecap="round"/>
+            <line x1="1" y1="9" x2="5" y2="9" stroke="var(--green-main)" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
           <span id="sort-label">日付順</span>
         </button>
       </div>
     </div>
-    <!-- ★★★ フィルターボトムシート ★★★ -->
+
+    <!-- ── フィルターボトムシート（既存互換） ── -->
     <div class="fbs-overlay" id="fbs-overlay" onclick="closeFilterSheet()">
       <div class="fbs-sheet" onclick="event.stopPropagation()">
         <div class="fbs-handle"></div>
@@ -4684,16 +6043,29 @@ body{
           <span>🔍 絞り込み</span>
           <button class="fbs-title-reset" id="fbs-reset-btn" onclick="resetFilterSheet()">リセット</button>
         </div>
-        <div class="fbs-scroll" id="fbs-scroll-body">
-          <!-- JS で描画 -->
-        </div>
+        <div class="fbs-scroll" id="fbs-scroll-body"><!-- JS で描画 --></div>
         <div class="fbs-footer">
           <button class="fbs-apply-btn" onclick="applyFilterSheet()">適用する</button>
         </div>
       </div>
     </div>
-    <div class="search-scroll"><div style="height:4px;"></div><div id="search-list"></div><div style="height:6px;"></div></div>
-    <!-- ★ リマインド：時間選択シート -->
+
+    <!-- ── お気に入り / すべて タブ（非表示だが機能互換のため残す） ── -->
+    <div class="search-mode-tabs" id="search-mode-tabs" style="display:none;">
+      <button class="search-mode-tab is-active" data-mode="all">すべて表示</button>
+      <button class="search-mode-tab" data-mode="fav">⭐ お気に入り</button>
+    </div>
+    <!-- filter-grid は既存JSが参照するので残す（非表示） -->
+    <div class="filter-grid" id="filter-grid" style="display:none;"></div>
+
+    <!-- ── 大会リスト ── -->
+    <div class="search-scroll" id="tdb-scroll">
+      <div style="height:4px;"></div>
+      <div id="search-list"></div>
+      <div style="height:24px;"></div>
+    </div>
+
+    <!-- ── リマインドシート（既存互換） ── -->
     <div class="remind-overlay" id="remind-overlay" onclick="if(event.target===this)closeRemindSheet()">
       <div class="remind-sheet" onclick="event.stopPropagation()">
         <div class="remind-handle"></div>
@@ -10934,6 +12306,1835 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   });
 })();
 </script>
+
+
+<script>
+// ================================================================
+// ★★★ Phase1: 大会検索プラットフォーム JS ★★★
+// 既存のカレンダー・検索機能は一切壊さない
+// ================================================================
+
+// ── カテゴリマスタ（男子/女子別） ──
+const TDB_CATS_MEN = [
+  { key: 'all',       label: 'すべて',      color: '#1AAF7A', dot: '#1AAF7A' },
+  { key: 'jgto',      label: 'JGTO',        color: '#1AAF7A', dot: '#1AAF7A' },
+  { key: 'acn',       label: 'ACNツアー',   color: '#2A9D7E', dot: '#2A9D7E' },
+  { key: 'qt',        label: 'QT',          color: '#A0631A', dot: '#A0631A' },
+  { key: 'qualifier', label: '予選会',       color: '#B07015', dot: '#B07015' },
+  { key: 'jpga',      label: 'JPGA',        color: '#2D7DD2', dot: '#2D7DD2' },
+  { key: 'senior',    label: 'シニアツアー', color: '#7B4DB5', dot: '#7B4DB5' },
+  { key: 'atp',       label: 'ATP GOLF',    color: '#4A7A8A', dot: '#4A7A8A' },
+  { key: 'fj',        label: 'FJ TOUR',     color: '#3D7A6E', dot: '#3D7A6E' },
+  { key: 'future',    label: 'Future Tour', color: '#7A6040', dot: '#7A6040' },
+  { key: 'doucus',    label: 'DOUCUS OPEN', color: '#8A5A30', dot: '#8A5A30' },
+  { key: 'pa',        label: 'P&A CUP',     color: '#5A6A80', dot: '#5A6A80' },
+  { key: 'pref-open', label: '県オープン',   color: '#7B4DB5', dot: '#7B4DB5' },
+  { key: 'overseas',  label: '海外ツアー',   color: '#3A4A6A', dot: '#3A4A6A' },
+];
+const TDB_CATS_WOMEN = [
+  { key: 'all',         label: 'すべて',         color: '#D0567E', dot: '#D0567E' },
+  { key: 'jlpga',       label: 'JLPGA',          color: '#D0567E', dot: '#D0567E' },
+  { key: 'stepup',      label: 'ステップアップ',  color: '#E0688A', dot: '#E0688A' },
+  { key: 'qt-w',        label: 'QT',             color: '#B04070', dot: '#B04070' },
+  { key: 'qualifier-w', label: '予選会',          color: '#C05878', dot: '#C05878' },
+  { key: 'next-h',      label: 'NEXT HEROINE',   color: '#C06880', dot: '#C06880' },
+  { key: 'oneday',      label: 'One Day Tour',   color: '#A05068', dot: '#A05068' },
+  { key: 'open-w',      label: '女子オープン',    color: '#8A4060', dot: '#8A4060' },
+  { key: 'lpga',        label: 'LPGA',           color: '#904870', dot: '#904870' },
+  { key: 'klpga',       label: 'KLPGA',          color: '#7A3A5E', dot: '#7A3A5E' },
+];
+
+// ── 状態 ──
+let _tdbGender   = 'men';      // 'men' | 'women'
+let _tdbScope    = 'domestic'; // 'domestic' | 'overseas'
+let _tdbActiveCat = 'all';     // カテゴリキー
+
+// ── 初期化 ──
+function _tdbInit() {
+  _tdbRenderCatChips();
+  _tdbSyncGenderUI();
+  _tdbSyncScopeUI();
+  _tdbInitSearch();
+  // アバター同期
+  const src = document.getElementById('app-avatar-text');
+  const dst = document.getElementById('tdb-avatar');
+  if (src && dst) dst.textContent = src.textContent;
+  // アバター：メインヘッダーから値を引き継ぐ
+  const mainAvatar = document.querySelector('.app-avatar');
+  if (mainAvatar && dst) dst.textContent = mainAvatar.textContent;
+}
+
+// ── 男子/女子切替 ──
+window._tdbSetGender = function(gender) {
+  if (_tdbGender === gender) return;
+  _tdbGender = gender;
+  _tdbActiveCat = 'all';
+  _tdbRenderCatChips();
+  _tdbSyncGenderUI();
+  // 検索フィルター再適用（既存関数）
+  if (typeof applySearchFilters === 'function') applySearchFilters();
+};
+
+function _tdbSyncGenderUI() {
+  const menBtn = document.getElementById('tdb-gender-men');
+  const womenBtn = document.getElementById('tdb-gender-women');
+  if (!menBtn || !womenBtn) return;
+  const isWomen = _tdbGender === 'women';
+  menBtn.classList.toggle('is-active', !isWomen);
+  womenBtn.classList.toggle('is-active', isWomen);
+  // 女子モードはヘッダーのアクセントカラーをピンク調に
+  const header = document.getElementById('tdb-header');
+  if (header) {
+    header.style.borderBottomColor = isWomen ? '#D0567E' : '';
+  }
+}
+
+// ── 国内/海外切替 ──
+window._tdbSetScope = function(scope) {
+  if (_tdbScope === scope) return;
+  _tdbScope = scope;
+  _tdbSyncScopeUI();
+  if (typeof applySearchFilters === 'function') applySearchFilters();
+};
+
+function _tdbSyncScopeUI() {
+  const dom = document.getElementById('tdb-scope-domestic');
+  const ovs = document.getElementById('tdb-scope-overseas');
+  if (!dom || !ovs) return;
+  dom.classList.toggle('is-active', _tdbScope === 'domestic');
+  ovs.classList.toggle('is-active', _tdbScope === 'overseas');
+}
+
+// ── カテゴリチップ描画 ──
+function _tdbRenderCatChips() {
+  const wrap = document.getElementById('tdb-cat-scroll');
+  if (!wrap) return;
+  const cats = _tdbGender === 'women' ? TDB_CATS_WOMEN : TDB_CATS_MEN;
+  wrap.innerHTML = cats.map(c => {
+    const isActive = _tdbActiveCat === c.key;
+    const dotStyle = isActive ? 'background:rgba(255,255,255,0.7)' : `background:${c.dot}`;
+    return `<button class="tdb-cat-chip${isActive ? ' is-active' : ''}"
+      data-cat="${c.key}"
+      onclick="_tdbSetCat('${c.key}')"
+      style="${isActive ? `background:${c.color};` : ''}">
+      <span class="tdb-cat-chip-dot" style="${dotStyle}"></span>
+      ${c.label}
+    </button>`;
+  }).join('');
+}
+
+// ── カテゴリ選択 ──
+window._tdbSetCat = function(key) {
+  if (_tdbActiveCat === key) return;
+  _tdbActiveCat = key;
+  _tdbRenderCatChips();
+  // 既存 searchFilter に反映
+  if (typeof searchFilter !== 'undefined') {
+    const mapToExisting = {
+      all: 'all',
+      jgto: 'jgto',
+      jlpga: 'jlpga',
+      qualifier: 'qualifier',
+      'pref-open': 'open',
+    };
+    // マッピングがなければ 'all' に
+    searchFilter = mapToExisting[key] || 'all';
+  }
+  if (typeof applySearchFilters === 'function') applySearchFilters();
+  // スクロール位置をアクティブチップに合わせる
+  const wrap = document.getElementById('tdb-cat-scroll');
+  const chip = wrap ? wrap.querySelector('.tdb-cat-chip.is-active') : null;
+  if (chip && wrap) {
+    const wrapRect = wrap.getBoundingClientRect();
+    const chipRect = chip.getBoundingClientRect();
+    const offset = chipRect.left - wrapRect.left - (wrapRect.width / 2) + (chipRect.width / 2);
+    wrap.scrollBy({ left: offset, behavior: 'smooth' });
+  }
+};
+
+// ── 検索バー初期化 ──
+function _tdbInitSearch() {
+  const inp = document.getElementById('search-input');
+  const wrap = document.getElementById('tdb-search-wrap');
+  if (!inp || !wrap) return;
+  inp.addEventListener('input', () => {
+    const hasVal = inp.value.trim().length > 0;
+    wrap.classList.toggle('has-value', hasVal);
+    // 既存のサジェスト機能に委譲
+    if (typeof _sqOnInput === 'function') _sqOnInput();
+    if (typeof applySearchFilters === 'function') applySearchFilters();
+  });
+  inp.addEventListener('focus', () => {
+    wrap.classList.add('is-focused');
+    if (typeof _sqShowSuggest === 'function') _sqShowSuggest(inp.value.trim());
+  });
+  inp.addEventListener('blur', () => {
+    wrap.classList.remove('is-focused');
+    setTimeout(() => { if (typeof _sqHideSuggest === 'function') _sqHideSuggest(); }, 150);
+  });
+  inp.addEventListener('keydown', e => {
+    if (typeof _sqOnKeyDown === 'function') _sqOnKeyDown(e);
+  });
+}
+
+// ── 検索クリア ──
+window._tdbClearSearch = function() {
+  const inp = document.getElementById('search-input');
+  const wrap = document.getElementById('tdb-search-wrap');
+  if (inp) { inp.value = ''; inp.focus(); }
+  if (wrap) wrap.classList.remove('has-value');
+  if (typeof _sqClearAll === 'function') _sqClearAll();
+};
+
+// ── 新カードHTML（既存 _searchCardHTML を上書き） ──
+// 既存の _searchCardHTML を拡張する形で新デザインを注入
+(function patchSearchCard() {
+  const _origCardHTML = window._searchCardHTML;
+  window._searchCardHTML = function(t) {
+    if (!t) return '';
+    // 既存のステータス・追加済み・お気に入り関数を流用
+    const isAdded = typeof addedIds !== 'undefined' && addedIds.has(t.id);
+    const isFav   = typeof favTournaments !== 'undefined' && favTournaments.has(t.id);
+    const statusFn = typeof _searchStatus === 'function' ? _searchStatus : () => 'upcoming';
+    const status = statusFn(t);
+    const statusLabelMap = { live: '開催中', upcoming: '予定', ended: '終了' };
+    const statusLabel = statusLabelMap[status] || '予定';
+    const catKey = t.cat || 'personal';
+    // カテゴリラベル
+    const catLabelMap = typeof CAT_LABELS !== 'undefined' ? CAT_LABELS : {};
+    const catLabel = catLabelMap[catKey] || catKey;
+    // 日付
+    const datePart = t.start && t.end
+      ? `${t.start.slice(5).replace('-','/')} 〜 ${t.end.slice(5).replace('-','/')}`
+      : (t.start ? t.start.slice(5).replace('-','/') : '');
+    // リマインド状態
+    const rState = (typeof remindMap !== 'undefined' && remindMap[t.id]) || { reminder: false, reminderTiming: [] };
+    const isRemind = rState.reminder;
+    const remindKey = rState.reminderTiming && rState.reminderTiming[0];
+    const RLABELS = { '30min':'30分前', '1hour':'1時間前', sameDay:'当日朝', dayBefore:'前日', weekBefore:'1週間前' };
+    const pillLabel = remindKey ? RLABELS[remindKey] : 'タイミングを選択';
+    const chevSvg = `<svg viewBox="0 0 10 10" fill="none" style="width:9px;height:9px;flex-shrink:0;"><polyline points="3.5,2.5 6.5,5 3.5,7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const bellSvg = `<svg class="bell-svg" viewBox="0 0 20 20" fill="none" style="width:16px;height:16px;"><path d="M10 2.5a5.5 5.5 0 0 1 5.5 5.5v3l1.25 2H3.25L4.5 11V8A5.5 5.5 0 0 1 10 2.5Z" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M8 15.5a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>`;
+    // 場所表示
+    const placePart = t.place ? ` ｜ ${t.place}` : '';
+    return `<div class="tdb-card${isAdded ? ' is-added' : ''}" data-tid="${t.id}">
+      <div class="tdb-card-body">
+        <div class="tdb-card-stripe stripe-${catKey}"></div>
+        <div class="tdb-card-main">
+          <div class="tdb-card-name">
+            <span class="tdb-card-name-text">${typeof escapeHtml === 'function' ? escapeHtml(t.name) : t.name}</span>
+            ${isAdded ? '<span class="tdb-card-added-check">✓</span>' : ''}
+          </div>
+          <div class="tdb-card-meta">${datePart}${placePart}</div>
+          <div class="tdb-card-badges">
+            <span class="tdb-badge tdb-badge-${status}">${statusLabel}</span>
+            <span class="tdb-badge tdb-badge-cat">${catLabel}</span>
+            ${isAdded ? '<span class="tdb-badge tdb-badge-added">登録済み</span>' : ''}
+          </div>
+        </div>
+        <div class="tdb-card-actions">
+          <button class="tdb-fav-btn${isFav ? ' is-fav' : ''}"
+            onclick="event.stopPropagation();toggleFavTournament('${t.id}')" aria-label="お気に入り">★</button>
+          <button class="tdb-add-btn${isAdded ? ' added' : ''}"
+            onclick="event.stopPropagation();toggleSearchAdd('${t.id}')">
+            ${isAdded ? '✓ 追加済' : '＋ 追加'}
+          </button>
+        </div>
+      </div>
+      <div class="tdb-card-remind t-remind-row">
+        <button class="t-bell-btn${isRemind ? ' is-on' : ''}" id="bell-${t.id}"
+          onclick="event.stopPropagation();_toggleBell('${t.id}')" aria-label="リマインド">
+          ${bellSvg}
+        </button>
+        <button class="t-remind-pill${isRemind ? ' is-set visible' : ''}" id="pill-${t.id}"
+          onclick="event.stopPropagation();openRemindSheet('${t.id}')"
+          aria-label="通知タイミング">
+          ${pillLabel}${chevSvg}
+        </button>
+      </div>
+    </div>`;
+  };
+})();
+
+// ── page-search に切り替わったとき初期化 ──
+(function patchSwitchPage() {
+  const _origSwitch = window.switchPage;
+  window.switchPage = function(page) {
+    if (typeof _origSwitch === 'function') _origSwitch(page);
+    if (page === 'search') {
+      requestAnimationFrame(() => {
+        _tdbInit();
+        // アバター再同期
+        const mainAv = document.querySelector('#page-calendar .app-avatar, .app-header .app-avatar');
+        const tdbAv  = document.getElementById('tdb-avatar');
+        if (mainAv && tdbAv) tdbAv.textContent = mainAv.textContent;
+        // Phase2: 大会カードを描画
+        _p2RenderCards();
+      });
+    }
+  };
+})();
+
+// 初回（DOMロード後）
+document.addEventListener('DOMContentLoaded', function() {
+  // ハンバーガー2の接続（既存の drawer open 関数を使う）
+  const hb2 = document.getElementById('hamburger-btn-2');
+  if (hb2) {
+    hb2.addEventListener('click', () => {
+      if (typeof openDrawer === 'function') openDrawer();
+    });
+  }
+  // カレンダーページのアバターをtdbに同期するオブザーバー
+  const mainAv = document.querySelector('.app-avatar');
+  if (mainAv) {
+    const obs = new MutationObserver(() => {
+      const tdbAv = document.getElementById('tdb-avatar');
+      if (tdbAv) tdbAv.textContent = mainAv.textContent;
+    });
+    obs.observe(mainAv, { childList: true, characterData: true, subtree: true });
+  }
+});
+</script>
+
+<!-- ================================================================ -->
+<!-- ★★★ Phase2: 大会カードUI + 詳細モーダル JavaScript ★★★        -->
+<!-- ================================================================ -->
+<script>
+// ================================================================
+// Phase2 大会データ構造（手動追加可能）
+// ================================================================
+
+// ─── カラーマップ（カテゴリキー → カラー）───
+const TDB_CAT_COLORS = {
+  jgto: '#1AAF7A', acn: '#2A9D7E', qt: '#A0631A', qualifier: '#B07015',
+  jpga: '#2D7DD2', senior: '#7B4DB5', atp: '#4A7A8A', fj: '#3D7A6E',
+  future: '#7A6040', doucus: '#8A5A30', pa: '#5A6A80', 'pref-open': '#7B4DB5',
+  overseas: '#3A4A6A',
+  jlpga: '#D0567E', stepup: '#E0688A', 'qt-w': '#B04070', 'qualifier-w': '#C05878',
+  'next-h': '#C06880', oneday: '#A05068', 'open-w': '#8A4060',
+  lpga: '#904870', klpga: '#7A3A5E',
+  personal: '#6B6ED4', open: '#7B4DB5',
+};
+
+// ─── ダミーデータ（後から1件ずつ追加できる構造） ───
+// 新しい大会を追加するには TDB_TOURNAMENTS 配列にオブジェクトを追加してください
+const TDB_TOURNAMENTS = [
+  {
+    // ─ 識別子 ─
+    id: 'dummy-001',
+    // ─ 基本 ─
+    name: 'Future Tour Kanto Open 2025',
+    cat: 'future',           // カテゴリキー
+    tour: 'Future Tour',     // ツアー名（任意）
+    gender: 'men',           // 'men' | 'women'
+    status: 'upcoming',      // 'live'|'upcoming'|'ended'（startDate/endDateから自動計算も可）
+    // ─ 日程 ─
+    startDate: '2025-09-05',
+    endDate:   '2025-09-07',
+    entryDeadline:  '2025-08-20',
+    cancelDeadline: '2025-08-28',
+    // ─ 会場 ─
+    pref:    '千葉県',
+    region:  'kanto',        // エリアキー（kanto/kansai/chubu/kyushu/hokkaido/overseas）
+    venue:   '○○カントリークラブ',
+    course:  '',             // コース名（任意）
+    country: 'Japan',        // 国（任意、海外大会用）
+    // ─ 主催 ─
+    organizer: 'Future Tour 事務局',
+    // ─ 金額 ─
+    prizeTotal:  '¥3,000,000',
+    prizeWinner: '¥600,000',
+    entryFee:    '¥30,000',
+    practiceFee: '¥8,000',
+    // ─ エントリー ─
+    entryMethod:   'オンラインフォーム',
+    qualification: 'アマ可・ハンディキャップ12以下',
+    capacity:      '60名',
+    // ─ リンク（linksオブジェクト形式） ─
+    links: {
+      website:   'https://example.com',
+      instagram: '',
+      entryForm: 'https://example.com/entry',
+      pairings:  '',
+      liveScore: '',
+      youtube:   '',
+      x:         '',
+    },
+    // ─ 備考 ─
+    notes: '',
+  },
+  {
+    id: 'dummy-002',
+    name: 'DOUCUS OPEN Spring Classic',
+    cat: 'doucus',
+    gender: 'men',
+    status: 'upcoming',
+    startDate: '2025-10-10',
+    endDate:   '2025-10-12',
+    entryDeadline: '2025-09-25',
+    pref: '神奈川県',
+    venue: '△△ゴルフリゾート',
+    organizer: 'DOUCUS実行委員会',
+    prizeTotal:  '¥5,000,000',
+    prizeWinner: '¥1,000,000',
+    entryFee:    '¥35,000',
+    practiceFee: '¥10,000',
+    entryMethod:    'メール・郵送',
+    qualification:  'プロ・アマ可（ハンディ10以下）',
+    capacity:       '72名',
+    cancelDeadline: '2025-10-01',
+    website:     'https://example.com',
+    instagram:   'https://instagram.com/doucus',
+    entryForm:   '',
+    pairings:    '',
+    liveScore:   '',
+  },
+  {
+    id: 'dummy-003',
+    name: 'NEXT HEROINE TOUR Vol.8',
+    cat: 'next-h',
+    gender: 'women',
+    status: 'upcoming',
+    startDate: '2025-09-20',
+    endDate:   '2025-09-21',
+    entryDeadline: '2025-09-10',
+    pref: '埼玉県',
+    venue: '□□レディースCC',
+    organizer: 'NEXT HEROINE事務局',
+    prizeTotal:  '¥2,000,000',
+    prizeWinner: '¥400,000',
+    entryFee:    '¥22,000',
+    practiceFee: '',
+    entryMethod:    'オンラインフォーム',
+    qualification:  '女子アマ・プロ可',
+    capacity:       '50名',
+    cancelDeadline: '2025-09-15',
+    website:     '',
+    instagram:   'https://instagram.com/next_heroine',
+    entryForm:   'https://example.com/entry',
+    pairings:    '',
+    liveScore:   '',
+  },
+  {
+    id: 'dummy-004',
+    name: '○○県知事杯 Prefecture Open 2025',
+    cat: 'pref-open',
+    gender: 'men',
+    status: 'ended',
+    startDate: '2025-07-15',
+    endDate:   '2025-07-16',
+    entryDeadline: '2025-07-01',
+    pref: '○○県',
+    venue: '県立ゴルフ場',
+    organizer: '○○県ゴルフ連盟',
+    prizeTotal:  '¥1,500,000',
+    prizeWinner: '¥300,000',
+    entryFee:    '¥18,000',
+    practiceFee: '¥5,000',
+    entryMethod:    '郵送のみ',
+    qualification:  '○○県内在住・在勤者',
+    capacity:       '96名',
+    cancelDeadline: '2025-07-08',
+    website:     'https://example.com',
+    instagram:   '',
+    entryForm:   '',
+    pairings:    'https://example.com/pairings',
+    liveScore:   'https://example.com/score',
+  },
+  {
+    id: 'dummy-005',
+    name: 'P&A CUP Autumn Series',
+    cat: 'pa',
+    gender: 'men',
+    status: 'upcoming',
+    startDate: '2025-11-03',
+    endDate:   '2025-11-04',
+    entryDeadline: '2025-10-20',
+    pref: '静岡県',
+    venue: '◇◇ゴルフ＆リゾート',
+    organizer: 'P&A CUP実行委員会',
+    prizeTotal:  '¥4,000,000',
+    prizeWinner: '¥800,000',
+    entryFee:    '¥28,000',
+    practiceFee: '¥7,500',
+    entryMethod:    'オンラインフォーム',
+    qualification:  'プロ・認定アマチュア',
+    capacity:       '80名',
+    cancelDeadline: '2025-10-27',
+    website:     'https://example.com',
+    instagram:   '',
+    entryForm:   'https://example.com/entry',
+    pairings:    '',
+    liveScore:   '',
+  },
+];
+
+// ================================================================
+// Phase2 カード描画
+// ================================================================
+
+// カテゴリラベルマップ（Phase1と統合）
+const TDB_P2_CAT_LABELS = {
+  jgto:'JGTO', acn:'ACNツアー', qt:'QT', qualifier:'予選会', jpga:'JPGA',
+  senior:'シニア', atp:'ATP GOLF', fj:'FJ TOUR', future:'Future Tour',
+  doucus:'DOUCUS OPEN', pa:'P&A CUP', 'pref-open':'県オープン', overseas:'海外',
+  jlpga:'JLPGA', stepup:'ステップアップ', 'qt-w':'QT', 'qualifier-w':'予選会',
+  'next-h':'NEXT HEROINE', oneday:'One Day Tour', 'open-w':'女子オープン',
+  lpga:'LPGA', klpga:'KLPGA',
+};
+
+// アイコン SVG ヘルパー
+function _svgCal(){ return `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="2" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1v2M9 1v2M1 5h11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`; }
+function _svgPin(){ return `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1C4.567 1 3 2.567 3 4.5c0 3 3.5 6.5 3.5 6.5S10 7.5 10 4.5C10 2.567 8.433 1 6.5 1Z" stroke="currentColor" stroke-width="1.2"/><circle cx="6.5" cy="4.5" r="1.2" stroke="currentColor" stroke-width="1.1"/></svg>`; }
+function _svgClock(){ return `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 4v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`; }
+function _svgGolf(){ return `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M5 11.5c0-.828 1.343-1.5 3-1.5s3 .672 3 1.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><line x1="8" y1="2" x2="8" y2="10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M8 2l-3 2 3 2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
+
+// 日付フォーマット
+function _fmtDateRange(start, end) {
+  if (!start) return '—';
+  const s = start.slice(5).replace('-','/');
+  if (!end || start === end) return `${start.slice(0,4)}年 ${s}`;
+  const e = end.slice(5).replace('-','/');
+  return `${start.slice(0,4)}年 ${s} 〜 ${e}`;
+}
+function _fmtDeadline(d) {
+  if (!d) return '—';
+  return `${d.slice(0,4)}年 ${d.slice(5).replace('-','/')}`;
+}
+
+// カード1件のHTML生成
+function _p2CardHTML(t) {
+  const catColor = TDB_CAT_COLORS[t.cat] || '#888';
+  const catLabel = TDB_P2_CAT_LABELS[t.cat] || t.cat;
+  const statusMap = { live:'開催中', upcoming:'予定', ended:'終了' };
+  const statusLabel = statusMap[t.status] || '予定';
+  const genderLabel = t.gender === 'women' ? '女子' : '男子';
+  const genderTag = t.gender === 'women'
+    ? `<span class="tdb-p2-tag tdb-p2-tag-women">♀ ${genderLabel}</span>`
+    : `<span class="tdb-p2-tag tdb-p2-tag-men">♂ ${genderLabel}</span>`;
+  const statusClass = `tdb-p2-tag-status-${t.status || 'upcoming'}`;
+  const dateStr = _fmtDateRange(t.startDate, t.endDate);
+  const deadlineStr = _fmtDeadline(t.entryDeadline);
+
+  return `
+<div class="tdb-p2-card" data-tid="${t.id}" onclick="openTournamentModal('${t.id}')">
+  <div class="tdb-p2-bar" style="background:linear-gradient(180deg,${catColor},${catColor}99);"></div>
+  <div class="tdb-p2-inner">
+    <!-- 上段 -->
+    <div class="tdb-p2-top">
+      <div class="tdb-p2-title-block">
+        <div class="tdb-p2-name">${t.name}</div>
+        <div class="tdb-p2-tags">
+          <span class="tdb-p2-tag tdb-p2-tag-cat" style="background:${catColor}18;color:${catColor};border-color:${catColor}33;">${catLabel}</span>
+          ${genderTag}
+          <span class="tdb-p2-tag ${statusClass}">${statusLabel}</span>
+        </div>
+      </div>
+      <button class="tdb-p2-fav" onclick="event.stopPropagation();_p2ToggleFav('${t.id}',this)" aria-label="お気に入り">★</button>
+    </div>
+    <!-- 中段 -->
+    <div class="tdb-p2-info">
+      <div class="tdb-p2-info-item">
+        <div class="tdb-p2-info-icon">${_svgCal()}</div>
+        <div class="tdb-p2-info-text">
+          <span class="tdb-p2-info-label">開催日</span>
+          <span class="tdb-p2-info-value">${dateStr}</span>
+        </div>
+      </div>
+      <div class="tdb-p2-info-item">
+        <div class="tdb-p2-info-icon">${_svgClock()}</div>
+        <div class="tdb-p2-info-text">
+          <span class="tdb-p2-info-label">締切</span>
+          <span class="tdb-p2-info-value">${t.entryDeadline ? t.entryDeadline.slice(5).replace('-','/') : '—'}</span>
+        </div>
+      </div>
+      <div class="tdb-p2-info-item">
+        <div class="tdb-p2-info-icon">${_svgPin()}</div>
+        <div class="tdb-p2-info-text">
+          <span class="tdb-p2-info-label">開催県</span>
+          <span class="tdb-p2-info-value">${t.pref || '—'}</span>
+        </div>
+      </div>
+      <div class="tdb-p2-info-item">
+        <div class="tdb-p2-info-icon">${_svgGolf()}</div>
+        <div class="tdb-p2-info-text">
+          <span class="tdb-p2-info-label">会場</span>
+          <span class="tdb-p2-info-value">${t.venue || '—'}</span>
+        </div>
+      </div>
+    </div>
+    <!-- 区切り -->
+    <div class="tdb-p2-divider"></div>
+    <!-- 下段：金額 -->
+    <div class="tdb-p2-money">
+      <div class="tdb-p2-money-item">
+        <span class="tdb-p2-money-label">賞金総額</span>
+        <span class="tdb-p2-money-value is-prize">${t.prizeTotal || '—'}</span>
+      </div>
+      <div class="tdb-p2-money-sep"></div>
+      <div class="tdb-p2-money-item">
+        <span class="tdb-p2-money-label">エントリー費</span>
+        <span class="tdb-p2-money-value">${t.entryFee || '—'}</span>
+      </div>
+    </div>
+  </div>
+  <!-- フッター：アクション -->
+  <div class="tdb-p2-footer">
+    <button class="tdb-p2-action" onclick="event.stopPropagation();_p2AddCal('${t.id}')" aria-label="カレンダー追加">
+      ${_svgCal()} カレンダー
+    </button>
+    <div class="tdb-p2-action-sep"></div>
+    <button class="tdb-p2-action" onclick="openTournamentModal('${t.id}')" aria-label="詳細">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 5.5v4M6.5 4.2v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      詳細
+    </button>
+    <div class="tdb-p2-action-sep"></div>
+    <button class="tdb-p2-action is-entry" onclick="event.stopPropagation();_p2Entry('${t.id}')" aria-label="エントリー">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2v9M2 6.5h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      エントリー
+    </button>
+  </div>
+</div>`;
+}
+
+// カードリスト描画
+function _p2RenderCards() {
+  const listEl = document.getElementById('search-list');
+  if (!listEl) return;
+
+  // 既存の検索テキスト入力がある場合は既存の検索UIに任せる（壊さない）
+  const searchInp = document.getElementById('search-input');
+  if (searchInp && searchInp.value.trim().length > 0) return;
+
+  // フィルタリング：性別 + カテゴリ
+  const gender = typeof _tdbGender !== 'undefined' ? _tdbGender : 'men';
+  const cat    = typeof _tdbActiveCat !== 'undefined' ? _tdbActiveCat : 'all';
+
+  const filtered = TDB_TOURNAMENTS.filter(t => {
+    if (t.gender !== gender) return false;
+    if (cat !== 'all' && t.cat !== cat) return false;
+    return true;
+  });
+
+  // セクションヘッダー + カード群を構築
+  const count = filtered.length;
+  const sectionHd = `<div class="tdb-p2-section-hd">
+    <span class="tdb-p2-section-title">大会一覧</span>
+    <span class="tdb-p2-section-count">${count}件</span>
+  </div>`;
+
+  const cards = filtered.length > 0
+    ? filtered.map(_p2CardHTML).join('')
+    : `<div class="tdb-p2-empty">
+        <div class="tdb-p2-empty-icon">⛳</div>
+        <div class="tdb-p2-empty-title">大会が見つかりません</div>
+        <div class="tdb-p2-empty-desc">カテゴリや性別を変更してみてください</div>
+      </div>`;
+
+  listEl.innerHTML = sectionHd + cards;
+
+  // result-count 更新
+  const rc = document.getElementById('result-count');
+  if (rc) rc.textContent = `${count}件の大会`;
+}
+
+// お気に入り切替
+function _p2ToggleFav(id, btn) {
+  btn.classList.toggle('is-fav');
+  if (typeof showToast === 'function') {
+    showToast(btn.classList.contains('is-fav') ? 'お気に入りに追加しました' : 'お気に入りを解除しました');
+  }
+}
+
+// カレンダーに追加
+function _p2AddCal(id) {
+  const t = TDB_TOURNAMENTS.find(x => x.id === id);
+  if (!t) return;
+  // 既存の prefillForm / openCreateModal を流用
+  if (typeof openCreateModal === 'function' || typeof openModal === 'function') {
+    if (window.selectedDate !== undefined) window.selectedDate = t.startDate;
+    if (typeof prefillForm === 'function') {
+      // 仮の大会オブジェクトで既存フォームを開く
+      const pseudo = {
+        id: t.id,
+        name: t.name,
+        start: t.startDate,
+        end: t.endDate || t.startDate,
+        cat: t.cat,
+        place: t.venue || t.pref || '',
+        memo: `主催：${t.organizer||''} / エントリー費：${t.entryFee||'—'}`,
+      };
+      if (typeof toggleSearchAdd === 'function') toggleSearchAdd(t.id);
+      else if (typeof showToast === 'function') showToast('カレンダーに追加しました');
+    } else {
+      if (typeof showToast === 'function') showToast('カレンダーに追加しました');
+    }
+  } else {
+    if (typeof showToast === 'function') showToast('カレンダーに追加しました');
+  }
+}
+
+// エントリー
+function _p2Entry(id) {
+  const t = TDB_TOURNAMENTS.find(x => x.id === id);
+  if (!t) return;
+  if (t.entryForm) {
+    window.open(t.entryForm, '_blank');
+  } else if (t.website) {
+    window.open(t.website, '_blank');
+  } else {
+    if (typeof showToast === 'function') showToast('エントリーURLが登録されていません');
+  }
+}
+
+// 既存の性別・カテゴリ変更後にPhase2カードも再描画
+(function patchTdbFilters() {
+  const origSetGender = window._tdbSetGender;
+  window._tdbSetGender = function(gender) {
+    if (typeof origSetGender === 'function') origSetGender(gender);
+    requestAnimationFrame(_p2RenderCards);
+  };
+  const origSetCat = window._tdbSetCat;
+  window._tdbSetCat = function(key) {
+    if (typeof origSetCat === 'function') origSetCat(key);
+    requestAnimationFrame(_p2RenderCards);
+  };
+  const origSetScope = window._tdbSetScope;
+  window._tdbSetScope = function(scope) {
+    if (typeof origSetScope === 'function') origSetScope(scope);
+    requestAnimationFrame(_p2RenderCards);
+  };
+})();
+
+// ================================================================
+// Phase2 大会詳細モーダル
+// ================================================================
+
+let _tdmCurrentId = null;
+let _tdmDragStartY = 0;
+let _tdmDragCurrentY = 0;
+let _tdmIsDragging = false;
+
+// モーダルを開く
+window.openTournamentModal = function(id) {
+  const t = TDB_TOURNAMENTS.find(x => x.id === id);
+  if (!t) return;
+  _tdmCurrentId = id;
+
+  // データを流し込む
+  _tdmFill(t);
+
+  // アニメーション表示
+  const overlay = document.getElementById('tdm-overlay');
+  const sheet   = document.getElementById('tdm-sheet');
+  if (!overlay || !sheet) return;
+
+  overlay.classList.add('show');
+  // nextFrame で transform を開始（ブラウザが描画する前にshow追加するとアニメーションが飛ぶ）
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      sheet.classList.add('show');
+    });
+  });
+
+  // スクロール位置をトップに
+  const scroll = document.getElementById('tdm-scroll');
+  if (scroll) scroll.scrollTop = 0;
+
+  // ドラッグ（スワイプ閉じ）バインド
+  _tdmBindDrag();
+};
+
+// モーダルを閉じる
+window.closeTournamentModal = function() {
+  const overlay = document.getElementById('tdm-overlay');
+  const sheet   = document.getElementById('tdm-sheet');
+  if (!overlay || !sheet) return;
+  sheet.classList.remove('show');
+  overlay.classList.remove('show');
+  _tdmCurrentId = null;
+  // transform リセット（ドラッグ後の残留値）
+  setTimeout(() => { sheet.style.transform = ''; }, 420);
+};
+
+// 背景タップで閉じる
+window._tdmCloseOnBg = function(e) {
+  if (e.target === document.getElementById('tdm-overlay')) {
+    closeTournamentModal();
+  }
+};
+
+// ─── データ流し込み ───
+function _tdmFill(t) {
+  // タイトル
+  const titleEl = document.getElementById('tdm-title');
+  if (titleEl) titleEl.textContent = t.name;
+
+  // ヘッダータグ
+  const tagsEl = document.getElementById('tdm-header-tags');
+  if (tagsEl) {
+    const catColor = TDB_CAT_COLORS[t.cat] || '#888';
+    const catLabel = TDB_P2_CAT_LABELS[t.cat] || t.cat;
+    const statusMap = { live:'開催中', upcoming:'予定', ended:'終了' };
+    const genderLabel = t.gender === 'women' ? '♀ 女子' : '♂ 男子';
+    const genderCls = t.gender === 'women' ? 'tdm-tag-women' : 'tdm-tag-men';
+    tagsEl.innerHTML = `
+      <span class="tdm-tag tdm-tag-cat" style="background:${catColor}18;color:${catColor};border-color:${catColor}33;">${catLabel}</span>
+      <span class="tdm-tag ${genderCls}">${genderLabel}</span>
+      <span class="tdm-tag tdm-tag-${t.status||'upcoming'}">${statusMap[t.status]||'予定'}</span>
+    `;
+  }
+
+  // ヘッダーライン（カテゴリカラー）
+  const lineEl = document.getElementById('tdm-header-line');
+  if (lineEl) {
+    const catColor = TDB_CAT_COLORS[t.cat] || 'var(--green-main)';
+    lineEl.style.background = `linear-gradient(90deg, ${catColor}, ${catColor}44)`;
+  }
+
+  // 基本情報
+  _setTdmVal('tdm-dates',          _fmtDateRange(t.startDate, t.endDate));
+  _setTdmVal('tdm-entry-deadline', _fmtDeadline(t.entryDeadline));
+  _setTdmVal('tdm-venue',          t.venue);
+  _setTdmVal('tdm-pref',           t.pref);
+  _setTdmVal('tdm-organizer',      t.organizer);
+
+  // 金額
+  _setTdmMoney('tdm-prize-total',   t.prizeTotal);
+  _setTdmMoney('tdm-prize-winner',  t.prizeWinner);
+  _setTdmMoney('tdm-entry-fee',     t.entryFee,    true);
+  _setTdmMoney('tdm-practice-fee',  t.practiceFee, true);
+
+  // エントリー情報
+  _setTdmVal('tdm-entry-method',    t.entryMethod);
+  _setTdmVal('tdm-qualification',   t.qualification);
+  _setTdmVal('tdm-capacity',        t.capacity);
+  _setTdmVal('tdm-cancel-deadline', _fmtDeadline(t.cancelDeadline));
+
+  // リンク
+  _renderTdmLinks(t);
+}
+
+function _setTdmVal(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (val) {
+    el.textContent = val;
+    el.classList.remove('is-empty');
+  } else {
+    el.textContent = '未登録';
+    el.classList.add('is-empty');
+  }
+}
+
+function _setTdmMoney(id, val, isFee) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (val) {
+    el.textContent = val;
+    el.classList.remove('is-empty');
+  } else {
+    el.textContent = '未登録';
+    el.classList.add('is-empty');
+  }
+}
+
+function _renderTdmLinks(t) {
+  const container = document.getElementById('tdm-links-list');
+  if (!container) return;
+
+  const linkDefs = [
+    { key:'website',   icon:'🌐', label:'公式ホームページ',    url: t.website },
+    { key:'instagram', icon:'📷', label:'Instagram',           url: t.instagram },
+    { key:'entryForm', icon:'📝', label:'エントリーフォーム',  url: t.entryForm },
+    { key:'pairings',  icon:'📋', label:'組み合わせ',          url: t.pairings },
+    { key:'liveScore', icon:'📊', label:'結果速報',            url: t.liveScore },
+  ];
+
+  container.innerHTML = linkDefs.map(l => {
+    const isEmpty = !l.url;
+    const urlDisplay = l.url ? l.url.replace(/^https?:\/\//, '').split('/')[0] : '未登録';
+    return `<a class="tdm-link-btn${isEmpty ? ' is-empty' : ''}"
+        href="${l.url || '#'}"
+        ${l.url ? 'target="_blank" rel="noopener"' : 'onclick="return false"'}>
+      <div class="tdm-link-icon" style="background:${isEmpty ? '#F2F4F6' : '#F0FAF5'};">${l.icon}</div>
+      <div class="tdm-link-text">
+        <span class="tdm-link-label">${l.label}</span>
+        <span class="tdm-link-url">${urlDisplay}</span>
+      </div>
+      <span class="tdm-link-arrow">${isEmpty ? '' : '›'}</span>
+    </a>`;
+  }).join('');
+}
+
+// CTAボタン
+window._tdmEntry = function() {
+  const t = TDB_TOURNAMENTS.find(x => x.id === _tdmCurrentId);
+  if (!t) return;
+  if (t.entryForm) window.open(t.entryForm, '_blank');
+  else if (t.website) window.open(t.website, '_blank');
+  else if (typeof showToast === 'function') showToast('エントリーURLが登録されていません');
+};
+
+window._tdmAddCal = function() {
+  if (!_tdmCurrentId) return;
+  _p2AddCal(_tdmCurrentId);
+  // ボタンを「追加済み」に変える
+  const btn = document.getElementById('tdm-cta-cal');
+  if (btn) {
+    btn.textContent = '✓ 追加済み';
+    btn.classList.add('is-added-cal');
+    btn.style.color = '#7A9E94';
+  }
+};
+
+// ─── スワイプ（下ドラッグ）で閉じる ───
+function _tdmBindDrag() {
+  const sheet   = document.getElementById('tdm-sheet');
+  const grabber = document.getElementById('tdm-grabber');
+  const header  = document.getElementById('tdm-header');
+  if (!sheet) return;
+
+  let startY = 0;
+  let isDragging = false;
+
+  function onStart(e) {
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    startY = y;
+    isDragging = true;
+    sheet.classList.add('is-dragging');
+  }
+  function onMove(e) {
+    if (!isDragging) return;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const delta = Math.max(0, y - startY);
+    sheet.style.transform = `translateY(${delta}px)`;
+  }
+  function onEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    sheet.classList.remove('is-dragging');
+    const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+    const delta = y - startY;
+    if (delta > 90) {
+      closeTournamentModal();
+    } else {
+      // snap back
+      sheet.style.transition = 'transform 0.32s cubic-bezier(.32,.72,0,1)';
+      sheet.style.transform = 'translateY(0)';
+      setTimeout(() => { sheet.style.transition = ''; }, 340);
+    }
+  }
+
+  // 既存イベントを除去（重複防止）
+  const dragTargets = [grabber, header].filter(Boolean);
+  dragTargets.forEach(el => {
+    const clone = el.cloneNode(true);
+    el.parentNode.replaceChild(clone, el);
+  });
+
+  // 再取得してバインド
+  const g2 = document.getElementById('tdm-grabber');
+  const h2 = document.getElementById('tdm-header');
+  [g2, h2].filter(Boolean).forEach(el => {
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove',  onMove,  { passive: true });
+    el.addEventListener('touchend',   onEnd,   { passive: true });
+  });
+}
+
+// ================================================================
+// 初期描画：DOMロード後
+// ================================================================
+document.addEventListener('DOMContentLoaded', function() {
+  // ページが search なら即座に描画
+  const searchPage = document.getElementById('page-search');
+  if (searchPage && searchPage.classList.contains('active')) {
+    requestAnimationFrame(_p2RenderCards);
+  }
+
+  // 既存 applySearchFilters をhookして、クリア時に P2 カードを表示
+  const _origApply = window.applySearchFilters;
+  window.applySearchFilters = function() {
+    if (typeof _origApply === 'function') _origApply.apply(this, arguments);
+    // 検索テキストが空の場合は P2カードを表示
+    const inp = document.getElementById('search-input');
+    if (!inp || inp.value.trim().length === 0) {
+      requestAnimationFrame(_p2RenderCards);
+    }
+  };
+});
+</script>
+
+<!-- ================================================================ -->
+<!-- ★★★ Phase3: 実運用向けデータ構造最適化 + UX仕上げ + パフォーマンス改善 ★★★ -->
+<!-- ================================================================ -->
+<script>
+// ================================================================
+// Phase3-①: 拡張済みデータ構造テンプレート（運用マスタ）
+// ================================================================
+// 【大会データ追加方法】
+// TDB_TOURNAMENTS 配列に以下フォーマットでオブジェクトを追加するだけで
+// ・検索/フィルタ/カレンダー/詳細モーダル 全てに自動反映されます
+//
+// ── フィールド一覧 ──────────────────────────────
+// 必須: id(ユニーク文字列), name, cat, gender, startDate, endDate
+// 推奨: entryDeadline, pref, venue, status
+// 任意: organizer, prizeTotal, prizeWinner, entryFee, practiceFee,
+//       entryMethod, qualification, capacity, cancelDeadline,
+//       tour, region, country, course, notes,
+//       links: { website, instagram, entryForm, pairings, liveScore, youtube, x }
+// ────────────────────────────────────────────────
+
+/**
+ * 大会データを安全に追加するヘルパー関数
+ * @param {Object} t - 大会データオブジェクト
+ */
+window.addTournament = function(t) {
+  if (!t || !t.id || !t.name || !t.startDate) {
+    console.warn('[ProNexaX] addTournament: 必須フィールドが不足しています', t);
+    return false;
+  }
+  // 重複チェック
+  const exists = TDB_TOURNAMENTS.find(x => x.id === t.id);
+  if (exists) {
+    console.warn('[ProNexaX] addTournament: 同IDが既に存在します:', t.id);
+    return false;
+  }
+  // デフォルト値補完
+  const normalized = {
+    status: _p3CalcStatus(t.startDate, t.endDate),
+    gender: 'men',
+    ...t,
+    // links をネスト構造に正規化（旧フラットフィールドも互換）
+    links: t.links || {
+      website:   t.website   || '',
+      instagram: t.instagram || '',
+      entryForm: t.entryForm || '',
+      pairings:  t.pairings  || '',
+      liveScore: t.liveScore || '',
+      youtube:   t.youtube   || '',
+      x:         t.x         || '',
+    },
+  };
+  TDB_TOURNAMENTS.push(normalized);
+  // キャッシュクリア
+  _p3Cache.filtered = null;
+  return true;
+};
+
+/**
+ * 日付から自動ステータス計算
+ */
+function _p3CalcStatus(startDate, endDate) {
+  if (!startDate) return 'upcoming';
+  const today = _p3TodayStr();
+  const end = endDate || startDate;
+  if (today < startDate) return 'upcoming';
+  if (today > end) return 'ended';
+  return 'live';
+}
+
+/**
+ * 全大会のステータスを今日基準で自動更新（1日1回想定）
+ */
+function _p3RefreshStatuses() {
+  TDB_TOURNAMENTS.forEach(t => {
+    if (t.startDate) {
+      t.status = _p3CalcStatus(t.startDate, t.endDate);
+    }
+  });
+}
+
+// ================================================================
+// Phase3-②: フィルター＆検索パフォーマンス最適化
+// ================================================================
+
+// ── フィルター結果キャッシュ ──
+const _p3Cache = {
+  filtered: null,
+  lastGender: null,
+  lastCat: null,
+  lastQ: '',
+  lastScope: null,
+};
+
+/**
+ * debounce: 連続呼び出しを遅延まとめ
+ * iPhone Safari での入力遅延を防ぐ
+ */
+function _p3Debounce(fn, ms) {
+  let timer = null;
+  return function(...args) {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => { timer = null; fn.apply(this, args); }, ms);
+  };
+}
+
+/**
+ * 高速フィルター（キャッシュ付き）
+ * TDB_TOURNAMENTS を性別・カテゴリ・テキストで絞り込む
+ */
+function _p3FilterTournaments(gender, cat, q, scope) {
+  const cacheKey = `${gender}|${cat}|${q}|${scope}`;
+  if (_p3Cache.filtered && _p3Cache.key === cacheKey) {
+    return _p3Cache.filtered;
+  }
+  const kw = q ? q.toLowerCase() : '';
+  const result = TDB_TOURNAMENTS.filter(t => {
+    if (t.gender !== gender) return false;
+    if (cat !== 'all' && t.cat !== cat) return false;
+    if (scope === 'overseas' && (t.cat !== 'overseas' && t.cat !== 'pga' && t.cat !== 'lpga' && t.cat !== 'klpga')) return false;
+    if (scope === 'domestic' && (t.cat === 'overseas' || t.cat === 'pga' || t.cat === 'lpga' || t.cat === 'klpga')) return false;
+    if (kw) {
+      const name  = (t.name  || '').toLowerCase();
+      const pref  = (t.pref  || '').toLowerCase();
+      const venue = (t.venue || '').toLowerCase();
+      const org   = (t.organizer || '').toLowerCase();
+      if (!name.includes(kw) && !pref.includes(kw) && !venue.includes(kw) && !org.includes(kw)) return false;
+    }
+    return true;
+  });
+  // 日付昇順（upcoming→live→ended）
+  result.sort((a, b) => {
+    const statusRank = { live: 0, upcoming: 1, ended: 2 };
+    const sa = statusRank[a.status] ?? 1;
+    const sb = statusRank[b.status] ?? 1;
+    if (sa !== sb) return sa - sb;
+    return (a.startDate || '').localeCompare(b.startDate || '');
+  });
+  _p3Cache.filtered = result;
+  _p3Cache.key = cacheKey;
+  return result;
+}
+
+// 今日の日付文字列
+function _p3TodayStr() {
+  const t = new Date();
+  return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+}
+
+// ================================================================
+// Phase3-③: スクロール性能改善・タッチUX最適化
+// ================================================================
+
+/**
+ * スクロール可能な要素にパフォーマンス最適化を適用
+ * - will-change: transform（GPU合成レイヤー）
+ * - touch-action: pan-y（水平スクロール干渉防止）
+ * - overscroll-behavior: contain（バウンス伝播防止）
+ */
+function _p3OptimizeScrollContainers() {
+  const selectors = [
+    '.tdm-scroll',
+    '.search-scroll',
+    '.cal-scroll',
+    '.drawer-scroll',
+    '.tdb-cat-scroll',
+    '.cal-multi-day',
+    '#search-list',
+  ];
+  selectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      el.style.webkitOverflowScrolling = 'touch';
+      el.style.overscrollBehavior = 'contain';
+    });
+  });
+}
+
+/**
+ * カード要素にタップフィードバックのhaptics最適化
+ * - cursor: pointer付加
+ * - -webkit-tap-highlight-color 無効化確認
+ */
+function _p3OptimizeTapTargets() {
+  const selectors = [
+    '.tdb-p2-card',
+    '.tdb-card',
+    '.tdm-link-btn',
+    '.tdb-p2-action',
+  ];
+  selectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      if (!el._p3Optimized) {
+        el._p3Optimized = true;
+        // タップ時の即時視覚フィードバック（transformベース）
+        el.addEventListener('touchstart', _p3OnCardTouchStart, { passive: true });
+        el.addEventListener('touchend',   _p3OnCardTouchEnd,   { passive: true });
+        el.addEventListener('touchcancel',_p3OnCardTouchEnd,   { passive: true });
+      }
+    });
+  });
+}
+
+function _p3OnCardTouchStart(e) {
+  this._p3TouchTarget = e.currentTarget || this;
+  // will-changeを動的セット（アニメーション直前のみ）
+  this.style.willChange = 'transform';
+}
+function _p3OnCardTouchEnd() {
+  const el = this;
+  // will-change を解除（常時ON は逆にメモリ圧迫）
+  setTimeout(() => { el.style.willChange = ''; }, 400);
+}
+
+// ================================================================
+// Phase3-④: iPhone/PWA 最終安定化
+// ================================================================
+
+/**
+ * iOS Safari PWA: viewport高さ・safe-area の確実な適用
+ * orientationchange / resize 両対応
+ */
+(function _p3FixPWALayout() {
+  // CSS変数 --vh を実際のビューポート高に合わせる
+  function setVhVar() {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }
+  setVhVar();
+  // resize: debounce
+  const debouncedSetVh = _p3Debounce(setVhVar, 80);
+  window.addEventListener('resize', debouncedSetVh, { passive: true });
+  // orientationchange: 少し遅延（ブラウザがサイズ確定するのを待つ）
+  window.addEventListener('orientationchange', () => {
+    setTimeout(setVhVar, 200);
+    setTimeout(setVhVar, 600);
+  }, { passive: true });
+})();
+
+/**
+ * iOS Safari: 横向き時のUI崩れ防止
+ * max-height を innerWidth で固定
+ */
+(function _p3PreventLandscapeBreak() {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (!meta) return;
+  function onOrient() {
+    const angle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+    if (angle === 90 || angle === -90 || angle === 270) {
+      // 横向き：高さを現在のinnerHeightに固定してズレ防止
+      document.documentElement.style.maxHeight = window.innerHeight + 'px';
+    } else {
+      document.documentElement.style.maxHeight = '';
+    }
+  }
+  window.addEventListener('orientationchange', () => setTimeout(onOrient, 300), { passive: true });
+})();
+
+/**
+ * モーダル表示中のbodyスクロール防止（iOS対応）
+ * touchmoveをpassiveなしでキャプチャ
+ */
+let _p3ModalScrollLocked = false;
+function _p3LockBodyScroll() {
+  if (_p3ModalScrollLocked) return;
+  _p3ModalScrollLocked = true;
+  document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.width = '100%';
+}
+function _p3UnlockBodyScroll() {
+  if (!_p3ModalScrollLocked) return;
+  _p3ModalScrollLocked = false;
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
+}
+
+// 詳細モーダルの開閉にbodyロックを連動
+(function _p3PatchModalScrollLock() {
+  const _origOpen  = window.openTournamentModal;
+  const _origClose = window.closeTournamentModal;
+  window.openTournamentModal = function(id) {
+    _p3LockBodyScroll();
+    if (typeof _origOpen === 'function') _origOpen(id);
+  };
+  window.closeTournamentModal = function() {
+    _p3UnlockBodyScroll();
+    if (typeof _origClose === 'function') _origClose();
+  };
+})();
+
+// ================================================================
+// Phase3-⑤: 詳細モーダルのlinks互換（新旧両フォーマット対応）
+// ================================================================
+
+/**
+ * _renderTdmLinks を拡張：
+ * 旧フラット形式（t.website, t.instagram...）と
+ * 新ネスト形式（t.links.website...）の両方に対応
+ */
+(function _p3PatchTdmLinks() {
+  const _origRender = window._renderTdmLinks || function(){};
+  window._renderTdmLinks = function(t) {
+    // 新形式（t.links オブジェクト）を旧フラット形式にマージ
+    const merged = Object.assign({}, t);
+    if (t.links && typeof t.links === 'object') {
+      merged.website   = merged.website   || t.links.website   || '';
+      merged.instagram = merged.instagram || t.links.instagram || '';
+      merged.entryForm = merged.entryForm || t.links.entryForm || '';
+      merged.pairings  = merged.pairings  || t.links.pairings  || '';
+      merged.liveScore = merged.liveScore || t.links.liveScore || '';
+    }
+    const container = document.getElementById('tdm-links-list');
+    if (!container) return;
+    const linkDefs = [
+      { key:'website',   icon:'🌐', label:'公式ホームページ',   url: merged.website   },
+      { key:'instagram', icon:'📷', label:'Instagram',          url: merged.instagram },
+      { key:'entryForm', icon:'📝', label:'エントリーフォーム', url: merged.entryForm },
+      { key:'pairings',  icon:'📋', label:'組み合わせ',         url: merged.pairings  },
+      { key:'liveScore', icon:'📊', label:'結果速報',           url: merged.liveScore },
+      { key:'youtube',   icon:'▶️', label:'YouTube',            url: (t.links && t.links.youtube) || t.youtube || '' },
+      { key:'x',         icon:'𝕏',  label:'X (Twitter)',        url: (t.links && t.links.x) || t.x || '' },
+    ];
+    const rendered = linkDefs.filter(l => l.url).map(l => {
+      const urlDisplay = l.url.replace(/^https?:\/\//, '').split('/')[0];
+      return `<a class="tdm-link-btn" href="${l.url}" target="_blank" rel="noopener">
+        <div class="tdm-link-icon" style="background:#F0FAF5;">${l.icon}</div>
+        <div class="tdm-link-text">
+          <span class="tdm-link-label">${l.label}</span>
+          <span class="tdm-link-url">${urlDisplay}</span>
+        </div>
+        <span class="tdm-link-arrow">›</span>
+      </a>`;
+    });
+    const empty = linkDefs.filter(l => !l.url).map(l => {
+      return `<div class="tdm-link-btn is-empty">
+        <div class="tdm-link-icon" style="background:#F2F4F6;">${l.icon}</div>
+        <div class="tdm-link-text">
+          <span class="tdm-link-label">${l.label}</span>
+          <span class="tdm-link-url">未登録</span>
+        </div>
+        <span class="tdm-link-arrow"></span>
+      </div>`;
+    });
+    container.innerHTML = [...rendered, ...empty].join('');
+  };
+})();
+
+// ================================================================
+// Phase3-⑥: _p2RenderCards をdebounce付き高速版に置換
+// ================================================================
+(function _p3PatchRenderCards() {
+  const _orig = window._p2RenderCards;
+
+  function _fastRender() {
+    const listEl = document.getElementById('search-list');
+    if (!listEl) return;
+
+    // 検索テキストがある場合は既存の検索UIに任せる（壊さない）
+    const searchInp = document.getElementById('search-input');
+    if (searchInp && searchInp.value.trim().length > 0) return;
+
+    const gender = typeof _tdbGender    !== 'undefined' ? _tdbGender    : 'men';
+    const cat    = typeof _tdbActiveCat !== 'undefined' ? _tdbActiveCat : 'all';
+    const scope  = typeof _tdbScope     !== 'undefined' ? _tdbScope     : 'domestic';
+
+    // キャッシュ付き高速フィルター
+    const filtered = _p3FilterTournaments(gender, cat, '', scope);
+
+    if (!filtered.length) {
+      listEl.innerHTML = `<div class="tdb-p2-section-hd">
+        <span class="tdb-p2-section-title">大会一覧</span>
+        <span class="tdb-p2-section-count">0件</span>
+      </div>
+      <div class="tdb-p2-empty">
+        <div class="tdb-p2-empty-icon">⛳</div>
+        <div class="tdb-p2-empty-title">大会が見つかりません</div>
+        <div class="tdb-p2-empty-desc">カテゴリや性別を変更してみてください</div>
+      </div>`;
+    } else {
+      // DocumentFragment でDOM挿入を1回に
+      const sectionHd = `<div class="tdb-p2-section-hd">
+        <span class="tdb-p2-section-title">大会一覧</span>
+        <span class="tdb-p2-section-count">${filtered.length}件</span>
+      </div>`;
+      listEl.innerHTML = sectionHd + filtered.map(_p2CardHTML).join('');
+    }
+
+    const rc = document.getElementById('result-count');
+    if (rc) rc.textContent = `${filtered.length}件の大会`;
+
+    // タップ最適化を適用
+    requestAnimationFrame(_p3OptimizeTapTargets);
+  }
+
+  // debounce付きで上書き（16ms = 約1フレーム）
+  window._p2RenderCards = _p3Debounce(_fastRender, 16);
+})();
+
+// ================================================================
+// Phase3-⑦: UX仕上げ
+// ================================================================
+
+/**
+ * カード開閉・モーダルのanimation品質向上
+ * transformベースのスプリング感
+ */
+(function _p3InjectAnimStyles() {
+  const style = document.createElement('style');
+  style.textContent = `
+/* ── Phase3: パフォーマンス最適化CSS ── */
+
+/* スクロールコンテナのGPU合成ヒント */
+.tdm-scroll,
+.search-scroll,
+.cal-scroll,
+.drawer-scroll,
+.cal-multi-day,
+#search-list {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* カード: GPU合成レイヤーに昇格（ホバー・タップ時のみ） */
+.tdb-p2-card,
+.tdb-card {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  cursor: pointer;
+  transform: translateZ(0);       /* GPU昇格 */
+  transition: transform 0.12s cubic-bezier(.32,.72,0,1),
+              box-shadow 0.12s ease;
+}
+.tdb-p2-card:active,
+.tdb-card:active {
+  transform: scale(0.985) translateZ(0);
+  box-shadow: 0 1px 6px rgba(10,107,71,.08) !important;
+}
+
+/* ボタン: タップフィードバック */
+.tdb-p2-action,
+.tdb-p2-fav,
+.tdb-add-btn,
+.tdb-fav-btn,
+.tdm-cta-btn,
+.tdm-close {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.1s cubic-bezier(.32,.72,0,1),
+              opacity 0.1s ease;
+}
+.tdb-p2-action:active,
+.tdb-p2-fav:active,
+.tdb-add-btn:active,
+.tdb-fav-btn:active,
+.tdm-cta-btn:active {
+  transform: scale(0.92) translateZ(0);
+  opacity: 0.8;
+}
+.tdm-close:active {
+  transform: scale(0.88) translateZ(0);
+}
+
+/* モーダルシート: スプリング感あるスライドイン */
+.tdm-sheet {
+  will-change: transform;
+  transition: transform 0.38s cubic-bezier(.32,.72,0,1) !important;
+}
+.tdm-sheet.show {
+  transition: transform 0.38s cubic-bezier(.32,.72,0,1) !important;
+}
+
+/* リンクボタン: タップフィードバック */
+.tdm-link-btn:not(.is-empty) {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background 0.12s ease, transform 0.1s ease;
+}
+.tdm-link-btn:not(.is-empty):active {
+  background: #EDF8F3 !important;
+  transform: scale(0.97) translateZ(0);
+}
+
+/* カテゴリチップ: スムーズスクロール */
+.tdb-cat-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.tdb-cat-chip {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.1s cubic-bezier(.32,.72,0,1),
+              background 0.15s ease;
+}
+.tdb-cat-chip:active {
+  transform: scale(0.93) translateZ(0);
+}
+
+/* フィルターチップ */
+.filter-chip {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.1s cubic-bezier(.32,.72,0,1),
+              background 0.12s ease;
+}
+.filter-chip:active {
+  transform: scale(0.93) translateZ(0);
+}
+
+/* 矢印ボタン（月送り） */
+.m-arrow {
+  touch-action: manipulation;
+}
+
+/* ドロワーオーバーレイ: GPU合成 */
+.drawer-overlay {
+  will-change: opacity;
+}
+.drawer {
+  will-change: transform;
+}
+
+/* tdm-overlay: backdrop-filter で高級感 */
+.tdm-overlay {
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: backdrop-filter 0.3s ease, opacity 0.28s ease;
+}
+.tdm-overlay.show {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Phase3: iOS PWA高さ変数対応 */
+@supports (height: env(safe-area-inset-bottom)) {
+  .phone-inner {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .bottom-nav {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
+  }
+}
+
+/* ヘッダー: ガラスモーフィズム効果（PWA時） */
+@media (display-mode: standalone) {
+  .app-header {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.95) !important;
+  }
+}
+
+/* 横向き防止CSS（強制縦向き） */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  .phone-inner {
+    overflow-y: auto;
+  }
+}
+
+/* 詳細モーダル: ダークモード対応 */
+:root[data-theme="dark"] .tdm-sheet {
+  background: #1A2620;
+}
+:root[data-theme="dark"] .tdm-section {
+  background: #1F2E28;
+  border-color: #2A3833;
+}
+:root[data-theme="dark"] .tdm-title,
+:root[data-theme="dark"] .tdm-row-value {
+  color: #E8F0EC;
+}
+:root[data-theme="dark"] .tdm-row-label,
+:root[data-theme="dark"] .tdm-section-title {
+  color: #A8BEB4;
+}
+:root[data-theme="dark"] .tdm-money-cell {
+  background: #1A2620;
+  border-color: #2A3833;
+}
+:root[data-theme="dark"] .tdm-link-btn {
+  background: #1F2E28;
+  border-color: #2A3833;
+}
+:root[data-theme="dark"] .tdm-link-label {
+  color: #E8F0EC;
+}
+:root[data-theme="dark"] .tdm-link-url {
+  color: #7A9E94;
+}
+:root[data-theme="dark"] .tdm-cta-secondary {
+  background: #1F2E28;
+  color: #A8BEB4;
+  border-color: #2A3833;
+}
+
+/* P2カード: ダークモード */
+:root[data-theme="dark"] .tdb-p2-card {
+  background: #1A2620;
+  border-color: #2A3833;
+}
+:root[data-theme="dark"] .tdb-p2-name {
+  color: #E8F0EC;
+}
+:root[data-theme="dark"] .tdb-p2-info-value {
+  color: #A8BEB4;
+}
+:root[data-theme="dark"] .tdb-p2-money-value {
+  color: #A8BEB4;
+}
+:root[data-theme="dark"] .tdb-p2-footer {
+  background: #131D18;
+  border-top-color: #2A3833;
+}
+:root[data-theme="dark"] .tdb-p2-action {
+  color: #A8BEB4;
+}
+:root[data-theme="dark"] .tdb-p2-divider {
+  background: #2A3833;
+}
+
+/* tdbカード: ダークモード */
+:root[data-theme="dark"] .tdb-card {
+  background: #1A2620;
+  border-color: #2A3833;
+}
+:root[data-theme="dark"] .tdb-card-name-text {
+  color: #E8F0EC;
+}
+:root[data-theme="dark"] .tdb-card-meta {
+  color: #7A9E94;
+}
+  `;
+  document.head.appendChild(style);
+})();
+
+// ================================================================
+// Phase3-⑧: 初期化（DOMロード後 + ページ切替時に呼ぶ）
+// ================================================================
+function _p3Init() {
+  // ステータス自動更新
+  _p3RefreshStatuses();
+  // スクロールコンテナ最適化
+  _p3OptimizeScrollContainers();
+  // タップターゲット最適化
+  requestAnimationFrame(_p3OptimizeTapTargets);
+  // キャッシュクリア（データが変わった可能性）
+  _p3Cache.filtered = null;
+}
+
+document.addEventListener('DOMContentLoaded', _p3Init);
+
+// switchPage フックに Phase3初期化を追加
+(function _p3PatchSwitchPage() {
+  const _orig = window.switchPage;
+  window.switchPage = function(page) {
+    if (typeof _orig === 'function') _orig(page);
+    if (page === 'search') {
+      requestAnimationFrame(() => {
+        _p3OptimizeScrollContainers();
+        requestAnimationFrame(_p3OptimizeTapTargets);
+      });
+    }
+  };
+})();
+
+// applySearchFilters のdebounce最適化（既存フックに追加）
+// 検索入力時のiPhone過負荷を防ぐ
+(function _p3PatchSearchDebounce() {
+  const inp = document.getElementById('search-input');
+  if (!inp || inp._p3DebouncePatched) return;
+  inp._p3DebouncePatched = true;
+  const _origListener = inp.oninput;
+  const _debouncedApply = _p3Debounce(() => {
+    if (typeof applySearchFilters === 'function') applySearchFilters();
+  }, 120);
+  inp.addEventListener('input', _debouncedApply, { passive: true });
+})();
+
+console.log('[ProNexaX Phase3] ✅ 実運用基盤 初期化完了');
+console.log('[ProNexaX Phase3] 📋 大会データ:', TDB_TOURNAMENTS.length, '件');
+console.log('[ProNexaX Phase3] 💡 大会追加: addTournament({ id, name, cat, gender, startDate, endDate, ... })');
+</script>
+<!-- ================================================================ -->
+<!-- ★★★ Phase2: 大会詳細モーダル（Bottom Sheet） ★★★              -->
+<!-- ================================================================ -->
+<div class="tdm-overlay" id="tdm-overlay" onclick="_tdmCloseOnBg(event)">
+  <div class="tdm-sheet" id="tdm-sheet" onclick="event.stopPropagation()">
+
+    <!-- グラバーバー -->
+    <div class="tdm-grabber" id="tdm-grabber"></div>
+
+    <!-- ─── ヘッダー ─── -->
+    <div class="tdm-header" id="tdm-header">
+      <div class="tdm-header-top">
+        <div class="tdm-title" id="tdm-title">大会名</div>
+        <button class="tdm-close" onclick="closeTournamentModal()" aria-label="閉じる">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <line x1="2" y1="2" x2="10" y2="10" stroke="#8e8e93" stroke-width="1.8" stroke-linecap="round"/>
+            <line x1="10" y1="2" x2="2" y2="10" stroke="#8e8e93" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="tdm-header-tags" id="tdm-header-tags">
+        <!-- JSで描画 -->
+      </div>
+      <div class="tdm-header-line" id="tdm-header-line"></div>
+    </div>
+
+    <!-- ─── スクロール本体 ─── -->
+    <div class="tdm-scroll" id="tdm-scroll">
+
+      <!-- アクションボタン（上部CTA） -->
+      <div class="tdm-cta-area" id="tdm-cta-area">
+        <button class="tdm-cta-btn tdm-cta-primary" id="tdm-cta-entry" onclick="_tdmEntry()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          エントリーする
+        </button>
+        <div style="display:flex;gap:8px;">
+          <button class="tdm-cta-btn tdm-cta-secondary" style="flex:1;" id="tdm-cta-cal" onclick="_tdmAddCal()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1.5" y="2.5" width="11" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/>
+              <path d="M4.5 1v3M9.5 1v3M1.5 6h11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+            カレンダーに追加
+          </button>
+          <button class="tdm-cta-btn tdm-cta-secondary" style="flex:1;" onclick="closeTournamentModal()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <line x1="2" y1="2" x2="12" y2="12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <line x1="12" y1="2" x2="2" y2="12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+            閉じる
+          </button>
+        </div>
+      </div>
+
+      <!-- 基本情報 -->
+      <div class="tdm-section" id="tdm-sec-basic">
+        <div class="tdm-section-title">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M6 4v4M6 3.5v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          基本情報
+        </div>
+        <div class="tdm-row">
+          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1.5v2M10 1.5v2M1.5 5.5h11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+          <div class="tdm-row-body">
+            <span class="tdm-row-label">開催日</span>
+            <span class="tdm-row-value" id="tdm-dates">—</span>
+          </div>
+        </div>
+        <div class="tdm-row">
+          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5.5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 12.5c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+          <div class="tdm-row-body">
+            <span class="tdm-row-label">エントリー締切</span>
+            <span class="tdm-row-value" id="tdm-entry-deadline">—</span>
+          </div>
+        </div>
+        <div class="tdm-row">
+          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5C4.515 1.5 2.5 3.515 2.5 6c0 3.75 4.5 7 4.5 7s4.5-3.25 4.5-7c0-2.485-2.015-4.5-4.5-4.5Z" stroke="currentColor" stroke-width="1.2"/><circle cx="7" cy="6" r="1.5" stroke="currentColor" stroke-width="1.2"/></svg></div>
+          <div class="tdm-row-body">
+            <span class="tdm-row-label">試合会場</span>
+            <span class="tdm-row-value" id="tdm-venue">—</span>
+          </div>
+        </div>
+        <div class="tdm-row">
+          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 5h5M4.5 7.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+          <div class="tdm-row-body">
+            <span class="tdm-row-label">開催県</span>
+            <span class="tdm-row-value" id="tdm-pref">—</span>
+          </div>
+        </div>
+        <div class="tdm-row">
+          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5 2.5 5.5v7h3.5v-4h2v4H11.5v-7L7 1.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+          <div class="tdm-row-body">
+            <span class="tdm-row-label">主催</span>
+            <span class="tdm-row-value" id="tdm-organizer">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 金額情報 -->
+      <div class="tdm-section" id="tdm-sec-money">
+        <div class="tdm-section-title">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M6 3v6M4.5 4.5h2.25A.75.75 0 0 1 7.5 6H4.5v1.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          金額情報
+        </div>
+        <div class="tdm-money-grid" id="tdm-money-grid">
+          <div class="tdm-money-cell">
+            <span class="tdm-money-cell-label">賞金総額</span>
+            <span class="tdm-money-cell-value" id="tdm-prize-total">—</span>
+          </div>
+          <div class="tdm-money-cell">
+            <span class="tdm-money-cell-label">優勝賞金</span>
+            <span class="tdm-money-cell-value" id="tdm-prize-winner">—</span>
+          </div>
+          <div class="tdm-money-cell">
+            <span class="tdm-money-cell-label">エントリー費</span>
+            <span class="tdm-money-cell-value is-fee" id="tdm-entry-fee">—</span>
+          </div>
+          <div class="tdm-money-cell">
+            <span class="tdm-money-cell-label">練習ラウンド費</span>
+            <span class="tdm-money-cell-value is-fee" id="tdm-practice-fee">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- エントリー情報 -->
+      <div class="tdm-section" id="tdm-sec-entry">
+        <div class="tdm-section-title">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M1.5 6h9M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          エントリー情報
+        </div>
+        <div class="tdm-row">
+          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7l3.5 4 7.5-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="tdm-row-body">
+            <span class="tdm-row-label">エントリー方法</span>
+            <span class="tdm-row-value" id="tdm-entry-method">—</span>
+          </div>
+        </div>
+        <div class="tdm-row">
+          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 12c0-2.761 2.239-5 5-5s5 2.239 5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+          <div class="tdm-row-body">
+            <span class="tdm-row-label">出場資格</span>
+            <span class="tdm-row-value" id="tdm-qualification">—</span>
+          </div>
+        </div>
+        <div class="tdm-row">
+          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7h11M7 1.5v11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+          <div class="tdm-row-body">
+            <span class="tdm-row-label">募集人数</span>
+            <span class="tdm-row-value" id="tdm-capacity">—</span>
+          </div>
+        </div>
+        <div class="tdm-row">
+          <div class="tdm-row-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 4v3.5l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+          <div class="tdm-row-body">
+            <span class="tdm-row-label">キャンセル期限</span>
+            <span class="tdm-row-value" id="tdm-cancel-deadline">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- リンク -->
+      <div class="tdm-section" id="tdm-sec-links">
+        <div class="tdm-section-title">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M5 3H3a2 2 0 0 0 0 4h2M7 3h2a2 2 0 0 1 0 4H7M4 6h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          リンク
+        </div>
+        <div class="tdm-links" id="tdm-links-list">
+          <!-- JSで描画 -->
+        </div>
+      </div>
+
+      <!-- 下余白 -->
+      <div style="height:24px;"></div>
+
+    </div><!-- /.tdm-scroll -->
+  </div><!-- /.tdm-sheet -->
+</div><!-- /.tdm-overlay -->
 
 </body>
 </html>
