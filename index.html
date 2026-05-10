@@ -7143,7 +7143,10 @@ function switchPage(page){
   });
   const activeBtn=document.getElementById('nav-'+page),activeIcon=document.getElementById('icon-'+page);
   if(activeBtn){activeBtn.classList.add('active');const lbl=activeBtn.querySelector('.bnav-label');lbl.style.color='#1AAF7A';lbl.style.fontWeight='600';if(activeIcon&&NAV_ICONS[page])activeIcon.innerHTML=NAV_ICONS[page].active;}
-  if(page==='search')applySearchFilters();
+  if(page==='search'){
+    // ★ Fix: rAFで1フレーム遅延させてページ切替アニメを妨げない
+    requestAnimationFrame(()=>{ setTimeout(applySearchFilters,0); });
+  }
   if(page==='calendar'){renderAllPanels();renderCalList();}
 }
 
@@ -8351,6 +8354,7 @@ function _updateFbsOpenBtn(){
 }
 
 function renderSearchFilters(){
+  if(typeof console!=='undefined'&&console.time) console.time('[PNX] renderSearchFilters');
   const hasFbs=fbsCats.size>0||fbsAreas.size>0||fbsPrefs.size>0;
   const grid=document.getElementById('filter-grid');
   if(!grid)return;
@@ -8388,6 +8392,7 @@ function renderSearchFilters(){
     return`<button class="filter-chip${searchFilter===f.key?' active':''}" data-key="${f.key}" onclick="setSearchFilter('${f.key}',this)">${f.label}${showStar?`<span class="filter-chip-star${isFav?' is-fav':''}" data-fav-key="${f.key}" onclick="event.stopPropagation();toggleFavTour('${f.key}')">★</span>`:''}</button>`;
   }).join('');
   grid.innerHTML=`<div class="filter-row">${catChips}</div>`;
+  if(typeof console!=='undefined'&&console.timeEnd) console.timeEnd('[PNX] renderSearchFilters');
 }
 function setSearchFilter(key,el){el.style.transform='scale(0.92)';setTimeout(()=>{el.style.transform='';},120);searchFilter=key;applySearchFilters();}
 function setSearchAreaFilter(key,el){
@@ -8606,6 +8611,7 @@ function _sqRenderTokens(){
 // ── サジェスト表示 ──
 let _sqSuggestIdx=-1;
 function _sqShowSuggest(q){
+  if(typeof console!=='undefined'&&console.time) console.time('[PNX] _sqShowSuggest');
   const panel=document.getElementById('sq-suggest');
   if(!panel)return;
   // ★ 空欄時：最近の検索 + 人気キーワードを表示
@@ -8674,6 +8680,7 @@ function _sqShowSuggest(q){
     </div>`).join('');
   _sqSuggestIdx=-1;
   panel.classList.add('show');
+  if(typeof console!=='undefined'&&console.timeEnd) console.timeEnd('[PNX] _sqShowSuggest');
 }
 function _sqHideSuggest(){
   const p=document.getElementById('sq-suggest');
@@ -8748,11 +8755,17 @@ function _sqOnKeyDown(e){
 }
 
 // input イベント
+let _sqInputDebounceTimer=null;
 function _sqOnInput(){
   const inp=document.getElementById('search-input');
   const v=inp?inp.value:'';
+  // サジェストは即時（体感レスポンス優先）
   _sqShowSuggest(v.trim());
-  applySearchFilters();
+  // フィルター適用はdebounce（iPhone Safari負荷対策）
+  clearTimeout(_sqInputDebounceTimer);
+  _sqInputDebounceTimer=setTimeout(function(){
+    applySearchFilters();
+  },120);
 }
 
 // 初期化（DOMロード後に呼ぶ）
@@ -8976,6 +8989,13 @@ function initComplexSearch(){
 
 
 function applySearchFilters(){
+  // ★ Fix: 検索ページ非表示時はスキップ（不要なDOM操作を防ぐ）
+  const searchPage = document.getElementById('page-search');
+  if (searchPage && !searchPage.classList.contains('active')) {
+    // 非表示ページは処理をスキップ
+    return;
+  }
+  if(typeof console!=='undefined'&&console.time) console.time('[PNX] applySearchFilters');
   _updateFbsOpenBtn();
   _sqRenderTokens();
   // モードタブ反映
@@ -8996,6 +9016,7 @@ function applySearchFilters(){
     resultMeta.classList.add('is-hidden');
     list.innerHTML=_buildFavTabHTML(rawInput);
     _bindFavTabEvents();
+    if(typeof console!=='undefined'&&console.timeEnd) console.timeEnd('[PNX] applySearchFilters');
     return;
   }
   // ★★★ すべて表示タブ ★★★
@@ -9070,6 +9091,7 @@ function applySearchFilters(){
     return;
   }
   list.innerHTML=arr.map(_searchCardHTML).join('');
+  if(typeof console!=='undefined'&&console.timeEnd) console.timeEnd('[PNX] applySearchFilters');
 }
 
 // ★★★ お気に入りタブ：上部にカテゴリチップ列 + 下部に大会一覧 ★★★
@@ -11435,7 +11457,8 @@ startNotificationLoop(); // ★★★ 通知エンジンを起動
     });
   }
   initComplexSearch(); // ★ 複合検索を初期化
-  applySearchFilters();
+  // ★ Fix: 初回は非同期で実行（メインスレッドのブロックを防ぐ）
+  // applySearchFilters(); ← 削除：起動時フリーズの原因
 })();
 // Day View 時間ドラッグ選択：document レベル委譲で1度だけバインド
 dvBindDragSelect();
@@ -12460,9 +12483,9 @@ function _tdbInitSearch() {
   inp.addEventListener('input', () => {
     const hasVal = inp.value.trim().length > 0;
     wrap.classList.toggle('has-value', hasVal);
-    // 既存のサジェスト機能に委譲
-    if (typeof _sqOnInput === 'function') _sqOnInput();
-    if (typeof applySearchFilters === 'function') applySearchFilters();
+    // ★ Fix: _sqOnInput内でdebounce済みapplySearchFiltersを呼ぶため
+    // ここではhas-value更新のみ。_sqOnInputへの委譲はinitComplexSearch側で管理。
+    // 二重実行（_sqOnInput + applySearchFilters）を防止
   });
   inp.addEventListener('focus', () => {
     wrap.classList.add('is-focused');
@@ -12557,19 +12580,25 @@ window._tdbClearSearch = function() {
 })();
 
 // ── page-search に切り替わったとき初期化 ──
+// ★ Fix: _tdbInitは初回1回のみ。_p2RenderCardsはapplySearchFiltersフックが担うため削除
+let _tdbInitDone = false;
 (function patchSwitchPage() {
   const _origSwitch = window.switchPage;
   window.switchPage = function(page) {
     if (typeof _origSwitch === 'function') _origSwitch(page);
     if (page === 'search') {
       requestAnimationFrame(() => {
-        _tdbInit();
+        // 初回のみ_tdbInit（2回目以降は不要）
+        if (!_tdbInitDone) {
+          _tdbInitDone = true;
+          _tdbInit();
+        }
         // アバター再同期
         const mainAv = document.querySelector('#page-calendar .app-avatar, .app-header .app-avatar');
         const tdbAv  = document.getElementById('tdb-avatar');
         if (mainAv && tdbAv) tdbAv.textContent = mainAv.textContent;
-        // Phase2: 大会カードを描画
-        _p2RenderCards();
+        // ★ _p2RenderCardsはapplySearchFiltersのhook経由で呼ばれるため不要
+        // _p2RenderCards(); ← 削除：重複描画の原因
       });
     }
   };
@@ -13253,14 +13282,19 @@ document.addEventListener('DOMContentLoaded', function() {
     requestAnimationFrame(_p2RenderCards);
   }
 
-  // 既存 applySearchFilters をhookして、クリア時に P2 カードを表示
+  // ★ Fix: applySearchFilters hook - P2カード描画をdebounce付きで実行
+  // 連続呼び出し時の多重描画を防ぐ
+  let _p2RenderDebounce = null;
   const _origApply = window.applySearchFilters;
   window.applySearchFilters = function() {
     if (typeof _origApply === 'function') _origApply.apply(this, arguments);
-    // 検索テキストが空の場合は P2カードを表示
+    // 検索テキストが空の場合のみP2カードを表示（debounce付き）
     const inp = document.getElementById('search-input');
     if (!inp || inp.value.trim().length === 0) {
-      requestAnimationFrame(_p2RenderCards);
+      clearTimeout(_p2RenderDebounce);
+      _p2RenderDebounce = setTimeout(function(){
+        requestAnimationFrame(_p2RenderCards);
+      }, 30);
     }
   };
 });
@@ -13917,32 +13951,13 @@ function _p3Init() {
 
 document.addEventListener('DOMContentLoaded', _p3Init);
 
-// switchPage フックに Phase3初期化を追加
-(function _p3PatchSwitchPage() {
-  const _orig = window.switchPage;
-  window.switchPage = function(page) {
-    if (typeof _orig === 'function') _orig(page);
-    if (page === 'search') {
-      requestAnimationFrame(() => {
-        _p3OptimizeScrollContainers();
-        requestAnimationFrame(_p3OptimizeTapTargets);
-      });
-    }
-  };
-})();
+// ★ Fix: Phase3 switchPageフックは軽量処理のみ（重い処理は既存フックが担当）
+// _p3OptimizeScrollContainersは初期化時に1回だけ実行済みのためswitchPage毎の実行不要
+// (function _p3PatchSwitchPage() { ... }) - 削除：重複フックの排除
 
-// applySearchFilters のdebounce最適化（既存フックに追加）
-// 検索入力時のiPhone過負荷を防ぐ
-(function _p3PatchSearchDebounce() {
-  const inp = document.getElementById('search-input');
-  if (!inp || inp._p3DebouncePatched) return;
-  inp._p3DebouncePatched = true;
-  const _origListener = inp.oninput;
-  const _debouncedApply = _p3Debounce(() => {
-    if (typeof applySearchFilters === 'function') applySearchFilters();
-  }, 120);
-  inp.addEventListener('input', _debouncedApply, { passive: true });
-})();
+// ★ Fix: Phase3 debounceパッチは _sqOnInput内で統合済みのため削除
+// （二重のdebounceを防ぐ）
+// _p3PatchSearchDebounce -> _sqOnInputのdebounce化で対応済み
 
 console.log('[ProNexaX Phase3] ✅ 実運用基盤 初期化完了');
 console.log('[ProNexaX Phase3] 📋 大会データ:', TDB_TOURNAMENTS.length, '件');
