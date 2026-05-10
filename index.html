@@ -37,6 +37,36 @@
 </head>
 <body>
 
+<!-- ★★★ スプラッシュスクリーン：Apple風ネイティブ起動画面 ★★★ -->
+<div id="splash-screen" aria-hidden="true">
+
+  <!-- 中央コンテンツ -->
+  <div class="sp-center">
+    <div class="sp-logo-wrap">
+      <img src="pronexaX_logo.png" class="sp-logo" alt="ProNexaX logo">
+    </div>
+    <div class="sp-brand">
+      <span class="sp-brand-text">ProNexa</span><span class="sp-brand-x">X</span>
+    </div>
+    <div class="sp-tagline-wrap">
+      <span class="sp-tagline-line"></span>
+      <span class="sp-tagline-text">Tournament &amp; Career Management</span>
+      <span class="sp-tagline-line"></span>
+    </div>
+  </div>
+
+  <!-- 下部ローディングバー -->
+  <div class="sp-bottom">
+    <div class="sp-progress-wrap">
+      <div class="sp-progress-track">
+        <div class="sp-progress-fill"></div>
+      </div>
+    </div>
+    <div class="sp-loading-text">Loading...</div>
+  </div>
+
+</div>
+
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -67,6 +97,166 @@ body{
   overscroll-behavior-y:none;
   /* Phase3: タッチ遅延ゼロ化 */
   touch-action:manipulation;
+  /* ★★★ 起動チラつき防止：認証確認完了まで非表示 ★★★ */
+  opacity:0;
+}
+body.app-ready{
+  opacity:1;
+  transition:opacity .18s ease;
+}
+
+/* ================================================================ */
+/* ★★★ スプラッシュスクリーン — Apple純正風ネイティブ起動画面 ★★★  */
+/* ================================================================ */
+
+/* ── ベースレイアウト ── */
+#splash-screen{
+  position:fixed;
+  inset:0;
+  background:#ffffff;
+  z-index:99999;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:space-between;
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  padding-top: max(env(safe-area-inset-top, 0px), 60px);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 52px);
+  pointer-events:none;
+  /* フェードイン：起動時 */
+  animation: spFadeIn .55s cubic-bezier(.4,0,.2,1) both;
+}
+
+/* 起動フェードイン */
+@keyframes spFadeIn{
+  from{ opacity:0; }
+  to{   opacity:1; }
+}
+
+/* フェードアウト（認証完了後） */
+#splash-screen.fade-out{
+  animation: spFadeOut .38s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes spFadeOut{
+  from{ opacity:1; transform:scale(1);   }
+  to{   opacity:0; transform:scale(1.04);}
+}
+
+/* ── 中央エリア ── */
+.sp-center{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  /* ロゴエリア全体を少し上寄りに */
+  margin-bottom:10%;
+}
+
+/* ── ロゴラッパー（ふわっと拡大フェードイン） ── */
+.sp-logo-wrap{
+  margin-bottom:32px;
+  animation: spLogoIn .85s cubic-bezier(.34,1.18,.64,1) .1s both;
+}
+@keyframes spLogoIn{
+  from{ opacity:0; transform:scale(.82) translateY(8px); }
+  to{   opacity:1; transform:scale(1)   translateY(0);   }
+}
+
+/* ── ロゴ画像 ── */
+.sp-logo{
+  width:110px;
+  height:110px;
+  object-fit:contain;
+  display:block;
+}
+
+/* ── ブランド名 ── */
+.sp-brand{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Hiragino Sans",sans-serif;
+  font-size:38px;
+  font-weight:700;
+  letter-spacing:-.04em;
+  line-height:1;
+  color:#1d1d1f;
+  margin-bottom:14px;
+  animation: spTextIn .7s cubic-bezier(.4,0,.2,1) .28s both;
+}
+.sp-brand-text{
+  color:#1d1d1f;
+}
+.sp-brand-x{
+  color:#39C892;
+}
+@keyframes spTextIn{
+  from{ opacity:0; transform:translateY(6px); }
+  to{   opacity:1; transform:translateY(0);   }
+}
+
+/* ── タグライン（ライン＋テキスト＋ライン） ── */
+.sp-tagline-wrap{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  animation: spTextIn .7s cubic-bezier(.4,0,.2,1) .38s both;
+}
+.sp-tagline-line{
+  flex:1;
+  width:36px;
+  height:1px;
+  background:#D0D0D0;
+  display:block;
+  flex-shrink:0;
+}
+.sp-tagline-text{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+  font-size:12px;
+  font-weight:400;
+  letter-spacing:.06em;
+  color:#A0A0A0;
+  white-space:nowrap;
+}
+
+/* ── 下部エリア ── */
+.sp-bottom{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  animation: spTextIn .6s cubic-bezier(.4,0,.2,1) .5s both;
+}
+
+/* ── プログレスバー ── */
+.sp-progress-wrap{
+  width:120px;
+}
+.sp-progress-track{
+  width:120px;
+  height:3px;
+  background:#E5E5E5;
+  border-radius:2px;
+  overflow:hidden;
+}
+.sp-progress-fill{
+  height:100%;
+  width:38%;
+  background:linear-gradient(90deg,#22A874,#39C892);
+  border-radius:2px;
+  animation: spProgress 1.4s cubic-bezier(.4,0,.6,1) .55s infinite alternate;
+}
+@keyframes spProgress{
+  from{ width:22%; opacity:.8; }
+  to{   width:60%; opacity:1;  }
+}
+
+/* ── ローディングテキスト ── */
+.sp-loading-text{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+  font-size:12px;
+  font-weight:400;
+  letter-spacing:.04em;
+  color:#A0A0A0;
 }
 *,*::before,*::after{
   font-family:inherit;
@@ -4408,7 +4598,7 @@ button,input,select,textarea{
    ================================================================ */
 #auth-screen {
   position: fixed; inset: 0; z-index: 9999;
-  display: flex;
+  display: none; /* ★ 認証確認完了まで非表示 */
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -4418,7 +4608,7 @@ button,input,select,textarea{
   -webkit-overflow-scrolling: touch;
   font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
 }
-#auth-screen.hidden { display: none !important; }
+#auth-screen.visible { display: flex !important; }
 
 /* ── 背景：Apple風 ミントグリーン グラデーション ── */
 .auth-bg {
@@ -5642,7 +5832,7 @@ body{
   <div class="notch"></div>
   <div class="status-bar"><span class="status-time">9:41</span><span class="status-icons">●●● WiFi ▮▮▮</span></div>
 
-  <div class="page active" id="page-calendar">
+  <div class="page" id="page-calendar">
     <div class="app-header">
       <div class="app-header-top">
         <div style="display:flex;align-items:center;gap:10px;">
@@ -6506,16 +6696,49 @@ function _onAuthStateChanged(user) {
   }
 }
 
+// ================================================================
+// ★★★ スプラッシュ除去 & app-ready 付与
+// ================================================================
+let _splashRemoved = false;
+function _removeSplash(callback) {
+  // body を先に表示（opacity 0→1）
+  document.body.classList.add('app-ready');
+
+  if (_splashRemoved) {
+    if (callback) callback();
+    return;
+  }
+  _splashRemoved = true;
+
+  const splash = document.getElementById('splash-screen');
+  if (!splash) {
+    if (callback) callback();
+    return;
+  }
+  // フェードアウト → 削除（@keyframes spFadeOut と同期: 380ms）
+  splash.classList.add('fade-out');
+  const delay = 400;
+  setTimeout(() => {
+    splash.remove();
+    if (callback) callback();
+  }, delay);
+}
+
 function _showAuthScreen() {
-  document.getElementById('auth-screen')?.classList.remove('hidden');
-  document.getElementById('auth-loading')?.classList.add('hidden');
-  document.body.classList.add('auth-guest');
+  // ★ スプラッシュ除去 → body表示 → auth-screen表示
+  _removeSplash(function() {
+    document.getElementById('auth-screen')?.classList.add('visible');
+    document.getElementById('auth-loading')?.classList.add('hidden');
+    document.body.classList.add('auth-guest');
+  });
 }
 
 function _showApp(user) {
   _currentUser = user;
-  document.getElementById('auth-screen')?.classList.add('hidden');
+  document.getElementById('auth-screen')?.classList.remove('visible');
   document.body.classList.remove('auth-guest');
+  // ★ スプラッシュ除去 → body表示
+  _removeSplash();
   // アバターにイニシャル表示
   const initial = (user.displayName || user.email || '?').charAt(0).toUpperCase();
   document.querySelectorAll('.app-avatar').forEach(el => el.textContent = initial);
@@ -6568,7 +6791,7 @@ function _saveUserEvents() {
 function _requireAuth(callback) {
   if (_currentUser) { callback(); return; }
   showToast('ログインが必要です');
-  document.getElementById('auth-screen')?.classList.remove('hidden');
+  document.getElementById('auth-screen')?.classList.add('visible');
 }
 
 // ログアウト
@@ -8534,7 +8757,7 @@ function onRangeEnd(){
 function _openModalWithRange(startDs,endDs){
   if(!_currentUser){
     showToast('ログインが必要です');
-    document.getElementById('auth-screen')?.classList.remove('hidden');
+    document.getElementById('auth-screen')?.classList.add('visible');
     return;
   }
   selectedDate=startDs;
@@ -13211,7 +13434,7 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   window.openModal = function(id) {
     if (!_currentUser) {
       showToast('ログインが必要です');
-      document.getElementById('auth-screen')?.classList.remove('hidden');
+      document.getElementById('auth-screen')?.classList.add('visible');
       return;
     }
     if (typeof _origOpenModal === 'function') _origOpenModal(id);
@@ -13229,7 +13452,7 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     if (!_currentUser) {
       e.stopImmediatePropagation();
       showToast('ログインが必要です');
-      document.getElementById('auth-screen')?.classList.remove('hidden');
+      document.getElementById('auth-screen')?.classList.add('visible');
     }
   }, true);
 })();
@@ -13281,7 +13504,7 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
       e.preventDefault();
       if (!_currentUser) {
         showToast('ログインが必要です');
-        document.getElementById('auth-screen')?.classList.remove('hidden');
+        document.getElementById('auth-screen')?.classList.add('visible');
         return;
       }
       // ★ openCreateModal でタップしたセルの実日付を確実に渡す
