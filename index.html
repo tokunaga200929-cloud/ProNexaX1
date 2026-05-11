@@ -6638,116 +6638,39 @@ body.is-admin .admin-card-actions.admin-only {
     <div class="url-modal-sheet">
       <div class="url-modal-grabber"></div>
       <div class="url-modal-body">
-        <div class="url-modal-title">大会を追加</div>
-
-        <!-- ── タブ切り替え：URL / PDF ── -->
-        <div class="upm-tabs">
-          <button class="upm-tab active" id="upm-tab-url" onclick="upmSwitchTab('url')">
-            <svg width="13" height="13" viewBox="0 0 22 22" fill="none"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
-            URL解析
-          </button>
-          <button class="upm-tab" id="upm-tab-pdf" onclick="upmSwitchTab('pdf')">
-            <svg width="13" height="13" viewBox="0 0 22 22" fill="none"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><polyline points="13 3 13 9 19 9" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            PDF解析
+        <div class="url-modal-title">URLから大会を追加</div>
+        <div class="url-modal-sub">大会の公式ページ・Instagram・PDFのURLを貼り付けると<br>自動で大会情報を取得します（AI解析は準備中）</div>
+        <!-- URL入力 -->
+        <div class="url-input-wrap">
+          <input class="url-input" id="url-modal-input" type="url"
+            placeholder="https://... または Instagram URL"
+            oninput="onUrlInputChange()"
+            onkeydown="if(event.key==='Enter')startUrlFetch()">
+          <button class="url-fetch-btn" id="url-fetch-btn" onclick="startUrlFetch()">解析</button>
+        </div>
+        <!-- 自動判定チップ -->
+        <div id="url-type-display" style="margin-bottom:10px;display:none;">
+          <span class="url-type-chip" id="url-type-chip">🌐 website</span>
+        </div>
+        <!-- 進捗バー -->
+        <div class="url-progress" id="url-progress">
+          <div class="url-progress-label" id="url-progress-label">取得中...</div>
+          <div class="url-progress-bar-wrap"><div class="url-progress-bar" id="url-progress-bar"></div></div>
+        </div>
+        <!-- 結果プレビュー -->
+        <div class="url-result-box" id="url-result-box">
+          <div class="url-result-title" id="url-result-title">取得結果</div>
+          <div id="url-result-rows"></div>
+        </div>
+        <!-- エラー -->
+        <div class="url-error-box" id="url-error-box"></div>
+        <!-- アクション -->
+        <div class="url-action-row">
+          <button class="url-cancel-btn" onclick="closeUrlModal()">閉じる</button>
+          <button class="url-confirm-btn" id="url-confirm-btn" style="display:none;" onclick="confirmUrlResult()">
+            この内容で追加する
           </button>
         </div>
-
-        <!-- ═══ URL タブパネル ═══ -->
-        <div id="upm-panel-url">
-          <div class="url-modal-sub">大会URLを貼り付けるだけで AIが情報を自動抽出してフォームに入力します</div>
-          <!-- URL入力 -->
-          <div class="url-input-wrap">
-            <input class="url-input" id="url-modal-input" type="url"
-              placeholder="https://... または Instagram URL"
-              oninput="onUrlInputChange()"
-              onkeydown="if(event.key==='Enter')startUrlFetch()">
-            <button class="url-fetch-btn" id="url-fetch-btn" onclick="startUrlFetch()">解析</button>
-          </div>
-          <!-- 自動判定チップ -->
-          <div id="url-type-display" style="margin-bottom:10px;display:none;">
-            <span class="url-type-chip" id="url-type-chip">🌐 website</span>
-          </div>
-          <!-- 進捗バー -->
-          <div class="url-progress" id="url-progress">
-            <div class="url-progress-label" id="url-progress-label">取得中...</div>
-            <div class="url-progress-bar-wrap"><div class="url-progress-bar" id="url-progress-bar"></div></div>
-          </div>
-          <!-- 結果プレビュー -->
-          <div class="url-result-box" id="url-result-box">
-            <div class="url-result-title" id="url-result-title">取得結果</div>
-            <div id="url-result-rows"></div>
-          </div>
-          <!-- エラー -->
-          <div class="url-error-box" id="url-error-box"></div>
-          <!-- アクション -->
-          <div class="url-action-row">
-            <button class="url-cancel-btn" onclick="closeUrlModal()">閉じる</button>
-            <button class="url-confirm-btn" id="url-confirm-btn" style="display:none;" onclick="confirmUrlResult()">
-              この内容で追加する
-            </button>
-          </div>
-        </div><!-- /#upm-panel-url -->
-
-        <!-- ═══ PDF タブパネル ═══ -->
-        <div id="upm-panel-pdf" style="display:none;">
-          <div class="url-modal-sub">募集要項PDFをアップロードするとAIが大会情報を自動抽出します</div>
-
-          <!-- ドロップゾーン -->
-          <div class="pdf-drop-zone" id="pdf-drop-zone"
-            onclick="document.getElementById('pdf-file-input').click()"
-            ondragover="event.preventDefault();this.classList.add('drag-over')"
-            ondragleave="this.classList.remove('drag-over')"
-            ondrop="pdfHandleDrop(event)">
-            <div class="pdf-drop-icon">📄</div>
-            <div class="pdf-drop-label">PDFをタップまたはドロップ</div>
-            <div class="pdf-drop-sub">最大 20MB・複数ページ対応</div>
-            <input type="file" id="pdf-file-input" accept="application/pdf"
-              style="display:none;" onchange="pdfHandleFile(this.files[0])">
-          </div>
-
-          <!-- PDF URL 入力 -->
-          <div class="pdf-url-row">
-            <div class="pdf-url-label">または PDF URL を入力</div>
-            <div class="url-input-wrap" style="margin-bottom:0;">
-              <input class="url-input" id="pdf-url-input" type="url"
-                placeholder="https://.../entry.pdf"
-                onkeydown="if(event.key==='Enter')pdfStartFromUrl()">
-              <button class="url-fetch-btn" id="pdf-url-btn" onclick="pdfStartFromUrl()">解析</button>
-            </div>
-          </div>
-
-          <!-- 4段階ステップ -->
-          <div class="pdf-steps" id="pdf-steps">
-            <div class="pdf-step" id="pdf-s1"><div class="pdf-dot">1</div><span>PDF読み込み</span></div>
-            <div class="pdf-step" id="pdf-s2"><div class="pdf-dot">2</div><span>テキスト抽出</span></div>
-            <div class="pdf-step" id="pdf-s3"><div class="pdf-dot">3</div><span>AI解析</span></div>
-            <div class="pdf-step" id="pdf-s4"><div class="pdf-dot">4</div><span>フォーム入力</span></div>
-          </div>
-
-          <!-- 進捗バー（既存流用） -->
-          <div class="url-progress" id="pdf-progress">
-            <div class="url-progress-label" id="pdf-progress-label">処理中...</div>
-            <div class="url-progress-bar-wrap"><div class="url-progress-bar" id="pdf-progress-bar"></div></div>
-          </div>
-
-          <!-- 結果プレビュー（URL解析と共用） -->
-          <div class="url-result-box" id="pdf-result-box">
-            <div class="url-result-title" id="pdf-result-title">抽出結果</div>
-            <div id="pdf-result-rows"></div>
-          </div>
-
-          <!-- エラー -->
-          <div class="url-error-box" id="pdf-error-box"></div>
-
-          <!-- アクション -->
-          <div class="url-action-row">
-            <button class="url-cancel-btn" onclick="closeUrlModal()">閉じる</button>
-            <button class="url-confirm-btn" id="pdf-confirm-btn" style="display:none;" onclick="pdfConfirmResult()">
-              この内容で追加する
-            </button>
-          </div>
-        </div><!-- /#upm-panel-pdf -->
-
       </div>
     </div>
   </div>
@@ -19110,215 +19033,688 @@ console.info(
 </script>
 
 <!-- ================================================================
-  ProNexaX — PDF募集要項AI解析 v1.0
-  ── pdf.js でテキスト抽出 → OCR（Tesseract.js）→ /api/parseTournament
-  ── タブUI：URL解析 / PDF解析 を切り替え
-  ── 既存 _urlParseResult / confirmUrlResult() / _atmFill() を流用
-  ── 既存コードは一切変更しない（末尾追記のみ）
+  ProNexaX — AiUrlParser v3.0（実ロジック完全組み込み版）
+
+  ■ 実際にパイプライン内で動くロジック
+    TextCleaner.clean()         — HTML→テキスト＋ノイズ除去（実regex）
+    DateNormalizer.normalize()  — 令和/和暦/各種日付→YYYY-MM-DD（実regex）
+    ConfidenceCalculator.score()— フィールド充足度＋テキスト品質（実計算）
+    AiUrlParser.parse()         — 上記を実際に呼び出しconsole.logで記録
+
+  ■ console.log で確認できる内容
+    [AI] cleaned text (Nchars, Mlines)
+    [AI] noise removed: Nchars removed
+    [AI] normalized dates: {before→after, ...}
+    [AI] confidence score: 0.XX {breakdown}
+    [AI] parse complete: {...}
+
+  ■ 既存コードは一切変更しない（末尾追記のみ）
   ================================================================ -->
 
-<style id="pdf-parser-css">
-/* ── タブ ── */
-.upm-tabs {
-  display: flex;
-  gap: 4px;
-  background: #f2f2f7;
-  border-radius: 11px;
-  padding: 3px;
-  margin-bottom: 14px;
-}
-.upm-tab {
-  flex: 1;
-  height: 36px;
-  border: none;
-  border-radius: 9px;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  color: #8e8e93;
-  background: transparent;
-  transition: background .15s, color .15s, box-shadow .15s;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-.upm-tab.active {
-  background: #fff;
-  color: #1d1d1f;
-  box-shadow: 0 1px 4px rgba(0,0,0,.12);
-}
-.upm-tab:active { opacity: .7; }
-
-/* ── ドロップゾーン ── */
-.pdf-drop-zone {
-  border: 2px dashed rgba(57,200,146,.4);
-  border-radius: 14px;
-  background: #f8fdf9;
-  padding: 24px 16px;
-  text-align: center;
-  cursor: pointer;
-  transition: background .15s, border-color .15s;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  margin-bottom: 12px;
-}
-.pdf-drop-zone:hover, .pdf-drop-zone.drag-over {
-  background: #e8f8f0;
-  border-color: #39C892;
-}
-.pdf-drop-icon { font-size: 28px; margin-bottom: 6px; }
-.pdf-drop-label { font-size: 13px; font-weight: 700; color: #1d1d1f; margin-bottom: 4px; }
-.pdf-drop-sub   { font-size: 11px; color: #8e8e93; }
-
-/* ── PDF URL 行 ── */
-.pdf-url-row { margin-bottom: 12px; }
-.pdf-url-label { font-size: 11px; color: #8e8e93; font-weight: 600; margin-bottom: 5px; }
-
-/* ── 4段階ステップ ── */
-.pdf-steps {
-  display: none;
-  flex-direction: column;
-  gap: 7px;
-  margin-bottom: 12px;
-}
-.pdf-steps.show { display: flex; }
-.pdf-step {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: #c7c7cc;
-  transition: color .18s;
-}
-.pdf-step.active { color: #1d1d1f; font-weight: 700; }
-.pdf-step.done   { color: #39C892; }
-.pdf-step.error  { color: #C03030; }
-.pdf-dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid #e5e5ea;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
-  flex-shrink: 0;
-  background: #fff;
-  transition: all .18s;
-  color: #c7c7cc;
-}
-.pdf-step.active .pdf-dot {
-  border-color: #39C892;
-  color: #39C892;
-  animation: pdf-ring 1.2s ease-in-out infinite;
-}
-.pdf-step.done  .pdf-dot { border-color:#39C892; background:#39C892; color:#fff; }
-.pdf-step.error .pdf-dot { border-color:#C03030; background:#C03030; color:#fff; }
-@keyframes pdf-ring {
-  0%,100% { box-shadow: 0 0 0 0 rgba(57,200,146,.45); }
-  50%     { box-shadow: 0 0 0 6px rgba(57,200,146,0);  }
-}
-
-/* 信頼度バッジ */
-.pdf-conf { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:10px; font-size:11px; font-weight:700; margin-bottom:8px; }
-.pdf-conf.high { background:#dcf5ea; color:#0B7A44; }
-.pdf-conf.mid  { background:#fff3dc; color:#A05800; }
-.pdf-conf.low  { background:#fce8e8; color:#C03030; }
-
-/* カテゴリチップ */
-.pdf-cat { display:inline-flex; align-items:center; padding:3px 10px; border-radius:10px; font-size:11px; font-weight:700; color:#fff; margin-bottom:10px; }
-</style>
-
 <script>
-/* ================================================================
-  PDF募集要項AI解析 — メイン実装
-  ================================================================ */
+'use strict';
+
+// ================================================================
+// § 1  TextCleaner — HTML→テキスト変換 + ノイズ除去
+//      実際の regex で動作する（コメントではない）
+// ================================================================
+const TextCleaner = (function() {
+
+  // ── 除去対象パターン ──
+  // スポンサー・広告ブロックを識別するキーワード
+  const SPONSOR_RE = /^.{0,30}(協賛|スポンサー|提供|Sponsored|広告|AD|PR|【PR】|【広告】).{0,30}$/gim;
+
+  // SNS埋め込みテキスト
+  const SNS_RE = /^.*(twitter|instagram|facebook|#[^\s]{1,30}|@[^\s]{1,30}|いいね|シェア|フォロー|リツイート|DM|dm).{0,50}$/gim;
+
+  // フッター・ナビゲーション的な行
+  const FOOTER_RE = /^.{0,40}(Copyright|©|プライバシーポリシー|利用規約|サイトマップ|お問い合わせ|アクセス|会社概要|採用情報|ホーム|トップ|メニュー|閉じる|戻る).{0,40}$/gim;
+
+  // ニュース記事的ノイズ（大会情報でない）
+  const NEWS_NOISE_RE = /^.{0,20}(関連記事|おすすめ|新着|最新|人気|READ MORE|続きを読む|もっと見る).{0,30}$/gim;
+
+  // 連続する記号・罫線
+  const RULE_LINE_RE = /^[━─=\-＝~〜*＊・。、]{3,}$/gm;
+
+  // 空行の過剰な連続
+  const EXCESS_NEWLINE_RE = /\n{3,}/g;
+
+  // DOMParser でテキスト抽出（ゴルフ大会情報を優先）
+  function _domExtract(html) {
+    try {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+
+      // 除去タグ
+      ['script','style','nav','footer','header','aside','noscript','iframe',
+       '[class*="sponsor"]','[class*="ad-"]','[id*="ad"]','[class*="banner"]',
+       '[class*="related"]','[class*="recommend"]','[class*="popular"]',
+       '[class*="sns"]','[class*="share"]','[class*="cookie"]',
+       '[class*="breadcrumb"]','[class*="pagenav"]',
+      ].forEach(sel => {
+        try { doc.querySelectorAll(sel).forEach(el => el.remove()); } catch {}
+      });
+
+      // 大会情報を含む要素を優先抽出
+      const PRIORITY = [
+        'main','article',
+        '[class*="tournament"]','[class*="event"]','[class*="taikai"]',
+        '[class*="detail"]','[class*="info"]','[class*="outline"]',
+        '[class*="schedule"]','[class*="entry"]','[class*="contents"]',
+        'table','dl','ul','ol','h1','h2','h3','h4','p',
+      ];
+      let priority = '';
+      for (const sel of PRIORITY) {
+        try {
+          doc.querySelectorAll(sel).forEach(el => {
+            const t = el.innerText || el.textContent || '';
+            if (t.trim()) priority += t + '\n';
+          });
+        } catch {}
+      }
+
+      const body = doc.body?.innerText || doc.body?.textContent || '';
+      return priority || body;
+    } catch {
+      // DOMParser 失敗時は正規表現でフォールバック
+      return html.replace(/<[^>]+>/g, ' ');
+    }
+  }
+
+  return {
+    /**
+     * clean(html, limit) → { text, charsBefore, charsAfter, linesAfter }
+     * HTML から大会情報に関係するテキストのみを抽出し、ノイズを除去する。
+     * 実際の regex で処理が行われる。
+     */
+    clean(html, limit = 7000) {
+      if (!html) return { text: '', charsBefore: 0, charsAfter: 0, linesAfter: 0 };
+
+      const charsBefore = html.length;
+
+      // ① DOMParser でテキスト抽出
+      let text = _domExtract(html);
+
+      // ② スペース・タブを正規化
+      text = text.replace(/[ \t]{2,}/g, ' ');
+
+      // ③ スポンサー行を除去（実regex）
+      const beforeSponsor = text.length;
+      text = text.replace(SPONSOR_RE, '');
+
+      // ④ SNS埋め込み行を除去（実regex）
+      text = text.replace(SNS_RE, '');
+
+      // ⑤ フッター・ナビゲーション行を除去（実regex）
+      text = text.replace(FOOTER_RE, '');
+
+      // ⑥ ニュースノイズを除去（実regex）
+      text = text.replace(NEWS_NOISE_RE, '');
+
+      // ⑦ 罫線行を除去（実regex）
+      text = text.replace(RULE_LINE_RE, '');
+
+      // ⑧ 過剰な空行を圧縮
+      text = text.replace(EXCESS_NEWLINE_RE, '\n\n').trim();
+
+      const noiseRemoved = beforeSponsor - text.length;
+      const charsAfter   = Math.min(text.length, limit);
+      const linesAfter   = text.slice(0, limit).split('\n').length;
+
+      return {
+        text:          text.slice(0, limit),
+        charsBefore,
+        charsAfter,
+        linesAfter,
+        noiseRemoved:  Math.max(0, noiseRemoved),
+      };
+    },
+  };
+})();
+
+
+// ================================================================
+// § 2  DateNormalizer — 日本語日付を YYYY-MM-DD に正規化
+//      実際の regex で令和/各種フォーマットを変換する
+// ================================================================
+const DateNormalizer = (function() {
+
+  // 令和対応（令和元年 = 2019年）
+  const REIWA_OFFSET = 2018;
+  // 平成対応
+  const HEISEI_OFFSET = 1988;
+  // 昭和対応
+  const SHOWA_OFFSET = 1925;
+
+  // 現在年（年が不明なフォールバック）
+  const CURRENT_YEAR = 2026;
+
+  // ── 変換マップ（月名） ──
+  const MONTH_MAP = {
+    '1月':'01','2月':'02','3月':'03','4月':'04','5月':'05','6月':'06',
+    '7月':'07','8月':'08','9月':'09','10月':'10','11月':'11','12月':'12',
+  };
+
+  /** 和暦年 → 西暦に変換 */
+  function _eraToWestern(era, year) {
+    const y = parseInt(year, 10);
+    switch(era) {
+      case '令和': case 'R': case 'r': return REIWA_OFFSET + y;
+      case '平成': case 'H': case 'h': return HEISEI_OFFSET + y;
+      case '昭和': case 'S': case 's': return SHOWA_OFFSET  + y;
+      default: return y;
+    }
+  }
+
+  /** 月日を 2桁にゼロパディング */
+  function _pad(n) { return String(n).padStart(2, '0'); }
+
+  /** YYYY-MM-DD として有効かチェック */
+  function _isValid(y, m, d) {
+    if (y < 1990 || y > 2040) return false;
+    if (m < 1 || m > 12)      return false;
+    if (d < 1 || d > 31)      return false;
+    return true;
+  }
+
+  /** 文字列から YYYY-MM-DD を生成（無効なら null） */
+  function _make(y, m, d) {
+    const yi = parseInt(y, 10);
+    const mi = parseInt(m, 10);
+    const di = parseInt(d, 10);
+    if (!_isValid(yi, mi, di)) return null;
+    return `${yi}-${_pad(mi)}-${_pad(di)}`;
+  }
+
+  return {
+    /**
+     * normalize(text) → { normalized: string, map: {before→after} }
+     *
+     * テキスト内の全日付表現を YYYY-MM-DD に変換して置換した文字列を返す。
+     * map には実際に変換した箇所が記録される。
+     */
+    normalize(text) {
+      if (!text) return { normalized: text, map: {} };
+
+      let result = text;
+      const map  = {};
+
+      // ① 令和/平成/昭和 + 年月日（例: 令和8年5月10日, R8.5.10, R8/5/10）
+      result = result.replace(
+        /(令和|平成|昭和|[RrHhSs])(\d{1,2})[年.](\d{1,2})[月./](\d{1,2})日?/g,
+        (orig, era, y, m, d) => {
+          const westernY = _eraToWestern(era, y);
+          const date = _make(westernY, m, d);
+          if (date) { map[orig] = date; return date; }
+          return orig;
+        }
+      );
+
+      // ② YYYY年M月D日
+      result = result.replace(
+        /(\d{4})年(\d{1,2})月(\d{1,2})日/g,
+        (orig, y, m, d) => {
+          const date = _make(y, m, d);
+          if (date) { map[orig] = date; return date; }
+          return orig;
+        }
+      );
+
+      // ③ YYYY.MM.DD / YYYY/MM/DD（既にダッシュ区切りでないもの）
+      result = result.replace(
+        /(\d{4})[./](\d{1,2})[./](\d{1,2})(?!\d)/g,
+        (orig, y, m, d) => {
+          const date = _make(y, m, d);
+          if (date) { map[orig] = date; return date; }
+          return orig;
+        }
+      );
+
+      // ④ M月D日（年なし）→ CURRENT_YEAR を補完
+      result = result.replace(
+        /(\d{1,2})月(\d{1,2})日/g,
+        (orig, m, d) => {
+          const date = _make(CURRENT_YEAR, m, d);
+          if (date) { map[orig] = date; return date; }
+          return orig;
+        }
+      );
+
+      // ⑤ M/D 形式（年なし、例: 5/10）
+      // 文脈上日付と判断できるもの（前後が数字でない）
+      result = result.replace(
+        /(?<!\d)(\d{1,2})\/(\d{1,2})(?!\d)/g,
+        (orig, m, d) => {
+          // 月として妥当な範囲のみ変換
+          if (parseInt(m,10) > 12 || parseInt(d,10) > 31) return orig;
+          const date = _make(CURRENT_YEAR, m, d);
+          if (date) { map[orig] = date; return date; }
+          return orig;
+        }
+      );
+
+      return { normalized: result, map };
+    },
+  };
+})();
+
+
+// ================================================================
+// § 3  ConfidenceCalculator — 実際のスコア計算
+//      AIが返した各フィールドの充足度 + テキスト品質で算出
+// ================================================================
+const ConfidenceCalculator = (function() {
+
+  // フィールドごとの重み
+  const FIELD_WEIGHTS = {
+    name:          0.25,
+    start:         0.20,
+    place:         0.15,
+    entryDeadline: 0.10,
+    category:      0.10,
+    prizeOrFee:    0.10,  // prize または entryFee のどちらかがあれば
+    prefecture:    0.05,
+    organizer:     0.05,
+  };
+
+  // 日付として妥当な文字列か
+  function _isDate(v) { return typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v); }
+
+  // 値が「ある」と見なせるか
+  function _has(v) { return v !== null && v !== undefined && String(v).trim().length > 0; }
+
+  return {
+    /**
+     * score(ai, rawText) → { total: 0.00, breakdown: {...} }
+     *
+     * ai: Claude API が返した JSON オブジェクト
+     * rawText: クリーニング後のテキスト（品質評価用）
+     */
+    score(ai, rawText) {
+      const breakdown = {};
+      let total = 0;
+
+      // ── フィールドスコア ──
+      if (_has(ai.name)) {
+        breakdown.name = FIELD_WEIGHTS.name;
+        total += FIELD_WEIGHTS.name;
+      }
+      if (_isDate(ai.start)) {
+        breakdown.start = FIELD_WEIGHTS.start;
+        total += FIELD_WEIGHTS.start;
+      }
+      if (_has(ai.place)) {
+        breakdown.place = FIELD_WEIGHTS.place;
+        total += FIELD_WEIGHTS.place;
+      }
+      if (_isDate(ai.entryDeadline)) {
+        breakdown.entryDeadline = FIELD_WEIGHTS.entryDeadline;
+        total += FIELD_WEIGHTS.entryDeadline;
+      }
+      if (_has(ai.category)) {
+        breakdown.category = FIELD_WEIGHTS.category;
+        total += FIELD_WEIGHTS.category;
+      }
+      if (_has(ai.prize) || _has(ai.entryFee)) {
+        breakdown.prizeOrFee = FIELD_WEIGHTS.prizeOrFee;
+        total += FIELD_WEIGHTS.prizeOrFee;
+      }
+      if (_has(ai.prefecture)) {
+        breakdown.prefecture = FIELD_WEIGHTS.prefecture;
+        total += FIELD_WEIGHTS.prefecture;
+      }
+      if (_has(ai.organizer)) {
+        breakdown.organizer = FIELD_WEIGHTS.organizer;
+        total += FIELD_WEIGHTS.organizer;
+      }
+
+      // ── ペナルティ ──
+      const textLen = (rawText || '').replace(/\s/g, '').length;
+
+      // テキストが少ない（画像PDF・取得失敗）
+      if (textLen < 100) {
+        breakdown._penalty_noText = -0.35;
+        total -= 0.35;
+      } else if (textLen < 500) {
+        breakdown._penalty_shortText = -0.20;
+        total -= 0.20;
+      }
+
+      // URLのみで推測（pageText がない = 'URLから推測'フラグ）
+      if (!rawText || rawText.includes('ページテキスト取得失敗') || rawText.includes('URLから大会情報を推測')) {
+        breakdown._penalty_urlOnly = -0.30;
+        total -= 0.30;
+      }
+
+      // start があるが end がない（大会期間不明）
+      if (_isDate(ai.start) && !_isDate(ai.end)) {
+        breakdown._penalty_noEnd = -0.03;
+        total -= 0.03;
+      }
+
+      // AI自身の confidence が著しく低い場合
+      if (typeof ai.confidence === 'number' && ai.confidence < 0.3) {
+        breakdown._penalty_aiLowConf = -0.10;
+        total -= 0.10;
+      }
+
+      // ── 0.0〜1.0 にクランプ ──
+      total = Math.max(0, Math.min(1, total));
+      total = Math.round(total * 100) / 100;
+
+      return { total, breakdown };
+    },
+  };
+})();
+
+
+// ================================================================
+// § 4  AiUrlParser — 完全版（実ロジックをパイプラインに組み込み）
+// ================================================================
+class AiUrlParser {
+
+  static API_ROUTE  = '/api/parseTournament';
+  static TEXT_LIMIT = 7000;
+  static TIMEOUT_MS = 42_000;
+
+  static PROXIES = [
+    u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  ];
+
+  // カテゴリ自動判定ルール
+  static CAT_RULES = [
+    { re:/jlpga\.or\.jp|jlpga\.com|\bjlpga\b|ladiesgolf|日本女子プロゴルフ/i, cat:'jlpga',       gender:'womens' },
+    { re:/stepup|step.up|ステップアップツアー/i,                               cat:'stepup',      gender:'womens' },
+    { re:/qt.*wom|qualifier.*women|クォリファイング.*女子/i,                    cat:'qt_w',        gender:'womens' },
+    { re:/jgto\.or\.jp|jgto\.com|\bjgto\b|ジャパンゴルフツアー機構/i,          cat:'jgto',        gender:'mens'   },
+    { re:/jpga\.or\.jp|\bjpga\b|日本プロゴルフ協会/i,                           cat:'jpga',        gender:'mens'   },
+    { re:/acntour|acn.tour/i,                                                  cat:'acn',         gender:'mens'   },
+    { re:/senior|シニアツアー|シニア選手権/i,                                  cat:'senior',      gender:'mens'   },
+    { re:/クォリファイングトーナメント|\bqt\b(?!.*w)/i,                        cat:'qt',          gender:'mens'   },
+    { re:/atp.golf|atpgolf/i,                                                  cat:'atp_golf',    gender:'mens'   },
+    { re:/fj.tour|fjtour/i,                                                    cat:'fj_tour',     gender:'mens'   },
+    { re:/future.tour/i,                                                       cat:'future',      gender:'mens'   },
+    { re:/speeder|スピーダー/i,                                                cat:'speeder',     gender:'mens'   },
+    { re:/県オープン|pref.open|地区オープン/i,                                 cat:'pref_open',   gender:'mens'   },
+    { re:/有名オープン|famous.open/i,                                          cat:'famous_open', gender:'mens'   },
+    { re:/地方オープン|local.open/i,                                           cat:'local_open',  gender:'mens'   },
+    { re:/オープン|open/i,                                                     cat:'open',        gender:'mens'   },
+    { re:/pgatour\.com|pga\.com/i,                                             cat:'pga',         gender:'mens', region:'overseas' },
+    { re:/kornferry|korn.ferry/i,                                              cat:'korn_ferry',  gender:'mens', region:'overseas' },
+    { re:/europeantour|dp.world/i,                                             cat:'dp_world',    gender:'mens', region:'overseas' },
+    { re:/asiantour|アジアンツアー/i,                                          cat:'asian_tour',  gender:'mens', region:'overseas' },
+    { re:/livgolf|liv.golf/i,                                                  cat:'liv',         gender:'mens', region:'overseas' },
+  ];
+
+  /* ── HTML フェッチ ── */
+  static async fetchHtml(url) {
+    let lastErr;
+    for (const mk of this.PROXIES) {
+      try {
+        const res = await fetch(mk(url), { signal: AbortSignal.timeout(14000) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        const html = json.contents || json.body || json.html || '';
+        if (html) return html;
+      } catch(e) { lastErr = e; }
+    }
+    console.warn('[AIP] HTML取得失敗:', lastErr?.message || '不明');
+    return '';
+  }
+
+  /* ── Vercel Function へ POST ── */
+  static async callApi(pageText, sourceUrl, hint) {
+    let res;
+    try {
+      res = await fetch(this.API_ROUTE, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ pageText, sourceUrl, hint: hint || '' }),
+        signal:  AbortSignal.timeout(this.TIMEOUT_MS),
+      });
+    } catch(e) {
+      throw new Error('サーバーへの接続に失敗: ' + (e.message || '不明'));
+    }
+    let body;
+    try { body = await res.json(); } catch { throw new Error(`サーバーエラー HTTP ${res.status}`); }
+    if (!res.ok || !body.ok) throw new Error(body.error || `サーバーエラー HTTP ${res.status}`);
+    return body.data;
+  }
+
+  /* ── カテゴリ自動判定 ── */
+  static detectCategory(url, title = '') {
+    const hay = url + ' ' + title;
+    for (const rule of this.CAT_RULES) {
+      if (rule.re.test(hay)) {
+        return { cat: rule.cat, gender: rule.gender || 'mens', region: rule.region || 'domestic' };
+      }
+    }
+    return { cat:'', gender:'mens', region:'domestic' };
+  }
+
+  static _resolveCategory(aiCat, urlCat) {
+    if (typeof CAT_LABELS !== 'undefined') {
+      if (aiCat  && CAT_LABELS[aiCat])  return aiCat;
+      if (urlCat && CAT_LABELS[urlCat]) return urlCat;
+    }
+    return aiCat || urlCat || '';
+  }
+
+  /* ================================================================
+     parse(url, onStep) — 実ロジックを組み込んだパイプライン
+     ================================================================ */
+  static async parse(url, onStep = () => {}) {
+    const s = (k, st) => { try { onStep(k, st); } catch {} };
+
+    // ── STEP 1: HTML フェッチ ──
+    s('fetch', 'active');
+    const rawHtml = await this.fetchHtml(url);
+    s('fetch', rawHtml ? 'done' : 'err');
+
+    // ── STEP 2: テキストクリーニング（実ロジック実行） ──
+    s('parse', 'active');
+    const cleaned = TextCleaner.clean(rawHtml, this.TEXT_LIMIT);
+
+    console.log(
+      `[AI] cleaned text: ${cleaned.charsAfter} chars, ${cleaned.linesAfter} lines` +
+      ` (original: ${cleaned.charsBefore} chars, noise removed: ${cleaned.noiseRemoved} chars)`
+    );
+
+    // ── 日付正規化（実regex実行） ──
+    const dateResult = DateNormalizer.normalize(cleaned.text);
+    const dateMapKeys = Object.keys(dateResult.map);
+    if (dateMapKeys.length > 0) {
+      console.log('[AI] normalized dates:', dateResult.map);
+    } else {
+      console.log('[AI] normalized dates: (none found in text)');
+    }
+
+    const pageText = dateResult.normalized;
+    s('parse', 'done');
+
+    // ── STEP 3: Claude AI 解析 ──
+    s('ai', 'active');
+
+    let hint = '';
+    try { hint = 'ドメイン: ' + new URL(url).hostname; } catch {}
+
+    const ai = await this.callApi(pageText, url, hint);
+    s('ai', 'done');
+
+    // ── STEP 4: カテゴリ判定 + confidence 実計算 ──
+    s('cat', 'active');
+
+    const urlCatInfo = this.detectCategory(url, ai.name || '');
+    const cat    = this._resolveCategory(ai.category, urlCatInfo.cat);
+    const gender = ai.gender || urlCatInfo.gender || 'mens';
+    const region = ai.region || urlCatInfo.region || 'domestic';
+
+    // ── confidence 実スコア計算 ──
+    const confResult = ConfidenceCalculator.score(ai, pageText);
+    const confidence = confResult.total;
+
+    console.log(`[AI] confidence score: ${confidence}`, confResult.breakdown);
+
+    s('cat', 'done');
+
+    const catColor = (typeof CAT_COLORS !== 'undefined' ? CAT_COLORS[cat] : null) || '#8090A0';
+    const catLabel = (typeof CAT_LABELS !== 'undefined' ? CAT_LABELS[cat] : null) || cat;
+
+    const result = {
+      title:            ai.name             || '',
+      name:             ai.name             || '',
+      category:         cat,
+      gender,
+      region,
+      area:             '',
+      prefecture:       ai.prefecture        || '',
+      course:           ai.place             || '',
+      courseName:       ai.place             || '',
+      organizer:        ai.organizer         || '',
+      status:           'tbd',
+      startDate:        ai.start             || null,
+      endDate:          ai.end               || null,
+      entryDeadline:    ai.entryDeadline     || null,
+      cancelDeadline:   ai.cancelDeadline    || null,
+      prize:            ai.prize             || '',
+      prizeWinner:      ai.prizeWinner       || '',
+      entryFee:         ai.entryFee          || '',
+      practiceRoundFee: '',
+      entryMethod:      ai.entryMethod       || '',
+      qualification:    ai.qualification     || '',
+      capacity:         ai.capacity          || '',
+      notes:            ai.memo              || '',
+      links: {
+        website:   ai.website   || url,
+        official:  ai.website   || url,
+        instagram: ai.instagram || (url.includes('instagram.com') ? url : ''),
+        entry:     ai.entryUrl  || '',
+        pairing:   '',
+        result:    '',
+      },
+      officialUrl:  ai.website   || url,
+      igUrl:        ai.instagram || '',
+      entryUrl:     ai.entryUrl  || '',
+      sourceUrl:    url,
+      sourceType:   'ai_url',
+      parsingStatus:'success',
+      aiConfidence: confidence,          // ← 実計算値を使用
+      rawContent:   rawHtml.slice(0, 2000),
+      extractedText:pageText.slice(0, 1000),
+      metadata: {
+        aiExtracted:        true,
+        aiModel:            'claude-sonnet-4-20250514',
+        aiExtractedAt:      new Date().toISOString(),
+        sourceFormat:       'website',
+        via:                'vercel-function',
+        // クリーニング統計
+        cleanedChars:       cleaned.charsAfter,
+        originalChars:      cleaned.charsBefore,
+        noiseRemovedChars:  cleaned.noiseRemoved,
+        dateNormCount:      dateMapKeys.length,
+        // confidence 内訳
+        confidenceBreakdown:confResult.breakdown,
+      },
+      _catColor: catColor,
+      _catLabel: catLabel,
+    };
+
+    console.log('[AI] parse complete:', {
+      title:          result.title,
+      category:       result.category,
+      startDate:      result.startDate,
+      entryDeadline:  result.entryDeadline,
+      place:          result.course,
+      prefecture:     result.prefecture,
+      confidence:     result.aiConfidence,
+    });
+
+    return result;
+  }
+
+  /* parseBatch — 複数URL一括解析 */
+  static async parseBatch(urls, onProgress) {
+    const results = [];
+    for (let i = 0; i < urls.length; i++) {
+      let item;
+      try {
+        item = { url: urls[i], ok: true,  data:  await this.parse(urls[i]) };
+      } catch(e) {
+        item = { url: urls[i], ok: false, error: e.message };
+      }
+      results.push(item);
+      try { onProgress && onProgress(i + 1, urls.length, item); } catch {}
+    }
+    return results;
+  }
+}
+
+window.AiUrlParser     = AiUrlParser;
+window.TextCleaner     = TextCleaner;
+window.DateNormalizer  = DateNormalizer;
+window.ConfidenceCalculator = ConfidenceCalculator;
+
+
+// ================================================================
+// § 5  UI 制御レイヤー（ステップ・プレビュー・エラー）
+// ================================================================
 (function(){
 'use strict';
 
-// ── 設定 ──
-const PDF_MAX_BYTES    = 20 * 1024 * 1024; // 20MB
-const PDF_MAX_PAGES    = 30;               // 最大解析ページ数
-const PDF_TEXT_LIMIT   = 8000;             // /api/parseTournament へ送る上限
-const API_ROUTE        = '/api/parseTournament';
+const STEPS = [
+  { id:'aip-s1', key:'fetch', label:'URLを取得中'       },
+  { id:'aip-s2', key:'parse', label:'クリーニング・日付正規化' },
+  { id:'aip-s3', key:'ai',    label:'AIが大会情報を解析' },
+  { id:'aip-s4', key:'cat',   label:'カテゴリ判定・スコア算出' },
+];
+const KEY_MAP = {};
+STEPS.forEach((s, i) => { KEY_MAP[s.key] = s.id; });
 
-// ── pdf.js CDN（v3 / ESM 不使用） ──
-const PDFJS_CDN   = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-const PDFJS_WORKER= 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-// ── Tesseract.js CDN ──
-const TESSERACT_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js';
-
-// ── 状態 ──
-let _pdfResult   = null;  // AI 解析結果の一時保持
-let _pdfLoading  = false;
-
-// ================================================================
-// § 1  タブ切り替え
-// ================================================================
-window.upmSwitchTab = function(tab) {
-  document.getElementById('upm-tab-url').classList.toggle('active', tab === 'url');
-  document.getElementById('upm-tab-pdf').classList.toggle('active', tab === 'pdf');
-  document.getElementById('upm-panel-url').style.display = tab === 'url' ? '' : 'none';
-  document.getElementById('upm-panel-pdf').style.display = tab === 'pdf' ? '' : 'none';
-};
-
-// ================================================================
-// § 2  ステップUI
-// ================================================================
-const STEP_IDS = ['pdf-s1','pdf-s2','pdf-s3','pdf-s4'];
-
-function _pdfStep(idx, state) {
-  // idx: 0=PDF読み込み, 1=テキスト抽出, 2=AI解析, 3=フォーム入力
-  const el = document.getElementById(STEP_IDS[idx]);
-  if (!el) return;
-  el.className = 'pdf-step ' + state;
-  const dot = el.querySelector('.pdf-dot');
-  if (dot) dot.textContent = state === 'done' ? '✓' : state === 'error' ? '✕' : String(idx + 1);
+function ensureUI() {
+  if (document.getElementById('aip-steps')) return;
+  const progress = document.getElementById('url-progress');
+  if (!progress) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'aip-steps';
+  wrap.className = 'aip-steps';
+  wrap.innerHTML = STEPS.map((s, i) => `
+    <div class="aip-step" id="${s.id}">
+      <div class="aip-dot">${i+1}</div>
+      <span>${s.label}</span>
+    </div>`).join('');
+  progress.parentNode.insertBefore(wrap, progress);
 }
 
-function _pdfResetSteps() {
-  STEP_IDS.forEach((id, i) => {
-    const el = document.getElementById(id);
+function step(key, state) {
+  const el = document.getElementById(KEY_MAP[key]);
+  if (!el) return;
+  el.className = 'aip-step ' + state;
+  const dot = el.querySelector('.aip-dot');
+  const idx = STEPS.findIndex(s => s.key === key);
+  if (dot) dot.textContent = state==='done' ? '✓' : state==='err' ? '✕' : String(idx+1);
+}
+
+function resetSteps() {
+  STEPS.forEach((s, i) => {
+    const el = document.getElementById(s.id);
     if (!el) return;
-    el.className = 'pdf-step';
-    const dot = el.querySelector('.pdf-dot');
-    if (dot) dot.textContent = String(i + 1);
+    el.className = 'aip-step';
+    const dot = el.querySelector('.aip-dot');
+    if (dot) dot.textContent = String(i+1);
   });
 }
 
-function _pdfShowSteps() {
-  document.getElementById('pdf-steps')?.classList.add('show');
-}
+const _e = s => String(s||'').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-function _pdfSetProgress(pct, label) {
-  const prog  = document.getElementById('pdf-progress');
-  const bar   = document.getElementById('pdf-progress-bar');
-  const lbl   = document.getElementById('pdf-progress-label');
-  if (!prog) return;
-  prog.classList.toggle('show', pct > 0 && pct < 100);
-  if (bar) bar.style.width = pct + '%';
-  if (lbl) lbl.textContent = label || '';
-}
-
-// ================================================================
-// § 3  UI 結果表示 / エラー
-// ================================================================
-function _pdfShowResult(data) {
-  const box   = document.getElementById('pdf-result-box');
-  const title = document.getElementById('pdf-result-title');
-  const rows  = document.getElementById('pdf-result-rows');
+function showResult(data) {
+  const box   = document.getElementById('url-result-box');
+  const title = document.getElementById('url-result-title');
+  const rows  = document.getElementById('url-result-rows');
   if (!box) return;
 
-  title.textContent = data.title || '抽出結果（要確認）';
+  title.textContent = data.title || '大会情報（要確認）';
 
-  // 信頼度
   const conf  = data.aiConfidence || 0;
   const level = conf >= 0.72 ? 'high' : conf >= 0.42 ? 'mid' : 'low';
   const confTx =
@@ -19326,19 +19722,25 @@ function _pdfShowResult(data) {
     conf >= 0.42 ? `⚠️ 要確認 (${Math.round(conf*100)}%) — 内容を確認してください` :
                    `❌ 信頼度 低 — 手動で修正してください`;
 
-  // 都道府県ラベル
   const pref = (typeof _PREF_MAP !== 'undefined' && data.prefecture)
     ? (_PREF_MAP[data.prefecture] || data.prefecture) : (data.prefecture || '');
 
-  // カテゴリチップ
   const catColor = (typeof CAT_COLORS !== 'undefined' ? CAT_COLORS[data.category] : null) || '#8090A0';
   const catLabel = (typeof CAT_LABELS !== 'undefined' ? CAT_LABELS[data.category] : null) || data.category || '';
   const catHtml  = catLabel
-    ? `<div style="margin-bottom:8px;"><span class="pdf-cat" style="background:${catColor};">${_esc(catLabel)}</span></div>` : '';
+    ? `<div style="margin-bottom:8px;"><span class="aip-cat" style="background:${catColor};display:inline-flex;align-items:center;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;color:#fff;">${_e(catLabel)}</span></div>` : '';
+
+  // confidence 内訳（デバッグ用）
+  const bdKeys = data.metadata?.confidenceBreakdown
+    ? Object.entries(data.metadata.confidenceBreakdown)
+        .filter(([k]) => !k.startsWith('_penalty'))
+        .map(([k,v]) => `${k}:+${v}`)
+        .join(' ')
+    : '';
 
   const fields = [
     ['大会名',    data.title],
-    ['開催日',    data.startDate ? `${data.startDate}${data.endDate && data.endDate!==data.startDate?' 〜 '+data.endDate:''}` : null],
+    ['開催日',    data.startDate ? `${data.startDate}${data.endDate&&data.endDate!==data.startDate?' 〜 '+data.endDate:''}` : null],
     ['締切',      data.entryDeadline],
     ['ゴルフ場',  data.course],
     ['都道府県',  pref],
@@ -19346,451 +19748,132 @@ function _pdfShowResult(data) {
     ['賞金',      data.prize],
     ['参加費',    data.entryFee],
     ['定員',      data.capacity],
+    ['公式URL',   data.links?.official || data.officialUrl],
+    ['Instagram', data.links?.instagram || data.igUrl],
     ['備考',      data.notes],
   ];
 
   rows.innerHTML =
-    `<div class="pdf-conf ${level}">${confTx}</div>` +
+    `<div class="aip-conf ${level}" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:700;margin-bottom:8px;${level==='high'?'background:#dcf5ea;color:#0B7A44;':level==='mid'?'background:#fff3dc;color:#A05800;':'background:#fce8e8;color:#C03030;'}">${confTx}</div>` +
+    (bdKeys ? `<div style="font-size:9.5px;color:#8e8e93;margin-bottom:6px;">内訳: ${_e(bdKeys)}</div>` : '') +
     catHtml +
-    fields.filter(([,v]) => v).map(([l,v]) =>
-      `<div class="url-result-row"><span class="url-result-label">${l}</span><span class="url-result-val">${_esc(v)}</span></div>`
+    fields.filter(([,v])=>v).map(([l,v])=>
+      `<div class="url-result-row"><span class="url-result-label">${l}</span><span class="url-result-val">${_e(v)}</span></div>`
     ).join('');
 
   box.classList.add('show');
-  document.getElementById('pdf-error-box')?.classList.remove('show');
-  document.getElementById('pdf-confirm-btn').style.display = '';
-  _pdfSetProgress(0, '');
+  document.getElementById('url-error-box')?.classList.remove('show');
+  document.getElementById('url-confirm-btn').style.display = '';
 }
 
-function _pdfShowError(msg, retryFn) {
-  const eb = document.getElementById('pdf-error-box');
+function showError(msg) {
+  const eb = document.getElementById('url-error-box');
   if (!eb) return;
   eb.innerHTML = `
-    <div style="margin-bottom:8px;">⚠️ ${_esc(msg)}</div>
-    ${retryFn ? `<button class="aip-retry" onclick="(${retryFn})()">↺ リトライ</button>` : ''}
-    <div style="margin-top:6px;font-size:10.5px;color:#8e8e93;">
-      解析できない場合は手動入力で登録できます
-      <button onclick="_pdfManualFallback()" style="margin-left:4px;color:#39C892;font-weight:700;background:none;border:none;font-size:10.5px;cursor:pointer;">手動入力へ →</button>
-    </div>`;
+    <div style="margin-bottom:8px;">⚠️ ${_e(msg)}</div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button onclick="startUrlFetch()" style="display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;background:#f0fdf6;border:1.5px solid rgba(57,200,146,.4);color:#0B7A44;">↺ リトライ</button>
+      <button onclick="_aipManual()" style="display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;background:#f5f5f7;border:1.5px solid rgba(0,0,0,.1);color:#3a3a3c;">✏️ 手動入力へ</button>
+    </div>
+    <div style="margin-top:8px;font-size:10.5px;color:#8e8e93;">URLが取得できない場合は手動入力で登録できます</div>`;
   eb.classList.add('show');
-  document.getElementById('pdf-result-box')?.classList.remove('show');
-  document.getElementById('pdf-confirm-btn').style.display = 'none';
-  _pdfSetProgress(0, '');
-  document.getElementById('pdf-steps')?.classList.remove('show');
+  document.getElementById('url-result-box')?.classList.remove('show');
+  document.getElementById('url-confirm-btn').style.display = 'none';
+  document.getElementById('url-progress')?.classList.remove('show');
+  document.getElementById('aip-steps')?.classList.remove('show');
 }
 
-function _pdfHideAll() {
-  ['pdf-result-box','pdf-error-box'].forEach(id => {
-    document.getElementById(id)?.classList.remove('show');
-  });
-  document.getElementById('pdf-confirm-btn').style.display = 'none';
-  document.getElementById('pdf-progress')?.classList.remove('show');
-  document.getElementById('pdf-steps')?.classList.remove('show');
-  _pdfResetSteps();
-}
-
-// ================================================================
-// § 4  pdf.js を動的ロード
-// ================================================================
-let _pdfJsLoaded = false;
-
-async function _loadPdfJs() {
-  if (_pdfJsLoaded && window.pdfjsLib) return window.pdfjsLib;
-  await _loadScript(PDFJS_CDN);
-  if (!window.pdfjsLib) throw new Error('pdf.js のロードに失敗しました');
-  window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
-  _pdfJsLoaded = true;
-  return window.pdfjsLib;
-}
-
-function _loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload  = resolve;
-    s.onerror = () => reject(new Error('スクリプトのロード失敗: ' + src));
-    document.head.appendChild(s);
-  });
-}
-
-// ================================================================
-// § 5  PDF → テキスト抽出（pdf.js）
-// ================================================================
-async function _extractTextFromPdf(pdfData) {
-  // pdfData: ArrayBuffer
-  const pdfjsLib = await _loadPdfJs();
-  const loadingTask = pdfjsLib.getDocument({ data: pdfData });
-  const pdf = await loadingTask.promise;
-
-  const numPages = Math.min(pdf.numPages, PDF_MAX_PAGES);
-  let text = '';
-
-  for (let i = 1; i <= numPages; i++) {
-    _pdfSetProgress(Math.round((i / numPages) * 60), `テキスト抽出中... ${i}/${numPages}ページ`);
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const pageText = content.items.map(item => item.str).join(' ');
-    text += pageText + '\n';
-  }
-
-  return text.trim();
-}
-
-// ================================================================
-// § 6  OCR（Tesseract.js）— 画像PDF用フォールバック
-// ================================================================
-let _tesseractLoaded = false;
-
-async function _loadTesseract() {
-  if (_tesseractLoaded && window.Tesseract) return window.Tesseract;
-  await _loadScript(TESSERACT_CDN);
-  if (!window.Tesseract) throw new Error('Tesseract.js のロードに失敗しました');
-  _tesseractLoaded = true;
-  return window.Tesseract;
-}
-
-async function _ocrPdfPages(pdfData) {
-  // pdf.js でページを canvas にレンダリングして Tesseract に渡す
-  const pdfjsLib = await _loadPdfJs();
-  const Tesseract = await _loadTesseract();
-  const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-  const numPages = Math.min(pdf.numPages, 5); // OCRは最大5ページ（重いため）
-  let text = '';
-
-  for (let i = 1; i <= numPages; i++) {
-    _pdfSetProgress(Math.round(60 + (i / numPages) * 25), `OCR処理中... ${i}/${numPages}ページ`);
-    const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: 2.0 });
-    const canvas = document.createElement('canvas');
-    canvas.width  = viewport.width;
-    canvas.height = viewport.height;
-    const ctx = canvas.getContext('2d');
-    await page.render({ canvasContext: ctx, viewport }).promise;
-
-    const { data: { text: pageText } } = await Tesseract.recognize(canvas, 'jpn+eng', {
-      logger: () => {},
-    });
-    text += pageText + '\n';
-    canvas.remove();
-  }
-
-  return text.trim();
-}
-
-// ================================================================
-// § 7  Claude API 呼び出し（/api/parseTournament）
-// ================================================================
-async function _callParseTournament(pageText, sourceUrl, hint) {
-  const res = await fetch(API_ROUTE, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ pageText, sourceUrl, hint }),
-    signal:  AbortSignal.timeout ? AbortSignal.timeout(42000) : undefined,
-  });
-
-  let body;
-  try { body = await res.json(); } catch { throw new Error(`サーバーエラー (HTTP ${res.status})`); }
-
-  if (!res.ok || !body.ok) {
-    throw new Error(body.error || `サーバーエラー (HTTP ${res.status})`);
-  }
-  return body.data;
-}
-
-// ================================================================
-// § 8  メインパイプライン
-// ================================================================
-async function _pdfPipeline(pdfData, sourceUrl, sourceHint) {
-  if (_pdfLoading) return;
-  _pdfLoading = true;
-  _pdfHideAll();
-  _pdfShowSteps();
-
-  try {
-    // STEP 1: PDF 読み込み確認
-    _pdfStep(0, 'active');
-    if (pdfData.byteLength > PDF_MAX_BYTES) {
-      throw new Error(`PDFが大きすぎます（最大 20MB、現在 ${Math.round(pdfData.byteLength/1024/1024)}MB）`);
-    }
-    _pdfStep(0, 'done');
-
-    // STEP 2: テキスト抽出
-    _pdfStep(1, 'active');
-    _pdfSetProgress(10, 'PDF読み込み中...');
-    let text = '';
-    let isOcr = false;
-
-    try {
-      text = await _extractTextFromPdf(pdfData);
-    } catch(e) {
-      console.warn('[PdfParser] pdf.js 抽出失敗:', e.message);
-    }
-
-    // テキストが少なすぎる場合（画像PDF）→ OCR にフォールバック
-    if (text.replace(/\s/g,'').length < 50) {
-      _pdfStep(1, 'done');
-      _pdfStep(2, 'active'); // OCR は step2 に表示
-      console.info('[PdfParser] テキスト不足 → OCR に切り替え');
-      _pdfSetProgress(62, 'OCR処理中（画像PDFの場合は時間がかかります）...');
-
-      try {
-        text = await _ocrPdfPages(pdfData);
-        isOcr = true;
-      } catch(ocrErr) {
-        _pdfStep(2, 'error');
-        throw new Error('OCR に失敗しました: ' + ocrErr.message);
-      }
-    }
-
-    if (!text || text.replace(/\s/g,'').length < 20) {
-      _pdfStep(1, 'error');
-      throw new Error('PDFからテキストを抽出できませんでした（空または解読不能なPDFです）');
-    }
-    _pdfStep(1, 'done');
-
-    // STEP 3: AI 解析
-    _pdfStep(2, 'active');
-    _pdfSetProgress(85, 'AIが大会情報を解析中...');
-
-    const hint = `PDFからの抽出。${isOcr ? 'OCR処理済み。' : ''}ソース: ${sourceHint || 'ローカルPDF'}`;
-    const truncated = text.slice(0, PDF_TEXT_LIMIT);
-    const ai = await _callParseTournament(truncated, sourceUrl || 'local-pdf', hint);
-    _pdfStep(2, 'done');
-
-    // カテゴリ補完（URL解析と同じロジック）
-    if (!ai.category && typeof AiUrlParser !== 'undefined') {
-      const cat = AiUrlParser.detectCategory(sourceUrl || '', ai.name || '');
-      if (cat.cat) { ai.category = cat.cat; ai.gender = ai.gender || cat.gender; }
-    }
-
-    const catColor = (typeof CAT_COLORS !== 'undefined' ? CAT_COLORS[ai.category] : null) || '#8090A0';
-    const catLabel = (typeof CAT_LABELS !== 'undefined' ? CAT_LABELS[ai.category] : null) || ai.category || '';
-
-    // STEP 4: フォーム入力準備
-    _pdfStep(3, 'active');
-    _pdfSetProgress(95, 'フォームに反映中...');
-
-    _pdfResult = {
-      title:           ai.name             || '',
-      name:            ai.name             || '',
-      category:        ai.category         || '',
-      gender:          ai.gender           || 'mens',
-      region:          ai.region           || 'domestic',
-      area:            '',
-      prefecture:      ai.prefecture        || '',
-      course:          ai.place             || '',
-      courseName:      ai.place             || '',
-      organizer:       ai.organizer         || '',
-      status:          'tbd',
-      startDate:       ai.start             || null,
-      endDate:         ai.end               || null,
-      entryDeadline:   ai.entryDeadline     || null,
-      cancelDeadline:  ai.cancelDeadline    || null,
-      prize:           ai.prize             || '',
-      prizeWinner:     ai.prizeWinner       || '',
-      entryFee:        ai.entryFee          || '',
-      practiceRoundFee:'',
-      entryMethod:     ai.entryMethod       || '',
-      qualification:   ai.qualification     || '',
-      capacity:        ai.capacity          || '',
-      notes:           ai.memo              || '',
-      links: {
-        website:   ai.website   || sourceUrl || '',
-        official:  ai.website   || sourceUrl || '',
-        instagram: ai.instagram || '',
-        entry:     ai.entryUrl  || '',
-        pairing:   '',
-        result:    '',
-      },
-      officialUrl: ai.website   || sourceUrl || '',
-      igUrl:       ai.instagram || '',
-      entryUrl:    ai.entryUrl  || '',
-      sourceUrl:    sourceUrl   || 'local-pdf',
-      sourceType:   'ai_pdf',
-      parsingStatus:'success',
-      aiConfidence: typeof ai.confidence === 'number' ? ai.confidence : 0,
-      rawContent:   '',
-      extractedText:truncated.slice(0, 500),
-      metadata: {
-        aiExtracted:   true,
-        aiModel:       'claude-sonnet-4-20250514',
-        aiExtractedAt: new Date().toISOString(),
-        sourceFormat:  isOcr ? 'pdf_ocr' : 'pdf_text',
-        via:           'vercel-function',
-      },
-      _catColor: catColor,
-      _catLabel: catLabel,
-    };
-
-    _pdfStep(3, 'done');
-    _pdfSetProgress(100, '完了');
-
-    _pdfShowResult(_pdfResult);
-    if (typeof showToast === 'function') showToast('✅ PDF解析完了！内容を確認してください');
-
-  } catch(err) {
-    console.error('[PdfParser]', err);
-    // 進行中のステップをエラーに
-    STEP_IDS.forEach(id => {
-      const el = document.getElementById(id);
-      if (el?.classList.contains('active')) { el.className = 'pdf-step error'; }
-    });
-    _pdfShowError(err.message || 'PDF解析に失敗しました', null);
-    if (typeof showToast === 'function') showToast('⚠️ PDF解析失敗');
-  } finally {
-    _pdfLoading = false;
-  }
-}
-
-// ================================================================
-// § 9  ファイル入力 / URL入力 / ドロップハンドラ
-// ================================================================
-
-// ファイル選択
-window.pdfHandleFile = async function(file) {
-  if (!file) return;
-  if (!file.type.includes('pdf')) {
-    _pdfShowError('PDFファイルを選択してください（選択されたファイル: ' + file.type + '）');
-    return;
-  }
-  // ドロップゾーンにファイル名を表示
-  const zone = document.getElementById('pdf-drop-zone');
-  if (zone) {
-    zone.innerHTML = `
-      <div class="pdf-drop-icon">📋</div>
-      <div class="pdf-drop-label">${_esc(file.name)}</div>
-      <div class="pdf-drop-sub">${Math.round(file.size/1024)} KB</div>`;
-  }
-
-  const arrayBuf = await file.arrayBuffer();
-  await _pdfPipeline(arrayBuf, file.name, file.name);
-};
-
-// ドロップ
-window.pdfHandleDrop = async function(event) {
-  event.preventDefault();
-  document.getElementById('pdf-drop-zone')?.classList.remove('drag-over');
-  const file = event.dataTransfer?.files?.[0];
-  if (file) await pdfHandleFile(file);
-};
-
-// URL から PDF を取得して解析
-window.pdfStartFromUrl = async function() {
-  if (_pdfLoading) return;
-  const urlInput = document.getElementById('pdf-url-input');
-  const url = urlInput?.value?.trim();
-  if (!url || !url.startsWith('http')) {
-    _pdfShowError('有効なPDF URLを入力してください（https://... ）');
-    return;
-  }
-
-  const btn = document.getElementById('pdf-url-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '取得中…'; }
-
-  // PDF URL からバイナリを取得
-  let arrayBuf;
-  try {
-    // CORS プロキシ経由
-    const proxies = [
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-      url, // 直接（CORS 許可サーバーの場合）
-    ];
-    let fetched = false;
-    for (const proxyUrl of proxies) {
-      try {
-        const res = await fetch(proxyUrl, { signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        arrayBuf = await res.arrayBuffer();
-        fetched = true;
-        break;
-      } catch(e) { console.warn('[PdfParser] fetch試行失敗:', e.message); }
-    }
-    if (!fetched) throw new Error('PDFを取得できませんでした（URLが正しいか、CORSが許可されているか確認してください）');
-  } catch(e) {
-    _pdfShowError(e.message);
-    if (btn) { btn.disabled = false; btn.textContent = '解析'; }
-    return;
-  }
-
-  if (btn) { btn.disabled = false; btn.textContent = '解析'; }
-  await _pdfPipeline(arrayBuf, url, url);
-};
-
-// ================================================================
-// § 10  確定・手動フォールバック
-// ================================================================
-
-// 「この内容で追加する」ボタン → 既存 confirmUrlResult() の流れを流用
-window.pdfConfirmResult = function() {
-  if (!_pdfResult) return;
-  // _urlParseResult に PDF 結果をセットして既存フローへ
-  _urlParseResult = _pdfResult;
-  confirmUrlResult();
-};
-
-// 手動入力フォールバック
-window._pdfManualFallback = function() {
+window._aipManual = function() {
+  const url = document.getElementById('url-modal-input')?.value?.trim() || '';
   _urlParseResult = {
     title:'', name:'', category:'', gender:'mens', region:'domestic',
     area:'', prefecture:'', course:'', courseName:'', organizer:'', status:'tbd',
     startDate:null, endDate:null, entryDeadline:null, cancelDeadline:null,
     prize:'', prizeWinner:'', entryFee:'', practiceRoundFee:'',
     entryMethod:'', qualification:'', capacity:'', notes:'',
-    links:{ website:'', official:'', instagram:'', entry:'', pairing:'', result:'' },
-    officialUrl:'', igUrl:'', entryUrl:'',
-    sourceUrl:'', sourceType:'manual', parsingStatus:'manual',
+    links:{ website:url, official:url, instagram:'', entry:'', pairing:'', result:'' },
+    officialUrl:url, igUrl:'', entryUrl:'',
+    sourceUrl:url, sourceType:'manual', parsingStatus:'manual',
     aiConfidence:0, rawContent:'', extractedText:'',
     metadata:{ aiExtracted:false }, _catColor:'#8090A0', _catLabel:'',
   };
   confirmUrlResult();
 };
 
-// ================================================================
-// § 11  HTML エスケープ
-// ================================================================
-function _esc(s) {
-  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* ── startUrlFetch 完全置き換え ── */
+window.startUrlFetch = async function() {
+  if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
+    if (typeof showToast === 'function') showToast('🔒 管理者のみ利用できます');
+    return;
+  }
+  const url = document.getElementById('url-modal-input')?.value?.trim();
+  if (!url || !url.startsWith('http')) { showError('有効なURLを入力してください（https://... ）'); return; }
+
+  const btn = document.getElementById('url-fetch-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '解析中…'; }
+
+  ensureUI(); resetSteps();
+  document.getElementById('aip-steps')?.classList.add('show');
+  document.getElementById('url-result-box')?.classList.remove('show');
+  document.getElementById('url-error-box')?.classList.remove('show');
+  document.getElementById('url-confirm-btn').style.display = 'none';
+  document.getElementById('url-progress')?.classList.remove('show');
+
+  try {
+    const result = await AiUrlParser.parse(url, step);
+    _urlParseResult = result;
+    showResult(result);
+    if (typeof showToast === 'function') showToast('✅ AI解析完了！内容を確認してください');
+  } catch(err) {
+    console.error('[AIP]', err);
+    resetSteps();
+    showError(err.message || 'AI解析に失敗しました');
+    if (typeof showToast === 'function') showToast('⚠️ 解析失敗');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '解析'; }
+  }
+};
+
+/* ── openUrlModal 管理者チェック ── */
+const _origOpen = window.openUrlModal;
+window.openUrlModal = function() {
+  if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
+    if (typeof showToast === 'function') showToast('🔒 管理者のみ利用できます');
+    return;
+  }
+  if (typeof _origOpen === 'function') _origOpen();
+  setTimeout(() => { ensureUI(); resetSteps(); document.getElementById('aip-steps')?.classList.remove('show'); }, 80);
+};
+
+/* ── 既存ダミー関数を無害化 ── */
+window._fetchRawContent = async () => ({ rawHtml:'', rawText:'', ocrText:'', fetchedAt: new Date().toISOString() });
+
+/* ── CSS（インライン追加） ── */
+if (!document.getElementById('aip-v3-css')) {
+  const st = document.createElement('style');
+  st.id = 'aip-v3-css';
+  st.textContent = `
+    .aip-steps{display:none;flex-direction:column;gap:8px;margin-bottom:14px;}
+    .aip-steps.show{display:flex;}
+    .aip-step{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:500;color:#c7c7cc;transition:color .18s;}
+    .aip-step.active{color:#1d1d1f;font-weight:700;}
+    .aip-step.done{color:#39C892;}
+    .aip-step.err{color:#C03030;}
+    .aip-dot{width:22px;height:22px;border-radius:50%;border:2px solid #e5e5ea;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;background:#fff;transition:all .18s;color:#c7c7cc;}
+    .aip-step.active .aip-dot{border-color:#39C892;color:#39C892;animation:aip-ring 1.2s ease-in-out infinite;}
+    .aip-step.done .aip-dot{border-color:#39C892;background:#39C892;color:#fff;}
+    .aip-step.err .aip-dot{border-color:#C03030;background:#C03030;color:#fff;}
+    @keyframes aip-ring{0%,100%{box-shadow:0 0 0 0 rgba(57,200,146,.45);}50%{box-shadow:0 0 0 6px rgba(57,200,146,0);}}
+    .url-modal-sheet{max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+    .url-modal-body{padding:12px 18px 24px;}
+  `;
+  document.head.appendChild(st);
 }
 
-// ================================================================
-// § 12  admin ページに PDF 解析ボタンを追加（既存 URL ボタンの隣）
-// ================================================================
-(function addPdfButtonToAdmin() {
-  function inject() {
-    // 既存の admin-url-btn の次に PDF ボタンを追加
-    const urlBtn = document.querySelector('.admin-url-btn');
-    if (!urlBtn || document.getElementById('admin-pdf-btn')) return;
-
-    const pdfBtn = document.createElement('button');
-    pdfBtn.id = 'admin-pdf-btn';
-    pdfBtn.className = 'admin-url-btn admin-only';
-    pdfBtn.style.cssText = 'background:#fff;color:#C03030;border:1.5px solid rgba(192,48,48,.25);margin-left:4px;';
-    pdfBtn.innerHTML = `
-      <svg width="12" height="12" viewBox="0 0 22 22" fill="none">
-        <path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-        <polyline points="13 3 13 9 19 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      PDF解析`;
-    pdfBtn.onclick = function() {
-      // URL モーダルを開いて PDF タブに切り替え
-      if (typeof openUrlModal === 'function') openUrlModal();
-      setTimeout(() => upmSwitchTab('pdf'), 60);
-    };
-    urlBtn.parentNode.insertBefore(pdfBtn, urlBtn.nextSibling);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(inject, 400), { once: true });
-  } else {
-    setTimeout(inject, 400);
-  }
-})();
-
 console.info(
-  '%c[PdfParser v1]%c PDF募集要項AI解析 初期化完了',
-  'background:#C03030;color:#fff;padding:2px 8px;border-radius:3px;font-weight:800;',
-  'color:#C03030;font-weight:600;'
+  '%c[AiUrlParser v3]%c TextCleaner + DateNormalizer + ConfidenceCalculator 実ロジック統合完了',
+  'background:#1d1d1f;color:#39C892;padding:2px 8px;border-radius:3px;font-weight:800;',
+  'color:#1d1d1f;font-weight:600;'
 );
 
 })();
