@@ -19033,23 +19033,26 @@ console.info(
 </script>
 
 <!-- ================================================================
-  ProNexaX — AiUrlParser v1.0（Claude API 本接続）
+  ProNexaX — AiUrlParser v2.0（Vercel Function 経由 / APIキー不要）
   ──────────────────────────────────────────────────────────────────
-  ■ 既存関数の上書き（末尾で差し替え）
-    - _fetchRawContent()       ダミー → allorigins / corsproxy 経由 fetch
-    - parseWebsiteTournament() ダミー → Claude API JSON 抽出
-    - normalizeTournamentData() ダミー → Claude API 呼び出し後の正規化
-    - startUrlFetch()          旧フロー → AiUrlParser 経由に切り替え
+  ■ セキュリティ
+    フロントに API キーを持たず、
+    /api/parseTournament（Vercel Serverless Function）経由で
+    Claude API を安全に呼び出す。
 
-  ■ 追加（新規）
-    - AiUrlParser クラス       全解析ロジックを分離・再利用可能
-    - parseBatch()             複数URL一括解析（将来拡張用）
-    - 4段階ステップUI          アニメーション付き進捗表示
-    - 信頼度バッジ・カテゴリチップ  結果プレビュー強化
+  ■ 構成
+    AiUrlParser クラス
+      fetchHtml()        allorigins → corsproxy フォールバック
+      htmlToText()       DOMParser でテキスト抽出
+      callApi()          /api/parseTournament へ POST ← ★ キー不要
+      detectCategory()   URL + タイトルから tournamentCategories キーへ
+      parse()            単一URL解析メイン
+      parseBatch()       複数URL一括解析（将来拡張用）
 
-  ■ 絶対変更しない
-    - Firebase Auth / Firestore / Realtime sync
-    - Favorites / 管理CMS / PWA / Apple風UI
+  ■ 既存コードの上書き
+    startUrlFetch()      AiUrlParser.parse() 経由に切り替え
+    openUrlModal()       管理者チェック追加
+    _fetchRawContent()   無害化（呼ばれても何もしない）
   ================================================================ -->
 
 <style id="aip-styles">
@@ -19097,7 +19100,7 @@ console.info(
 .url-error-box { display:none; background:#fdf0f0; border:1px solid rgba(200,50,50,.2); border-radius:12px; padding:13px; margin-bottom:12px; font-size:12px; color:#C03030; line-height:1.6; }
 .url-error-box.show { display:block; }
 
-/* ── リトライ/手動ボタン ── */
+/* ── ボタン ── */
 .aip-acts { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
 .aip-retry, .aip-manual {
   display:inline-flex; align-items:center; gap:5px; padding:7px 13px;
@@ -19108,63 +19111,29 @@ console.info(
 .aip-manual { background:#f5f5f7; border:1.5px solid rgba(0,0,0,.1);      color:#3a3a3c; }
 .aip-retry:active,.aip-manual:active { opacity:.7; }
 
-/* url-modal スクロール対応 */
+/* モーダル スクロール */
 .url-modal-sheet { max-height:88vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 .url-modal-body  { padding:12px 18px 24px; }
 </style>
 
 <script>
 /* ================================================================
-  § 1  AiUrlParser クラス — 全解析ロジックを分離・再利用可能
+  § 1  AiUrlParser クラス
   ================================================================ */
 class AiUrlParser {
 
-  /* ── 設定 ── */
-  static MODEL      = 'claude-sonnet-4-20250514';
-  static API_URL    = 'https://api.anthropic.com/v1/messages';
-  static MAX_TOKENS = 1200;
-  static TIMEOUT_MS = 38000;
-  static TEXT_LIMIT = 5500;   // Claude へ送るテキストの文字数上限
+  // ── 設定 ──
+  static API_ROUTE  = '/api/parseTournament'; // Vercel Function エンドポイント
+  static TEXT_LIMIT = 5500;
+  static TIMEOUT_MS = 42_000;                 // Function 側 30s + バッファ
 
-  /* ── CORSプロキシ（フォールバック順） ── */
+  // CORSプロキシ（HTML取得用）
   static PROXIES = [
     u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
     u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
   ];
 
-  /* ── System Prompt ── */
-  static SYS = `あなたはゴルフ大会情報を抽出する専門AIです。
-与えられたウェブページテキストから大会情報をJSONのみで返してください。
-説明・前置き・コードブロック（\`\`\`）は絶対に含めないでください。純粋なJSONだけを返してください。
-日付は必ずYYYY-MM-DD形式に変換してください。不明なフィールドはnullにしてください。
-
-必ず以下のキー名でJSONを返してください:
-{
-  "name": "大会名",
-  "start": "YYYY-MM-DD",
-  "end": "YYYY-MM-DD",
-  "entryDeadline": "YYYY-MM-DD",
-  "cancelDeadline": "YYYY-MM-DD",
-  "place": "ゴルフ場名",
-  "prefecture": "都道府県（英字キー例: tokyo/osaka/aichi/kanagawa/fukuoka/hokkaido/okinawa/nagano）",
-  "category": "カテゴリキー（jgto/jlpga/jpga/pga/senior/qt/qt_w/mini/pref_open/open/overseas のいずれか）",
-  "gender": "mens または womens",
-  "region": "domestic または overseas",
-  "entryFee": "参加費（例: 30,000円）",
-  "prize": "賞金総額（例: 15,000万円）",
-  "prizeWinner": "優勝賞金",
-  "organizer": "主催者名",
-  "entryMethod": "エントリー方法",
-  "qualification": "出場資格",
-  "capacity": "定員（例: 144名）",
-  "website": "公式サイトURL",
-  "instagram": "Instagram URL",
-  "entryUrl": "エントリーフォームURL",
-  "memo": "特記事項",
-  "confidence": 0.0から1.0の数値（抽出の確信度）
-}`;
-
-  /* ── カテゴリ自動判定ルール（URL + タイトルテキスト） ── */
+  // カテゴリ自動判定ルール
   static CAT_RULES = [
     // 女子ツアー
     { re:/jlpga\.or\.jp|jlpga\.com|\bjlpga\b|ladiesgolf/i, cat:'jlpga',       gender:'womens' },
@@ -19173,12 +19142,12 @@ class AiUrlParser {
     // 男子国内ツアー
     { re:/jgto\.or\.jp|jgto\.com|\bjgto\b/i,               cat:'jgto',        gender:'mens'   },
     { re:/jpga\.or\.jp|\bjpga\b/i,                          cat:'jpga',        gender:'mens'   },
-    { re:/acntour|acn.tour|acngolf/i,                       cat:'acn',         gender:'mens'   },
+    { re:/acntour|acn.tour/i,                               cat:'acn',         gender:'mens'   },
     { re:/senior|シニア/i,                                  cat:'senior',      gender:'mens'   },
     { re:/\bqt\b(?!.*w)|クォリファイングトーナメント/i,      cat:'qt',          gender:'mens'   },
     // ミニツアー
     { re:/atp.golf|atpgolf/i,                               cat:'atp_golf',    gender:'mens'   },
-    { re:/fj.tour|fjtour/i,                                 cat:'fj_tour',     gender:'mens'   },
+    { re:/fj.tour/i,                                        cat:'fj_tour',     gender:'mens'   },
     { re:/future.tour/i,                                    cat:'future',      gender:'mens'   },
     { re:/doucus/i,                                         cat:'doucus',      gender:'mens'   },
     { re:/speeder|スピーダー/i,                             cat:'speeder',     gender:'mens'   },
@@ -19195,104 +19164,68 @@ class AiUrlParser {
     { re:/livgolf|liv.golf/i,                               cat:'liv',         gender:'mens',  region:'overseas' },
   ];
 
-  /* ── CORSプロキシ経由でHTML取得 ── */
+  /* ── CORSプロキシ経由で HTML 取得 ── */
   static async fetchHtml(url) {
     let lastErr;
-    for (const mkProxy of this.PROXIES) {
+    for (const mk of this.PROXIES) {
       try {
-        const res = await fetch(mkProxy(url), {
-          signal: AbortSignal.timeout(14000),
-        });
+        const res = await fetch(mk(url), { signal: AbortSignal.timeout(14000) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         const html = json.contents || json.body || json.html || '';
         if (html) return html;
       } catch(e) { lastErr = e; }
     }
-    // 取得失敗はエラーにせず空文字を返す（URLのみで解析続行）
     console.warn('[AIP] HTML取得失敗 — URLのみで解析します:', lastErr?.message || '不明');
-    return '';
+    return ''; // エラーにせず続行
   }
 
-  /* ── HTML → プレーンテキスト（DOMParser + 不要タグ除去） ── */
+  /* ── HTML → プレーンテキスト（DOMParser） ── */
   static htmlToText(html) {
     if (!html) return '';
     try {
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      ['script','style','nav','footer','header','aside','noscript','iframe'].forEach(tag =>
-        doc.querySelectorAll(tag).forEach(el => el.remove())
-      );
+      ['script','style','nav','footer','header','aside','noscript','iframe']
+        .forEach(t => doc.querySelectorAll(t).forEach(el => el.remove()));
       const txt = doc.body?.innerText || doc.body?.textContent || '';
-      // 連続空白・改行を整理して TEXT_LIMIT 文字に切り詰め
       return txt.replace(/[ \t]{3,}/g,' ').replace(/\n{4,}/g,'\n\n').trim().slice(0, this.TEXT_LIMIT);
     } catch {
       return html.replace(/<[^>]+>/g,' ').replace(/\s{3,}/g,' ').trim().slice(0, this.TEXT_LIMIT);
     }
   }
 
-  /* ── Anthropic Messages API 本接続 ── */
-  static async callClaude(pageText, sourceUrl) {
-    const userContent =
-      `解析対象URL: ${sourceUrl}\n\n` +
-      `--- ページテキスト ---\n` +
-      `${pageText || '（ページ取得失敗。URLから大会情報を推測してください）'}\n` +
-      `---`;
-
+  /* ── /api/parseTournament へ POST（APIキー不要） ── */
+  static async callApi(pageText, sourceUrl) {
     let res;
     try {
-      res = await fetch(this.API_URL, {
-        method: 'POST',
+      res = await fetch(this.API_ROUTE, {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model:      this.MODEL,
-          max_tokens: this.MAX_TOKENS,
-          system:     this.SYS,
-          messages:   [{ role: 'user', content: userContent }],
-        }),
-        signal: AbortSignal.timeout(this.TIMEOUT_MS),
+        body:    JSON.stringify({ pageText, sourceUrl }),
+        signal:  AbortSignal.timeout(this.TIMEOUT_MS),
       });
     } catch(e) {
       if (e.name === 'TimeoutError' || e.name === 'AbortError') {
-        throw new Error('AI解析がタイムアウトしました（38秒）。リトライしてください');
+        throw new Error('解析がタイムアウトしました。リトライしてください');
       }
-      throw new Error('ネットワークエラー: ' + (e.message || '不明'));
+      throw new Error('サーバーへの接続に失敗しました: ' + (e.message || '不明'));
     }
 
-    // HTTP エラー処理
-    if (!res.ok) {
-      let errMsg = `HTTP ${res.status}`;
-      try {
-        const e = await res.json();
-        errMsg = e?.error?.message || errMsg;
-      } catch { /**/ }
-      if (res.status === 429) throw new Error('APIのレート制限に達しました。しばらく待ってからリトライしてください');
-      if (res.status === 401) throw new Error('APIキーが無効または期限切れです');
-      if (res.status === 413) throw new Error('テキストが長すぎます。別のURLをお試しください');
-      throw new Error('Claude API エラー: ' + errMsg);
+    // サーバーからの JSON を読む
+    let body;
+    try { body = await res.json(); } catch {
+      throw new Error(`サーバーエラー (HTTP ${res.status})`);
     }
 
-    const data = await res.json();
-    const raw  = (data.content?.[0]?.text || '').trim();
-    if (!raw) throw new Error('AIから空のレスポンスが返されました。リトライしてください');
-
-    // JSON パース
-    // ① コードブロックを除去してから試みる
-    const cleaned = raw.replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim();
-    try {
-      return JSON.parse(cleaned);
-    } catch { /**/ }
-
-    // ② { ... } を正規表現で抽出して試みる
-    const m = raw.match(/\{[\s\S]*\}/);
-    if (m) {
-      try { return JSON.parse(m[0]); } catch { /**/ }
+    if (!res.ok || !body.ok) {
+      // サーバー側が error フィールドを持っている場合そのまま表示
+      throw new Error(body.error || `サーバーエラー (HTTP ${res.status})`);
     }
 
-    console.error('[AIP] JSON parse失敗。raw response:', raw.slice(0, 400));
-    throw new Error('AIの応答をJSONとして解析できませんでした。リトライしてください');
+    return body.data; // Claude が返した大会情報 JSON
   }
 
-  /* ── URL + タイトルからカテゴリを自動判定 ── */
+  /* ── カテゴリ自動判定 ── */
   static detectCategory(url, title = '') {
     const hay = url + ' ' + title;
     for (const rule of this.CAT_RULES) {
@@ -19300,10 +19233,9 @@ class AiUrlParser {
         return { cat: rule.cat, gender: rule.gender || 'mens', region: rule.region || 'domestic' };
       }
     }
-    return { cat: '', gender: 'mens', region: 'domestic' };
+    return { cat:'', gender:'mens', region:'domestic' };
   }
 
-  /* ── AIカテゴリキーを CAT_LABELS で検証・フォールバック ── */
   static resolveCategory(aiCat, urlCat) {
     if (typeof CAT_LABELS !== 'undefined') {
       if (aiCat  && CAT_LABELS[aiCat])  return aiCat;
@@ -19314,11 +19246,10 @@ class AiUrlParser {
 
   /* ================================================================
      parse(url, onStep) — 単一URL解析メイン
-     onStep: (key: 'fetch'|'parse'|'ai'|'cat', state: 'active'|'done'|'err') => void
-     戻り値: _atmFill() 完全互換オブジェクト
+     onStep: (key, state) => void
      ================================================================ */
   static async parse(url, onStep = () => {}) {
-    const s = (k, st) => { try { onStep(k, st); } catch { /**/ } };
+    const s = (k, st) => { try { onStep(k, st); } catch { /* ignore */ } };
 
     // STEP 1: HTML フェッチ
     s('fetch', 'active');
@@ -19330,12 +19261,12 @@ class AiUrlParser {
     const pageText = this.htmlToText(rawHtml);
     s('parse', 'done');
 
-    // STEP 3: Claude AI 解析（失敗時は例外を投げる）
+    // STEP 3: /api/parseTournament 呼び出し
     s('ai', 'active');
-    const ai = await this.callClaude(pageText, url);
+    const ai = await this.callApi(pageText, url); // 失敗は例外を投げる
     s('ai', 'done');
 
-    // STEP 4: カテゴリ自動判定
+    // STEP 4: カテゴリ判定
     s('cat', 'active');
     const urlCatInfo = this.detectCategory(url, ai.name || '');
     const cat    = this.resolveCategory(ai.category, urlCatInfo.cat);
@@ -19346,9 +19277,7 @@ class AiUrlParser {
     const catColor = (typeof CAT_COLORS !== 'undefined' ? CAT_COLORS[cat] : null) || '#8090A0';
     const catLabel = (typeof CAT_LABELS !== 'undefined' ? CAT_LABELS[cat] : null) || cat;
 
-    /* _atmFill() と完全互換の形式に変換 */
     return {
-      // 基本情報
       title:           ai.name             || '',
       name:            ai.name             || '',
       category:        cat,
@@ -19360,22 +19289,18 @@ class AiUrlParser {
       courseName:      ai.place             || '',
       organizer:       ai.organizer         || '',
       status:          'tbd',
-      // 日程
       startDate:       ai.start             || null,
       endDate:         ai.end               || null,
       entryDeadline:   ai.entryDeadline     || null,
       cancelDeadline:  ai.cancelDeadline    || null,
-      // 賞金・費用
       prize:           ai.prize             || '',
       prizeWinner:     ai.prizeWinner       || '',
       entryFee:        ai.entryFee          || '',
       practiceRoundFee:'',
-      // エントリー
       entryMethod:     ai.entryMethod       || '',
       qualification:   ai.qualification     || '',
       capacity:        ai.capacity          || '',
       notes:           ai.memo              || '',
-      // リンク（_atmFill の links.* に対応）
       links: {
         website:   ai.website   || url,
         official:  ai.website   || url,
@@ -19384,11 +19309,9 @@ class AiUrlParser {
         pairing:   '',
         result:    '',
       },
-      // フラットURL（旧フォーマット互換）
       officialUrl: ai.website   || url,
       igUrl:       ai.instagram || '',
       entryUrl:    ai.entryUrl  || '',
-      // メタ
       sourceUrl:    url,
       sourceType:   'ai_url',
       parsingStatus:'success',
@@ -19397,11 +19320,11 @@ class AiUrlParser {
       extractedText:pageText.slice(0, 1000),
       metadata: {
         aiExtracted:   true,
-        aiModel:       this.MODEL,
+        aiModel:       'claude-sonnet-4-20250514',
         aiExtractedAt: new Date().toISOString(),
         sourceFormat:  'website',
+        via:           'vercel-function',
       },
-      // UI 用（内部専用）
       _catColor: catColor,
       _catLabel: catLabel,
     };
@@ -19409,8 +19332,6 @@ class AiUrlParser {
 
   /* ================================================================
      parseBatch(urls, onProgress) — 複数URL一括解析（将来拡張用）
-     urls:       string[]
-     onProgress: (index, total, result: {url, ok, data?, error?}) => void
      ================================================================ */
   static async parseBatch(urls, onProgress) {
     const results = [];
@@ -19423,13 +19344,12 @@ class AiUrlParser {
         item = { url: urls[i], ok: false, error: e.message };
       }
       results.push(item);
-      try { onProgress && onProgress(i + 1, urls.length, item); } catch { /**/ }
+      try { onProgress && onProgress(i + 1, urls.length, item); } catch { /* ignore */ }
     }
     return results;
   }
 }
 
-// グローバル公開（将来の外部利用・バッチ解析のため）
 window.AiUrlParser = AiUrlParser;
 
 
@@ -19439,17 +19359,15 @@ window.AiUrlParser = AiUrlParser;
 (function(){
 'use strict';
 
-/* ── ステップ定義 ── */
 const STEPS = [
-  { id:'aip-s1', key:'fetch', label:'URLを取得中'        },
-  { id:'aip-s2', key:'parse', label:'テキストを抽出中'    },
-  { id:'aip-s3', key:'ai',    label:'AIが大会情報を解析'  },
-  { id:'aip-s4', key:'cat',   label:'カテゴリを自動判定'  },
+  { id:'aip-s1', key:'fetch', label:'URLを取得中'       },
+  { id:'aip-s2', key:'parse', label:'テキストを抽出中'   },
+  { id:'aip-s3', key:'ai',    label:'AIが大会情報を解析' },
+  { id:'aip-s4', key:'cat',   label:'カテゴリを自動判定' },
 ];
 const KEY_MAP = {};
 STEPS.forEach((s, i) => { KEY_MAP[s.key] = s.id; });
 
-/* ── ステップUI を動的挿入（初回のみ） ── */
 function ensureUI() {
   if (document.getElementById('aip-steps')) return;
   const progress = document.getElementById('url-progress');
@@ -19465,35 +19383,30 @@ function ensureUI() {
   progress.parentNode.insertBefore(wrap, progress);
 }
 
-/* ── ステップ状態を更新 ── */
 function step(key, state) {
   const el = document.getElementById(KEY_MAP[key]);
   if (!el) return;
   el.className = 'aip-step ' + state;
   const dot = el.querySelector('.aip-dot');
   const idx = STEPS.findIndex(s => s.key === key);
-  if (dot) dot.textContent = state === 'done' ? '✓' : state === 'err' ? '✕' : String(idx + 1);
+  if (dot) dot.textContent = state==='done' ? '✓' : state==='err' ? '✕' : String(idx+1);
 }
 
-/* ── 全ステップリセット ── */
 function resetSteps() {
   STEPS.forEach((s, i) => {
     const el = document.getElementById(s.id);
     if (!el) return;
     el.className = 'aip-step';
     const dot = el.querySelector('.aip-dot');
-    if (dot) dot.textContent = String(i + 1);
+    if (dot) dot.textContent = String(i+1);
   });
 }
 
-/* ── HTML エスケープ ── */
 function esc(s) {
-  return String(s || '').replace(/[&<>"']/g, c =>
-    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])
-  );
+  return String(s||'').replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-/* ── 結果プレビュー表示 ── */
 function showResult(data) {
   const box   = document.getElementById('url-result-box');
   const title = document.getElementById('url-result-title');
@@ -19502,29 +19415,23 @@ function showResult(data) {
 
   title.textContent = data.title || '大会情報（要確認）';
 
-  // 信頼度バッジ
   const conf  = data.aiConfidence || 0;
   const level = conf >= 0.72 ? 'high' : conf >= 0.42 ? 'mid' : 'low';
   const confTx =
-    conf >= 0.72 ? `✅ 信頼度 高 (${Math.round(conf * 100)}%)` :
-    conf >= 0.42 ? `⚠️ 要確認 (${Math.round(conf * 100)}%) — 内容を確認してください` :
+    conf >= 0.72 ? `✅ 信頼度 高 (${Math.round(conf*100)}%)` :
+    conf >= 0.42 ? `⚠️ 要確認 (${Math.round(conf*100)}%) — 内容を確認してください` :
                    `❌ 信頼度 低 — 手動で修正してください`;
 
-  // 都道府県ラベル
-  const prefLabel = (typeof _PREF_MAP !== 'undefined' && data.prefecture)
-    ? (_PREF_MAP[data.prefecture] || data.prefecture)
-    : (data.prefecture || '');
+  const prefLabel = (typeof _PREF_MAP!=='undefined' && data.prefecture)
+    ? (_PREF_MAP[data.prefecture] || data.prefecture) : (data.prefecture || '');
 
-  // カテゴリチップ
   const catHtml = data._catLabel
-    ? `<div style="margin-bottom:8px;"><span class="aip-cat" style="background:${data._catColor || '#8090A0'};">${esc(data._catLabel)}</span></div>`
+    ? `<div style="margin-bottom:8px;"><span class="aip-cat" style="background:${data._catColor||'#8090A0'};">${esc(data._catLabel)}</span></div>`
     : '';
 
   const fields = [
     ['大会名',    data.title],
-    ['開催日',    data.startDate
-      ? `${data.startDate}${data.endDate && data.endDate !== data.startDate ? ' 〜 ' + data.endDate : ''}`
-      : null],
+    ['開催日',    data.startDate ? `${data.startDate}${data.endDate&&data.endDate!==data.startDate?' 〜 '+data.endDate:''}` : null],
     ['締切',      data.entryDeadline],
     ['ゴルフ場',  data.course],
     ['都道府県',  prefLabel],
@@ -19540,11 +19447,8 @@ function showResult(data) {
   rows.innerHTML =
     `<div class="aip-conf ${level}">${confTx}</div>` +
     catHtml +
-    fields.filter(([, v]) => v).map(([l, v]) =>
-      `<div class="url-result-row">
-         <span class="url-result-label">${l}</span>
-         <span class="url-result-val">${esc(v)}</span>
-       </div>`
+    fields.filter(([,v])=>v).map(([l,v])=>
+      `<div class="url-result-row"><span class="url-result-label">${l}</span><span class="url-result-val">${esc(v)}</span></div>`
     ).join('');
 
   box.classList.add('show');
@@ -19552,7 +19456,6 @@ function showResult(data) {
   document.getElementById('url-confirm-btn').style.display = '';
 }
 
-/* ── エラー表示（リトライ＆手動フォールバック付き） ── */
 function showError(msg) {
   const eb = document.getElementById('url-error-box');
   if (!eb) return;
@@ -19572,7 +19475,6 @@ function showError(msg) {
   document.getElementById('aip-steps')?.classList.remove('show');
 }
 
-/* ── 手動入力フォールバック ── */
 window._aipManual = function() {
   const url = document.getElementById('url-modal-input')?.value?.trim() || '';
   _urlParseResult = {
@@ -19591,14 +19493,10 @@ window._aipManual = function() {
   confirmUrlResult();
 };
 
-/* ================================================================
-  ★★★ startUrlFetch 完全置き換え ★★★
-  既存のダミー実装 → AiUrlParser 経由の Claude API 本接続
-  ================================================================ */
+/* ── startUrlFetch 完全置き換え ── */
 window.startUrlFetch = async function() {
-  // ① 管理者チェック
   if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
-    if (typeof showToast === 'function') showToast('🔒 管理者のみ利用できます');
+    if (typeof showToast==='function') showToast('🔒 管理者のみ利用できます');
     return;
   }
 
@@ -19611,7 +19509,6 @@ window.startUrlFetch = async function() {
   const btn = document.getElementById('url-fetch-btn');
   if (btn) { btn.disabled = true; btn.textContent = '解析中…'; }
 
-  // ② UI 初期化
   ensureUI();
   resetSteps();
   document.getElementById('aip-steps')?.classList.add('show');
@@ -19621,44 +19518,39 @@ window.startUrlFetch = async function() {
   document.getElementById('url-progress')?.classList.remove('show');
 
   try {
-    // ③ AiUrlParser で解析
     const result = await AiUrlParser.parse(url, step);
-
-    // ④ 結果格納・表示
     _urlParseResult = result;
     showResult(result);
-    if (typeof showToast === 'function') showToast('✅ AI解析完了！内容を確認してください');
-
+    if (typeof showToast==='function') showToast('✅ AI解析完了！内容を確認してください');
   } catch(err) {
     console.error('[AIP]', err);
     resetSteps();
     showError(err.message || 'AI解析に失敗しました');
-    if (typeof showToast === 'function') showToast('⚠️ 解析失敗');
+    if (typeof showToast==='function') showToast('⚠️ 解析失敗');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '解析'; }
   }
 };
 
-/* ── openUrlModal に管理者チェックを追加 ── */
+/* ── openUrlModal 管理者チェック追加 ── */
 const _origOpen = window.openUrlModal;
 window.openUrlModal = function() {
   if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
-    if (typeof showToast === 'function') showToast('🔒 管理者のみ利用できます');
+    if (typeof showToast==='function') showToast('🔒 管理者のみ利用できます');
     return;
   }
-  if (typeof _origOpen === 'function') _origOpen();
+  if (typeof _origOpen==='function') _origOpen();
   setTimeout(() => {
-    ensureUI();
-    resetSteps();
+    ensureUI(); resetSteps();
     document.getElementById('aip-steps')?.classList.remove('show');
   }, 80);
 };
 
-/* ── 既存ダミー関数を無害化（呼ばれても何もしない） ── */
+/* ── 既存ダミー関数を無害化 ── */
 window._fetchRawContent = async () => ({ rawHtml:'', rawText:'', ocrText:'', fetchedAt: new Date().toISOString() });
 
 console.info(
-  '%c[AiUrlParser v1]%c Claude API 本接続完了 — ' + AiUrlParser.MODEL,
+  '%c[AiUrlParser v2]%c Vercel Function 経由 / APIキー安全管理',
   'background:#1d1d1f;color:#39C892;padding:2px 8px;border-radius:3px;font-weight:800;',
   'color:#1d1d1f;font-weight:600;'
 );
