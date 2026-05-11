@@ -11468,17 +11468,16 @@ function goStep(n){
 }
 function renderCatGrid(){
   const grid=document.getElementById('cat-grid');
-  grid.innerHTML=CATEGORIES.map(c=>{
+  // 表示するカテゴリ: personal は固定 + favTours に登録済みのもののみ
+  const visible=CATEGORIES.filter(c=>c.key==='personal'||favTours.has(c.key));
+  grid.innerHTML=visible.map(c=>{
     const isSel=selectedCat===c.key;
     const isEnabled=c.key==='personal'||userEnabledCategories.includes(c.key);
     const selStyle=isSel?`border-color:${c.color};background:${c.color}12`:'';
-    // ★ 「追加済み」バッジは廃止：追加済み状態は .is-enabled クラスのみで管理し、
-    //    Apple純正カレンダー風に枠線をカテゴリカラーで軽く強調するだけにする
     const enabledStyle=isEnabled&&!isSel?`border-color:${c.color}66;`:'';
     return`<div class="cat-item${isSel?' sel':''}${isEnabled?' is-enabled':''}" style="${selStyle}${enabledStyle}" id="cat-${c.key}" data-cat-key="${c.key}"><div class="cat-color-dot" style="background:${c.color}"></div><div style="flex:1;"><div class="cat-name">${c.label}</div><div class="cat-desc">${c.desc}</div></div><div class="cat-check" style="color:${c.color}">✓</div></div>`;
   }).join('');
   grid.classList.toggle('reorder-mode',catReorderMode);
-  // ★ クリック / ドラッグハンドラを取り付け
   bindCatItemHandlers();
 }
 // ★★★ カテゴリ並び替え機能 ★★★
@@ -17672,8 +17671,8 @@ function IOSSheetDrag(config) {
     ? scrollEls.filter(Boolean)
     : (scrollEls ? [scrollEls] : []);
 
-  // ── ドラッグ領域: grabber pill がある上部エリアのみ（48px）──
-  // 80px にするとスクロールコンテナと重複し touch-action:none が競合するため
+  // ── ドラッグ領域: シート上部 80px 全体 ──
+  // handleEl（視覚ハンドル）+ シート自体の上部エリアを使う
   const dragZone = document.createElement('div');
   dragZone.className = 'ios-sheet-drag-zone';
   dragZone.style.cssText = [
@@ -17681,7 +17680,7 @@ function IOSSheetDrag(config) {
     'top:0',
     'left:0',
     'right:0',
-    'height:48px',   // grabber pill (5px) + margin を包む最小高さ
+    'height:48px',
     'z-index:10',
     'cursor:grab',
     'touch-action:none',
@@ -17703,15 +17702,13 @@ function IOSSheetDrag(config) {
   function onStart(e) {
     if (dismissed) return;
 
-    // 内部スクロール中なら dismiss しない
-    // （scrollTop > 4px の場合はドラッグを無視）
     const isScrolled = scrollArr.some(el => el && el.scrollTop > 4);
-    if (isScrolled) return; // preventDefault しない → iOS のスクロールを妨げない
+    if (isScrolled) return; // スクロール中: preventDefault しない → iOS スクロールを通す
+
+    // スクロール中でない: iOS の scroll intent を止めて drag を開始
+    e.preventDefault();
 
     const touch = e.touches ? e.touches[0] : e;
-
-    // 下方向スワイプ意図を事前判定（垂直方向が水平より大きい場合のみ）
-    // この時点では dy が計算できないため、最初のタッチ位置のみ記録
     startY    = touch.clientY;
     lastY     = touch.clientY;
     lastT     = Date.now();
@@ -17720,7 +17717,6 @@ function IOSSheetDrag(config) {
     velSmooth = 0;
     active    = true;
 
-    // transition を一時停止してリアルタイム追従を有効化
     sheetEl.style.transition = 'none';
     sheetEl.classList.add('ios-dragging');
   }
@@ -17732,27 +17728,25 @@ function IOSSheetDrag(config) {
     const touch = e.touches ? e.touches[0] : e;
     const dy    = touch.clientY - startY;
 
-    // 内部スクロール中にドラッグが始まったら、sheetを動かさず静かに中断
-    // （_snapBack() を呼ぶとシートが一瞬動いてしまうため呼ばない）
-    const isScrolled = scrollArr.some(el => el && el.scrollTop > 4);
-    if (isScrolled) {
-      active = false;
-      sheetEl.classList.remove('ios-dragging');
-      sheetEl.style.transition = '';
-      // transform をリセット（translateY が設定されていれば戻す）
-      if (curY !== 0) {
-        sheetEl.style.transform = 'translateY(0)';
-        setTimeout(() => { sheetEl.style.transform = ''; }, 0);
-      }
-      curY = 0;
-      return; // preventDefault しない → iOS のスクロールを妨げない
-    }
-
     // 上方向ドラッグは無視（シートを引き上げない）
     if (dy < 0) {
       curY = 0;
       sheetEl.style.transform = 'translateY(0)';
       return;
+    }
+
+    // 内部スクロール中にドラッグが始まったら静かに中断
+    // _snapBack() を呼ぶと translateY アニメーションが起動し「戻る」挙動になるため呼ばない
+    const isScrolled = scrollArr.some(el => el && el.scrollTop > 4);
+    if (isScrolled) {
+      if (curY !== 0) {
+        sheetEl.style.transition = '';
+        sheetEl.style.transform  = '';
+        curY = 0;
+      }
+      active = false;
+      sheetEl.classList.remove('ios-dragging');
+      return; // preventDefault しない → iOS スクロールを通す
     }
 
     e.preventDefault();
@@ -17880,7 +17874,6 @@ function IOSSheetDrag(config) {
 
   // ── scrollEl の設定 ──
   // touch-action は設定しない（dragZone の touch-action:none と競合するため）
-  // overscroll-behavior:contain と -webkit-overflow-scrolling:touch のみ設定
   scrollArr.forEach(el => {
     if (!el) return;
     el.style.overscrollBehavior       = 'contain';
@@ -17957,7 +17950,7 @@ function _applyIOSHandle(containerEl) {
 .ios-sheet-drag-zone {
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 48px;  /* grabber pill を包む最小高さ。80px だとスクロール領域と重複する */
+  height: 48px;
   z-index: 10;
   cursor: grab;
   touch-action: none;
