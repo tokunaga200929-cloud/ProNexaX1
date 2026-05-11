@@ -19033,30 +19033,23 @@ console.info(
 </script>
 
 <!-- ================================================================
-  ProNexaX — AiUrlParser v2.0（Vercel Function 経由 / APIキー不要）
+  ProNexaX — AiUrlParser v2.0（精度改善版）
   ──────────────────────────────────────────────────────────────────
-  ■ セキュリティ
-    フロントに API キーを持たず、
-    /api/parseTournament（Vercel Serverless Function）経由で
-    Claude API を安全に呼び出す。
+  ■ 改善内容
+    - ゴルフ大会専用 System Prompt（server側）
+    - htmlToText()：ゴルフ大会情報を優先抽出するスマート版
+    - カテゴリ自動判定：20+ルール（JGTO/JLPGA/QT/ミニツアー/海外）
+    - hint 付き API 呼び出し（URLドメイン情報を渡して精度向上）
+    - 4段階ステップUI・信頼度バッジ・リトライ・手動入力対応
 
-  ■ 構成
-    AiUrlParser クラス
-      fetchHtml()        allorigins → corsproxy フォールバック
-      htmlToText()       DOMParser でテキスト抽出
-      callApi()          /api/parseTournament へ POST ← ★ キー不要
-      detectCategory()   URL + タイトルから tournamentCategories キーへ
-      parse()            単一URL解析メイン
-      parseBatch()       複数URL一括解析（将来拡張用）
-
-  ■ 既存コードの上書き
-    startUrlFetch()      AiUrlParser.parse() 経由に切り替え
-    openUrlModal()       管理者チェック追加
-    _fetchRawContent()   無害化（呼ばれても何もしない）
+  ■ 既存関数の上書き（末尾で差し替え）
+    - startUrlFetch()      AiUrlParser.parse() 経由に切り替え
+    - openUrlModal()       管理者チェック追加
+    - _fetchRawContent()   無害化
   ================================================================ -->
 
-<style id="aip-styles">
-/* ── 4段階ステップUI ── */
+<style id="aip-v2-css">
+/* ── ステップUI ── */
 .aip-steps { display:none; flex-direction:column; gap:8px; margin-bottom:14px; }
 .aip-steps.show { display:flex; }
 .aip-step {
@@ -19080,88 +19073,78 @@ console.info(
   0%,100%{ box-shadow:0 0 0 0 rgba(57,200,146,.45); }
   50%    { box-shadow:0 0 0 6px rgba(57,200,146,0);  }
 }
-
 /* ── 信頼度バッジ ── */
 .aip-conf { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:10px; font-size:11px; font-weight:700; margin-bottom:8px; }
 .aip-conf.high { background:#dcf5ea; color:#0B7A44; }
 .aip-conf.mid  { background:#fff3dc; color:#A05800; }
 .aip-conf.low  { background:#fce8e8; color:#C03030; }
-
 /* ── カテゴリチップ ── */
 .aip-cat { display:inline-flex; align-items:center; padding:3px 10px; border-radius:10px; font-size:11px; font-weight:700; color:#fff; margin-bottom:10px; }
-
 /* ── 結果行 ── */
 .url-result-row { display:flex; align-items:flex-start; gap:8px; font-size:12px; padding:5px 0; border-bottom:.5px solid rgba(0,0,0,.05); }
 .url-result-row:last-child { border-bottom:none; }
 .url-result-label { font-weight:700; color:#39C892; white-space:nowrap; min-width:68px; font-size:11px; padding-top:1px; }
 .url-result-val   { flex:1; color:#1d1d1f; line-height:1.5; word-break:break-all; }
-
 /* ── エラーボックス ── */
 .url-error-box { display:none; background:#fdf0f0; border:1px solid rgba(200,50,50,.2); border-radius:12px; padding:13px; margin-bottom:12px; font-size:12px; color:#C03030; line-height:1.6; }
 .url-error-box.show { display:block; }
-
 /* ── ボタン ── */
 .aip-acts { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
-.aip-retry, .aip-manual {
-  display:inline-flex; align-items:center; gap:5px; padding:7px 13px;
-  border-radius:10px; font-size:12px; font-weight:700; font-family:inherit;
-  cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; transition:opacity .12s;
-}
+.aip-retry, .aip-manual { display:inline-flex; align-items:center; gap:5px; padding:7px 13px; border-radius:10px; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; transition:opacity .12s; }
 .aip-retry  { background:#f0fdf6; border:1.5px solid rgba(57,200,146,.4); color:#0B7A44; }
-.aip-manual { background:#f5f5f7; border:1.5px solid rgba(0,0,0,.1);      color:#3a3a3c; }
+.aip-manual { background:#f5f5f7; border:1.5px solid rgba(0,0,0,.1); color:#3a3a3c; }
 .aip-retry:active,.aip-manual:active { opacity:.7; }
-
-/* モーダル スクロール */
+/* モーダルスクロール */
 .url-modal-sheet { max-height:88vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 .url-modal-body  { padding:12px 18px 24px; }
 </style>
 
 <script>
 /* ================================================================
-  § 1  AiUrlParser クラス
+  § 1  AiUrlParser クラス v2.0（精度改善版）
   ================================================================ */
 class AiUrlParser {
 
   // ── 設定 ──
-  static API_ROUTE  = '/api/parseTournament'; // Vercel Function エンドポイント
-  static TEXT_LIMIT = 5500;
-  static TIMEOUT_MS = 42_000;                 // Function 側 30s + バッファ
+  static API_ROUTE  = '/api/parseTournament';
+  static TEXT_LIMIT = 7000;   // 精度向上のため増加
+  static TIMEOUT_MS = 42_000;
 
-  // CORSプロキシ（HTML取得用）
+  // ── CORSプロキシ ──
   static PROXIES = [
     u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
     u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
   ];
 
-  // カテゴリ自動判定ルール
+  // ── カテゴリ自動判定ルール ──
   static CAT_RULES = [
-    // 女子ツアー
-    { re:/jlpga\.or\.jp|jlpga\.com|\bjlpga\b|ladiesgolf/i, cat:'jlpga',       gender:'womens' },
-    { re:/stepup|step.up|ステップアップ/i,                  cat:'stepup',      gender:'womens' },
-    { re:/qt.*wom|qualifier.*women/i,                       cat:'qt_w',        gender:'womens' },
-    // 男子国内ツアー
-    { re:/jgto\.or\.jp|jgto\.com|\bjgto\b/i,               cat:'jgto',        gender:'mens'   },
-    { re:/jpga\.or\.jp|\bjpga\b/i,                          cat:'jpga',        gender:'mens'   },
-    { re:/acntour|acn.tour/i,                               cat:'acn',         gender:'mens'   },
-    { re:/senior|シニア/i,                                  cat:'senior',      gender:'mens'   },
-    { re:/\bqt\b(?!.*w)|クォリファイングトーナメント/i,      cat:'qt',          gender:'mens'   },
+    // 女子プロ
+    { re:/jlpga\.or\.jp|jlpga\.com|\bjlpga\b|ladiesgolf|日本女子プロゴルフ/i, cat:'jlpga',       gender:'womens' },
+    { re:/stepup|step.up|ステップアップツアー/i,                               cat:'stepup',      gender:'womens' },
+    { re:/qt.*wom|qualifier.*women|クォリファイング.*女子/i,                    cat:'qt_w',        gender:'womens' },
+    // 男子プロ
+    { re:/jgto\.or\.jp|jgto\.com|\bjgto\b|ジャパンゴルフツアー機構/i,          cat:'jgto',        gender:'mens'   },
+    { re:/jpga\.or\.jp|\bjpga\b|日本プロゴルフ協会/i,                           cat:'jpga',        gender:'mens'   },
+    { re:/acntour|acn.tour/i,                                                  cat:'acn',         gender:'mens'   },
+    { re:/senior|シニアツアー|シニア選手権|50歳以上/i,                          cat:'senior',      gender:'mens'   },
+    { re:/クォリファイングトーナメント|\bqt\b(?!.*w)|qualifying.tour(?!.*w)/i, cat:'qt',          gender:'mens'   },
     // ミニツアー
-    { re:/atp.golf|atpgolf/i,                               cat:'atp_golf',    gender:'mens'   },
-    { re:/fj.tour/i,                                        cat:'fj_tour',     gender:'mens'   },
-    { re:/future.tour/i,                                    cat:'future',      gender:'mens'   },
-    { re:/doucus/i,                                         cat:'doucus',      gender:'mens'   },
-    { re:/speeder|スピーダー/i,                             cat:'speeder',     gender:'mens'   },
+    { re:/atp.golf|atpgolf/i,    cat:'atp_golf', gender:'mens' },
+    { re:/\bfj.tour|fjtour/i,    cat:'fj_tour',  gender:'mens' },
+    { re:/future.tour/i,         cat:'future',   gender:'mens' },
+    { re:/doucus/i,              cat:'doucus',   gender:'mens' },
+    { re:/speeder|スピーダー/i,  cat:'speeder',  gender:'mens' },
     // オープン
-    { re:/県オープン|pref.open/i,                           cat:'pref_open',   gender:'mens'   },
-    { re:/有名オープン|famous.open/i,                       cat:'famous_open', gender:'mens'   },
-    { re:/地方オープン|local.open/i,                        cat:'local_open',  gender:'mens'   },
-    { re:/オープン|open/i,                                  cat:'open',        gender:'mens'   },
+    { re:/県オープン|county.open|pref.open|地区オープン/i, cat:'pref_open',   gender:'mens' },
+    { re:/有名オープン/i,                                  cat:'famous_open', gender:'mens' },
+    { re:/地方オープン/i,                                  cat:'local_open',  gender:'mens' },
+    { re:/オープン選手権|open/i,                           cat:'open',        gender:'mens' },
     // 海外
-    { re:/pgatour\.com|pga\.com/i,                          cat:'pga',         gender:'mens',  region:'overseas' },
-    { re:/kornferry|korn.ferry/i,                           cat:'korn_ferry',  gender:'mens',  region:'overseas' },
-    { re:/europeantour|dp.world/i,                          cat:'dp_world',    gender:'mens',  region:'overseas' },
-    { re:/asiantour/i,                                      cat:'asian_tour',  gender:'mens',  region:'overseas' },
-    { re:/livgolf|liv.golf/i,                               cat:'liv',         gender:'mens',  region:'overseas' },
+    { re:/pgatour\.com|pga\.com|PGAツアー/i,   cat:'pga',         gender:'mens', region:'overseas' },
+    { re:/kornferry|korn.ferry/i,              cat:'korn_ferry',  gender:'mens', region:'overseas' },
+    { re:/europeantour|dp.world|DPワールド/i,  cat:'dp_world',    gender:'mens', region:'overseas' },
+    { re:/asiantour|アジアンツアー/i,          cat:'asian_tour',  gender:'mens', region:'overseas' },
+    { re:/livgolf|liv.golf/i,                  cat:'liv',         gender:'mens', region:'overseas' },
   ];
 
   /* ── CORSプロキシ経由で HTML 取得 ── */
@@ -19176,32 +19159,74 @@ class AiUrlParser {
         if (html) return html;
       } catch(e) { lastErr = e; }
     }
-    console.warn('[AIP] HTML取得失敗 — URLのみで解析します:', lastErr?.message || '不明');
-    return ''; // エラーにせず続行
+    console.warn('[AIP] HTML取得失敗 — URLのみで解析:', lastErr?.message || '不明');
+    return '';
   }
 
-  /* ── HTML → プレーンテキスト（DOMParser） ── */
+  /* ── HTML → テキスト（ゴルフ大会情報を優先する精度改善版） ── */
   static htmlToText(html) {
     if (!html) return '';
     try {
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      ['script','style','nav','footer','header','aside','noscript','iframe']
-        .forEach(t => doc.querySelectorAll(t).forEach(el => el.remove()));
-      const txt = doc.body?.innerText || doc.body?.textContent || '';
-      return txt.replace(/[ \t]{3,}/g,' ').replace(/\n{4,}/g,'\n\n').trim().slice(0, this.TEXT_LIMIT);
+
+      // 不要タグを除去（広告・SNS埋め込み・フッター等）
+      const REMOVE_TAGS = [
+        'script','style','nav','footer','header','aside',
+        'noscript','iframe','form','button','select',
+        '[class*="sponsor"]','[class*="ad"]','[class*="banner"]',
+        '[class*="related"]','[class*="recommend"]','[id*="footer"]',
+        '[class*="sns"]','[class*="share"]','[class*="cookie"]',
+      ];
+      REMOVE_TAGS.forEach(sel => {
+        try { doc.querySelectorAll(sel).forEach(el => el.remove()); } catch {}
+      });
+
+      // ゴルフ大会情報を含む可能性が高い要素を優先抽出
+      const PRIORITY_SELS = [
+        'main','article','[class*="tournament"]','[class*="event"]',
+        '[class*="detail"]','[class*="info"]','[class*="schedule"]',
+        '[class*="entry"]','[class*="outline"]','[class*="contents"]',
+        'table','dl','ul','ol','h1','h2','h3','h4',
+      ];
+      let priorityText = '';
+      for (const sel of PRIORITY_SELS) {
+        try {
+          doc.querySelectorAll(sel).forEach(el => {
+            const t = el.innerText || el.textContent || '';
+            if (t.trim()) priorityText += t + '\n';
+          });
+        } catch {}
+      }
+
+      // 優先テキストがある場合はそれを使い、ない場合は全文を使う
+      const bodyText = doc.body?.innerText || doc.body?.textContent || '';
+      let result = (priorityText || bodyText)
+        .replace(/[ \t]{3,}/g, ' ')
+        .replace(/\n{4,}/g, '\n\n')
+        .trim();
+
+      // TEXT_LIMIT 文字に切り詰め
+      return result.slice(0, this.TEXT_LIMIT);
     } catch {
       return html.replace(/<[^>]+>/g,' ').replace(/\s{3,}/g,' ').trim().slice(0, this.TEXT_LIMIT);
     }
   }
 
-  /* ── /api/parseTournament へ POST（APIキー不要） ── */
+  /* ── Vercel Function へ POST（APIキーはサーバー側で管理） ── */
   static async callApi(pageText, sourceUrl) {
+    // URLのドメインを hint として渡して精度を向上
+    let hint = '';
+    try {
+      const host = new URL(sourceUrl).hostname;
+      hint = `ドメイン: ${host}`;
+    } catch {}
+
     let res;
     try {
       res = await fetch(this.API_ROUTE, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ pageText, sourceUrl }),
+        body:    JSON.stringify({ pageText, sourceUrl, hint }),
         signal:  AbortSignal.timeout(this.TIMEOUT_MS),
       });
     } catch(e) {
@@ -19211,18 +19236,15 @@ class AiUrlParser {
       throw new Error('サーバーへの接続に失敗しました: ' + (e.message || '不明'));
     }
 
-    // サーバーからの JSON を読む
     let body;
-    try { body = await res.json(); } catch {
-      throw new Error(`サーバーエラー (HTTP ${res.status})`);
-    }
+    try { body = await res.json(); }
+    catch { throw new Error(`サーバーエラー (HTTP ${res.status})`); }
 
     if (!res.ok || !body.ok) {
-      // サーバー側が error フィールドを持っている場合そのまま表示
       throw new Error(body.error || `サーバーエラー (HTTP ${res.status})`);
     }
 
-    return body.data; // Claude が返した大会情報 JSON
+    return body.data;
   }
 
   /* ── カテゴリ自動判定 ── */
@@ -19246,27 +19268,26 @@ class AiUrlParser {
 
   /* ================================================================
      parse(url, onStep) — 単一URL解析メイン
-     onStep: (key, state) => void
      ================================================================ */
   static async parse(url, onStep = () => {}) {
-    const s = (k, st) => { try { onStep(k, st); } catch { /* ignore */ } };
+    const s = (k, st) => { try { onStep(k, st); } catch {} };
 
     // STEP 1: HTML フェッチ
     s('fetch', 'active');
     const rawHtml = await this.fetchHtml(url);
     s('fetch', rawHtml ? 'done' : 'err');
 
-    // STEP 2: テキスト抽出
+    // STEP 2: テキスト抽出（精度改善版 htmlToText）
     s('parse', 'active');
     const pageText = this.htmlToText(rawHtml);
     s('parse', 'done');
 
-    // STEP 3: /api/parseTournament 呼び出し
+    // STEP 3: Vercel Function 経由で Claude AI 解析
     s('ai', 'active');
-    const ai = await this.callApi(pageText, url); // 失敗は例外を投げる
+    const ai = await this.callApi(pageText, url);
     s('ai', 'done');
 
-    // STEP 4: カテゴリ判定
+    // STEP 4: カテゴリ自動判定
     s('cat', 'active');
     const urlCatInfo = this.detectCategory(url, ai.name || '');
     const cat    = this.resolveCategory(ai.category, urlCatInfo.cat);
@@ -19331,20 +19352,19 @@ class AiUrlParser {
   }
 
   /* ================================================================
-     parseBatch(urls, onProgress) — 複数URL一括解析（将来拡張用）
+     parseBatch — 複数URL一括解析（将来拡張用）
      ================================================================ */
   static async parseBatch(urls, onProgress) {
     const results = [];
     for (let i = 0; i < urls.length; i++) {
       let item;
       try {
-        const data = await this.parse(urls[i]);
-        item = { url: urls[i], ok: true, data };
+        item = { url: urls[i], ok: true,  data:  await this.parse(urls[i]) };
       } catch(e) {
         item = { url: urls[i], ok: false, error: e.message };
       }
       results.push(item);
-      try { onProgress && onProgress(i + 1, urls.length, item); } catch { /* ignore */ }
+      try { onProgress && onProgress(i + 1, urls.length, item); } catch {}
     }
     return results;
   }
@@ -19377,7 +19397,7 @@ function ensureUI() {
   wrap.className = 'aip-steps';
   wrap.innerHTML = STEPS.map((s, i) => `
     <div class="aip-step" id="${s.id}">
-      <div class="aip-dot">${i + 1}</div>
+      <div class="aip-dot">${i+1}</div>
       <span>${s.label}</span>
     </div>`).join('');
   progress.parentNode.insertBefore(wrap, progress);
@@ -19422,7 +19442,7 @@ function showResult(data) {
     conf >= 0.42 ? `⚠️ 要確認 (${Math.round(conf*100)}%) — 内容を確認してください` :
                    `❌ 信頼度 低 — 手動で修正してください`;
 
-  const prefLabel = (typeof _PREF_MAP!=='undefined' && data.prefecture)
+  const prefLabel = (typeof _PREF_MAP !== 'undefined' && data.prefecture)
     ? (_PREF_MAP[data.prefecture] || data.prefecture) : (data.prefecture || '');
 
   const catHtml = data._catLabel
@@ -19496,7 +19516,7 @@ window._aipManual = function() {
 /* ── startUrlFetch 完全置き換え ── */
 window.startUrlFetch = async function() {
   if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
-    if (typeof showToast==='function') showToast('🔒 管理者のみ利用できます');
+    if (typeof showToast === 'function') showToast('🔒 管理者のみ利用できます');
     return;
   }
 
@@ -19521,12 +19541,12 @@ window.startUrlFetch = async function() {
     const result = await AiUrlParser.parse(url, step);
     _urlParseResult = result;
     showResult(result);
-    if (typeof showToast==='function') showToast('✅ AI解析完了！内容を確認してください');
+    if (typeof showToast === 'function') showToast('✅ AI解析完了！内容を確認してください');
   } catch(err) {
     console.error('[AIP]', err);
     resetSteps();
     showError(err.message || 'AI解析に失敗しました');
-    if (typeof showToast==='function') showToast('⚠️ 解析失敗');
+    if (typeof showToast === 'function') showToast('⚠️ 解析失敗');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '解析'; }
   }
@@ -19536,10 +19556,10 @@ window.startUrlFetch = async function() {
 const _origOpen = window.openUrlModal;
 window.openUrlModal = function() {
   if (!window._isAdmin && !document.body.classList.contains('is-admin')) {
-    if (typeof showToast==='function') showToast('🔒 管理者のみ利用できます');
+    if (typeof showToast === 'function') showToast('🔒 管理者のみ利用できます');
     return;
   }
-  if (typeof _origOpen==='function') _origOpen();
+  if (typeof _origOpen === 'function') _origOpen();
   setTimeout(() => {
     ensureUI(); resetSteps();
     document.getElementById('aip-steps')?.classList.remove('show');
@@ -19547,10 +19567,12 @@ window.openUrlModal = function() {
 };
 
 /* ── 既存ダミー関数を無害化 ── */
-window._fetchRawContent = async () => ({ rawHtml:'', rawText:'', ocrText:'', fetchedAt: new Date().toISOString() });
+window._fetchRawContent = async () => ({
+  rawHtml:'', rawText:'', ocrText:'', fetchedAt: new Date().toISOString()
+});
 
 console.info(
-  '%c[AiUrlParser v2]%c Vercel Function 経由 / APIキー安全管理',
+  '%c[AiUrlParser v2]%c 精度改善版 — Vercel Function / ゴルフ大会専用Prompt',
   'background:#1d1d1f;color:#39C892;padding:2px 8px;border-radius:3px;font-weight:800;',
   'color:#1d1d1f;font-weight:600;'
 );
