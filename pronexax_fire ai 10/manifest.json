@@ -1,0 +1,24 @@
+{
+  "name": "ProNexaX",
+  "short_name": "ProNexaX",
+  "description": "ProNexaX ゴルフトーナメント管理アプリ",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#39C892",
+  "icons": [
+    {
+      "src": "pronexaX_logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "pronexaX_logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
