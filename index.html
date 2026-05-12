@@ -17274,6 +17274,10 @@ const FirestoreDB = (function() {
   let _status       = 'idle'; // 'idle'|'loading'|'live'|'error'
   let _fsLoaded     = false;  // 初回取得完了フラグ
   let _retryTimer   = null;
+  let _retryCount   = 0;          // 連続エラー回数（成功時リセット）
+  const _MAX_RETRY  = 5;          // これ以上はリトライ停止（バッテリー保護）
+  const _BASE_DELAY = 10000;      // 初回リトライ 10s
+  const _MAX_DELAY  = 300000;     // 上限 5 分
 
   // Firestore から取得したデータを保持（Map: id → flat entry）
   const _fsMap = new Map();
@@ -17475,6 +17479,7 @@ const FirestoreDB = (function() {
   // ── onSnapshot コールバック ──
   function _onSnapshot(snapshot) {
     _fsLoaded = true;
+    _retryCount = 0;  // 接続成功 → リトライカウンタをリセット
 
     snapshot.docChanges().forEach(change => {
       const flat = _fsDocToFlat(change.doc);
@@ -17507,9 +17512,16 @@ const FirestoreDB = (function() {
             console.error('[Firestore] onSnapshot error:', err);
             _setStatus('error', 'データ取得エラー — 静的データで表示中');
             if (typeof showToast === 'function') showToast('Firestore接続エラー。静的データで表示します。');
-            // 10 秒後にリトライ（エラー多発を防ぐ）
+            // 指数バックオフ + 最大リトライ上限（バッテリー・暴走防止）
             if (_retryTimer) clearTimeout(_retryTimer);
-            _retryTimer = setTimeout(_subscribe, 10000);
+            _retryCount++;
+            if (_retryCount > _MAX_RETRY) {
+              console.warn(`[Firestore] ${_MAX_RETRY}回リトライ失敗 → 自動再接続を停止。FirestoreDB.reconnect() で手動再試行できます。`);
+              return;
+            }
+            const _delay = Math.min(_BASE_DELAY * Math.pow(2, _retryCount - 1), _MAX_DELAY);
+            console.info(`[Firestore] リトライ ${_retryCount}/${_MAX_RETRY} — ${_delay / 1000}s 後`);
+            _retryTimer = setTimeout(_subscribe, _delay);
           }
         );
 
@@ -17548,7 +17560,18 @@ const FirestoreDB = (function() {
     get isLoaded() { return _fsLoaded; },
 
     /** 手動でデータを再取得（pull to refresh 等に利用可） */
-    refresh() { if (_unsubscribe) { _subscribe(); } },
+    refresh() {
+      if (_retryTimer) { clearTimeout(_retryTimer); _retryTimer = null; }
+      _retryCount = 0;
+      _subscribe();
+    },
+
+    /** 上限到達後の手動再接続（reconnect ボタン等から呼ぶ） */
+    reconnect() {
+      if (_retryTimer) { clearTimeout(_retryTimer); _retryTimer = null; }
+      _retryCount = 0;
+      _subscribe();
+    },
   };
 })();
 
