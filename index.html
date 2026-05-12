@@ -13675,23 +13675,6 @@ startNotificationLoop(); // ★★★ 通知エンジンを起動
 dvBindDragSelect();
 setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',checkSubmit);});},200);
 
-/* ★ 修正②: wp-trigger に touchend リスナーを追加。
-   iOS Safari では div[onclick] に 300ms 遅延が発生し、
-   modal-scroll のスクロール判定と競合して click が発火しないケースがある。
-   touchend で即時 wpOpen() を呼ぶことでこの問題を回避する。     */
-setTimeout(function(){
-  ['wp-start-trigger','wp-end-trigger'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(!el) return;
-    el.addEventListener('touchend', function(e){
-      e.preventDefault();              // click の 300ms 遅延をキャンセル
-      e.stopPropagation();
-      var tab = (id === 'wp-start-trigger') ? 'start' : 'end';
-      if(typeof wpOpen === 'function') wpOpen(tab);
-    }, {passive: false});
-  });
-}, 300);
-
 /* =====================================================================
    ★★★ iOSホイールピッカー v2 JS — Apple純正カレンダー風
    ===================================================================== */
@@ -15956,9 +15939,18 @@ window.closeModal = function(type) {
     appState.set('modal.addCat.open', false);
   }
   if (closeAll || type === 'create') {
-    const evModal = document.getElementById('event-modal') ||
+    // ★ 修正②: modal-overlay が実際のIDなので直接閉じる
+    const evModal = document.getElementById('modal-overlay') ||
+                    document.getElementById('event-modal') ||
                     document.getElementById('modal-sheet');
     if (evModal) { evModal.classList.remove('show'); evModal.style.transform = ''; }
+    // 内部stateも元のcloseModal相当でリセット
+    if (typeof editingId !== 'undefined') editingId = null;
+    if (typeof dvPresetStartTime !== 'undefined') dvPresetStartTime = null;
+    if (typeof dvPresetEndTime   !== 'undefined') dvPresetEndTime   = null;
+    if (typeof catReorderMode !== 'undefined' && catReorderMode) {
+      if (typeof toggleCatReorder === 'function') toggleCatReorder();
+    }
   }
 };
 
@@ -20697,11 +20689,21 @@ function _onSelect(key) {
   if (ov) ov.classList.remove('open');
 
   setTimeout(function(){
-    /* ★ 修正①-B: selectedCat/selectedTour は let 宣言のため window プロパティにならない。
-       window.xxx 経由の typeof チェックが常に 'undefined' → 代入がスキップされていた。
-       グローバルスコープの変数へ直接代入する。                                        */
-    if (typeof selectedCat  !== 'undefined') selectedCat  = key;  else try { window.selectedCat  = key;  } catch(e){}
-    if (typeof selectedTour !== 'undefined') selectedTour = null;  else try { window.selectedTour = null; } catch(e){}
+    /* selectedCat・selectedTour をセット */
+    if (typeof window.selectedCat  !== 'undefined') window.selectedCat  = key;
+    if (typeof window.selectedTour !== 'undefined') window.selectedTour = null;
+
+    /* ★ 修正①: modalPresetDate / selectedDate を prefillForm 呼び出し直前に
+       確実に保持しておく。patchOpenModal が _orig(ds,null) で設定済みの値を
+       ここで読み出し、undefined/null の場合は今日付を保険として使う。      */
+    const _presetDs = (typeof modalPresetDate !== 'undefined' && modalPresetDate)
+                    ? modalPresetDate
+                    : (typeof selectedDate !== 'undefined' && selectedDate)
+                    ? selectedDate
+                    : (typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0,10));
+    /* 念のため両変数を同じ値で上書き（競合回避） */
+    if (typeof modalPresetDate !== 'undefined') modalPresetDate = _presetDs;
+    if (typeof selectedDate    !== 'undefined') selectedDate    = _presetDs;
 
     /* modal-overlay を show にしてから step 遷移 */
     const mainOv = document.getElementById('modal-overlay');
