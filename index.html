@@ -19491,10 +19491,7 @@ class AiUrlParser {
   static TEXT_LIMIT = 7000;
   static TIMEOUT_MS = 42_000;
 
-  static PROXIES = [
-    u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
-    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  ];
+  // 旧プロキシルート削除済み — HTML取得はサーバーサイド(/api/parseTournament)で完結
 
   // カテゴリ自動判定ルール
   static CAT_RULES = [
@@ -19521,19 +19518,12 @@ class AiUrlParser {
     { re:/livgolf|liv.golf/i,                                                  cat:'liv',         gender:'mens', region:'overseas' },
   ];
 
-  /* ── HTML フェッチ ── */
-  static async fetchHtml(url) {
-    let lastErr;
-    for (const mk of this.PROXIES) {
-      try {
-        const res = await fetch(mk(url), { signal: AbortSignal.timeout(14000) });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        const html = json.contents || json.body || json.html || '';
-        if (html) return html;
-      } catch(e) { lastErr = e; }
-    }
-    console.warn('[AIP] HTML取得失敗:', lastErr?.message || '不明');
+  /* ── HTML フェッチ（旧ブラウザ直接fetch廃止） ──
+   * HTML取得はサーバーサイド(/api/parseTournament)で行う。
+   * ブラウザからは pageText を空のまま callApi に渡し、
+   * サーバーが sourceUrl を受け取ってfetchする。
+   */
+  static async fetchHtml(_url) {
     return '';
   }
 
@@ -21457,22 +21447,10 @@ window.pdfFromUrl = async function() {
 
   let buf;
   try {
-    // allorigins.win raw プロキシ経由でバイナリ取得
-    const proxies = [
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-      url,
-    ];
-    let fetched = false;
-    for (const pUrl of proxies) {
-      try {
-        const res = await fetch(pUrl, { signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        buf = await res.arrayBuffer();
-        fetched = true;
-        break;
-      } catch(e) { console.warn('[PDF] fetch 試行失敗:', e.message); }
-    }
-    if (!fetched) throw new Error('PDF を取得できませんでした（CORS 制限の可能性あり）');
+    // 旧 allorigins プロキシ削除済み — 直接fetchのみ（CORSヘッダー必須）
+    const res = await fetch(url, { signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    buf = await res.arrayBuffer();
   } catch(e) {
     _pdfShowError(e.message);
     if (btn) { btn.disabled = false; btn.textContent = '解析'; }
@@ -21905,15 +21883,12 @@ class UrlDiscoveryEngine {
   }
 
   // ── HTML 取得（AiUrlParser.fetchHtml を再利用）─────────────────
+  // 旧 allorigins フォールバック削除済み — AiUrlParser が必須
   static async fetchHtml(url) {
     if (typeof AiUrlParser !== 'undefined' && typeof AiUrlParser.fetchHtml === 'function') {
       return AiUrlParser.fetchHtml(url);
     }
-    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const res   = await fetch(proxy, { signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const j = await res.json();
-    return j.contents || '';
+    throw new Error('[Discovery] AiUrlParser が未定義のため HTML 取得不可');
   }
 
   // ── a[href] 全取得 → 正規化 → スコアリング → dedup ───────────
