@@ -11468,16 +11468,18 @@ function goStep(n){
 }
 function renderCatGrid(){
   const grid=document.getElementById('cat-grid');
-  // 表示するカテゴリ: personal は固定 + favTours に登録済みのもののみ
-  const visible=CATEGORIES.filter(c=>c.key==='personal'||favTours.has(c.key));
+  const visible=CATEGORIES.filter(c=>c.key==='personal'||userEnabledCategories.includes(c.key));
   grid.innerHTML=visible.map(c=>{
     const isSel=selectedCat===c.key;
     const isEnabled=c.key==='personal'||userEnabledCategories.includes(c.key);
     const selStyle=isSel?`border-color:${c.color};background:${c.color}12`:'';
+    // ★ 「追加済み」バッジは廃止：追加済み状態は .is-enabled クラスのみで管理し、
+    //    Apple純正カレンダー風に枠線をカテゴリカラーで軽く強調するだけにする
     const enabledStyle=isEnabled&&!isSel?`border-color:${c.color}66;`:'';
     return`<div class="cat-item${isSel?' sel':''}${isEnabled?' is-enabled':''}" style="${selStyle}${enabledStyle}" id="cat-${c.key}" data-cat-key="${c.key}"><div class="cat-color-dot" style="background:${c.color}"></div><div style="flex:1;"><div class="cat-name">${c.label}</div><div class="cat-desc">${c.desc}</div></div><div class="cat-check" style="color:${c.color}">✓</div></div>`;
   }).join('');
   grid.classList.toggle('reorder-mode',catReorderMode);
+  // ★ クリック / ドラッグハンドラを取り付け
   bindCatItemHandlers();
 }
 // ★★★ カテゴリ並び替え機能 ★★★
@@ -11996,6 +11998,7 @@ function _renderAddCatSheet(){
 function addCatFromSheet(key){
   addCategory(key);
   _renderAddCatSheet();
+  renderCatGrid();
   syncDrawerState();
   renderAllPanels();
   renderCalList();
@@ -12004,8 +12007,8 @@ function addCatFromSheet(key){
 function removeCatFromSheet(key){
   removeCategory(key);
   _renderAddCatSheet();
+  renderCatGrid();
   syncDrawerState();
-  // カレンダーフィルタが削除されたカテゴリだった場合は解除
   if(calCatFilter===key)calCatFilter=null;
   renderAllPanels();
   renderCalList();
@@ -17705,8 +17708,8 @@ function IOSSheetDrag(config) {
     const isScrolled = scrollArr.some(el => el && el.scrollTop > 4);
     if (isScrolled) return; // スクロール中: preventDefault しない → iOS スクロールを通す
 
-    // スクロール中でない: iOS の scroll intent を止めて drag を開始
-    e.preventDefault();
+    // 非スクロール: e.preventDefault() で iOS の scroll intent をブロックして drag 確定
+    if (e.cancelable) e.preventDefault();
 
     const touch = e.touches ? e.touches[0] : e;
     startY    = touch.clientY;
