@@ -23,7 +23,7 @@
  *   { "ok": false, "error": "msg", "code": "CODE" }
  */
 
-const MODEL      = 'claude-sonnet-4-20250514';
+const MODEL      = 'claude-sonnet-4-5';
 const MAX_TOKENS = 1400;
 const TIMEOUT_MS = 28000;
 const TEXT_LIMIT = 7000;
