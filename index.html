@@ -6748,7 +6748,7 @@ body.is-admin .admin-card-actions.admin-only {
   <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
-      <button onclick="event.stopPropagation();closeModal();" style="position:absolute;top:14px;right:16px;width:32px;height:32px;border:none;border-radius:50%;background:rgba(0,0,0,.06);font-size:16px;color:#222;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;-webkit-tap-highlight-color:transparent;touch-action:manipulation;" aria-label="閉じる">✕</button>
+      <button onclick="event.stopPropagation();closeModal();" style="position:absolute;top:14px;right:16px;width:32px;height:32px;border:none;border-radius:50%;background:rgba(0,0,0,.06);font-size:16px;color:#222;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9999;pointer-events:auto;-webkit-tap-highlight-color:transparent;touch-action:manipulation;" aria-label="閉じる">✕</button>
       <div class="modal-title" id="modal-title">予定を追加</div>
       <div class="modal-scroll" id="modal-scroll">
         <div class="mstep active" id="mstep1">
@@ -17690,6 +17690,7 @@ function IOSSheetDrag(config) {
     'touch-action:none',
     '-webkit-user-select:none',
     'user-select:none',
+    'pointer-events:none',  /* ✕ボタンなど下層要素へタッチを通す */
   ].join(';');
 
   // sheetEl の先頭に dragZone を挿入（position:relative が必要）
@@ -17850,11 +17851,27 @@ function IOSSheetDrag(config) {
   }
 
   // ── イベント登録 ──
-  // passive:false で e.preventDefault() 可能にする
-  dragZone.addEventListener('touchstart',  onStart, { passive: true  });
-  dragZone.addEventListener('touchmove',   onMove,  { passive: false });
-  dragZone.addEventListener('touchend',    onEnd,   { passive: true  });
-  dragZone.addEventListener('touchcancel', onEnd,   { passive: true  });
+  // dragZone は pointer-events:none のため sheetEl 本体に登録する。
+  // touchstart の clientY が dragZone の高さ（48px）内かつボタン要素でない時のみ drag 開始。
+  function _isTouchOnDragZone(e) {
+    const touch = e.touches ? e.touches[0] : e;
+    // ① sheetEl の上端から dragZone 高さ（48px）以内
+    const rect = sheetEl.getBoundingClientRect();
+    if (touch.clientY - rect.top > 48) return false;
+    // ② ✕ボタンなど interactive 要素の場合はドラッグしない
+    const target = e.target;
+    if (target && (target.tagName === 'BUTTON' || target.closest('button'))) return false;
+    return true;
+  }
+
+  function _onSheetTouchStart(e) { if (_isTouchOnDragZone(e)) onStart(e); }
+  function _onSheetTouchMove(e)  { onMove(e); }
+  function _onSheetTouchEnd(e)   { onEnd(e); }
+
+  sheetEl.addEventListener('touchstart',  _onSheetTouchStart, { passive: true  });
+  sheetEl.addEventListener('touchmove',   _onSheetTouchMove,  { passive: false });
+  sheetEl.addEventListener('touchend',    _onSheetTouchEnd,   { passive: true  });
+  sheetEl.addEventListener('touchcancel', _onSheetTouchEnd,   { passive: true  });
 
   // マウス対応（デスクトップ開発・テスト用）
   dragZone.addEventListener('mousedown', (e) => {
@@ -17882,10 +17899,10 @@ function IOSSheetDrag(config) {
     dismiss:  _dismiss,
     snapBack: _snapBack,
     destroy() {
-      dragZone.removeEventListener('touchstart',  onStart);
-      dragZone.removeEventListener('touchmove',   onMove);
-      dragZone.removeEventListener('touchend',    onEnd);
-      dragZone.removeEventListener('touchcancel', onEnd);
+      sheetEl.removeEventListener('touchstart',  _onSheetTouchStart);
+      sheetEl.removeEventListener('touchmove',   _onSheetTouchMove);
+      sheetEl.removeEventListener('touchend',    _onSheetTouchEnd);
+      sheetEl.removeEventListener('touchcancel', _onSheetTouchEnd);
       dragZone.remove();
     },
   };
