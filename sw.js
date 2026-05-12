@@ -1,5 +1,5 @@
 // ProNexaX Service Worker v2.0
-const CACHE_NAME = 'pronexax-v2';
+const CACHE_NAME = 'pronexax-v3';
 const OFFLINE_URL = './index.html';
 
 // インストール時：主要アセットをキャッシュ
@@ -9,7 +9,9 @@ self.addEventListener('install', (event) => {
       return cache.addAll([
         OFFLINE_URL,
         './manifest.json',
-        './pronexaX_logo.png'
+        './pronexaX_logo.png',
+        './style.css',
+        './app.js'
       ]);
     }).then(() => self.skipWaiting())
   );

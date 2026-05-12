@@ -149,8 +149,20 @@ function _onAuthStateChangedGuest() {
 function _onAuthStateChanged(user) {
   if (user) {
     _showApp(user);
+    // ★修正: window._showApp（管理者UI強化版）も確実に呼ぶ
+    if (typeof window._showApp === 'function' && window._showApp !== _showApp) {
+      window._showApp(user);
+    }
+    // ★デバッグログ
+    console.log("ADMIN_EMAILS", ADMIN_EMAILS);
+    console.log("LOGIN EMAIL", user.email);
+    console.log("IS ADMIN", _isAdminEmail(user.email));
+    console.log("BODY CLASS", document.body.className);
   } else {
     _showAuthScreen();
+    if (typeof window._showAuthScreen === 'function' && window._showAuthScreen !== _showAuthScreen) {
+      window._showAuthScreen();
+    }
   }
 }
 
@@ -405,6 +417,7 @@ window.authSubmit = async function() {
     if (loader) loader.style.display = 'none';
     if (btn) btn.disabled = false;
     _showApp(_currentUser);
+    if (typeof window._showApp === 'function' && window._showApp !== _showApp) window._showApp(_currentUser);
     return;
   }
 
@@ -433,6 +446,7 @@ window.authSubmit = async function() {
       localStorage.setItem('pronexax.guestUser', JSON.stringify({ email }));
       _currentUser = { email, displayName: email.split('@')[0], uid: 'guest-'+btoa(email) };
       _showApp(_currentUser);
+      if (typeof window._showApp === 'function' && window._showApp !== _showApp) window._showApp(_currentUser);
       return;
     }
 
