@@ -21825,5 +21825,338 @@ console.info('%c[catsel]%c カテゴリ選択モーダル 初期化完了',
 })();
 </script>
 
+<!-- ================================================================
+  ProNexaX — URL Discovery Engine v1.0
+  大会一覧ページから詳細URL を自動検出し watchTargets へ追加
+
+  接続位置:
+    discoverTournamentUrls(listingUrl)
+      └─ TournamentWatcher.addTarget(url, { source:'discovery', ... })
+            ※ Watcher側は一切変更しない
+
+  dedupe 戦略:
+    1. normalizeUrl() で utm/hash 除去後に Set で即時重複排除
+    2. TournamentWatcher.addTarget() 内の Firestore where('url','==')
+       で既存チェック（update のみで add スキップ）
+    3. 戻り値で added / skipped / failed カウントを返す
+  ================================================================ -->
+<script>
+/* ================================================================
+  UrlDiscoveryEngine — 完全スタンドアロン実装
+  既存コード（parseTournament / events / Favorites / UI）は一切変更しない
+  ================================================================ */
+class UrlDiscoveryEngine {
+
+  // ── URL スコアリング設定 ──────────────────────────────────────
+  static SCORE_RULES = [
+    // プラス評価：大会詳細ページらしいパターン
+    { re: /\/tournament\//i,    score: +10 },
+    { re: /\/taikai\//i,        score: +10 }, // 大会（日本語ローマ字）
+    { re: /\/event\//i,         score:  +8 },
+    { re: /\/competition\//i,   score:  +8 },
+    { re: /\/entry\//i,         score:  +6 },
+    { re: /\/schedule\//i,      score:  +5 },
+    { re: /\/detail\//i,        score:  +5 },
+    { re: /\/info\//i,          score:  +3 },
+    { re: /\/result\//i,        score:  +3 },
+    { re: /\/2025\/|\/2026\//i, score:  +4 }, // 年号含むパス
+    // マイナス評価：大会詳細でないページ
+    { re: /\/news\//i,          score:  -5 },
+    { re: /\/sponsor\//i,       score: -10 },
+    { re: /\/about\//i,         score:  -8 },
+    { re: /\/contact\//i,       score:  -8 },
+    { re: /\/privacy\//i,       score: -10 },
+    { re: /\/sitemap/i,         score: -10 },
+    { re: /\/login\b/i,         score: -10 },
+    { re: /\/search\b/i,        score:  -5 },
+  ];
+
+  static SCORE_THRESHOLD = 0;  // これ未満のURLを除外
+  static MAX_RESULTS     = 50; // 1リスト当たりの最大発見数
+
+  // ── URL 正規化 ────────────────────────────────────────────────
+  // utm パラメータ除去 / hash 除去 / trailing slash 統一 / relative→absolute
+  static normalizeUrl(href, baseUrl) {
+    if (!href) return null;
+    try {
+      // relative → absolute
+      const abs = new URL(href, baseUrl);
+
+      // http(s) 以外を除外（mailto/tel/javascript など）
+      if (abs.protocol !== 'http:' && abs.protocol !== 'https:') return null;
+
+      // utm_* パラメータ除去
+      const params = abs.searchParams;
+      const utmKeys = [...params.keys()].filter(k => k.startsWith('utm_') || k === 'ref' || k === 'fbclid');
+      utmKeys.forEach(k => params.delete(k));
+      abs.search = params.toString() ? '?' + params.toString() : '';
+
+      // hash 除去
+      abs.hash = '';
+
+      // trailing slash 統一（パスが '/' 以外で終わる場合はそのまま）
+      // ルートパス以外で末尾 '/' を除去
+      if (abs.pathname.length > 1 && abs.pathname.endsWith('/')) {
+        abs.pathname = abs.pathname.slice(0, -1);
+      }
+
+      return abs.toString();
+    } catch(e) {
+      return null;
+    }
+  }
+
+  // ── URL スコア計算 ────────────────────────────────────────────
+  static scoreUrl(url) {
+    if (!url) return -999;
+    let score = 0;
+    for (const rule of this.SCORE_RULES) {
+      if (rule.re.test(url)) score += rule.score;
+    }
+    return score;
+  }
+
+  // ── 除外パターン（バイナリ・画像・PDF 等）────────────────────
+  static _isExcluded(url) {
+    return /\.(pdf|jpg|jpeg|png|gif|svg|webp|mp4|zip|docx|xlsx|pptx)(\?|$)/i.test(url)
+      || /\/(tag|category|author|page\/\d)(\/?$|\/)/i.test(url);
+  }
+
+  // ================================================================
+  //  fetchHtml(url) — CORS プロキシ経由で HTML 取得
+  //  AiUrlParser.fetchHtml が利用可能な場合はそれを使う
+  // ================================================================
+  static async fetchHtml(url) {
+    // AiUrlParser.fetchHtml を再利用（同じ CORS プロキシを使う）
+    if (typeof AiUrlParser !== 'undefined' && typeof AiUrlParser.fetchHtml === 'function') {
+      return AiUrlParser.fetchHtml(url);
+    }
+    // フォールバック: allorigins.win 直接
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxyUrl, { signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    return json.contents || '';
+  }
+
+  // ================================================================
+  //  extractLinks(html, baseUrl) — HTML から a[href] を全取得してスコアリング
+  //
+  //  戻り値: Array<{ url: string, score: number, text: string }>
+  //           スコア降順・正規化済み・重複除去済み
+  // ================================================================
+  static extractLinks(html, baseUrl) {
+    if (!html) return [];
+
+    let doc;
+    try {
+      doc = new DOMParser().parseFromString(html, 'text/html');
+    } catch(e) {
+      console.warn('[Discovery] DOMParser失敗:', e.message);
+      return [];
+    }
+
+    const seen  = new Set();  // dedupe layer 1（normalizeUrl後）
+    const links = [];
+
+    doc.querySelectorAll('a[href]').forEach(a => {
+      const href = a.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
+
+      const normalized = this.normalizeUrl(href, baseUrl);
+      if (!normalized)           return;
+      if (this._isExcluded(normalized)) return;
+      if (seen.has(normalized))  return;
+      seen.add(normalized);
+
+      const score = this.scoreUrl(normalized);
+      if (score < this.SCORE_THRESHOLD) return;
+
+      links.push({
+        url:   normalized,
+        score,
+        text:  (a.textContent || a.title || '').trim().slice(0, 100),
+      });
+    });
+
+    // スコア降順ソート
+    links.sort((a, b) => b.score - a.score);
+    return links.slice(0, this.MAX_RESULTS);
+  }
+
+  // ================================================================
+  //  discoverTournamentUrls(listingUrl, options)
+  //
+  //  大会一覧ページから大会URLを自動発見し watchTargets へ追加する。
+  //
+  //  処理フロー:
+  //    1. fetchHtml(listingUrl)
+  //    2. extractLinks() でスコアリング済みリンクを抽出
+  //    3. TournamentWatcher.addTarget() で watchTargets に登録
+  //       （Watcher内の重複チェックが dedupe layer 2）
+  //
+  //  options:
+  //    dryRun       (bool)   true = Firestore 書き込みなしで結果だけ返す
+  //    scoreMin     (number) このスコア以上のURLのみ登録（デフォルト: 0）
+  //    maxAdd       (number) 今回追加する上限数（デフォルト: 20）
+  //    intervalHours (number) Watcher の巡回間隔（デフォルト: 24）
+  //    onProgress   (fn)     ({ done, total, url, result }) を受け取る進捗コールバック
+  //
+  //  戻り値:
+  //    {
+  //      ok: bool,
+  //      listingUrl,
+  //      discovered: number,   // スコアリングで発見したURL数
+  //      added:      number,   // 新規登録数
+  //      updated:    number,   // 既存更新数
+  //      skipped:    number,   // dryRun / エラーでスキップした数
+  //      urls:       Array<{ url, score, text, addResult }>,
+  //    }
+  // ================================================================
+  static async discoverTournamentUrls(listingUrl, options = {}) {
+    const {
+      dryRun        = false,
+      scoreMin      = 0,
+      maxAdd        = 20,
+      intervalHours = TournamentWatcher?.DEFAULT_HOURS || 24,
+      onProgress    = null,
+    } = options;
+
+    if (!listingUrl || !listingUrl.startsWith('http')) {
+      return { ok: false, error: 'Invalid listingUrl', listingUrl };
+    }
+
+    console.log(`[Discovery] 開始: ${listingUrl} (dryRun=${dryRun}, scoreMin=${scoreMin})`);
+
+    // ── 1. HTML 取得 ──
+    let html;
+    try {
+      html = await this.fetchHtml(listingUrl);
+    } catch(e) {
+      console.error('[Discovery] fetchHtml 失敗:', e.message);
+      return { ok: false, error: e.message, listingUrl, discovered: 0, added: 0, updated: 0, skipped: 0, urls: [] };
+    }
+
+    // ── 2. リンク抽出＆スコアリング ──
+    const allLinks = this.extractLinks(html, listingUrl);
+    const filtered = allLinks
+      .filter(l => l.score >= scoreMin)
+      .slice(0, maxAdd);
+
+    console.log(`[Discovery] 発見: ${allLinks.length} 件 → スコア${scoreMin}以上: ${filtered.length} 件`);
+
+    // ── 3. dryRun の場合はここで終了 ──
+    if (dryRun) {
+      return {
+        ok: true, listingUrl,
+        discovered: allLinks.length,
+        added: 0, updated: 0, skipped: filtered.length,
+        urls: filtered.map(l => ({ ...l, addResult: { dryRun: true } })),
+      };
+    }
+
+    // ── 4. TournamentWatcher.addTarget() で watchTargets に登録 ──
+    if (typeof TournamentWatcher === 'undefined') {
+      console.warn('[Discovery] TournamentWatcher が未定義 → Firestore 登録スキップ');
+      return {
+        ok: false, error: 'TournamentWatcher undefined', listingUrl,
+        discovered: allLinks.length, added: 0, updated: 0, skipped: filtered.length,
+        urls: filtered.map(l => ({ ...l, addResult: { skipped: true } })),
+      };
+    }
+
+    let added   = 0;
+    let updated = 0;
+    let failed  = 0;
+    const results = [];
+
+    for (let i = 0; i < filtered.length; i++) {
+      const link = filtered[i];
+      let addResult;
+      try {
+        addResult = await TournamentWatcher.addTarget(link.url, {
+          source:          'discovery',
+          discoverySource: listingUrl,            // 発見元の一覧ページURL
+          discoveredAt:    new Date().toISOString(),
+          intervalHours,
+          enabled:         true,
+        });
+        if (addResult.added)   added++;
+        if (addResult.updated) updated++;
+        if (!addResult.ok)     failed++;
+      } catch(e) {
+        console.error('[Discovery] addTarget 失敗:', link.url, e.message);
+        addResult = { ok: false, error: e.message };
+        failed++;
+      }
+
+      results.push({ ...link, addResult });
+
+      // 進捗コールバック
+      if (typeof onProgress === 'function') {
+        try { onProgress({ done: i + 1, total: filtered.length, url: link.url, result: addResult }); }
+        catch(e) { /* ignore */ }
+      }
+
+      // 連続リクエストを避けるため短めに待機
+      if (i < filtered.length - 1) {
+        await new Promise(r => setTimeout(r, 300));
+      }
+    }
+
+    console.log(
+      `[Discovery] 完了: added=${added} updated=${updated} failed=${failed}`,
+      'listingUrl:', listingUrl
+    );
+
+    return {
+      ok:         true,
+      listingUrl,
+      discovered: allLinks.length,
+      added,
+      updated,
+      skipped:    failed,
+      urls:       results,
+    };
+  }
+
+  // ================================================================
+  //  discoverBatch(listingUrls, options) — 複数の一覧ページを一括処理
+  // ================================================================
+  static async discoverBatch(listingUrls, options = {}) {
+    const results = [];
+    let totalAdded   = 0;
+    let totalUpdated = 0;
+
+    for (let i = 0; i < listingUrls.length; i++) {
+      const url = listingUrls[i];
+      console.log(`[Discovery] Batch ${i + 1}/${listingUrls.length}: ${url}`);
+      const r = await this.discoverTournamentUrls(url, options);
+      results.push(r);
+      if (r.ok) {
+        totalAdded   += r.added;
+        totalUpdated += r.updated;
+      }
+      // 一覧ページ間は 2 秒待機
+      if (i < listingUrls.length - 1) {
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+
+    console.log(`[Discovery] Batch 完了: totalAdded=${totalAdded} totalUpdated=${totalUpdated}`);
+    return { ok: true, total: results.length, totalAdded, totalUpdated, results };
+  }
+}
+
+// グローバル公開（管理画面・コンソールから利用可能）
+window.UrlDiscoveryEngine = UrlDiscoveryEngine;
+
+console.info(
+  '%c[UrlDiscovery v1]%c URL Discovery Engine 初期化完了',
+  'background:#2D7DD2;color:#fff;padding:2px 8px;border-radius:3px;font-weight:800;',
+  'color:#1a5090;font-weight:600;'
+);
+</script>
+
 </body>
 </html>
