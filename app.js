@@ -148,10 +148,11 @@ function _onAuthStateChangedGuest() {
 
 function _onAuthStateChanged(user) {
   if (user) {
-    _showApp(user);
-    // ★修正: window._showApp（管理者UI強化版）も確実に呼ぶ
-    if (typeof window._showApp === 'function' && window._showApp !== _showApp) {
+    // window._showApp（⑧ちらつき防止ラッパー → ③完全版）を経由して呼ぶ
+    if (typeof window._showApp === 'function') {
       window._showApp(user);
+    } else {
+      _showApp(user);
     }
     // ★デバッグログ
     console.log("ADMIN_EMAILS", ADMIN_EMAILS);
@@ -159,9 +160,10 @@ function _onAuthStateChanged(user) {
     console.log("IS ADMIN", _isAdminEmail(user.email));
     console.log("BODY CLASS", document.body.className);
   } else {
-    _showAuthScreen();
-    if (typeof window._showAuthScreen === 'function' && window._showAuthScreen !== _showAuthScreen) {
+    if (typeof window._showAuthScreen === 'function') {
       window._showAuthScreen();
+    } else {
+      _showAuthScreen();
     }
   }
 }
@@ -276,27 +278,7 @@ function _requireAuth(callback) {
   document.getElementById('auth-screen')?.classList.remove('hidden');
 }
 
-// ログアウト
-window.authLogout = function() {
-  if (!confirm('ログアウトしますか？')) return;
-  localStorage.removeItem('pronexax.guestUser');
-  // 管理者状態をリセット
-  _isAdmin = false;
-  document.body.classList.remove('is-admin');
-  const adminNavBtn = document.getElementById('nav-admin');
-  if (adminNavBtn) adminNavBtn.style.display = 'none';
-  if (typeof appState !== 'undefined') {
-    appState.set('admin.isAdmin', false);
-    appState.set('admin.mode', 'user');
-  }
-  if (typeof firebase !== 'undefined' && firebase.apps?.length) {
-    firebase.auth().signOut().catch(()=>{});
-  }
-  _currentUser = null;
-  document.body.classList.add('auth-guest');
-  _showAuthScreen();
-  if (typeof closeDrawer === 'function') closeDrawer();
-};
+// ログアウト: window.authLogout は後方（⑥）で完全版を定義
 
 // ── Google ログイン ──
 window.authGoogleSignIn = async function() {
