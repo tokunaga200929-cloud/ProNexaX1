@@ -9213,7 +9213,14 @@ async function _saveUserToFirestore(user, isAdmin) {
   const _origShowApp = window._showApp || function(){};
 
   window._showApp = function(user) {
-    if (!user) { _showAuthScreen(); return; }
+    if (!user) {
+      if (typeof window._showAuthScreen === 'function') {
+        window._showAuthScreen();
+      } else {
+        _showAuthScreen();
+      }
+      return;
+    }
 
     _currentUser = user;
 
@@ -9428,7 +9435,12 @@ window.authLogout = function() {
     appState.set('admin.mode', 'user');
   }
 
-  _showAuthScreen();
+  // window._showAuthScreen（⑧→④完全版）を呼ぶ
+  if (typeof window._showAuthScreen === 'function') {
+    window._showAuthScreen();
+  } else {
+    _showAuthScreen();
+  }
   if (typeof closeDrawer === 'function') closeDrawer();
   if (typeof showToast === 'function') showToast('ログアウトしました');
 };
