@@ -6748,6 +6748,7 @@ body.is-admin .admin-card-actions.admin-only {
   <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
+      <button onclick="event.stopPropagation();closeModal();" style="position:absolute;top:14px;right:16px;width:32px;height:32px;border:none;border-radius:50%;background:rgba(0,0,0,.06);font-size:16px;color:#222;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;-webkit-tap-highlight-color:transparent;touch-action:manipulation;" aria-label="閉じる">✕</button>
       <div class="modal-title" id="modal-title">予定を追加</div>
       <div class="modal-scroll" id="modal-scroll">
         <div class="mstep active" id="mstep1">
@@ -17683,7 +17684,7 @@ function IOSSheetDrag(config) {
     'top:0',
     'left:0',
     'right:0',
-    'height:48px',
+    'height:80px',
     'z-index:10',
     'cursor:grab',
     'touch-action:none',
@@ -17705,11 +17706,10 @@ function IOSSheetDrag(config) {
   function onStart(e) {
     if (dismissed) return;
 
+    // 内部スクロール中なら dismiss しない
+    // （scrollTop > 4px の場合はドラッグを無視）
     const isScrolled = scrollArr.some(el => el && el.scrollTop > 4);
-    if (isScrolled) return; // スクロール中: preventDefault しない → iOS スクロールを通す
-
-    // 非スクロール: e.preventDefault() で iOS の scroll intent をブロックして drag 確定
-    if (e.cancelable) e.preventDefault();
+    if (isScrolled) return;
 
     const touch = e.touches ? e.touches[0] : e;
     startY    = touch.clientY;
@@ -17720,6 +17720,7 @@ function IOSSheetDrag(config) {
     velSmooth = 0;
     active    = true;
 
+    // transition を一時停止してリアルタイム追従を有効化
     sheetEl.style.transition = 'none';
     sheetEl.classList.add('ios-dragging');
   }
@@ -17738,18 +17739,11 @@ function IOSSheetDrag(config) {
       return;
     }
 
-    // 内部スクロール中にドラッグが始まったら静かに中断
-    // _snapBack() を呼ぶと translateY アニメーションが起動し「戻る」挙動になるため呼ばない
+    // 内部スクロール中にドラッグが始まったら中断
     const isScrolled = scrollArr.some(el => el && el.scrollTop > 4);
     if (isScrolled) {
-      if (curY !== 0) {
-        sheetEl.style.transition = '';
-        sheetEl.style.transform  = '';
-        curY = 0;
-      }
-      active = false;
-      sheetEl.classList.remove('ios-dragging');
-      return; // preventDefault しない → iOS スクロールを通す
+      _snapBack();
+      return;
     }
 
     e.preventDefault();
@@ -17857,7 +17851,7 @@ function IOSSheetDrag(config) {
 
   // ── イベント登録 ──
   // passive:false で e.preventDefault() 可能にする
-  dragZone.addEventListener('touchstart',  onStart, { passive: false });
+  dragZone.addEventListener('touchstart',  onStart, { passive: true  });
   dragZone.addEventListener('touchmove',   onMove,  { passive: false });
   dragZone.addEventListener('touchend',    onEnd,   { passive: true  });
   dragZone.addEventListener('touchcancel', onEnd,   { passive: true  });
@@ -17876,9 +17870,9 @@ function IOSSheetDrag(config) {
   });
 
   // ── scrollEl の設定 ──
-  // touch-action は設定しない（dragZone の touch-action:none と競合するため）
   scrollArr.forEach(el => {
     if (!el) return;
+    el.style.touchAction              = 'pan-y';
     el.style.overscrollBehavior       = 'contain';
     el.style.webkitOverflowScrolling  = 'touch';
   });
@@ -17953,7 +17947,7 @@ function _applyIOSHandle(containerEl) {
 .ios-sheet-drag-zone {
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 48px;
+  height: 80px;
   z-index: 10;
   cursor: grab;
   touch-action: none;
