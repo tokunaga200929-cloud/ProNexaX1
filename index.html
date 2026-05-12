@@ -19556,6 +19556,106 @@ class AiUrlParser {
     return body.data;
   }
 
+  /* ── ページ種別判定: 'detail' | 'listing' ──
+     URL文字列・タイトル・h1・meta・本文 を使って
+     一覧/トップページかどうかを判定する。
+     ■ 'listing' → AI解析を停止してユーザーに詳細URLを促す
+     ■ 'detail'  → 通常通り parseTournament を続行 */
+  static _detectPageKind(url, rawHtml = '') {
+
+    // ── 1. URL パターンで詳細ページを確定 ──────────────────────────
+    const DETAIL_URL_RE = [
+      /\/tournament\/\d/i,          // /tournament/12345
+      /\/event\/\d/i,               // /event/42
+      /\/detail[_\-/]/i,            // /detail/ /detail_
+      /[?&]id=\d/i,                 // ?id=123
+      /[?&]eid=\d/i,
+      /\/\d{4}\/\d{2}\//i,          // /2026/05/
+      /\/schedule\/[^/]+\/[^/]+/i,  // /schedule/foo/bar (2セグメント以上)
+      /\/entry\//i,                 // /entry/
+      /\/info\//i,                  // /info/
+    ];
+    for (const re of DETAIL_URL_RE) {
+      if (re.test(url)) return 'detail';
+    }
+
+    // ── 2. URL パターンで一覧を確定 ─────────────────────────────────
+    const LIST_URL_RE = [
+      /\/tournaments?\/?$/i,         // /tournaments /tournament (末尾)
+      /\/schedule\/?$/i,             // /schedule
+      /\/schedule\/\d{4}\/?$/i,      // /schedule/2026
+      /\/events?\/?$/i,              // /events
+      /\/calendar\/?$/i,             // /calendar
+      /\/top\/?$/i,                  // /top
+      /\/$|^https?:\/\/[^/]+\/?$/i, // トップ（パスなし）
+      /\/index\.html?$/i,            // /index.html
+    ];
+    for (const re of LIST_URL_RE) {
+      if (re.test(url)) return 'listing';
+    }
+
+    // ── 3. HTML が取得できている場合はコンテンツ解析 ────────────────
+    if (rawHtml && rawHtml.length > 200) {
+
+      // タイトル・h1・meta description を抽出
+      const titleMatch = rawHtml.match(/<title[^>]*>([^<]{1,200})<\/title>/i);
+      const h1Match    = rawHtml.match(/<h1[^>]*>([^<]{1,200})<\/h1>/i);
+      const descMatch  = rawHtml.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']{1,300})["']/i)
+                      || rawHtml.match(/<meta[^>]+content=["']([^"']{1,300})["'][^>]+name=["']description["']/i);
+
+      const titleText = (titleMatch?.[1] || '').replace(/<[^>]*>/g,'').trim();
+      const h1Text    = (h1Match?.[1]    || '').replace(/<[^>]*>/g,'').trim();
+      const descText  = (descMatch?.[1]  || '').replace(/<[^>]*>/g,'').trim();
+      const bodyText  = rawHtml.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').slice(0, 5000);
+
+      const allText = [titleText, h1Text, descText, bodyText.slice(0,1000)].join(' ');
+
+      // ── 詳細ページのシグナル（スコア +1 ずつ） ──
+      const DETAIL_SIGNALS = [
+        /開催日|開催期間|競技日程/,
+        /エントリー締切|申込締切|参加申込|申し込み締切|応募締切/,
+        /賞金総額|優勝賞金|総額/,
+        /参加費|エントリーフィー|参加料/,
+        /会場|開催コース|ゴルフ場|ゴルフクラブ|カントリークラブ/,
+        /主催|主管|後援|協賛/,
+        /出場資格|参加資格|出場条件/,
+        /定員|募集人員|定員数/,
+      ];
+
+      // ── 一覧ページのシグナル（スコア +1 ずつ） ──
+      const LIST_SIGNALS = [
+        /大会一覧|試合一覧|イベント一覧|競技一覧/,
+        /tournament list|tournaments|all tournaments/i,
+        /スケジュール一覧|年間スケジュール|競技スケジュール/,
+        /ツアー情報|ツアースケジュール/,
+        /schedule list|tour schedule/i,
+        /カレンダー|年間カレンダー/,
+        /トップページ|ホームページ|公式サイト$/,
+        /一覧はこちら|大会を探す|大会検索/,
+      ];
+
+      let detailScore = 0;
+      let listScore   = 0;
+
+      for (const re of DETAIL_SIGNALS) {
+        if (re.test(allText)) detailScore++;
+      }
+      for (const re of LIST_SIGNALS) {
+        if (re.test(allText)) listScore++;
+      }
+
+      // 詳細シグナルが3つ以上 → detail 確定
+      if (detailScore >= 3) return 'detail';
+      // 一覧シグナルが2つ以上かつ詳細シグナルが1以下 → listing
+      if (listScore >= 2 && detailScore <= 1) return 'listing';
+      // 一覧シグナルが1つでも詳細シグナルが0 → listing
+      if (listScore >= 1 && detailScore === 0) return 'listing';
+    }
+
+    // ── 4. 判定不能 → 詳細として扱う（誤検知を最小化） ──
+    return 'detail';
+  }
+
   /* ── カテゴリ自動判定 ── */
   static detectCategory(url, title = '') {
     const hay = url + ' ' + title;
@@ -19585,6 +19685,14 @@ class AiUrlParser {
     s('fetch', 'active');
     const rawHtml = await this.fetchHtml(url);
     s('fetch', rawHtml ? 'done' : 'err');
+
+    // ── STEP 1.5: ページ種別チェック（一覧・トップは解析停止） ──
+    const _pageKind = AiUrlParser._detectPageKind(url, rawHtml);
+    if (_pageKind === 'listing') {
+      const _listErr = new Error('LISTING_PAGE');
+      _listErr.isListingPage = true;
+      throw _listErr;
+    }
 
     // ── STEP 2: テキストクリーニング（実ロジック実行） ──
     s('parse', 'active');
@@ -19902,8 +20010,41 @@ window.startUrlFetch = async function() {
   } catch(err) {
     console.error('[AIP]', err);
     resetSteps();
-    showError(err.message || 'AI解析に失敗しました');
-    if (typeof showToast === 'function') showToast('⚠️ 解析失敗');
+    if (err.isListingPage) {
+      // ── 一覧・トップページ検出時の専用エラー表示 ──
+      const eb = document.getElementById('url-error-box');
+      if (eb) {
+        eb.innerHTML = `
+          <div style="font-size:14px;font-weight:700;color:#1d1d1f;margin-bottom:6px;">📋 一覧・トップページが検出されました</div>
+          <div style="font-size:13px;color:#3a3a3c;line-height:1.6;margin-bottom:10px;">
+            個別の<strong>大会詳細ページ</strong>のURLを入力してください。
+          </div>
+          <div style="font-size:12px;color:#636366;line-height:1.8;background:#f5f5f7;border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+            ✅ 開催日・会場・エントリー情報が記載されたページ<br>
+            ✅ 個別大会のエントリーフォームページ<br>
+            ✅ 例：<code style="font-size:11px;">.../tournament/2026-xxx</code>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button onclick="document.getElementById('url-error-box').classList.remove('show');document.getElementById('url-modal-input').focus();"
+              style="display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;background:#f0fdf6;border:1.5px solid rgba(57,200,146,.4);color:#0B7A44;">
+              ↩ URLを変更する
+            </button>
+            <button onclick="_aipManual()"
+              style="display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;background:#f5f5f7;border:1.5px solid rgba(0,0,0,.1);color:#3a3a3c;">
+              ✏️ 手動入力へ
+            </button>
+          </div>`;
+        eb.classList.add('show');
+      }
+      document.getElementById('url-result-box')?.classList.remove('show');
+      document.getElementById('url-confirm-btn').style.display = 'none';
+      document.getElementById('url-progress')?.classList.remove('show');
+      document.getElementById('aip-steps')?.classList.remove('show');
+      if (typeof showToast === 'function') showToast('📋 詳細ページのURLを入力してください');
+    } else {
+      showError(err.message || 'AI解析に失敗しました');
+      if (typeof showToast === 'function') showToast('⚠️ 解析失敗');
+    }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '解析'; }
   }
