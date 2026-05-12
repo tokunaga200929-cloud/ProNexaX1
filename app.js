@@ -35,7 +35,7 @@ const _FIREBASE_IS_PLACEHOLDER = false;
 // ここに管理者の Gmail を追加してください
 // ================================================================
 const ADMIN_EMAILS = [
-   "pronexax0929@gmail.com",  // ← 実際のメールアドレスに書き換えてください
+   //"pronexax@gmail.com",  // ← 実際のメールアドレスに書き換えてください
 ];
 // 管理者判定
 function _isAdminEmail(email) {
@@ -148,23 +148,9 @@ function _onAuthStateChangedGuest() {
 
 function _onAuthStateChanged(user) {
   if (user) {
-    // window._showApp（⑧ちらつき防止ラッパー → ③完全版）を経由して呼ぶ
-    if (typeof window._showApp === 'function') {
-      window._showApp(user);
-    } else {
-      _showApp(user);
-    }
-    // ★デバッグログ
-    console.log("ADMIN_EMAILS", ADMIN_EMAILS);
-    console.log("LOGIN EMAIL", user.email);
-    console.log("IS ADMIN", _isAdminEmail(user.email));
-    console.log("BODY CLASS", document.body.className);
+    _showApp(user);
   } else {
-    if (typeof window._showAuthScreen === 'function') {
-      window._showAuthScreen();
-    } else {
-      _showAuthScreen();
-    }
+    _showAuthScreen();
   }
 }
 
@@ -278,7 +264,27 @@ function _requireAuth(callback) {
   document.getElementById('auth-screen')?.classList.remove('hidden');
 }
 
-// ログアウト: window.authLogout は後方（⑥）で完全版を定義
+// ログアウト
+window.authLogout = function() {
+  if (!confirm('ログアウトしますか？')) return;
+  localStorage.removeItem('pronexax.guestUser');
+  // 管理者状態をリセット
+  _isAdmin = false;
+  document.body.classList.remove('is-admin');
+  const adminNavBtn = document.getElementById('nav-admin');
+  if (adminNavBtn) adminNavBtn.style.display = 'none';
+  if (typeof appState !== 'undefined') {
+    appState.set('admin.isAdmin', false);
+    appState.set('admin.mode', 'user');
+  }
+  if (typeof firebase !== 'undefined' && firebase.apps?.length) {
+    firebase.auth().signOut().catch(()=>{});
+  }
+  _currentUser = null;
+  document.body.classList.add('auth-guest');
+  _showAuthScreen();
+  if (typeof closeDrawer === 'function') closeDrawer();
+};
 
 // ── Google ログイン ──
 window.authGoogleSignIn = async function() {
@@ -399,7 +405,6 @@ window.authSubmit = async function() {
     if (loader) loader.style.display = 'none';
     if (btn) btn.disabled = false;
     _showApp(_currentUser);
-    if (typeof window._showApp === 'function' && window._showApp !== _showApp) window._showApp(_currentUser);
     return;
   }
 
@@ -428,7 +433,6 @@ window.authSubmit = async function() {
       localStorage.setItem('pronexax.guestUser', JSON.stringify({ email }));
       _currentUser = { email, displayName: email.split('@')[0], uid: 'guest-'+btoa(email) };
       _showApp(_currentUser);
-      if (typeof window._showApp === 'function' && window._showApp !== _showApp) window._showApp(_currentUser);
       return;
     }
 
@@ -444,7 +448,6 @@ window.authSubmit = async function() {
     errEl.textContent = msgs[err.code] || err.message || 'エラーが発生しました';
   }
 };
-
 const NAV_ICONS={
   calendar:{active:`<rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#1AAF7A" stroke-width="1.7"/><line x1="7" y1="2" x2="7" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="#1AAF7A" stroke-width="1.7"/>`,inactive:`<rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#9BB8AE" stroke-width="1.7"/><line x1="7" y1="2" x2="7" y2="6" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/><line x1="15" y1="2" x2="15" y2="6" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/><line x1="3" y1="9" x2="19" y2="9" stroke="#9BB8AE" stroke-width="1.7"/>`},
   search:{active:`<circle cx="10" cy="10" r="6" stroke="#1AAF7A" stroke-width="1.7"/><line x1="14.5" y1="14.5" x2="19" y2="19" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>`,inactive:`<circle cx="10" cy="10" r="6" stroke="#9BB8AE" stroke-width="1.7"/><line x1="14.5" y1="14.5" x2="19" y2="19" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>`},
@@ -7245,7 +7248,6 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     updateTriggers();
   },300);
 })();
-
 // ================================================================
 // 認証チェック：予定追加・編集をログイン必須に
 // ================================================================
@@ -7336,7 +7338,6 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     lastDs = ds;
   }, { passive: false });
 })();
-
 // ================================================================
 // ★★★ Phase3: PWA/iPhone高さ修正・縦固定強化 ★★★
 (function fixSafariPWAHeight(){
@@ -7379,7 +7380,6 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     }, { passive: true });
   }
 })();
-
 // ================================================================
 // 月ピッカー（"2025年5月 ▼" タップで開くドロップダウン）
 // ================================================================
@@ -7495,7 +7495,6 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
     });
   });
 })();
-
 /* ================================================================
    Phase5+6: 大会管理 + AI抽出パイプライン
    ① TOURNAMENTS_DB  ② 管理者モード  ③ 大会CRUD
@@ -8362,7 +8361,6 @@ function _delay(ms) { return new Promise(r => setTimeout(r, ms)); }
     setTimeout(ready, 80);
   }
 })();
-
 /* ================================================================
    ★★★ Phase8: TOURNAMENTS_DB 中心構造 — 本格移行 ★★★
 
@@ -9134,7 +9132,6 @@ window.ProNexaX = Object.assign(window.ProNexaX || {}, {
   }
 })();
 
-
 /* ================================================================
    ★★★ Firebase Auth 完全統合 + 管理者分離 ★★★
 
@@ -9213,14 +9210,7 @@ async function _saveUserToFirestore(user, isAdmin) {
   const _origShowApp = window._showApp || function(){};
 
   window._showApp = function(user) {
-    if (!user) {
-      if (typeof window._showAuthScreen === 'function') {
-        window._showAuthScreen();
-      } else {
-        _showAuthScreen();
-      }
-      return;
-    }
+    if (!user) { _showAuthScreen(); return; }
 
     _currentUser = user;
 
@@ -9435,12 +9425,7 @@ window.authLogout = function() {
     appState.set('admin.mode', 'user');
   }
 
-  // window._showAuthScreen（⑧→④完全版）を呼ぶ
-  if (typeof window._showAuthScreen === 'function') {
-    window._showAuthScreen();
-  } else {
-    _showAuthScreen();
-  }
+  _showAuthScreen();
   if (typeof closeDrawer === 'function') closeDrawer();
   if (typeof showToast === 'function') showToast('ログアウトしました');
 };
@@ -9546,7 +9531,6 @@ console.info(
   'color:#C04040;font-weight:600;',
   typeof ADMIN_EMAILS !== 'undefined' ? ADMIN_EMAILS.length : 0
 );
-
 
 /* ================================================================
    ★★★ Firestore CMS 層 — 管理画面 CRUD ★★★
@@ -10122,7 +10106,6 @@ console.info(
   'color:#C04040;font-weight:600;'
 );
 
-
 /* ================================================================
    ★★★ Firestore 大会データ層 ★★★
 
@@ -10570,7 +10553,6 @@ if (typeof window.ProNexaX !== 'undefined') {
 }
 
 console.info('[Firestore Layer] 初期化完了');
-
 
 /* ================================================================
    ★★★ iOS純正風 BottomSheet — 完全実装 ★★★
@@ -11263,7 +11245,6 @@ body.is-admin #page-admin.active {
 
 })();
 
-
 /* ================================================================
   大会詳細モーダル — _renderTdm 完全版置き換え
   ================================================================ */
@@ -11655,7 +11636,6 @@ console.info(
 );
 
 })();
-
 'use strict';
 
 // ================================================================
@@ -13510,7 +13490,6 @@ console.info(
 );
 
 })();
-
 /* ================================================================
   PDF解析エンジン
   ================================================================ */
@@ -14038,7 +14017,6 @@ console.info(
 );
 
 })();
-
 (function(){
 'use strict';
 
