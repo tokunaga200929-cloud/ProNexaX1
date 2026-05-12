@@ -3269,52 +3269,46 @@ button,input,select,textarea{
 }
 .empty-search{text-align:center;padding:32px 14px;color:var(--text-tertiary);font-size:11px;font-weight:500;}
 /* BottomSheet 初期状態: 完全非表示（Safari PWA対応） */
+/* ── 予定追加 BottomSheet（シンプル版・drag-free） ── */
 .modal-overlay{
-  position:fixed;inset:0;
-  background:rgba(5,20,14,.5);
-  z-index:100;
-  display:none;          /* Safari PWA対策：初期はdisplay:none */
-  align-items:flex-end;
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-  transition:opacity .25s;
+  position: fixed;
+  inset: 0;
+  background: rgba(5,20,14,.5);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
 }
 .modal-overlay.show{
-  display:flex;          /* 表示時のみflexに */
-  opacity:1;
-  visibility:visible;
-  pointer-events:all;
+  opacity: 1;
+  pointer-events: auto;
 }
-/* BottomSheet本体 初期状態 */
 .modal-sheet{
-  background:#fff;
-  border-radius:20px 20px 0 0;
-  width:100%;
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-  transform:translateY(110%);  /* 画面外に完全退避 */
-  transition:transform .38s cubic-bezier(.32,.72,0,1), opacity .3s ease, visibility .3s ease;
-  max-height:88%;
-  display:flex;
-  flex-direction:column;
-  box-shadow:0 -4px 24px rgba(0,0,0,.12);
-  position:relative;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 88dvh;
+  max-height: 88vh; /* fallback */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -4px 24px rgba(0,0,0,.12);
+  position: relative;
+  /* 下から出るアニメーション */
+  transform: translateY(100%);
+  transition: transform .34s cubic-bezier(.32,.72,.25,1);
 }
-/* 表示時のみアニメーションで出現 */
 .modal-overlay.show .modal-sheet{
-  opacity:1;
-  visibility:visible;
-  pointer-events:auto;
-  transform:translateY(0);
+  transform: translateY(0);
 }
 .modal-handle{width:44px;height:5px;background:#D1D1D6;border-radius:999px;margin:8px auto 10px;flex-shrink:0;display:block;}
 .modal-title{font-size:14px;font-weight:700;color:var(--text-primary);padding:0 16px 9px;border-bottom:1px solid #EEF5F2;flex-shrink:0;}
 .modal-title.edit-mode{background:linear-gradient(90deg,var(--green-chip) 0%,transparent 100%);border-left:3px solid var(--green-main);padding-left:13px;}
-.modal-scroll{flex:1;overflow-y:auto;padding:12px 16px 0;}
+.modal-scroll{flex:1;overflow-y:auto;padding:12px 16px 0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
 .modal-scroll::-webkit-scrollbar{display:none;}
-.modal-footer{padding:8px 16px 12px;flex-shrink:0;border-top:1px solid #EEF5F2;}
+.modal-footer{padding:8px 16px calc(env(safe-area-inset-bottom,0px) + 12px);flex-shrink:0;border-top:1px solid #EEF5F2;}
 .form-label{font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.5px;}
 .mstep{display:none;}.mstep.active{display:block;}
 .step-indicator{display:flex;gap:6px;justify-content:center;margin-bottom:12px;}
@@ -6745,10 +6739,26 @@ body.is-admin .admin-card-actions.admin-only {
       </div>
     </div>
   </div>
-  <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
-    <div class="modal-sheet" onclick="event.stopPropagation()">
+  <!-- 予定追加 BottomSheet -->
+  <div id="modal-overlay" class="modal-overlay" ontouchend="if(event.target===this){event.stopPropagation();event.preventDefault();closeModal();}">
+    <div class="modal-sheet">
       <div class="modal-handle"></div>
-      <button onclick="event.stopPropagation();closeModal();" ontouchend="event.stopPropagation();event.preventDefault();closeModal();" style="position:absolute;top:14px;right:16px;width:32px;height:32px;border:none;border-radius:50%;background:rgba(0,0,0,.06);font-size:16px;color:#222;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9999;pointer-events:auto;-webkit-tap-highlight-color:transparent;touch-action:manipulation;" aria-label="閉じる">✕</button>
+      <!-- ✕ 閉じるボタン -->
+      <button
+        id="modal-close-btn"
+        aria-label="閉じる"
+        ontouchend="event.stopPropagation();event.preventDefault();closeModal();"
+        onclick="event.stopPropagation();closeModal();"
+        style="position:absolute;top:12px;right:14px;
+               width:30px;height:30px;
+               border:none;border-radius:50%;
+               background:rgba(0,0,0,.06);
+               font-size:15px;color:#3a3a3c;
+               display:flex;align-items:center;justify-content:center;
+               cursor:pointer;
+               z-index:10;
+               -webkit-tap-highlight-color:transparent;
+               touch-action:manipulation;">✕</button>
       <div class="modal-title" id="modal-title">予定を追加</div>
       <div class="modal-scroll" id="modal-scroll">
         <div class="mstep active" id="mstep1">
@@ -18007,9 +18017,8 @@ function _applyIOSHandle(containerEl) {
   -webkit-user-select: none;
 }
 
-/* ⑤ シート本体の transition */
+/* ⑤ シート本体の transition（modal-sheetは独自CSSで管理するため除外） */
 /* 表示時 */
-.modal-overlay.show .modal-sheet,
 .tdm-sheet.show,
 .fbs-sheet,
 .add-cat-sheet.show {
@@ -18017,7 +18026,6 @@ function _applyIOSHandle(containerEl) {
 }
 
 /* ⑥ 非表示・スナップバック時 */
-.modal-sheet,
 .tdm-sheet,
 .fbs-sheet,
 .add-cat-sheet {
@@ -18064,9 +18072,9 @@ function _applyIOSHandle(containerEl) {
   pointer-events: none !important;
 }
 
-/* ⑩ modal-sheet の構造 */
+/* ⑩ modal-sheet の構造（overflow は独自CSSで管理） */
 .modal-sheet {
-  overflow: hidden;
+  position: relative; /* ✕ボタン absolute 基準 */
 }
 .modal-scroll {
   overflow-y: auto;
@@ -18174,18 +18182,8 @@ body.is-admin #page-admin.active {
     // ─────────────────────────────────────────
     // ① メインモーダル（カレンダー予定追加）
     // ─────────────────────────────────────────
-    (function() {
-      const overlay = document.getElementById('modal-overlay');
-      if (!overlay) return;
-      const sheet  = overlay.querySelector('.modal-sheet');
-      const scroll = document.getElementById('modal-scroll');
-      if (!sheet) return;
-
-      _setup('main-modal', sheet,
-        [scroll],
-        () => { if (typeof closeModal === 'function') closeModal(); }
-      );
-    })();
+    // drag-free 版に再構築済みのため IOSSheetDrag は適用しない
+    // (function() { ... })();
 
     // ─────────────────────────────────────────
     // ② Day View モーダル（予定一覧）
