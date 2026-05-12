@@ -17274,10 +17274,6 @@ const FirestoreDB = (function() {
   let _status       = 'idle'; // 'idle'|'loading'|'live'|'error'
   let _fsLoaded     = false;  // 初回取得完了フラグ
   let _retryTimer   = null;
-  let _retryCount   = 0;          // 連続エラー回数（成功時リセット）
-  const _MAX_RETRY  = 5;          // これ以上はリトライ停止（バッテリー保護）
-  const _BASE_DELAY = 10000;      // 初回リトライ 10s
-  const _MAX_DELAY  = 300000;     // 上限 5 分
 
   // Firestore から取得したデータを保持（Map: id → flat entry）
   const _fsMap = new Map();
@@ -17479,7 +17475,6 @@ const FirestoreDB = (function() {
   // ── onSnapshot コールバック ──
   function _onSnapshot(snapshot) {
     _fsLoaded = true;
-    _retryCount = 0;  // 接続成功 → リトライカウンタをリセット
 
     snapshot.docChanges().forEach(change => {
       const flat = _fsDocToFlat(change.doc);
@@ -17512,16 +17507,9 @@ const FirestoreDB = (function() {
             console.error('[Firestore] onSnapshot error:', err);
             _setStatus('error', 'データ取得エラー — 静的データで表示中');
             if (typeof showToast === 'function') showToast('Firestore接続エラー。静的データで表示します。');
-            // 指数バックオフ + 最大リトライ上限（バッテリー・暴走防止）
+            // 10 秒後にリトライ（エラー多発を防ぐ）
             if (_retryTimer) clearTimeout(_retryTimer);
-            _retryCount++;
-            if (_retryCount > _MAX_RETRY) {
-              console.warn(`[Firestore] ${_MAX_RETRY}回リトライ失敗 → 自動再接続を停止。FirestoreDB.reconnect() で手動再試行できます。`);
-              return;
-            }
-            const _delay = Math.min(_BASE_DELAY * Math.pow(2, _retryCount - 1), _MAX_DELAY);
-            console.info(`[Firestore] リトライ ${_retryCount}/${_MAX_RETRY} — ${_delay / 1000}s 後`);
-            _retryTimer = setTimeout(_subscribe, _delay);
+            _retryTimer = setTimeout(_subscribe, 10000);
           }
         );
 
@@ -17560,18 +17548,7 @@ const FirestoreDB = (function() {
     get isLoaded() { return _fsLoaded; },
 
     /** 手動でデータを再取得（pull to refresh 等に利用可） */
-    refresh() {
-      if (_retryTimer) { clearTimeout(_retryTimer); _retryTimer = null; }
-      _retryCount = 0;
-      _subscribe();
-    },
-
-    /** 上限到達後の手動再接続（reconnect ボタン等から呼ぶ） */
-    reconnect() {
-      if (_retryTimer) { clearTimeout(_retryTimer); _retryTimer = null; }
-      _retryCount = 0;
-      _subscribe();
-    },
+    refresh() { if (_unsubscribe) { _subscribe(); } },
   };
 })();
 
@@ -19550,6 +19527,173 @@ class AiUrlParser {
     return '';
   }
 
+  /* ── Browser Render Engine（iframe DOM取得）──────────────────────
+   * 用途: Cloudflare 保護サイト / SPA / JS描画必須ページ
+   *
+   * 処理:
+   *   1. hidden iframe を生成・body に追加
+   *   2. DOMContentLoaded または load のどちらか早い方を待つ
+   *   3. iframe.contentDocument から innerHTML を取得
+   *   4. iframe を必ず削除（メモリ・バッテリー保護）
+   *
+   * モバイル PWA 対策:
+   *   - RENDERED_TIMEOUT_MS: 8秒でタイムアウト（ハング防止）
+   *   - document.hidden: バックグラウンド時はスキップ
+   *   - finally: 失敗時も iframe を確実に除去
+   *   - X-Frame-Options / CSP ブロック: try/catch で静かに失敗
+   *
+   * 戻り値: HTML文字列（取得失敗時は ''）
+   */
+  static RENDERED_TIMEOUT_MS = 8000;
+
+  static async fetchRenderedHtml(url) {
+    // バックグラウンド実行は skip（バッテリー節約）
+    if (typeof document === 'undefined' || document.hidden) {
+      console.info('[BrowserRender] skip — document.hidden or undefined:', url);
+      return '';
+    }
+
+    console.info('[BrowserRender] ▶ start:', url);
+
+    return new Promise((resolve) => {
+      let iframe = null;
+      let settled = false;
+
+      // ── cleanup: iframe を DOM から確実に除去（zombie 防止）──
+      const cleanup = () => {
+        if (iframe) {
+          try { iframe.remove(); } catch {}
+          iframe = null;
+          console.info('[BrowserRender] iframe removed (cleanup)');
+        }
+      };
+
+      // ── done: 二重 resolve 防止 + cleanup 保証 ──
+      const done = (html) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(html);
+      };
+
+      // ── タイムアウト（RENDERED_TIMEOUT_MS = 8s）──
+      const timer = setTimeout(() => {
+        console.warn('[BrowserRender] ⏱ timeout (8s) — iframe 強制除去:', url);
+        done('');
+      }, this.RENDERED_TIMEOUT_MS);
+
+      try {
+        iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;border:none;top:-9999px;left:-9999px;';
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+        iframe.setAttribute('aria-hidden', 'true');
+        console.info('[BrowserRender] iframe created, src=', url);
+
+        const extract = () => {
+          clearTimeout(timer);
+          try {
+            const doc = iframe.contentDocument || iframe.contentWindow?.document;
+            if (!doc || !doc.body) {
+              console.warn('[BrowserRender] doc/body が null — 取得不可:', url);
+              done(''); return;
+            }
+            const html = doc.body.innerHTML || doc.documentElement?.outerHTML || '';
+            console.info(
+              `[BrowserRender] ✅ DOM extracted: ${html.length} chars` +
+              ` | body.children: ${doc.body.children.length}` +
+              ` | title: "${doc.title}"` +
+              ` | url: ${url}`
+            );
+            // iframe が残っていないことを確認（done 内の cleanup で除去済みのはず）
+            if (document.body.contains(iframe)) {
+              console.warn('[BrowserRender] ⚠ iframe まだ DOM に残存 — 強制除去します');
+            }
+            done(html);
+          } catch (e) {
+            // X-Frame-Options / CSP でクロスオリジンアクセス不可
+            console.warn(
+              '[BrowserRender] ❌ cross-origin block — DOM アクセス不可',
+              `| error: ${e.message}`,
+              `| url: ${url}`
+            );
+            done('');
+          }
+        };
+
+        iframe.addEventListener('DOMContentLoaded', () => {
+          console.info('[BrowserRender] DOMContentLoaded fired:', url);
+          extract();
+        }, { once: true });
+
+        iframe.addEventListener('load', () => {
+          console.info('[BrowserRender] load fired:', url);
+          extract();
+        }, { once: true });
+
+        iframe.src = url;
+        document.body.appendChild(iframe);
+        console.info('[BrowserRender] iframe appended to body');
+
+      } catch (e) {
+        clearTimeout(timer);
+        console.warn('[BrowserRender] ❌ iframe 生成失敗:', e.message, url);
+        cleanup();
+        resolve('');
+      }
+    });
+  }
+
+  /* ── Server-side Render Fetch Engine ────────────────────────────
+   * 用途: cross-origin / X-Frame-Options / SPA で
+   *       fetchHtml・fetchRenderedHtml が両方失敗したサイト向け。
+   *
+   * 処理:
+   *   POST /api/renderFetch { url }
+   *   → サーバー側 headless browser (Puppeteer/Playwright/Browserless)
+   *   → networkidle 待ち → rendered HTML → JSON 返却
+   *
+   * クライアント側の責務はリクエスト1本のみ。
+   * headless browser の起動・終了・cleanup はすべてサーバー側。
+   * スマホ battery / memory / cold start への影響ゼロ。
+   *
+   * タイムアウト: RENDER_FETCH_TIMEOUT_MS = 20s
+   *   Vercel Function の maxDuration: 30s に対応。
+   *   cold start 込みで 15〜20s を想定。
+   */
+  static RENDER_FETCH_ROUTE      = '/api/renderFetch';
+  static RENDER_FETCH_TIMEOUT_MS = 20000;
+
+  static async serverRenderFetch(url) {
+    console.info('[ServerRender] ▶ start:', url);
+    let res;
+    try {
+      res = await fetch(this.RENDER_FETCH_ROUTE, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ url }),
+        signal:  AbortSignal.timeout(this.RENDER_FETCH_TIMEOUT_MS),
+      });
+    } catch (e) {
+      console.warn('[ServerRender] ❌ fetch 失敗:', e.message, url);
+      return '';
+    }
+    if (!res.ok) {
+      console.warn(`[ServerRender] ❌ HTTP ${res.status} — ${url}`);
+      return '';
+    }
+    let body;
+    try { body = await res.json(); } catch (e) {
+      console.warn('[ServerRender] ❌ JSON parse 失敗:', e.message);
+      return '';
+    }
+    if (!body.ok || !body.html) {
+      console.warn('[ServerRender] ❌ サーバーエラー:', body.error || 'no html', url);
+      return '';
+    }
+    console.info(`[ServerRender] ✅ 取得成功: ${body.html.length} chars | url: ${url}`);
+    return body.html;
+  }
+
   /* ── Vercel Function へ POST ── */
   static async callApi(pageText, sourceUrl, hint) {
     let res;
@@ -19596,8 +19740,56 @@ class AiUrlParser {
 
     // ── STEP 1: HTML フェッチ ──
     s('fetch', 'active');
-    const rawHtml = await this.fetchHtml(url);
+    let rawHtml = await this.fetchHtml(url);
     s('fetch', rawHtml ? 'done' : 'err');
+
+    // ── STEP 1-b: Browser Render Engine（fetchHtml が空のとき試みる）──
+    // サーバーサイド fetch が失敗 / Cloudflare 保護 / SPA 等で rawHtml が空の場合、
+    // hidden iframe でブラウザにレンダリングさせて DOM を取得する。
+    // 取得できた場合のみ rawHtml を上書き。失敗時は静かに次へ（URL-only AI fallback）。
+    if (!rawHtml) {
+      console.info('[AI] fetchHtml → empty — Browser Render Engine を試みます:', url);
+      try {
+        const rendered = await this.fetchRenderedHtml(url);
+        if (rendered && rendered.length > 200) {
+          rawHtml = rendered;
+          console.info(`[AI] ✅ rendered fallback 成功: ${rendered.length} chars → STEP 2 へ`);
+          s('fetch', 'done');
+        } else {
+          console.info(
+            `[AI] rendered fallback: 取得不可 (length=${rendered ? rendered.length : 0})` +
+            ' → URL-only AI fallback へ'
+          );
+        }
+      } catch (e) {
+        console.warn('[AI] Browser Render Engine 例外:', e.message, '→ serverRenderFetch へ');
+      }
+    } else {
+      console.info(`[AI] fetchHtml 成功: ${rawHtml.length} chars — rendered fallback スキップ`);
+    }
+
+    // ── STEP 1-c: Server-side Render Fetch（A・B が両方失敗のとき試みる）──
+    // Puppeteer/Playwright/Browserless による headless browser fetch。
+    // クライアントは POST /api/renderFetch を投げるだけ。
+    // バッテリー・メモリ負荷ゼロ（サーバー側で処理）。
+    if (!rawHtml) {
+      console.info('[AI] Browser Render Engine も空 — Server Render Fetch を試みます:', url);
+      try {
+        const serverHtml = await this.serverRenderFetch(url);
+        if (serverHtml && serverHtml.length > 200) {
+          rawHtml = serverHtml;
+          console.info(`[AI] ✅ serverRenderFetch 成功: ${serverHtml.length} chars → STEP 2 へ`);
+          s('fetch', 'done');
+        } else {
+          console.info(
+            `[AI] serverRenderFetch: 取得不可 (length=${serverHtml ? serverHtml.length : 0})` +
+            ' → URL-only AI fallback へ'
+          );
+        }
+      } catch (e) {
+        console.warn('[AI] serverRenderFetch 例外:', e.message, '→ URL-only AI fallback へ');
+      }
+    }
 
     // ── STEP 2: テキストクリーニング（実ロジック実行） ──
     s('parse', 'active');
