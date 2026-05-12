@@ -35,7 +35,7 @@ const _FIREBASE_IS_PLACEHOLDER = false;
 // ここに管理者の Gmail を追加してください
 // ================================================================
 const ADMIN_EMAILS = [
-   //"pronexax@gmail.com",  // ← 実際のメールアドレスに書き換えてください
+   "pronexax0929@gmail.com",  // ← 実際のメールアドレスに書き換えてください
 ];
 // 管理者判定
 function _isAdminEmail(email) {
