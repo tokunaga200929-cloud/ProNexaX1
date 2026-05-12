@@ -3269,39 +3269,36 @@ button,input,select,textarea{
 }
 .empty-search{text-align:center;padding:32px 14px;color:var(--text-tertiary);font-size:11px;font-weight:500;}
 /* BottomSheet 初期状態: 完全非表示（Safari PWA対応） */
-/* ── 予定追加 BottomSheet（シンプル版・drag-free） ── */
+/* ── 予定追加 BottomSheet（drag-free シンプル版） ── */
 .modal-overlay{
-  position: fixed;
-  inset: 0;
-  background: rgba(5,20,14,.5);
-  z-index: 100;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .25s ease;
+  position:fixed;inset:0;
+  background:rgba(5,20,14,.5);
+  z-index:100;
+  display:flex;
+  align-items:flex-end;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
 }
 .modal-overlay.show{
-  opacity: 1;
-  pointer-events: auto;
+  opacity:1;
+  pointer-events:auto;
 }
 .modal-sheet{
-  background: #fff;
-  border-radius: 20px 20px 0 0;
-  width: 100%;
-  max-height: 88dvh;
-  max-height: 88vh; /* fallback */
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 -4px 24px rgba(0,0,0,.12);
-  position: relative;
-  /* 下から出るアニメーション */
-  transform: translateY(100%);
-  transition: transform .34s cubic-bezier(.32,.72,.25,1);
+  background:#fff;
+  border-radius:20px 20px 0 0;
+  width:100%;
+  max-height:88dvh;
+  max-height:88vh;
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 -4px 24px rgba(0,0,0,.12);
+  position:relative;
+  transform:translateY(100%);
+  transition:transform .34s cubic-bezier(.32,.72,.25,1);
 }
 .modal-overlay.show .modal-sheet{
-  transform: translateY(0);
+  transform:translateY(0);
 }
 .modal-handle{width:44px;height:5px;background:#D1D1D6;border-radius:999px;margin:8px auto 10px;flex-shrink:0;display:block;}
 .modal-title{font-size:14px;font-weight:700;color:var(--text-primary);padding:0 16px 9px;border-bottom:1px solid #EEF5F2;flex-shrink:0;}
@@ -6739,26 +6736,20 @@ body.is-admin .admin-card-actions.admin-only {
       </div>
     </div>
   </div>
-  <!-- 予定追加 BottomSheet -->
-  <div id="modal-overlay" class="modal-overlay" ontouchend="if(event.target===this){event.stopPropagation();event.preventDefault();closeModal();}">
+  <!-- 予定追加 BottomSheet（drag-free） -->
+  <div id="modal-overlay" class="modal-overlay"
+       ontouchend="if(event.target===this){event.stopPropagation();event.preventDefault();closeModal();}">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
-      <!-- ✕ 閉じるボタン -->
-      <button
-        id="modal-close-btn"
-        aria-label="閉じる"
-        ontouchend="event.stopPropagation();event.preventDefault();closeModal();"
+      <!-- 右上✕ボタン -->
+      <button id="modal-close-btn" aria-label="閉じる"
         onclick="event.stopPropagation();closeModal();"
-        style="position:absolute;top:12px;right:14px;
-               width:30px;height:30px;
-               border:none;border-radius:50%;
-               background:rgba(0,0,0,.06);
-               font-size:15px;color:#3a3a3c;
-               display:flex;align-items:center;justify-content:center;
-               cursor:pointer;
-               z-index:10;
-               -webkit-tap-highlight-color:transparent;
-               touch-action:manipulation;">✕</button>
+        ontouchend="event.stopPropagation();event.preventDefault();closeModal();"
+        style="position:absolute;top:12px;right:14px;width:30px;height:30px;
+               border:none;border-radius:50%;background:rgba(0,0,0,.06);
+               font-size:15px;color:#3a3a3c;display:flex;align-items:center;
+               justify-content:center;cursor:pointer;z-index:10;
+               -webkit-tap-highlight-color:transparent;touch-action:manipulation;">✕</button>
       <div class="modal-title" id="modal-title">予定を追加</div>
       <div class="modal-scroll" id="modal-scroll">
         <div class="mstep active" id="mstep1">
@@ -6795,7 +6786,6 @@ body.is-admin .admin-card-actions.admin-only {
           <label class="form-label">開催地・場所</label>
           <input type="text" class="form-input" id="input-place" placeholder="例：千葉県 袖ヶ浦CC">
           <label class="form-label">日程</label>
-          <!-- iOSホイールピッカー トリガー -->
           <div class="wp-trigger-row">
             <div class="wp-trigger" id="wp-start-trigger" onclick="wpOpen('start')">
               <span class="wp-trigger-lbl">開始日</span>
@@ -6806,12 +6796,10 @@ body.is-admin .admin-card-actions.admin-only {
               <span class="wp-trigger-val empty" id="wp-end-date-display">日付を選択</span>
             </div>
           </div>
-          <!-- 時間指定トグル -->
           <div class="wp-time-trigger" id="wp-time-trigger" onclick="wpToggleTimed()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <span id="wp-time-trigger-label">終日</span>
           </div>
-          <!-- 隠しフィールド（既存ロジックとの互換） -->
           <input type="date" id="input-start" style="display:none;" oninput="checkSubmit()">
           <input type="date" id="input-end" style="display:none;">
           <input type="time" id="input-start-time" step="900" style="display:none;">
@@ -11463,7 +11451,7 @@ function closeModal(){
   // 並び替えモードを解除
   if(catReorderMode)toggleCatReorder();
 }
-function handleOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+function handleOverlayClick(e){/* drag-free版: ontouchendで処理 */}
 function goStep(n){
   // ステップ遷移時は並び替えモードを解除（誤操作防止）
   if(n!==1&&catReorderMode)toggleCatReorder();
@@ -18018,18 +18006,17 @@ function _applyIOSHandle(containerEl) {
 }
 
 /* ⑤ シート本体の transition（modal-sheetは独自CSSで管理するため除外） */
-/* 表示時 */
 .tdm-sheet.show,
 .fbs-sheet,
 .add-cat-sheet.show {
   transition: transform .38s cubic-bezier(.32,.72,0,1) !important;
 }
 
-/* ⑥ 非表示・スナップバック時 */
+/* ⑥ dragZone 基準（modal-sheetは独自CSSで管理） */
 .tdm-sheet,
 .fbs-sheet,
 .add-cat-sheet {
-  position: relative;   /* dragZone の absolute 基準 */
+  position: relative;
 }
 
 /* ⑦ 内部スクロール */
@@ -18066,21 +18053,12 @@ function _applyIOSHandle(containerEl) {
   background: #48484A !important;
 }
 
-/* ⑨ overlay 非表示時は pointer-events なし */
-.modal-overlay:not(.show),
+/* ⑨ overlay 非表示時は pointer-events なし（modal-overlayは独自CSSで管理） */
 .tdm-overlay:not(.show) {
   pointer-events: none !important;
 }
 
-/* ⑩ modal-sheet の構造（overflow は独自CSSで管理） */
-.modal-sheet {
-  position: relative; /* ✕ボタン absolute 基準 */
-}
-.modal-scroll {
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-}
+/* ⑩ スクロール構造（modal-scrollは独自CSSで管理） */
 
 /* ★ dismiss中: CSS .show の transform上書きを防ぐ */
 .modal-sheet.ios-dismissing,
@@ -18181,9 +18159,8 @@ body.is-admin #page-admin.active {
 
     // ─────────────────────────────────────────
     // ① メインモーダル（カレンダー予定追加）
+    //    drag-free 版に再構築済み → IOSSheetDrag は適用しない
     // ─────────────────────────────────────────
-    // drag-free 版に再構築済みのため IOSSheetDrag は適用しない
-    // (function() { ... })();
 
     // ─────────────────────────────────────────
     // ② Day View モーダル（予定一覧）
@@ -20537,6 +20514,348 @@ console.info(
   '%c[PDF解析 v1]%c pdf.js + Tesseract.js + /api/parseTournament 完全接続',
   'background:#C03030;color:#fff;padding:2px 8px;border-radius:3px;font-weight:800;',
   'color:#C03030;font-weight:600;'
+);
+
+})();
+</script>
+
+<!-- ================================================================
+  カテゴリ選択モーダル — 完全新規・完全分離
+  既存 modal-overlay / modal-sheet には一切触れない
+  既存 selectedCat / goStep / renderCatGrid / CATEGORIES / userEnabledCategories
+  をそのまま呼び出して使う
+  ================================================================ -->
+<style id="catsel-css">
+/* ── overlay ── */
+#catsel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5,20,14,.5);
+  display: flex;
+  align-items: flex-end;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease;
+}
+#catsel-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── sheet ── */
+#catsel-sheet {
+  width: 100%;
+  max-height: 82dvh;
+  max-height: 82vh;
+  background: var(--bg, #fff);
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -4px 24px rgba(0,0,0,.12);
+  position: relative;
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.32,.72,.25,1);
+}
+#catsel-overlay.open #catsel-sheet {
+  transform: translateY(0);
+}
+
+/* ── handle pill ── */
+#catsel-handle {
+  width: 44px;
+  height: 5px;
+  background: #D1D1D6;
+  border-radius: 999px;
+  margin: 10px auto 8px;
+  flex-shrink: 0;
+  display: block;
+}
+
+/* ── header ── */
+#catsel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px 8px 16px;
+  border-bottom: 1px solid #EEF5F2;
+  flex-shrink: 0;
+}
+#catsel-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary, #0F1E18);
+}
+#catsel-close {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0,0,0,.06);
+  font-size: 15px;
+  color: #3a3a3c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* ── reorder toolbar（既存 cat-reorder-toolbar を流用） ── */
+#catsel-reorder-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px 4px;
+  flex-shrink: 0;
+}
+#catsel-reorder-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary, #3A5C52);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+/* ── scroll body ── */
+#catsel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 14px 0;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+#catsel-scroll::-webkit-scrollbar { display: none; }
+
+/* ── grid（既存 .cat-grid と同じ） ── */
+#catsel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-bottom: calc(env(safe-area-inset-bottom,0px) + 12px);
+}
+
+/* ── お気に入りカテゴリ追加ボタン ── */
+#catsel-add-btn {
+  grid-column: 1 / -1;
+  height: 44px;
+  border: 1.5px dashed rgba(26,175,122,.35);
+  border-radius: 12px;
+  background: var(--green-chip, #E0F8EE);
+  color: var(--green-dark, #22A874);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: opacity .12s;
+}
+#catsel-add-btn:active { opacity: .7; }
+</style>
+
+<script>
+/* ================================================================
+  カテゴリ選択モーダル — 完全新規実装
+  既存データ・ロジックは一切変更しない
+  ================================================================ */
+(function(){
+'use strict';
+
+/* ── DOM生成（初回1回のみ） ── */
+function _buildDOM() {
+  if (document.getElementById('catsel-overlay')) return;
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="catsel-overlay">
+      <div id="catsel-sheet">
+        <div id="catsel-handle"></div>
+        <div id="catsel-header">
+          <span id="catsel-title">カテゴリを選択</span>
+          <button id="catsel-close" aria-label="閉じる"
+            onclick="catselClose();"
+            ontouchend="event.preventDefault();event.stopPropagation();catselClose();">✕</button>
+        </div>
+        <div id="catsel-reorder-bar">
+          <span id="catsel-reorder-label">カテゴリをタップして選択</span>
+        </div>
+        <div id="catsel-scroll">
+          <div id="catsel-grid"></div>
+        </div>
+      </div>
+    </div>
+  `);
+
+  /* overlay タップで閉じる */
+  document.getElementById('catsel-overlay').addEventListener('click', function(e) {
+    if (e.target === this) catselClose();
+  });
+  document.getElementById('catsel-overlay').addEventListener('touchend', function(e) {
+    if (e.target === this) { e.preventDefault(); catselClose(); }
+  }, { passive: false });
+}
+
+/* ── グリッドを描画する（personal固定 + userEnabledCategories のみ） ── */
+function _renderGrid() {
+  const grid = document.getElementById('catsel-grid');
+  if (!grid) return;
+
+  /* CATEGORIES / userEnabledCategories / selectedCat は既存グローバル変数をそのまま使用 */
+  const visible = (typeof CATEGORIES !== 'undefined')
+    ? CATEGORIES.filter(c => c.key === 'personal' || (typeof userEnabledCategories !== 'undefined' && userEnabledCategories.includes(c.key)))
+    : [];
+
+  const currentSel = (typeof selectedCat !== 'undefined') ? selectedCat : null;
+
+  const items = visible.map(c => {
+    const isSel = currentSel === c.key;
+    const selStyle  = isSel ? `border-color:${c.color};background:${c.color}12;` : '';
+    const baseStyle = !isSel ? `border-color:${c.color}66;` : '';
+    return `<div class="cat-item${isSel?' sel':''} is-enabled"
+               style="${selStyle}${baseStyle}"
+               data-catsel-key="${c.key}"
+               id="catsel-item-${c.key}">
+              <div class="cat-color-dot" style="background:${c.color}"></div>
+              <div style="flex:1;">
+                <div class="cat-name">${c.label}</div>
+                <div class="cat-desc">${c.desc}</div>
+              </div>
+              <div class="cat-check" style="color:${c.color}">✓</div>
+            </div>`;
+  }).join('');
+
+  /* お気に入りカテゴリ追加ボタン */
+  const addBtn = `<button id="catsel-add-btn" onclick="catselClose();setTimeout(openAddCatSheet,80);">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    カテゴリを追加
+  </button>`;
+
+  grid.innerHTML = items + addBtn;
+
+  /* タップハンドラを登録 */
+  grid.querySelectorAll('[data-catsel-key]').forEach(el => {
+    const key = el.dataset.catselKey;
+
+    el.addEventListener('click', () => _onSelect(key, el), { passive: true });
+
+    el.addEventListener('touchstart', () => {
+      el.style.transform = 'scale(0.96)';
+    }, { passive: true });
+
+    el.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      el.style.transform = '';
+      _onSelect(key, el);
+    }, { passive: false });
+
+    el.addEventListener('touchcancel', () => {
+      el.style.transform = '';
+    }, { passive: true });
+  });
+}
+
+/* ── カテゴリ選択時の処理 ── */
+function _onSelect(key, el) {
+  /* 既存 selectedCat を更新し、既存 selectCatAuto を使う
+     ※ selectCatAuto は内部で goStep(2)/goStep(3) を呼ぶ
+        → 既存 modal-overlay（step2/3）を開く流れになる */
+  if (typeof selectCatAuto === 'function') {
+    /* catsel を先に閉じてから既存フローへ */
+    catselClose(/* noReset= */true);
+    setTimeout(() => {
+      /* 既存 modal-overlay を開く（既に openModal で show 済み） */
+      selectCatAuto(key, null);
+    }, 40);
+  }
+}
+
+/* ── 開く ── */
+window.catselOpen = function() {
+  _buildDOM();
+  _renderGrid();
+  /* scroll リセット */
+  const sc = document.getElementById('catsel-scroll');
+  if (sc) sc.scrollTop = 0;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.getElementById('catsel-overlay').classList.add('open');
+    });
+  });
+};
+
+/* ── 閉じる ── */
+window.catselClose = function(noReset) {
+  const ov = document.getElementById('catsel-overlay');
+  if (ov) ov.classList.remove('open');
+  if (!noReset && typeof selectedCat !== 'undefined') {
+    /* 選択なしで閉じた場合は modal-overlay も閉じる */
+    if (!selectedCat) {
+      const mainOv = document.getElementById('modal-overlay');
+      if (mainOv) mainOv.classList.remove('show');
+    }
+  }
+};
+
+/* ── openModal をラップして step1 を catsel に差し替え ── */
+(function patchOpenModal() {
+  function patch() {
+    if (typeof openModal !== 'function') return;
+    const _origOpenModal = window.openModal;
+    window.openModal = function(ds, editId) {
+      if (editId) {
+        /* 編集モード（step3）: 既存フローそのまま */
+        _origOpenModal(ds, editId);
+      } else {
+        /* 新規追加（step1 = カテゴリ選択）: catsel を使う */
+        /* 既存の日付/state設定だけ実行するために _origOpenModal を呼んで show は除去 */
+        _origOpenModal(ds, null);
+        /* show を外して catsel を開く */
+        const mainOv = document.getElementById('modal-overlay');
+        if (mainOv) mainOv.classList.remove('show');
+        catselOpen();
+      }
+    };
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 100), { once: true });
+  } else {
+    setTimeout(patch, 100);
+  }
+})();
+
+/* ── addCatFromSheet / removeCatFromSheet 後に catsel-grid も再描画 ── */
+(function patchCatSheet() {
+  function patch() {
+    ['addCatFromSheet','removeCatFromSheet'].forEach(fname => {
+      if (typeof window[fname] !== 'function') return;
+      const _orig = window[fname];
+      window[fname] = function() {
+        _orig.apply(this, arguments);
+        /* catsel が開いていれば再描画 */
+        const ov = document.getElementById('catsel-overlay');
+        if (ov && ov.classList.contains('open')) _renderGrid();
+      };
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(patch, 200), { once: true });
+  } else {
+    setTimeout(patch, 200);
+  }
+})();
+
+console.info(
+  '%c[catsel]%c カテゴリ選択モーダル 新規実装完了',
+  'background:#6B6ED4;color:#fff;padding:2px 8px;border-radius:3px;font-weight:700;',
+  'color:#4a4da0;font-weight:600;'
 );
 
 })();
