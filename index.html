@@ -15939,9 +15939,18 @@ window.closeModal = function(type) {
     appState.set('modal.addCat.open', false);
   }
   if (closeAll || type === 'create') {
-    const evModal = document.getElementById('event-modal') ||
+    // ★ 修正②: modal-overlay が実際のIDなので直接閉じる
+    const evModal = document.getElementById('modal-overlay') ||
+                    document.getElementById('event-modal') ||
                     document.getElementById('modal-sheet');
     if (evModal) { evModal.classList.remove('show'); evModal.style.transform = ''; }
+    // 内部stateも元のcloseModal相当でリセット
+    if (typeof editingId !== 'undefined') editingId = null;
+    if (typeof dvPresetStartTime !== 'undefined') dvPresetStartTime = null;
+    if (typeof dvPresetEndTime   !== 'undefined') dvPresetEndTime   = null;
+    if (typeof catReorderMode !== 'undefined' && catReorderMode) {
+      if (typeof toggleCatReorder === 'function') toggleCatReorder();
+    }
   }
 };
 
@@ -20683,6 +20692,18 @@ function _onSelect(key) {
     /* selectedCat・selectedTour をセット */
     if (typeof window.selectedCat  !== 'undefined') window.selectedCat  = key;
     if (typeof window.selectedTour !== 'undefined') window.selectedTour = null;
+
+    /* ★ 修正①: modalPresetDate / selectedDate を prefillForm 呼び出し直前に
+       確実に保持しておく。patchOpenModal が _orig(ds,null) で設定済みの値を
+       ここで読み出し、undefined/null の場合は今日付を保険として使う。      */
+    const _presetDs = (typeof modalPresetDate !== 'undefined' && modalPresetDate)
+                    ? modalPresetDate
+                    : (typeof selectedDate !== 'undefined' && selectedDate)
+                    ? selectedDate
+                    : (typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0,10));
+    /* 念のため両変数を同じ値で上書き（競合回避） */
+    if (typeof modalPresetDate !== 'undefined') modalPresetDate = _presetDs;
+    if (typeof selectedDate    !== 'undefined') selectedDate    = _presetDs;
 
     /* modal-overlay を show にしてから step 遷移 */
     const mainOv = document.getElementById('modal-overlay');
