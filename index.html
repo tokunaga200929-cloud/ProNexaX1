@@ -6746,9 +6746,9 @@ body.is-admin .admin-card-actions.admin-only {
     </div>
   </div>
   <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
-    <div class="modal-sheet">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
       <div class="modal-handle"></div>
-      <button onclick="event.stopPropagation();closeModal();" style="position:absolute;top:14px;right:16px;width:32px;height:32px;border:none;border-radius:50%;background:rgba(0,0,0,.06);font-size:16px;color:#222;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9999;pointer-events:auto;-webkit-tap-highlight-color:transparent;touch-action:manipulation;" aria-label="閉じる">✕</button>
+      <button onclick="event.stopPropagation();closeModal();" ontouchend="event.stopPropagation();event.preventDefault();closeModal();" style="position:absolute;top:14px;right:16px;width:32px;height:32px;border:none;border-radius:50%;background:rgba(0,0,0,.06);font-size:16px;color:#222;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9999;pointer-events:auto;-webkit-tap-highlight-color:transparent;touch-action:manipulation;" aria-label="閉じる">✕</button>
       <div class="modal-title" id="modal-title">予定を追加</div>
       <div class="modal-scroll" id="modal-scroll">
         <div class="mstep active" id="mstep1">
