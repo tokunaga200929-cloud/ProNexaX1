@@ -9,7 +9,9 @@ self.addEventListener('install', (event) => {
       return cache.addAll([
         OFFLINE_URL,
         './manifest.json',
-        './pronexaX_logo.png'
+        './pronexaX_logo.png',
+        './style.css',
+        './app.js'
       ]);
     }).then(() => self.skipWaiting())
   );
