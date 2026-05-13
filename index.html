@@ -11720,7 +11720,7 @@ function selectCatAuto(key,e){
   ripple.style.cssText=`width:${sz}px;height:${sz}px;left:${(e.clientX-rect.left)-sz/2}px;top:${(e.clientY-rect.top)-sz/2}px;background:${cat?cat.color:'#1AAF7A'};`;
   el.appendChild(ripple);setTimeout(()=>ripple.remove(),500);
   el.classList.add('sel','tapping');el.style.borderColor=cat?cat.color:'';el.style.background=cat?cat.color+'12':'';
-  setTimeout(()=>{el.classList.remove('tapping');key==='personal'?(goStep(3),prefillForm(null)):(document.getElementById('tour-search').value='',renderTourList(),goStep(2));},250);
+  setTimeout(()=>{el.classList.remove('tapping');key==='personal'?(goStep(3),modalPresetDate=modalPresetDate||selectedDate,prefillForm(null)):(document.getElementById('tour-search').value='',renderTourList(),goStep(2));},250);
 }
 function backFromStep3(){selectedCat==='personal'?goStep(1):goStep(2);}
 function renderTourList(q=''){
@@ -11742,7 +11742,26 @@ function onTourClick(idx,q){
 function prefillForm(tour){
   const banner=document.getElementById('edit-banner');banner.style.display='none';
   if(tour){document.getElementById('input-title').value=tour.name;document.getElementById('input-place').value=tour.place;document.getElementById('input-start').value=tour.start;document.getElementById('input-end').value=tour.end;document.getElementById('input-memo').value='';const cat=CATEGORIES.find(c=>c.key===selectedCat);document.getElementById('sel-preview').innerHTML=`<div class="sel-preview" style="border-left-color:${cat?cat.color:'#1AAF7A'}"><div class="sel-preview-name">${tour.name}</div><div class="sel-preview-meta">${tour.start.slice(5).replace('-','/')} 〜 ${tour.end.slice(5).replace('-','/')} ｜ ${tour.place}</div></div>`;}
-  else{const def=defaultDateStr();['input-title','input-place','input-memo'].forEach(id=>document.getElementById(id).value='');document.getElementById('input-start').value=def;document.getElementById('input-end').value=def;document.getElementById('sel-preview').innerHTML='';}
+  else{const def=defaultDateStr();['input-title','input-place','input-memo'].forEach(id=>document.getElementById(id).value='');document.getElementById('input-start').value=def;document.getElementById('input-end').value=def;document.getElementById('sel-preview').innerHTML='';
+    // ★ 個人予定：ホイールピッカーの表示ボタンにも日付をセット
+    if(def){
+      const[_y,_m,_d]=def.split('-').map(Number);
+      const _pad=n=>String(n).padStart(2,'0');
+      const _fmt=`${_y}/${_pad(_m)}/${_pad(_d)}`;
+      const sd=document.getElementById('wp-start-date-display');
+      const ed=document.getElementById('wp-end-date-display');
+      if(sd){sd.textContent=_fmt;sd.classList.remove('empty');}
+      if(ed){ed.textContent=_fmt;ed.classList.remove('empty');}
+      document.getElementById('wp-start-trigger')?.classList.add('is-set');
+      document.getElementById('wp-end-trigger')?.classList.add('is-set');
+      // WPオブジェクトも初期化しておく（ピッカーを開いた時に正しい日付から始まるように）
+      if(typeof WP!=='undefined'){
+        WP.startDate=new Date(_y,_m-1,_d,9,0,0,0);
+        WP.endDate=new Date(_y,_m-1,_d,10,0,0,0);
+        WP.isAllDay=true;
+      }
+    }
+  }
   checkSubmit();
 }
 function prefillFormFromEvent(ev){
@@ -14213,6 +14232,9 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   // prefillForm フック
   const _origPrefill=window.prefillForm;
   window.prefillForm=function(tour){
+    // ★ スマホ対応：_origPrefill呼び出し前にselectedDateをキャプチャ（最も確実なタイミング）
+    const _capturedDate=(typeof selectedDate!=='undefined'&&selectedDate)?selectedDate
+                       :(typeof modalPresetDate!=='undefined'&&modalPresetDate)?modalPresetDate:null;
     if(typeof _origPrefill==='function')_origPrefill(tour);
     setTimeout(()=>{
       const inS=document.getElementById('input-start');
@@ -14225,8 +14247,8 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
         const endDs=window._rangeEndPreset;
         window._rangeEndPreset=null;
         if(inS&&inE){
-          // 開始日は selectedDate から
-          const startDs=typeof selectedDate!=='undefined'?selectedDate:null;
+          // 開始日はキャプチャ済みselectedDateから（スマホ遅延対策）
+          const startDs=_capturedDate;
           if(startDs)inS.value=startDs;
           inE.value=endDs;
           // WP にも反映
@@ -14258,9 +14280,8 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
       if(isEdit){
         baseDate=parseDateLocalStr(inS?.value);
       }else{
-        // 新規：selectedDate が最優先
-        const selDs=typeof selectedDate!=='undefined'?selectedDate:null;
-        baseDate=parseDateLocalStr(selDs||inS?.value);
+        // 新規：キャプチャ済みselectedDateを最優先（スマホでの遅延対策）
+        baseDate=parseDateLocalStr(_capturedDate||inS?.value);
       }
 
       if(!baseDate||isNaN(baseDate.getTime())){
@@ -14296,7 +14317,7 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
       console.log('[prefillForm hook] isEdit=',isEdit,'selectedDate=',typeof selectedDate!=='undefined'?selectedDate:'(undef)',
         '\u2192 WP.startDate=',WP.startDate,'WP.endDate=',WP.endDate);
       updateTriggers();
-    },80);
+    },0);
   };
 
   // ── 初期化 ──
