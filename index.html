@@ -19142,8 +19142,8 @@ const TextCleaner = (function() {
   // SNS埋め込みテキスト
   const SNS_RE = /^.*(twitter|instagram|facebook|#[^\s]{1,30}|@[^\s]{1,30}|いいね|シェア|フォロー|リツイート|DM|dm).{0,50}$/gim;
 
-  // フッター・ナビゲーション的な行（短い行のみ削除・大会名への誤爆を防ぐ）
-  const FOOTER_RE = /^.{0,20}(Copyright|©|プライバシーポリシー|利用規約|サイトマップ|会社概要|採用情報).{0,20}$/gim;
+  // フッター・ナビゲーション的な行
+  const FOOTER_RE = /^.{0,40}(Copyright|©|プライバシーポリシー|利用規約|サイトマップ|お問い合わせ|アクセス|会社概要|採用情報|ホーム|トップ|メニュー|閉じる|戻る).{0,40}$/gim;
 
   // ニュース記事的ノイズ（大会情報でない）
   const NEWS_NOISE_RE = /^.{0,20}(関連記事|おすすめ|新着|最新|人気|READ MORE|続きを読む|もっと見る).{0,30}$/gim;
@@ -19188,10 +19188,7 @@ const TextCleaner = (function() {
       }
 
       const body = doc.body?.innerText || doc.body?.textContent || '';
-      // priority が少ない（500文字未満）場合は body 全体を使う
-      // 一覧ページ等で main/article が薄いケースをカバー
-      if (priority.replace(/\s/g, '').length < 500) return body;
-      return priority;
+      return priority || body;
     } catch {
       // DOMParser 失敗時は正規表現でフォールバック
       return html.replace(/<[^>]+>/g, ' ');
@@ -19843,12 +19840,21 @@ class AiUrlParser {
                    + (others ? ` / 他: ${others}` : '');
       return line;
     };
+    const _fmtSimple = (arr, label) => {
+      if (!arr || !arr.length) return null;
+      return `【${label}】${arr[0].value}`;
+    };
     const _hintLines = [
-      _fmt(candidates.candidateDates,      '開催日'),
-      _fmt(candidates.candidateDeadlines,  '締切'),
-      _fmt(candidates.candidatePrizes,     '賞金'),
-      _fmt(candidates.candidateFees,       '参加費'),
-      _fmt(candidates.candidateCourses,    '会場'),
+      _fmt(candidates.candidateDates,                '開催日'),
+      _fmt(candidates.candidateDeadlines,            '締切'),
+      _fmt(candidates.candidatePrizes,               '賞金'),
+      _fmt(candidates.candidateFees,                 '参加費'),
+      _fmt(candidates.candidateCourses,              '会場'),
+      _fmtSimple(candidates.candidateOrganizers,     '主催者'),
+      _fmtSimple(candidates.candidateCapacities,     '定員'),
+      _fmtSimple(candidates.candidateQualifications, '出場資格'),
+      _fmtSimple(candidates.candidateEntryUrls,      'エントリーURL'),
+      _fmtSimple(candidates.candidateIgUrls,         'InstagramURL'),
     ].filter(Boolean);
     if (_hintLines.length) {
       hint += (hint ? '\n' : '') + _hintLines.join('\n');
@@ -20366,19 +20372,94 @@ class AiUrlParser {
     }
     const candidateCourses = _rank(_courseRaw, 'course').slice(0, 5);
 
+    /* ── ⑥ 主催者 ──────────────────────────────────────────── */
+    const _orgRaw = [];
+    const ORG_RE = /[^
+]*(?:主催|主催者|オーガナイザー|organizer)[^
+]*/gi;
+    let om;
+    while ((om = ORG_RE.exec(text)) !== null && _orgRaw.length < 6) {
+      const line = om[0].trim();
+      if (line.length > 3 && line.length < 60) {
+        const val = line.replace(/^.*?[:：]/,'').trim() || line;
+        _orgRaw.push({ value: val.slice(0,40), sourceLine: line.slice(0,80) });
+      }
+    }
+    const candidateOrganizers = _rank(_orgRaw, 'organizer').slice(0, 2);
+
+    /* ── ⑦ 定員 ────────────────────────────────────────────── */
+    const _capRaw = [];
+    const CAP_RE = /[^
+]*(?:定員|募集人数|参加人数|出場人数)[^
+]*/gi;
+    let capm;
+    while ((capm = CAP_RE.exec(text)) !== null && _capRaw.length < 6) {
+      const line = capm[0].trim();
+      const numM = line.match(/\d+\s*(?:名|人|組)/);
+      if (numM) _capRaw.push({ value: numM[0], sourceLine: line.slice(0,80) });
+    }
+    const candidateCapacities = _rank(_capRaw, 'capacity').slice(0, 2);
+
+    /* ── ⑧ 出場資格 ────────────────────────────────────────── */
+    const _qualRaw = [];
+    const QUAL_RE = /[^
+]*(?:出場資格|参加資格|応募資格|対象者|資格)[^
+]*/gi;
+    let qm;
+    while ((qm = QUAL_RE.exec(text)) !== null && _qualRaw.length < 6) {
+      const line = qm[0].trim();
+      if (line.length > 5 && line.length < 100) {
+        const val = line.replace(/^.*?[:：]/,'').trim() || line;
+        _qualRaw.push({ value: val.slice(0,60), sourceLine: line.slice(0,100) });
+      }
+    }
+    const candidateQualifications = _rank(_qualRaw, 'qualification').slice(0, 2);
+
+    /* ── ⑨ エントリーURL ────────────────────────────────────── */
+    const _entryUrlRaw = [];
+    const ENTRY_URL_RE = /https?:\/\/[^\s"'<>]{10,120}/g;
+    const ENTRY_LABEL_RE = /(?:エントリー|申込|申し込み|entry|form|register)/i;
+    let eum;
+    while ((eum = ENTRY_URL_RE.exec(text)) !== null && _entryUrlRaw.length < 6) {
+      const url = eum[0];
+      if (ENTRY_LABEL_RE.test(url) || ENTRY_LABEL_RE.test(text.slice(Math.max(0,eum.index-30), eum.index))) {
+        _entryUrlRaw.push({ value: url, sourceLine: url });
+      }
+    }
+    const candidateEntryUrls = _entryUrlRaw.slice(0, 2);
+
+    /* ── ⑩ Instagram URL ────────────────────────────────────── */
+    const _igRaw = [];
+    const IG_RE = /https?:\/\/(?:www\.)?instagram\.com\/[^\s"'<>]{2,60}/g;
+    let igm;
+    while ((igm = IG_RE.exec(text)) !== null && _igRaw.length < 3) {
+      _igRaw.push({ value: igm[0], sourceLine: igm[0] });
+    }
+    const candidateIgUrls = _igRaw.slice(0, 2);
+
     /* ── デバッグログ ───────────────────────────────────────── */
     const _best = arr => arr[0]
       ? `${arr[0].value}(text:${arr[0].score} dom:${arr[0].domScore} total:${arr[0].totalScore})`
       : '-';
     console.log('[AIP:candidates] bestCandidate(text+dom):', {
-      date:     _best(candidateDates),
-      deadline: _best(candidateDeadlines),
-      prize:    _best(candidatePrizes),
-      fee:      _best(candidateFees),
-      course:   _best(candidateCourses),
+      date:         _best(candidateDates),
+      deadline:     _best(candidateDeadlines),
+      prize:        _best(candidatePrizes),
+      fee:          _best(candidateFees),
+      course:       _best(candidateCourses),
+      organizer:    candidateOrganizers[0]?.value   || '-',
+      capacity:     candidateCapacities[0]?.value   || '-',
+      qualification:candidateQualifications[0]?.value || '-',
+      entryUrl:     candidateEntryUrls[0]?.value    || '-',
+      instagram:    candidateIgUrls[0]?.value       || '-',
     });
 
-    return { candidateDates, candidateDeadlines, candidatePrizes, candidateFees, candidateCourses };
+    return {
+      candidateDates, candidateDeadlines, candidatePrizes,
+      candidateFees, candidateCourses,
+      candidateOrganizers, candidateCapacities, candidateQualifications,
+      candidateEntryUrls, candidateIgUrls,
+    };
   }
 
   /* ================================================================
