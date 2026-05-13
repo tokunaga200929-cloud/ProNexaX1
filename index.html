@@ -19147,7 +19147,7 @@ const TextCleaner = (function() {
   const SNS_RE = /^.*(twitter|instagram|facebook|#[^\s]{1,30}|@[^\s]{1,30}|いいね|シェア|フォロー|リツイート|DM|dm).{0,50}$/gim;
 
   // フッター・ナビゲーション的な行
-  const FOOTER_RE = /^.{0,40}(Copyright|©|プライバシーポリシー|利用規約|サイトマップ|お問い合わせ|アクセス|会社概要|採用情報|ホーム|トップ|メニュー|閉じる|戻る).{0,40}$/gim;
+  const FOOTER_RE = /^.{0,20}(Copyright|©|プライバシーポリシー|利用規約|サイトマップ|会社概要|採用情報).{0,20}$/gim;
 
   // ニュース記事的ノイズ（大会情報でない）
   const NEWS_NOISE_RE = /^.{0,20}(関連記事|おすすめ|新着|最新|人気|READ MORE|続きを読む|もっと見る).{0,30}$/gim;
@@ -19192,7 +19192,8 @@ const TextCleaner = (function() {
       }
 
       const body = doc.body?.innerText || doc.body?.textContent || '';
-      return priority || body;
+      if (priority.replace(/\s/g, '').length < 500) return body;
+      return priority;
     } catch {
       // DOMParser 失敗時は正規表現でフォールバック
       return html.replace(/<[^>]+>/g, ' ');
