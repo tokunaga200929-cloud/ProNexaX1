@@ -8667,6 +8667,12 @@ function _fixCalendarHeight(){
   // 月ラッパーが非表示なら何もしない
   if(monthWrap.style.display === 'none') return;
 
+  // ★ split-handle によるドラッグ操作中は flexGrow が有効なので介入しない
+  //    flex:none が強制セットされていない（＝ドラッグ操作が正常に効いている）場合はスキップ
+  if(wrap.style.flex !== 'none' && wrap.style.height === ''){
+    return;
+  }
+
   var wrapH = wrap.offsetHeight;
   if(wrapH < 100){
     // flex chain が崩壊している → 利用可能高さを直接計算してセット
@@ -12102,6 +12108,12 @@ function setSplitRatio(calRatio,animate){
   if(animate){
     cal.classList.add('snapping');list.classList.add('snapping');
     setTimeout(()=>{cal.classList.remove('snapping');list.classList.remove('snapping');},320);
+  }
+  // ★ _fixCalendarHeight が flex:none を強制セットしている場合は解除してからflexGrowを設定
+  if(cal.style.flex==='none'||cal.style.height){
+    cal.style.height='';
+    cal.style.minHeight='';
+    cal.style.flex='';
   }
   cal.style.flexGrow=String(r*10);
   list.style.flexGrow=String((1-r)*10);
