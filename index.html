@@ -6964,7 +6964,7 @@ body.is-admin .admin-card-actions.admin-only {
   </div>
 </div>
 
-<!-- ★★★ Cupertino Wheel Date Picker v2 ★★★ -->
+<!-- ★★★ Cupertino Wheel Date/Time Picker v4 ★★★ -->
 <div id="cpk-overlay" ontouchend="if(event.target===this){event.preventDefault();cupertinoClose();}">
   <div id="cpk-sheet" ontouchend="event.stopPropagation()">
     <div id="cpk-grip"></div>
@@ -6974,66 +6974,80 @@ body.is-admin .admin-card-actions.admin-only {
       <button class="cpk-btn-cancel" id="cpk-cancel-btn"
         ontouchend="event.preventDefault();event.stopPropagation();cupertinoClose();"
         onclick="cupertinoClose()">キャンセル</button>
-      <span id="cpk-title-label">日付を選択</span>
+      <span id="cpk-title-label">日付・時刻を選択</span>
       <button class="cpk-btn-done" id="cpk-done-btn"
         ontouchend="event.preventDefault();event.stopPropagation();cupertinoApply();"
         onclick="cupertinoApply()">完了</button>
     </div>
 
-    <!-- 開始・終了タブ -->
-    <div id="cpk-tabs">
-      <button class="cpk-tab active" id="cpk-tab-s"
-        ontouchend="event.preventDefault();cupertinoTab('start');"
-        onclick="cupertinoTab('start')">
-        <span class="cpk-tab-top">開始</span>
-        <span class="cpk-tab-val" id="cpk-tab-s-val">—</span>
-      </button>
-      <div id="cpk-tab-arrow">→</div>
-      <button class="cpk-tab" id="cpk-tab-e"
-        ontouchend="event.preventDefault();cupertinoTab('end');"
-        onclick="cupertinoTab('end')">
-        <span class="cpk-tab-top">終了</span>
-        <span class="cpk-tab-val" id="cpk-tab-e-val">—</span>
-      </button>
+    <!-- 終日トグル -->
+    <div id="cpk-allday-row">
+      <span id="cpk-allday-label">終日</span>
       <button class="cpk-allday-btn" id="cpk-allday-btn"
         ontouchend="event.preventDefault();cupertinoToggleAllday();"
-        onclick="cupertinoToggleAllday()">終日</button>
+        onclick="cupertinoToggleAllday()">
+        <span id="cpk-allday-knob"></span>
+      </button>
     </div>
 
-    <!-- ホイール本体 -->
-    <div id="cpk-wheels">
-      <!-- 選択ハイライトバー -->
-      <div id="cpk-bar"></div>
-      <!-- フェード上 -->
-      <div id="cpk-fade-t"></div>
-      <!-- フェード下 -->
-      <div id="cpk-fade-b"></div>
+    <!-- ── START section ── -->
+    <div class="cpk-section" id="cpk-section-start">
+      <div class="cpk-section-label">開始</div>
 
-      <!-- 月 -->
-      <div class="cpk-drum" id="cpk-drum-mo">
-        <div class="cpk-drum-inner" id="cpk-inner-mo"></div>
+      <!-- 開始 日付 wheel -->
+      <div class="cpk-row-label">日付</div>
+      <div class="cpk-wheels-wrap" id="cpk-wheels-sdate">
+        <div id="cpk-bar-sdate" class="cpk-sel-bar"></div>
+        <div id="cpk-fade-t-sdate" class="cpk-fade-t"></div>
+        <div id="cpk-fade-b-sdate" class="cpk-fade-b"></div>
+        <div class="cpk-drum" id="cpk-drum-smo"><div class="cpk-drum-inner" id="cpk-inner-smo"></div></div>
+        <div class="cpk-drum cpk-drum-day" id="cpk-drum-sdy"><div class="cpk-drum-inner" id="cpk-inner-sdy"></div></div>
+        <div class="cpk-drum cpk-drum-yr" id="cpk-drum-syr"><div class="cpk-drum-inner" id="cpk-inner-syr"></div></div>
       </div>
-      <!-- 日 -->
-      <div class="cpk-drum" id="cpk-drum-dy">
-        <div class="cpk-drum-inner" id="cpk-inner-dy"></div>
-      </div>
-      <!-- 年 -->
-      <div class="cpk-drum" id="cpk-drum-yr">
-        <div class="cpk-drum-inner" id="cpk-inner-yr"></div>
-      </div>
-      <!-- 区切り（時間あり時のみ表示） -->
-      <div class="cpk-sep" id="cpk-sep">—</div>
-      <!-- 時 -->
-      <div class="cpk-drum cpk-drum-time" id="cpk-drum-hr">
-        <div class="cpk-drum-inner" id="cpk-inner-hr"></div>
-      </div>
-      <!-- 分 -->
-      <div class="cpk-drum cpk-drum-time" id="cpk-drum-mn">
-        <div class="cpk-drum-inner" id="cpk-inner-mn"></div>
+
+      <!-- 開始 時刻 wheel -->
+      <div class="cpk-row-label cpk-time-label" id="cpk-lbl-stime">時刻</div>
+      <div class="cpk-wheels-wrap cpk-wheels-time" id="cpk-wheels-stime">
+        <div id="cpk-bar-stime" class="cpk-sel-bar"></div>
+        <div id="cpk-fade-t-stime" class="cpk-fade-t"></div>
+        <div id="cpk-fade-b-stime" class="cpk-fade-b"></div>
+        <div class="cpk-drum cpk-drum-hr" id="cpk-drum-shr"><div class="cpk-drum-inner" id="cpk-inner-shr"></div></div>
+        <div class="cpk-sep">:</div>
+        <div class="cpk-drum cpk-drum-mn" id="cpk-drum-smn"><div class="cpk-drum-inner" id="cpk-inner-smn"></div></div>
       </div>
     </div>
 
-    <!-- 分間隔（時間ありのみ） -->
+    <!-- ── divider ── -->
+    <div class="cpk-section-divider"></div>
+
+    <!-- ── END section ── -->
+    <div class="cpk-section" id="cpk-section-end">
+      <div class="cpk-section-label">終了</div>
+
+      <!-- 終了 日付 wheel -->
+      <div class="cpk-row-label">日付</div>
+      <div class="cpk-wheels-wrap" id="cpk-wheels-edate">
+        <div id="cpk-bar-edate" class="cpk-sel-bar"></div>
+        <div id="cpk-fade-t-edate" class="cpk-fade-t"></div>
+        <div id="cpk-fade-b-edate" class="cpk-fade-b"></div>
+        <div class="cpk-drum" id="cpk-drum-emo"><div class="cpk-drum-inner" id="cpk-inner-emo"></div></div>
+        <div class="cpk-drum cpk-drum-day" id="cpk-drum-edy"><div class="cpk-drum-inner" id="cpk-inner-edy"></div></div>
+        <div class="cpk-drum cpk-drum-yr" id="cpk-drum-eyr"><div class="cpk-drum-inner" id="cpk-inner-eyr"></div></div>
+      </div>
+
+      <!-- 終了 時刻 wheel -->
+      <div class="cpk-row-label cpk-time-label" id="cpk-lbl-etime">時刻</div>
+      <div class="cpk-wheels-wrap cpk-wheels-time" id="cpk-wheels-etime">
+        <div id="cpk-bar-etime" class="cpk-sel-bar"></div>
+        <div id="cpk-fade-t-etime" class="cpk-fade-t"></div>
+        <div id="cpk-fade-b-etime" class="cpk-fade-b"></div>
+        <div class="cpk-drum cpk-drum-hr" id="cpk-drum-ehr"><div class="cpk-drum-inner" id="cpk-inner-ehr"></div></div>
+        <div class="cpk-sep">:</div>
+        <div class="cpk-drum cpk-drum-mn" id="cpk-drum-emn"><div class="cpk-drum-inner" id="cpk-inner-emn"></div></div>
+      </div>
+    </div>
+
+    <!-- 分間隔 -->
     <div id="cpk-interval-row">
       <span id="cpk-interval-label">分の単位</span>
       <div id="cpk-interval-btns">
@@ -7050,287 +7064,267 @@ body.is-admin .admin-card-actions.admin-only {
 
 <style>
 /* ================================================================
-   Cupertino Wheel Picker v3 — Apple-native iOS 18 Level CSS
+   Cupertino Wheel Picker v4 — Apple Calendar / iOS 18 native
    ================================================================ */
 
 /* ── Overlay ── */
 #cpk-overlay {
-  position: fixed; inset: 0;
-  z-index: 9000;
+  position: fixed; inset: 0; z-index: 9000;
   background: rgba(0,0,0,.50);
   display: flex; align-items: flex-end;
   opacity: 0; pointer-events: none;
   transition: opacity .28s ease;
-  -webkit-backdrop-filter: blur(0px);
-  backdrop-filter: blur(0px);
 }
-#cpk-overlay.open {
-  opacity: 1; pointer-events: auto;
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
-}
+#cpk-overlay.open { opacity: 1; pointer-events: auto; }
 
 /* ── Sheet ── */
 #cpk-sheet {
   width: 100%;
-  background: rgba(242,242,247,0.96);
+  background: rgba(242,242,247,.97);
   -webkit-backdrop-filter: saturate(180%) blur(40px);
   backdrop-filter: saturate(180%) blur(40px);
   border-radius: 20px 20px 0 0;
   padding-bottom: env(safe-area-inset-bottom, 20px);
-  box-shadow:
-    0 -1px 0 rgba(255,255,255,.9) inset,
-    0 -2px 32px rgba(0,0,0,.18),
-    0 -1px 2px rgba(0,0,0,.08);
+  box-shadow: 0 -1px 0 rgba(255,255,255,.9) inset,
+              0 -2px 32px rgba(0,0,0,.18),
+              0 -1px 2px rgba(0,0,0,.08);
   transform: translateY(100%);
   transition: transform .36s cubic-bezier(.32,.72,.25,1);
   will-change: transform;
+  /* Scrollable sheet for tall content */
+  max-height: 92vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 :root[data-theme="dark"] #cpk-sheet {
-  background: rgba(28,28,32,0.95);
-  box-shadow:
-    0 -1px 0 rgba(255,255,255,.08) inset,
-    0 -2px 32px rgba(0,0,0,.45),
-    0 -1px 2px rgba(0,0,0,.25);
+  background: rgba(24,24,28,.97);
+  box-shadow: 0 -1px 0 rgba(255,255,255,.06) inset,
+              0 -2px 32px rgba(0,0,0,.5),
+              0 -1px 2px rgba(0,0,0,.28);
 }
 #cpk-overlay.open #cpk-sheet { transform: translateY(0); }
 
 /* ── Grip ── */
 #cpk-grip {
   width: 36px; height: 5px;
-  background: rgba(60,60,67,.28);
-  border-radius: 3px;
-  margin: 10px auto 0;
+  background: rgba(60,60,67,.26);
+  border-radius: 3px; margin: 10px auto 0;
+  flex-shrink: 0;
 }
-:root[data-theme="dark"] #cpk-grip { background: rgba(255,255,255,.22); }
+:root[data-theme="dark"] #cpk-grip { background: rgba(255,255,255,.2); }
 
 /* ── Header ── */
 #cpk-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 20px 10px;
-  border-bottom: .5px solid rgba(60,60,67,.18);
+  border-bottom: .5px solid rgba(60,60,67,.16);
+  position: sticky; top: 0; z-index: 10;
+  background: inherit;
+  -webkit-backdrop-filter: inherit;
+  backdrop-filter: inherit;
 }
-:root[data-theme="dark"] #cpk-header { border-bottom-color: rgba(255,255,255,.10); }
+:root[data-theme="dark"] #cpk-header { border-bottom-color: rgba(255,255,255,.09); }
 #cpk-title-label {
-  font-size: 14px; font-weight: 600; color: #1C1C1E;
+  font-size: 14px; font-weight: 600; color: #1C1C1E; letter-spacing: -.01em;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  letter-spacing: -0.01em;
 }
 :root[data-theme="dark"] #cpk-title-label { color: #F2F2F7; }
-
 .cpk-btn-cancel, .cpk-btn-done {
   background: none; border: none; padding: 4px 6px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   font-size: 16px; cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  letter-spacing: -0.01em;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  letter-spacing: -.01em;
 }
 .cpk-btn-cancel { color: #8E8E93; font-weight: 400; }
 .cpk-btn-done   { color: #007AFF; font-weight: 600; }
-.cpk-btn-cancel:active, .cpk-btn-done:active { opacity: .45; }
+.cpk-btn-cancel:active, .cpk-btn-done:active { opacity: .42; }
 :root[data-theme="dark"] .cpk-btn-cancel { color: #636366; }
 
-/* ── Tabs ── */
-#cpk-tabs {
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 16px 10px;
-  border-bottom: .5px solid rgba(60,60,67,.12);
+/* ── All-day toggle row ── */
+#cpk-allday-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 20px;
+  border-bottom: .5px solid rgba(60,60,67,.13);
 }
-:root[data-theme="dark"] #cpk-tabs { border-bottom-color: rgba(255,255,255,.07); }
-.cpk-tab {
-  flex: 1;
-  background: rgba(118,118,128,.12);
-  border: none;
-  border-radius: 12px; padding: 9px 12px;
-  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-  cursor: pointer; touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  transition: background .15s, box-shadow .15s;
-}
-:root[data-theme="dark"] .cpk-tab { background: rgba(255,255,255,.08); }
-.cpk-tab.active {
-  background: rgba(0,122,255,.10);
-  box-shadow: 0 0 0 1.5px rgba(0,122,255,.45);
-}
-.cpk-tab:active { opacity: .65; }
-.cpk-tab-top {
-  font-size: 10px; font-weight: 600; color: #8E8E93;
-  text-transform: uppercase; letter-spacing: .5px;
+:root[data-theme="dark"] #cpk-allday-row { border-bottom-color: rgba(255,255,255,.08); }
+#cpk-allday-label {
+  font-size: 16px; font-weight: 400; color: #1C1C1E; letter-spacing: -.01em;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
 }
-.cpk-tab.active .cpk-tab-top { color: #007AFF; }
-.cpk-tab-val {
-  font-size: 13px; font-weight: 500; color: #1C1C1E;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  white-space: nowrap; letter-spacing: -0.01em;
-}
-:root[data-theme="dark"] .cpk-tab-val { color: #F2F2F7; }
-#cpk-tab-arrow {
-  font-size: 14px; color: #C7C7CC; flex-shrink: 0;
-}
-.cpk-allday-btn {
-  background: rgba(118,118,128,.12); border: none; border-radius: 12px;
-  padding: 9px 14px; font-size: 13px; font-weight: 600; color: #1C1C1E;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  cursor: pointer; touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  flex-shrink: 0;
-  letter-spacing: -0.01em;
-  transition: background .15s, color .15s;
-}
-.cpk-allday-btn.active {
-  background: #007AFF; color: #fff;
-  box-shadow: 0 2px 8px rgba(0,122,255,.35);
-}
-:root[data-theme="dark"] .cpk-allday-btn { background: rgba(255,255,255,.08); color: #F2F2F7; }
-:root[data-theme="dark"] .cpk-allday-btn.active { background: #0A84FF; }
+:root[data-theme="dark"] #cpk-allday-label { color: #F2F2F7; }
 
-/* ── Wheels container ── */
-#cpk-wheels {
+/* iOS-style toggle switch */
+.cpk-allday-btn {
+  width: 51px; height: 31px; border-radius: 16px; border: none;
+  background: #E9E9EA; cursor: pointer;
+  position: relative; flex-shrink: 0;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: background .22s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.06) inset;
+}
+.cpk-allday-btn.active { background: #34C759; }
+:root[data-theme="dark"] .cpk-allday-btn { background: #39393D; }
+:root[data-theme="dark"] .cpk-allday-btn.active { background: #30D158; }
+#cpk-allday-knob {
+  position: absolute; top: 2px; left: 2px;
+  width: 27px; height: 27px; border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,.22), 0 .5px 1px rgba(0,0,0,.10);
+  transition: transform .22s cubic-bezier(.4,0,.2,1);
+  display: block;
+}
+.cpk-allday-btn.active #cpk-allday-knob { transform: translateX(20px); }
+
+/* ── Section (Start / End) ── */
+.cpk-section { padding: 0 0 4px; }
+.cpk-section-label {
+  font-size: 11px; font-weight: 700; color: #8E8E93;
+  text-transform: uppercase; letter-spacing: .7px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  padding: 14px 20px 4px;
+}
+:root[data-theme="dark"] .cpk-section-label { color: #636366; }
+
+.cpk-row-label {
+  font-size: 12px; font-weight: 500; color: #8E8E93;
+  letter-spacing: .2px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  padding: 6px 20px 0;
+}
+:root[data-theme="dark"] .cpk-row-label { color: #636366; }
+.cpk-time-label { padding-top: 2px; }
+
+.cpk-section-divider {
+  height: .5px; background: rgba(60,60,67,.13);
+  margin: 6px 0;
+}
+:root[data-theme="dark"] .cpk-section-divider { background: rgba(255,255,255,.08); }
+
+/* ── Wheels wrapper (per wheel group) ── */
+.cpk-wheels-wrap {
   position: relative;
   display: flex; align-items: center;
-  height: 228px;
+  height: 200px;
   padding: 0 12px;
   overflow: hidden;
   user-select: none; -webkit-user-select: none;
-  /* 3D perspective for drum depth */
-  perspective: 700px;
-  perspective-origin: 50% 50%;
+  touch-action: none;
 }
+.cpk-wheels-time { height: 180px; }
 
-/* ── Selection highlight bar — iOS frosted glass ── */
-#cpk-bar {
+/* ── Selection bar ── */
+.cpk-sel-bar {
   position: absolute; left: 12px; right: 12px;
   top: 50%; transform: translateY(-50%);
   height: 44px;
-  /* Frosted glass selection row */
   background: rgba(116,116,128,.11);
-  border-radius: 11px;
-  pointer-events: none; z-index: 2;
-  /* Subtle top/bottom hairlines */
-  box-shadow:
-    0 .5px 0 rgba(255,255,255,.9),
-    0 -.5px 0 rgba(60,60,67,.14),
-    0 2px 8px rgba(0,0,0,.04);
+  border-radius: 11px; pointer-events: none; z-index: 2;
+  box-shadow: 0 .5px 0 rgba(255,255,255,.88),
+              0 -.5px 0 rgba(60,60,67,.13),
+              0 2px 8px rgba(0,0,0,.04);
 }
-:root[data-theme="dark"] #cpk-bar {
-  background: rgba(255,255,255,.12);
-  box-shadow:
-    0 .5px 0 rgba(255,255,255,.12),
-    0 -.5px 0 rgba(0,0,0,.3),
-    0 2px 8px rgba(0,0,0,.15);
+:root[data-theme="dark"] .cpk-sel-bar {
+  background: rgba(255,255,255,.11);
+  box-shadow: 0 .5px 0 rgba(255,255,255,.10),
+              0 -.5px 0 rgba(0,0,0,.28),
+              0 2px 8px rgba(0,0,0,.18);
 }
 
-/* ── Gradient fade masks — deep immersive iOS style ── */
-#cpk-fade-t, #cpk-fade-b {
+/* ── Fade masks ── */
+.cpk-fade-t, .cpk-fade-b {
   position: absolute; left: 0; right: 0;
-  height: 94px; pointer-events: none; z-index: 3;
+  height: 80px; pointer-events: none; z-index: 3;
 }
-#cpk-fade-t {
+.cpk-fade-t {
   top: 0;
   background: linear-gradient(to bottom,
     rgba(242,242,247,1.00)  0%,
-    rgba(242,242,247,.96)  20%,
-    rgba(242,242,247,.82)  45%,
-    rgba(242,242,247,.40)  72%,
+    rgba(242,242,247,.94)  22%,
+    rgba(242,242,247,.78)  48%,
+    rgba(242,242,247,.35)  76%,
     transparent           100%);
 }
-#cpk-fade-b {
+.cpk-fade-b {
   bottom: 0;
   background: linear-gradient(to top,
     rgba(242,242,247,1.00)  0%,
-    rgba(242,242,247,.96)  20%,
-    rgba(242,242,247,.82)  45%,
-    rgba(242,242,247,.40)  72%,
+    rgba(242,242,247,.94)  22%,
+    rgba(242,242,247,.78)  48%,
+    rgba(242,242,247,.35)  76%,
     transparent           100%);
 }
-:root[data-theme="dark"] #cpk-fade-t {
+:root[data-theme="dark"] .cpk-fade-t {
   background: linear-gradient(to bottom,
-    rgba(28,28,32,1.00)  0%,
-    rgba(28,28,32,.96)  20%,
-    rgba(28,28,32,.82)  45%,
-    rgba(28,28,32,.40)  72%,
+    rgba(24,24,28,1.00)  0%,
+    rgba(24,24,28,.94)  22%,
+    rgba(24,24,28,.78)  48%,
+    rgba(24,24,28,.35)  76%,
     transparent        100%);
 }
-:root[data-theme="dark"] #cpk-fade-b {
+:root[data-theme="dark"] .cpk-fade-b {
   background: linear-gradient(to top,
-    rgba(28,28,32,1.00)  0%,
-    rgba(28,28,32,.96)  20%,
-    rgba(28,28,32,.82)  45%,
-    rgba(28,28,32,.40)  72%,
+    rgba(24,24,28,1.00)  0%,
+    rgba(24,24,28,.94)  22%,
+    rgba(24,24,28,.78)  48%,
+    rgba(24,24,28,.35)  76%,
     transparent        100%);
 }
 
-/* ── Drum columns ── */
+/* ── Drum column ── */
 .cpk-drum {
   flex: 1; height: 100%;
   overflow: hidden; position: relative;
   touch-action: none;
 }
-.cpk-drum-time { flex: .72; }
-.cpk-sep {
-  flex: 0 0 16px; text-align: center;
-  font-size: 20px; font-weight: 300; color: #8E8E93;
-  align-self: center;
-  display: none;
-}
+.cpk-drum-day { flex: 1.15; }
+.cpk-drum-yr  { flex: 1.05; }
+.cpk-drum-hr  { flex: .85; }
+.cpk-drum-mn  { flex: .85; }
 
-/* ── Drum inner scroll container ── */
+.cpk-sep {
+  flex: 0 0 20px; text-align: center;
+  font-size: 22px; font-weight: 300; color: #8E8E93;
+  align-self: center; padding-bottom: 2px;
+  pointer-events: none;
+}
+:root[data-theme="dark"] .cpk-sep { color: #636366; }
+
+/* ── Drum inner ── */
 .cpk-drum-inner {
   display: flex; flex-direction: column;
   will-change: transform;
   transform: translateY(0) translateZ(0);
   -webkit-transform: translateY(0) translateZ(0);
   transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
 }
 
-/* ── Cell items ── */
+/* ── Cells ── */
 .cpk-cell {
   height: 44px;
   display: flex; align-items: center; justify-content: center;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Hiragino Sans", sans-serif;
-  font-size: 22px;
-  font-weight: 300;
-  color: rgba(28,28,30,.28);
+  font-size: 21px; font-weight: 300;
+  color: rgba(28,28,30,.22);
   white-space: nowrap; flex-shrink: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -.02em;
   will-change: transform, opacity;
-  /* GPU layer */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
-:root[data-theme="dark"] .cpk-cell { color: rgba(242,242,247,.25); }
-
-/* ── Non-selected items with perspective depth ── */
-/* ±1 row from center */
-.cpk-cell.near1 {
-  color: rgba(28,28,30,.52);
-  font-weight: 300;
-}
-:root[data-theme="dark"] .cpk-cell.near1 { color: rgba(242,242,247,.50); }
-
-/* ±2 rows from center */
-.cpk-cell.near2 {
-  color: rgba(28,28,30,.34);
-  font-weight: 300;
-}
-:root[data-theme="dark"] .cpk-cell.near2 { color: rgba(242,242,247,.32); }
-
-/* ── Selected (center) cell ── */
+:root[data-theme="dark"] .cpk-cell { color: rgba(242,242,247,.2); }
+.cpk-cell.near2 { color: rgba(28,28,30,.38); }
+:root[data-theme="dark"] .cpk-cell.near2 { color: rgba(242,242,247,.36); }
+.cpk-cell.near1 { color: rgba(28,28,30,.56); }
+:root[data-theme="dark"] .cpk-cell.near1 { color: rgba(242,242,247,.55); }
 .cpk-cell.sel {
-  font-weight: 700;
-  font-size: 23px;
-  color: #000000;
-  letter-spacing: -0.03em;
-  text-shadow: none;
+  font-weight: 700; font-size: 22px; color: #000;
+  letter-spacing: -.03em;
 }
-:root[data-theme="dark"] .cpk-cell.sel {
-  color: #FFFFFF;
-}
+:root[data-theme="dark"] .cpk-cell.sel { color: #fff; }
 
 /* ── Interval row ── */
 #cpk-interval-row {
@@ -7341,58 +7335,51 @@ body.is-admin .admin-card-actions.admin-only {
 }
 :root[data-theme="dark"] #cpk-interval-row { border-top-color: rgba(255,255,255,.07); }
 #cpk-interval-label {
-  font-size: 12px; font-weight: 500; color: #8E8E93;
+  font-size: 12px; font-weight: 500; color: #8E8E93; letter-spacing: .2px;
   font-family: -apple-system, sans-serif;
-  letter-spacing: .2px;
 }
 #cpk-interval-btns { display: flex; gap: 7px; }
 .cpk-iv {
   background: rgba(118,118,128,.12); border: none; border-radius: 9px;
   padding: 6px 12px; font-size: 13px; font-weight: 600; color: #1C1C1E;
-  font-family: -apple-system, sans-serif;
-  letter-spacing: -0.01em;
+  font-family: -apple-system, sans-serif; letter-spacing: -.01em;
   cursor: pointer; touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition: background .14s, color .14s, box-shadow .14s;
 }
-.cpk-iv.active {
-  background: #007AFF; color: #fff;
-  box-shadow: 0 2px 6px rgba(0,122,255,.3);
-}
+.cpk-iv.active { background: #007AFF; color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,.3); }
 :root[data-theme="dark"] .cpk-iv { background: rgba(255,255,255,.08); color: #F2F2F7; }
 :root[data-theme="dark"] .cpk-iv.active { background: #0A84FF; }
 </style>
 
 <script>
 /* ================================================================
-   Cupertino Wheel Picker v3 — iOS 18 native-level JavaScript
+   Cupertino Wheel Picker v4
+   Apple Calendar-style: Start date/time + End date/time
    ================================================================ */
 (function(){
 'use strict';
 
-/* ── Constants ── */
-const ROW_H = 44;
-const PAD   = 2;   // padding rows top/bottom
+const ROW_H      = 44;
+const PAD        = 2;
+const DECEL_RATE = 0.9935;
+const MIN_VEL    = 0.5;
+const ELASTIC_K  = 0.22;
 
-/* ── Deceleration physics matching iOS UIScrollView ── */
-const DECEL_RATE   = 0.9935;  // iOS default deceleration rate
-const MIN_VEL      = 0.5;     // px/ms threshold
-const ELASTIC_K    = 0.22;    // rubber-band coefficient
-
-/* ── Global state ── */
+/* ── State ── */
 const S = {
-  tab:      'start',
   allday:   true,
   interval: 15,
   start: { yr:0, mo:0, dy:0, hr:9,  mn:0 },
   end:   { yr:0, mo:0, dy:0, hr:10, mn:0 },
 };
 
-/* ── Date utilities ── */
+/* ── Helpers ── */
 const PAD2 = n => String(n).padStart(2,'0');
 const DOW  = ['日','月','火','水','木','金','土'];
 const MLAB = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 const daysInMonth = (y,m) => new Date(y,m,0).getDate();
+const yearBase    = () => new Date().getFullYear() - 3;
 
 function dsToObj(ds, tm){
   if(!ds) return null;
@@ -7410,370 +7397,256 @@ function objLabel(o, allday){
 }
 
 /* ================================================================
-   Drum controller — iOS UIPickerView equivalent
+   Drum factory — identical physics for every wheel
    ================================================================ */
 function Drum(innerId, items, initIdx){
   const el   = document.getElementById(innerId);
+  if(!el){ console.warn('Drum: missing el', innerId); return null; }
   const wrap = el.closest('.cpk-drum');
-  let cur    = Math.max(0, Math.min(items.length-1, initIdx));
-  let yOff   = -cur * ROW_H;
-  let rafId  = 0;
+  if(!wrap){ console.warn('Drum: missing wrap for', innerId); return null; }
 
-  /* ── Apply transform (GPU-accelerated) ── */
-  function _applyY(y, transition){
-    el.style.transition = transition || 'none';
+  let cur  = Math.max(0, Math.min(items.length-1, initIdx));
+  let yOff = -cur * ROW_H;
+  let rafId = 0;
+  let onChangeCb = null;
+
+  /* GPU-accelerated apply */
+  function _applyY(y, tr){
     const t = `translateY(${y}px) translateZ(0)`;
+    el.style.transition        = tr || 'none';
     el.style.transform         = t;
     el.style.webkitTransform   = t;
     yOff = y;
   }
 
-  /* ── Clamp to valid range ── */
-  function _min(){ return -(items.length-1)*ROW_H; }
+  const _min  = () => -(items.length-1)*ROW_H;
+  const _snap = (y) => Math.max(0, Math.min(items.length-1, Math.round(-y/ROW_H)));
 
-  /* ── Rubber-band elastic overscroll ── */
   function _elastic(raw){
     const mn = _min();
-    if(raw > 0)   return raw * ELASTIC_K;
-    if(raw < mn)  return mn + (raw - mn) * ELASTIC_K;
+    if(raw>0)   return raw*ELASTIC_K;
+    if(raw<mn)  return mn+(raw-mn)*ELASTIC_K;
     return raw;
   }
 
-  /* ── Nearest snap index from pixel offset ── */
-  function _idxFromY(y){
-    return Math.max(0, Math.min(items.length-1, Math.round(-y/ROW_H)));
-  }
-
-  /* ── Update sel + near1/near2 classes for depth effect ── */
-  function _updateClasses(idx){
+  /* depth classes */
+  function _sync(idx){
     el.querySelectorAll('.cpk-cell').forEach((c,i)=>{
-      const row = i - PAD;
-      const dist = Math.abs(row - idx);
+      const row=i-PAD, d=Math.abs(row-idx);
       c.classList.remove('sel','near1','near2');
-      if(row === idx)     c.classList.add('sel');
-      else if(dist === 1) c.classList.add('near1');
-      else if(dist === 2) c.classList.add('near2');
+      if(row===idx)     c.classList.add('sel');
+      else if(d===1)    c.classList.add('near1');
+      else if(d===2)    c.classList.add('near2');
     });
   }
 
-  /* ── Snap with spring animation ── */
   function _snapTo(idx, animate){
     cur  = Math.max(0, Math.min(items.length-1, idx));
-    const target = -cur * ROW_H;
-    _applyY(target, animate ? 'transform .22s cubic-bezier(.25,.46,.45,.94)' : 'none');
-    _updateClasses(cur);
+    _applyY(-cur*ROW_H, animate ? 'transform .22s cubic-bezier(.25,.46,.45,.94)' : 'none');
+    _sync(cur);
+    if(onChangeCb) onChangeCb();
   }
 
-  /* ── Build DOM cells ── */
   function build(){
-    el.innerHTML = '';
-    for(let i=0;i<PAD;i++){
-      const c=document.createElement('div');
-      c.className='cpk-cell';
-      el.appendChild(c);
-    }
-    items.forEach((lbl,i)=>{
-      const c=document.createElement('div');
-      c.className='cpk-cell';
-      c.textContent=lbl;
-      el.appendChild(c);
-    });
-    for(let i=0;i<PAD;i++){
-      const c=document.createElement('div');
-      c.className='cpk-cell';
-      el.appendChild(c);
-    }
-    _applyY(-cur*ROW_H, 'none');
-    _updateClasses(cur);
+    el.innerHTML='';
+    for(let i=0;i<PAD;i++){ const c=document.createElement('div'); c.className='cpk-cell'; el.appendChild(c); }
+    items.forEach(lbl=>{ const c=document.createElement('div'); c.className='cpk-cell'; c.textContent=lbl; el.appendChild(c); });
+    for(let i=0;i<PAD;i++){ const c=document.createElement('div'); c.className='cpk-cell'; el.appendChild(c); }
+    _applyY(-cur*ROW_H,'none');
+    _sync(cur);
   }
 
-  /* ── Touch/Mouse input ── */
-  let t0=0, y0=0, startOff=0;
-  let lastY=0, lastT=0, vel=0;   // vel = px/ms
-  let isDown=false;
+  /* ── Touch / Mouse / Wheel input ── */
+  let y0=0, startOff=0, lastY=0, lastT=0, vel=0, isDown=false;
 
   function _onStart(cy){
     cancelAnimationFrame(rafId);
-    el.style.transition='none';
-    el.style.webkitTransition='none';
-    t0=Date.now(); y0=cy; startOff=yOff;
-    lastY=cy; lastT=t0; vel=0;
-    isDown=true;
+    el.style.transition='none'; el.style.webkitTransition='none';
+    y0=cy; startOff=yOff; lastY=cy; lastT=Date.now(); vel=0; isDown=true;
   }
-
   function _onMove(cy){
     if(!isDown) return;
-    const dy = cy - y0;
-    const raw = startOff + dy;
-    const next = _elastic(raw);
-    _applyY(next, 'none');
-    const now=Date.now();
-    const dt=Math.max(now-lastT, 8);
-    vel = (cy-lastY)/dt;
-    lastY=cy; lastT=now;
+    _applyY(_elastic(startOff+(cy-y0)),'none');
+    const now=Date.now(), dt=Math.max(now-lastT,8);
+    vel=(cy-lastY)/dt; lastY=cy; lastT=now;
   }
-
   function _onEnd(){
-    if(!isDown) return;
-    isDown=false;
-
-    /* iOS UIScrollView deceleration physics */
-    let v   = vel * 1000;  // convert to px/s
-    let off = yOff;
-    const mn = _min();
-
-    function step(ts){
-      /* dampen */
-      v *= DECEL_RATE;
-
-      const move = v * 0.016;  // ~60fps frame
-      off += move;
-
-      /* hard boundary */
-      if(off > 0)  { off=0; v=0; }
-      if(off < mn) { off=mn; v=0; }
-
+    if(!isDown) return; isDown=false;
+    let v=vel*1000, off=yOff;
+    const mn=_min();
+    function step(){
+      v*=DECEL_RATE; off+=v*0.016;
+      if(off>0){off=0;v=0;} if(off<mn){off=mn;v=0;}
       _applyY(off,'none');
-
-      if(Math.abs(v) > MIN_VEL){
-        rafId = requestAnimationFrame(step);
-      } else {
-        /* snap */
-        _snapTo(_idxFromY(off), true);
-        if(typeof onChangeCallback==='function') onChangeCallback();
-      }
+      if(Math.abs(v)>MIN_VEL){ rafId=requestAnimationFrame(step); }
+      else { _snapTo(_snap(off),true); }
     }
-
-    /* if nearly stopped, snap immediately */
-    if(Math.abs(v)*0.016 < 1){
-      _snapTo(_idxFromY(off), true);
-      if(typeof onChangeCallback==='function') onChangeCallback();
-    } else {
-      rafId = requestAnimationFrame(step);
-    }
+    if(Math.abs(v)*0.016<1){ _snapTo(_snap(off),true); }
+    else { rafId=requestAnimationFrame(step); }
   }
 
-  /* Touch events — passive:false to prevent scroll hijack */
-  wrap.addEventListener('touchstart', e=>{
-    e.preventDefault(); e.stopPropagation();
-    _onStart(e.touches[0].clientY);
-  },{passive:false});
-  wrap.addEventListener('touchmove', e=>{
-    e.preventDefault();
-    _onMove(e.touches[0].clientY);
-  },{passive:false});
-  wrap.addEventListener('touchend', e=>{
-    e.preventDefault(); _onEnd();
-  },{passive:false});
-  wrap.addEventListener('touchcancel', e=>{
-    e.preventDefault(); isDown=false; _snapTo(_idxFromY(yOff),true);
-  },{passive:false});
+  wrap.addEventListener('touchstart',e=>{ e.preventDefault(); e.stopPropagation(); _onStart(e.touches[0].clientY); },{passive:false});
+  wrap.addEventListener('touchmove', e=>{ e.preventDefault(); _onMove(e.touches[0].clientY); },{passive:false});
+  wrap.addEventListener('touchend',  e=>{ e.preventDefault(); _onEnd(); },{passive:false});
+  wrap.addEventListener('touchcancel',e=>{ e.preventDefault(); isDown=false; _snapTo(_snap(yOff),true); },{passive:false});
 
-  /* Mouse (desktop) */
   let md=false;
   wrap.addEventListener('mousedown', e=>{ md=true; _onStart(e.clientY); e.preventDefault(); });
-  window.addEventListener('mousemove', e=>{ if(md) _onMove(e.clientY); });
-  window.addEventListener('mouseup',   e=>{ if(md){ md=false; _onEnd(); } });
-
-  /* Scroll wheel (desktop) */
+  window.addEventListener('mousemove',e=>{ if(md) _onMove(e.clientY); });
+  window.addEventListener('mouseup',  e=>{ if(md){ md=false; _onEnd(); } });
   wrap.addEventListener('wheel', e=>{
-    e.preventDefault();
-    cancelAnimationFrame(rafId);
-    const delta = Math.sign(e.deltaY) * ROW_H;
-    _snapTo(Math.max(0,Math.min(items.length-1, cur + Math.sign(delta))), true);
-    if(typeof onChangeCallback==='function') onChangeCallback();
+    e.preventDefault(); cancelAnimationFrame(rafId);
+    _snapTo(Math.max(0,Math.min(items.length-1, cur+Math.sign(e.deltaY))), true);
   },{passive:false});
-
-  let onChangeCallback = null;
 
   build();
 
   return {
     getIdx(){ return cur; },
-    setIdx(idx, anim=false){ _snapTo(idx, anim); },
-    onchange(fn){ onChangeCallback=fn; },
-    rebuild(newItems, newIdx){
-      items = newItems;
-      cur   = Math.max(0, Math.min(items.length-1, newIdx));
+    setIdx(idx,anim){ _snapTo(idx,!!anim); },
+    onchange(fn){ onChangeCb=fn; },
+    rebuild(newItems,newIdx){
+      items=newItems;
+      cur=Math.max(0,Math.min(items.length-1,newIdx));
       build();
     },
   };
 }
 
-/* ── Drum instances ── */
-let drums = {};
-
-/* ── Item list generators ── */
-const yearOffset = ()=> new Date().getFullYear()-3;
-function yearItems(){ const a=[]; const base=new Date().getFullYear(); for(let y=base-3;y<=base+5;y++) a.push(y+'年'); return a; }
+/* ── Item generators ── */
+function yearItems(){ const a=[],b=yearBase(); for(let y=b;y<=b+8;y++) a.push(y+'年'); return a; }
 function moItems()  { return MLAB; }
-function dyItems(y,m){ const a=[]; const n=daysInMonth(y,m); for(let d=1;d<=n;d++) a.push(`${d}日(${DOW[new Date(y,m-1,d).getDay()]})`); return a; }
+function dyItems(y,m){ const a=[],n=daysInMonth(y,m); for(let d=1;d<=n;d++) a.push(`${d}日(${DOW[new Date(y,m-1,d).getDay()]})`); return a; }
 function hrItems()  { const a=[]; for(let h=0;h<24;h++) a.push(PAD2(h)+'時'); return a; }
 function mnItems(iv){ const a=[]; for(let m=0;m<60;m+=iv) a.push(PAD2(m)+'分'); return a; }
 
-/* ── Full drum rebuild ── */
-function buildDrums(obj){
-  const yOff = yearOffset();
-  const yr = obj.yr || new Date().getFullYear();
-  const mo = obj.mo || (new Date().getMonth()+1);
-  const dy = obj.dy || new Date().getDate();
-  const hr = obj.hr || 0;
-  const mn = obj.mn || 0;
-  const iv = S.interval;
+/* ── Drum registry ── */
+let D = {};  // keys: smo,sdy,syr,shr,smn,  emo,edy,eyr,ehr,emn
 
-  drums.yr = Drum('cpk-inner-yr', yearItems(),   yr - yOff);
-  drums.mo = Drum('cpk-inner-mo', moItems(),      mo - 1);
-  drums.dy = Drum('cpk-inner-dy', dyItems(yr,mo), dy - 1);
+/* ── Build a date+time group ── */
+function buildDateGroup(pfx, obj){
+  const b   = yearBase();
+  const iv  = S.interval;
+  const yr  = obj.yr, mo=obj.mo, dy=obj.dy, hr=obj.hr, mn=obj.mn;
 
-  /* Update days when year/month changes */
+  D[pfx+'mo'] = Drum(`cpk-inner-${pfx}mo`, moItems(),      mo-1);
+  D[pfx+'dy'] = Drum(`cpk-inner-${pfx}dy`, dyItems(yr,mo), dy-1);
+  D[pfx+'yr'] = Drum(`cpk-inner-${pfx}yr`, yearItems(),    yr-b);
+
+  /* sync days on month/year change */
   function syncDays(){
-    const y2 = (drums.yr.getIdx()||0) + yOff;
-    const m2 = (drums.mo.getIdx()||0) + 1;
-    const cur = drums.dy.getIdx();
-    const newItems = dyItems(y2,m2);
-    drums.dy.rebuild(newItems, Math.min(cur, newItems.length-1));
+    const y2=(D[pfx+'yr']?.getIdx()??0)+b;
+    const m2=(D[pfx+'mo']?.getIdx()??0)+1;
+    const cur=D[pfx+'dy'].getIdx();
+    const ni=dyItems(y2,m2);
+    D[pfx+'dy'].rebuild(ni, Math.min(cur,ni.length-1));
   }
-  drums.yr.onchange(syncDays);
-  drums.mo.onchange(syncDays);
+  D[pfx+'yr'].onchange(syncDays);
+  D[pfx+'mo'].onchange(syncDays);
 
   if(!S.allday){
-    drums.hr = Drum('cpk-inner-hr', hrItems(),   hr);
-    drums.mn = Drum('cpk-inner-mn', mnItems(iv), Math.round(mn/iv));
+    D[pfx+'hr'] = Drum(`cpk-inner-${pfx}hr`, hrItems(),      hr);
+    D[pfx+'mn'] = Drum(`cpk-inner-${pfx}mn`, mnItems(iv),    Math.round(mn/iv));
   }
 }
 
-/* ── Read current drum values ── */
-function readDrums(){
-  const yOff = yearOffset();
-  const yr = (drums.yr?.getIdx()??0) + yOff;
-  const mo = (drums.mo?.getIdx()??0) + 1;
-  let   dy = (drums.dy?.getIdx()??0) + 1;
-  const maxD = daysInMonth(yr, mo);
-  if(dy>maxD) dy=maxD;
-  const hr = S.allday ? 0 : (drums.hr?.getIdx()??0);
-  const mn = S.allday ? 0 : (drums.mn?.getIdx()??0) * S.interval;
-  return {yr, mo, dy, hr, mn};
+/* ── Read a group ── */
+function readGroup(pfx){
+  const b=yearBase();
+  const yr=(D[pfx+'yr']?.getIdx()??0)+b;
+  const mo=(D[pfx+'mo']?.getIdx()??0)+1;
+  let   dy=(D[pfx+'dy']?.getIdx()??0)+1;
+  const mx=daysInMonth(yr,mo); if(dy>mx) dy=mx;
+  const hr=S.allday?0:(D[pfx+'hr']?.getIdx()??0);
+  const mn=S.allday?0:(D[pfx+'mn']?.getIdx()??0)*S.interval;
+  return {yr,mo,dy,hr,mn};
 }
 
-/* ── Tab label update ── */
-function refreshTabLabels(){
-  document.getElementById('cpk-tab-s-val').textContent = objLabel(S.start, S.allday);
-  document.getElementById('cpk-tab-e-val').textContent = objLabel(S.end,   S.allday);
-}
-
-/* ── All-day UI toggle ── */
+/* ── All-day UI ── */
 function applyAlldayUI(){
-  const timeEls = ['cpk-drum-hr','cpk-drum-mn','cpk-sep','cpk-interval-row'];
-  timeEls.forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el) return;
-    if(id==='cpk-sep'||id==='cpk-interval-row'){
-      el.style.display = S.allday ? 'none' : (id==='cpk-interval-row'?'flex':'block');
-    } else {
-      el.style.display = S.allday ? 'none' : '';
-    }
+  const show=!S.allday;
+  ['cpk-wheels-stime','cpk-wheels-etime','cpk-lbl-stime','cpk-lbl-etime','cpk-interval-row'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    if(id==='cpk-interval-row') el.style.display=show?'flex':'none';
+    else el.style.display=show?'':'none';
   });
-  document.getElementById('cpk-allday-btn').classList.toggle('active', S.allday);
+  const btn=document.getElementById('cpk-allday-btn');
+  if(btn) btn.classList.toggle('active', S.allday);
 }
 
-/* ── Open picker ── */
-window.cupertinoOpen = function(tab){
-  S.tab = tab || 'start';
+/* ── Full rebuild ── */
+function buildAll(){
+  buildDateGroup('s', S.start);
+  buildDateGroup('e', S.end);
+  applyAlldayUI();
+}
 
+/* ── Public API ── */
+window.cupertinoOpen = function(tab){
   const dsS = document.getElementById('input-start')?.value || '';
   const dsE = document.getElementById('input-end')?.value   || '';
   const tmS = document.getElementById('input-start-time')?.value || '';
   const tmE = document.getElementById('input-end-time')?.value   || '';
 
-  const today = new Date();
-  const defObj = {yr:today.getFullYear(), mo:today.getMonth()+1, dy:today.getDate(), hr:9, mn:0};
+  const today=new Date();
+  const def={yr:today.getFullYear(), mo:today.getMonth()+1, dy:today.getDate(), hr:9, mn:0};
+  S.start = dsToObj(dsS,tmS) || def;
+  S.end   = dsToObj(dsE,tmE) || {...def, hr:10};
+  S.allday= !tmS;
 
-  S.start = dsToObj(dsS, tmS) || defObj;
-  S.end   = dsToObj(dsE, tmE) || {...defObj, hr:10};
-  S.allday = !tmS;
-
-  cupertinoTab(S.tab, true);
-  applyAlldayUI();
-  refreshTabLabels();
-
-  document.getElementById('cpk-allday-btn').classList.toggle('active', S.allday);
+  buildAll();
   document.getElementById('cpk-overlay').classList.add('open');
 };
 
-/* ── Tab switch ── */
-window.cupertinoTab = function(tab, silent){
-  if(!silent && drums.yr){
-    S[S.tab] = readDrums();
-    refreshTabLabels();
-  }
-  S.tab = tab;
-  document.getElementById('cpk-tab-s').classList.toggle('active', tab==='start');
-  document.getElementById('cpk-tab-e').classList.toggle('active', tab==='end');
-  buildDrums(tab==='start' ? S.start : S.end);
-};
-
-/* ── All-day toggle ── */
 window.cupertinoToggleAllday = function(){
-  if(drums.yr){ S[S.tab] = readDrums(); }
-  S.allday = !S.allday;
-  applyAlldayUI();
-  buildDrums(S[S.tab]);
-  refreshTabLabels();
+  S.start=readGroup('s'); S.end=readGroup('e');
+  S.allday=!S.allday;
+  buildAll();
 };
 
-/* ── Minute interval change ── */
 window.cupertinoSetInterval = function(iv){
-  S.interval = iv;
-  document.querySelectorAll('.cpk-iv').forEach(b=>{
-    b.classList.toggle('active', Number(b.dataset.v)===iv);
-  });
-  if(!S.allday && drums.mn){
-    const cur = readDrums();
-    S[S.tab] = cur;
-    const newMnItems = mnItems(iv);
-    const nearestIdx = Math.round((cur.mn||0)/iv);
-    drums.mn.rebuild(newMnItems, nearestIdx);
+  S.interval=iv;
+  document.querySelectorAll('.cpk-iv').forEach(b=>b.classList.toggle('active',Number(b.dataset.v)===iv));
+  if(!S.allday){
+    const cs=readGroup('s'), ce=readGroup('e');
+    if(D.smn) D.smn.rebuild(mnItems(iv), Math.round((cs.mn||0)/iv));
+    if(D.emn) D.emn.rebuild(mnItems(iv), Math.round((ce.mn||0)/iv));
   }
 };
 
-/* ── Close ── */
 window.cupertinoClose = function(){
   document.getElementById('cpk-overlay').classList.remove('open');
 };
 
-/* ── Apply / Done ── */
 window.cupertinoApply = function(){
-  if(drums.yr){ S[S.tab] = readDrums(); }
+  S.start=readGroup('s'); S.end=readGroup('e');
 
-  function writeToInputs(obj, prefix){
-    const ds = objToDs(obj);
-    const el = document.getElementById(`input-${prefix}`);
-    if(el) el.value = ds;
-    const stEl = document.getElementById(`input-${prefix}-time`);
-    if(stEl) stEl.value = S.allday ? '' : objToTm(obj);
-    const dispEl = document.getElementById(`wp-${prefix}-date-display`);
-    if(dispEl){
-      dispEl.textContent = objLabel(obj, S.allday);
-      dispEl.classList.remove('empty');
-    }
+  function write(obj,prefix){
+    const el=document.getElementById(`input-${prefix}`); if(el) el.value=objToDs(obj);
+    const te=document.getElementById(`input-${prefix}-time`); if(te) te.value=S.allday?'':objToTm(obj);
+    const de=document.getElementById(`wp-${prefix}-date-display`);
+    if(de){ de.textContent=objLabel(obj,S.allday); de.classList.remove('empty'); }
     document.getElementById(`wp-${prefix}-trigger`)?.classList.add('is-set');
   }
 
-  writeToInputs(S.start, 'start');
-  writeToInputs(S.end,   'end');
+  write(S.start,'start'); write(S.end,'end');
 
-  const dsS = objToDs(S.start), dsE = objToDs(S.end);
-  if(dsE < dsS){
-    S.end = {...S.start, hr: Math.min(S.start.hr+1,23), mn: S.start.mn};
-    writeToInputs(S.end, 'end');
+  /* ensure end >= start */
+  if(objToDs(S.end)<objToDs(S.start)){
+    S.end={...S.start, hr:Math.min(S.start.hr+1,23), mn:S.start.mn};
+    write(S.end,'end');
   }
 
-  if(typeof checkSubmit === 'function') checkSubmit();
+  if(typeof checkSubmit==='function') checkSubmit();
   cupertinoClose();
 };
 
+/* ── Legacy tab API (backward compat shim) ── */
+window.cupertinoTab = function(tab,silent){ /* no-op in v4 */ };
+
 })();
 </script>
+
 
 
 
