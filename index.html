@@ -3273,7 +3273,7 @@ button,input,select,textarea{
 .modal-overlay{
   position:fixed;inset:0;
   background:rgba(5,20,14,.5);
-  z-index:100;
+  z-index:500;
   display:flex;
   align-items:flex-end;
   opacity:0;
@@ -6736,84 +6736,7 @@ body.is-admin .admin-card-actions.admin-only {
       </div>
     </div>
   </div>
-  <!-- 予定追加 BottomSheet（drag-free） -->
-  <div id="modal-overlay" class="modal-overlay"
-       ontouchend="if(event.target===this){event.stopPropagation();event.preventDefault();closeModal();}">
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <!-- 右上✕ボタン -->
-      <button id="modal-close-btn" aria-label="閉じる"
-        onclick="event.stopPropagation();closeModal();"
-        ontouchend="event.stopPropagation();event.preventDefault();closeModal();"
-        style="position:absolute;top:12px;right:14px;width:30px;height:30px;
-               border:none;border-radius:50%;background:rgba(0,0,0,.06);
-               font-size:15px;color:#3a3a3c;display:flex;align-items:center;
-               justify-content:center;cursor:pointer;z-index:10;
-               -webkit-tap-highlight-color:transparent;touch-action:manipulation;">✕</button>
-      <div class="modal-title" id="modal-title">予定を追加</div>
-      <div class="modal-scroll" id="modal-scroll">
-        <div class="mstep active" id="mstep1">
-          <div class="step-indicator"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div>
-          <div class="cat-reorder-toolbar">
-            <label class="form-label" style="margin-bottom:0;">カテゴリをタップして選択</label>
-            <button class="cat-reorder-btn" id="cat-reorder-btn" type="button" onclick="toggleCatReorder()">
-              <span id="cat-reorder-btn-icon">⇅</span>
-              <span id="cat-reorder-btn-label">並び替え</span>
-            </button>
-          </div>
-          <div class="cat-reorder-hint" id="cat-reorder-hint" style="display:none;">
-            <span class="cat-reorder-hint-icon">✋</span>
-            <span>長押ししてドラッグで順番を入れ替えできます</span>
-          </div>
-          <div class="cat-grid" id="cat-grid"></div>
-        </div>
-        <div class="mstep" id="mstep2">
-          <div class="step-indicator"><div class="step-dot"></div><div class="step-dot active"></div><div class="step-dot"></div></div>
-          <button class="btn-back" onclick="goStep(1)">&#8592; カテゴリに戻る</button>
-          <label class="form-label">大会を選択 <span id="cat-label-sub" style="color:#1AAF7A;text-transform:none;letter-spacing:0;font-weight:700;"></span></label>
-          <input type="text" class="tour-search" id="tour-search" placeholder="大会名・開催地で絞り込み..." oninput="filterTourList()">
-          <div class="tour-hint">タップで選択　／　ダブルタップで即追加 ⚡</div>
-          <div class="tour-list" id="tour-list"></div>
-          <div style="margin-top:6px;padding-bottom:4px;"><button class="btn-back" onclick="goStep(3);prefillForm(null);" style="color:#9BB8AE;font-size:11px;">手動で入力する &#8250;</button></div>
-        </div>
-        <div class="mstep" id="mstep3">
-          <div class="step-indicator"><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot active"></div></div>
-          <button class="btn-back" id="btn-back-step3" onclick="backFromStep3()">&#8592; 戻る</button>
-          <div id="edit-banner" style="display:none;"></div>
-          <div id="sel-preview"></div>
-          <label class="form-label">大会・予定名</label>
-          <input type="text" class="form-input" id="input-title" placeholder="例：練習ラウンド" oninput="checkSubmit()">
-          <label class="form-label">開催地・場所</label>
-          <input type="text" class="form-input" id="input-place" placeholder="例：千葉県 袖ヶ浦CC">
-          <label class="form-label">日程</label>
-          <div class="wp-trigger-row">
-            <div class="wp-trigger" id="wp-start-trigger" onclick="wpOpen('start')">
-              <span class="wp-trigger-lbl">開始日</span>
-              <span class="wp-trigger-val empty" id="wp-start-date-display">日付を選択</span>
-            </div>
-            <div class="wp-trigger" id="wp-end-trigger" onclick="wpOpen('end')">
-              <span class="wp-trigger-lbl">終了日</span>
-              <span class="wp-trigger-val empty" id="wp-end-date-display">日付を選択</span>
-            </div>
-          </div>
-          <div class="wp-time-trigger" id="wp-time-trigger" onclick="wpToggleTimed()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span id="wp-time-trigger-label">終日</span>
-          </div>
-          <input type="date" id="input-start" style="display:none;" oninput="checkSubmit()">
-          <input type="date" id="input-end" style="display:none;">
-          <input type="time" id="input-start-time" step="900" style="display:none;">
-          <input type="time" id="input-end-time" step="900" style="display:none;">
-          <label class="form-label">メモ（任意）</label>
-          <textarea class="form-textarea" id="input-memo" rows="3" placeholder="例：&#10;・スタート時間 8:32（10番ホール）&#10;・宿泊先：◯◯ホテル（前泊）&#10;・キャディ：田中さん"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer" id="modal-footer">
-        <button class="btn-primary" id="modal-next-btn" onclick="handleNextBtn()">次へ</button>
-        <button class="btn-secondary" onclick="closeModal()">キャンセル</button>
-      </div>
-    </div>
-  </div><!-- /.modal-overlay -->
+  <!-- modal-overlay は body直下に移動済み（app-frameのoverflow:hiddenを回避） -->
 
   <!-- wp-overlay は phone-inner直下（tdm-overlay付近）へ移動 -->
 
@@ -6965,6 +6888,84 @@ body.is-admin .admin-card-actions.admin-only {
   <!-- ★★★ 範囲選択バナー ★★★ -->
   <div id="range-banner"></div>
 </div></div></div></div>
+
+<!-- ★★★ 予定追加モーダル：body直下に配置（app-frameのoverflow:hiddenを回避） ★★★ -->
+<div id="modal-overlay" class="modal-overlay"
+     ontouchend="if(event.target===this){event.stopPropagation();event.preventDefault();closeModal();}">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <button id="modal-close-btn" aria-label="閉じる"
+      onclick="event.stopPropagation();closeModal();"
+      ontouchend="event.stopPropagation();event.preventDefault();closeModal();"
+      style="position:absolute;top:12px;right:14px;width:30px;height:30px;
+             border:none;border-radius:50%;background:rgba(0,0,0,.06);
+             font-size:15px;color:#3a3a3c;display:flex;align-items:center;
+             justify-content:center;cursor:pointer;z-index:10;
+             -webkit-tap-highlight-color:transparent;touch-action:manipulation;">✕</button>
+    <div class="modal-title" id="modal-title">予定を追加</div>
+    <div class="modal-scroll" id="modal-scroll">
+      <div class="mstep active" id="mstep1">
+        <div class="step-indicator"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+        <div class="cat-reorder-toolbar">
+          <label class="form-label" style="margin-bottom:0;">カテゴリをタップして選択</label>
+          <button class="cat-reorder-btn" id="cat-reorder-btn" type="button" onclick="toggleCatReorder()">
+            <span id="cat-reorder-btn-icon">⇅</span>
+            <span id="cat-reorder-btn-label">並び替え</span>
+          </button>
+        </div>
+        <div class="cat-reorder-hint" id="cat-reorder-hint" style="display:none;">
+          <span class="cat-reorder-hint-icon">✋</span>
+          <span>長押ししてドラッグで順番を入れ替えできます</span>
+        </div>
+        <div class="cat-grid" id="cat-grid"></div>
+      </div>
+      <div class="mstep" id="mstep2">
+        <div class="step-indicator"><div class="step-dot"></div><div class="step-dot active"></div><div class="step-dot"></div></div>
+        <button class="btn-back" onclick="goStep(1)">&#8592; カテゴリに戻る</button>
+        <label class="form-label">大会を選択 <span id="cat-label-sub" style="color:#1AAF7A;text-transform:none;letter-spacing:0;font-weight:700;"></span></label>
+        <input type="text" class="tour-search" id="tour-search" placeholder="大会名・開催地で絞り込み..." oninput="filterTourList()">
+        <div class="tour-hint">タップで選択　／　ダブルタップで即追加 ⚡</div>
+        <div class="tour-list" id="tour-list"></div>
+        <div style="margin-top:6px;padding-bottom:4px;"><button class="btn-back" onclick="goStep(3);prefillForm(null);" style="color:#9BB8AE;font-size:11px;">手動で入力する &#8250;</button></div>
+      </div>
+      <div class="mstep" id="mstep3">
+        <div class="step-indicator"><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot active"></div></div>
+        <button class="btn-back" id="btn-back-step3" onclick="backFromStep3()">&#8592; 戻る</button>
+        <div id="edit-banner" style="display:none;"></div>
+        <div id="sel-preview"></div>
+        <label class="form-label">大会・予定名</label>
+        <input type="text" class="form-input" id="input-title" placeholder="例：練習ラウンド" oninput="checkSubmit()">
+        <label class="form-label">開催地・場所</label>
+        <input type="text" class="form-input" id="input-place" placeholder="例：千葉県 袖ヶ浦CC">
+        <label class="form-label">日程</label>
+        <div class="wp-trigger-row">
+          <div class="wp-trigger" id="wp-start-trigger" onclick="wpOpen('start')">
+            <span class="wp-trigger-lbl">開始日</span>
+            <span class="wp-trigger-val empty" id="wp-start-date-display">日付を選択</span>
+          </div>
+          <div class="wp-trigger" id="wp-end-trigger" onclick="wpOpen('end')">
+            <span class="wp-trigger-lbl">終了日</span>
+            <span class="wp-trigger-val empty" id="wp-end-date-display">日付を選択</span>
+          </div>
+        </div>
+        <div class="wp-time-trigger" id="wp-time-trigger" onclick="wpToggleTimed()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="wp-time-trigger-label">終日</span>
+        </div>
+        <input type="date" id="input-start" style="display:none;" oninput="checkSubmit()">
+        <input type="date" id="input-end" style="display:none;">
+        <input type="time" id="input-start-time" step="900" style="display:none;">
+        <input type="time" id="input-end-time" step="900" style="display:none;">
+        <label class="form-label">メモ（任意）</label>
+        <textarea class="form-textarea" id="input-memo" rows="3" placeholder="例：&#10;・スタート時間 8:32（10番ホール）&#10;・宿泊先：◯◯ホテル（前泊）&#10;・キャディ：田中さん"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer" id="modal-footer">
+      <button class="btn-primary" id="modal-next-btn" onclick="handleNextBtn()">次へ</button>
+      <button class="btn-secondary" onclick="closeModal()">キャンセル</button>
+    </div>
+  </div>
+</div>
 
 <!-- ★★★ iOSホイールピッカー：body直下に配置（app-frameのoverflow:hiddenを回避） ★★★ -->
 <div class="wp-overlay" id="wp-overlay" onclick="if(event.target===this)wpClose()">
