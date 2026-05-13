@@ -51,7 +51,6 @@ async function fetchWithBrowserless(url) {
         waitUntil: 'networkidle2',
         timeout:   GOTO_TIMEOUT_MS,
       },
-      
     }),
     signal: AbortSignal.timeout(GOTO_TIMEOUT_MS + 5000),
   });
