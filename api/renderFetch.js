@@ -69,14 +69,11 @@ async function fetchWithPuppeteer(url) {
     // executablePath: Vercel Lambda の /tmp に展開されるパスを明示。
     // 引数なしだと環境により誤パスを返すケースがある。
     // @sparticuz/chromium v124 以降は同期関数だが await しても動作する。
-    const exePath = await chromium.executablePath('/tmp/chromium');
-
     browser = await puppeteer.launch({
       args:            [...chromium.args, ...EXTRA_ARGS],
       defaultViewport: chromium.defaultViewport,
-      executablePath:  exePath,
+      executablePath:  await chromium.executablePath(),
       headless:        'new',
-      ignoreDefaultArgs: ['--disable-extensions'],
     });
 
     console.info('[renderFetch] browser launched');
