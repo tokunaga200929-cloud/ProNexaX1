@@ -7285,6 +7285,9 @@ function _loadUserEvents() {
           if (idx >= 0) EVENTS[idx] = ue;
           else EVENTS.push(ue);
         });
+        // ★ nextId を読み込んだイベントの最大ID+1 に更新（ID重複防止）
+        const maxId = Math.max(...userEvs.map(e => e.id), nextId - 1);
+        nextId = maxId + 1;
       }
     }
   } catch(e) {}
@@ -11406,7 +11409,7 @@ function toggleSearchAdd(id){
     saveSearchPrefs();
     showToast(`「${t.name}」をカレンダーに追加しました ✓`);
   }
-  applySearchFilters();renderAllPanels();renderCalList();
+  applySearchFilters();renderAllPanels();renderCalList();_saveUserEvents();
 }
 // ★★★ カレンダーセルをタップして「予定追加」を開く統一エントリー ★★★
 // cellDate: タップしたセルが持つ実日付。Date オブジェクト or 'YYYY-MM-DD' 文字列。
