@@ -14233,6 +14233,8 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
   const _origPrefill=window.prefillForm;
   window.prefillForm=function(tour){
     if(typeof _origPrefill==='function')_origPrefill(tour);
+    // ★ スマホ対応：setTimeout前にselectedDateをキャプチャ（遅延中にnullになるのを防ぐ）
+    const _capturedDate=(typeof selectedDate!=='undefined'&&selectedDate)?selectedDate:null;
     setTimeout(()=>{
       const inS=document.getElementById('input-start');
       const inE=document.getElementById('input-end');
@@ -14244,8 +14246,8 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
         const endDs=window._rangeEndPreset;
         window._rangeEndPreset=null;
         if(inS&&inE){
-          // 開始日は selectedDate から
-          const startDs=typeof selectedDate!=='undefined'?selectedDate:null;
+          // 開始日はキャプチャ済みselectedDateから（スマホ遅延対策）
+          const startDs=_capturedDate;
           if(startDs)inS.value=startDs;
           inE.value=endDs;
           // WP にも反映
@@ -14277,9 +14279,8 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
       if(isEdit){
         baseDate=parseDateLocalStr(inS?.value);
       }else{
-        // 新規：selectedDate が最優先
-        const selDs=typeof selectedDate!=='undefined'?selectedDate:null;
-        baseDate=parseDateLocalStr(selDs||inS?.value);
+        // 新規：キャプチャ済みselectedDateを最優先（スマホでの遅延対策）
+        baseDate=parseDateLocalStr(_capturedDate||inS?.value);
       }
 
       if(!baseDate||isNaN(baseDate.getTime())){
@@ -14315,7 +14316,7 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
       console.log('[prefillForm hook] isEdit=',isEdit,'selectedDate=',typeof selectedDate!=='undefined'?selectedDate:'(undef)',
         '\u2192 WP.startDate=',WP.startDate,'WP.endDate=',WP.endDate);
       updateTriggers();
-    },80);
+    },0);
   };
 
   // ── 初期化 ──
