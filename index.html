@@ -57,9 +57,10 @@ html,body{
   margin:0;
   padding:0;
   background:#ffffff;
-  overflow:hidden;
-  /* Phase3: iPhone縦固定 */
-  touch-action:pan-y;
+  /* ★ overflow:hidden を削除：body直下のposition:fixedモーダルのタッチを封じないため */
+  overflow:visible;
+  /* ★ touch-action:manipulation：pan-yではなくmanipulationでタップも確実に通す */
+  touch-action:manipulation;
 }
 body{
   position:relative;
