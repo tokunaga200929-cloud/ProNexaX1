@@ -1,25 +1,22 @@
-// api/renderFetch.js  —  ProNexaX Server-side Render Fetch Engine
+// api/renderFetch.js  —  ProNexaX Server-side Render Fetch Engine v2
 // ================================================================
-// Vercel Serverless Function
 // POST /api/renderFetch  { url: string }
 // → { ok: true,  html: string }
 // → { ok: false, error: string }
 //
-// headless browser 優先順:
-//   1. @sparticuz/chromium + puppeteer-core  (Vercel 推奨・最軽量)
-//   2. playwright-chromium                   (代替)
-//   3. Browserless.io  外部サービス          (BROWSERLESS_TOKEN 設定時)
+// 依存:
+//   @sparticuz/chromium  123.0.1
+//   puppeteer-core       22.6.1
 //
-// Vercel config: maxDuration = 30s (vercel.json に追記が必要)
+// Vercel Serverless (Node 18+)
+//   maxDuration: 30s  / memory: 1024MB  (vercel.json に設定済み)
 // ================================================================
 
-export const config = { maxDuration: 30 };
-
 // ── タイムアウト定数 ──────────────────────────────────────────────
-const GOTO_TIMEOUT_MS  = 15000;  // page.goto 上限 15s
-const TOTAL_TIMEOUT_MS = 25000;  // Function 全体の安全上限 25s
+const GOTO_TIMEOUT_MS  = 15000;   // page.goto 上限 15s
+const TOTAL_TIMEOUT_MS = 25000;   // handler 全体の安全上限 25s
 
-// ── URL 許可リスト（任意サイト fetch を防ぐ簡易ガード）────────────
+// ── URL 安全チェック ─────────────────────────────────────────────
 function _isSafeUrl(url) {
   try {
     const u = new URL(url);
@@ -28,15 +25,18 @@ function _isSafeUrl(url) {
 }
 
 // ================================================================
-//  方法1: @sparticuz/chromium + puppeteer-core
-//  Vercel の Lambda 環境で最もよく使われる構成。
-//  npm install --save @sparticuz/chromium puppeteer-core
+//  Puppeteer + @sparticuz/chromium
+//  Dynamic import: Vercel build 時に require() エラーを防ぐ。
+//  browser は必ず finally で close（zombie 防止）。
 // ================================================================
 async function fetchWithPuppeteer(url) {
-  const chromium    = (await import('@sparticuz/chromium')).default;
-  const puppeteer   = (await import('puppeteer-core')).default;
+  // dynamic import — Vercel が tree-shake しないようにする
+  const chromium  = (await import('@sparticuz/chromium')).default;
+  const puppeteer = (await import('puppeteer-core')).default;
 
   let browser = null;
+  let page    = null;
+
   try {
     browser = await puppeteer.launch({
       args:            chromium.args,
@@ -45,7 +45,9 @@ async function fetchWithPuppeteer(url) {
       headless:        chromium.headless,
     });
 
-    const page = await browser.newPage();
+    console.info('[renderFetch] browser launched');
+
+    page = await browser.newPage();
 
     // モバイル UA（ゴルフサイトはレスポンシブ版の方が軽い）
     await page.setUserAgent(
@@ -53,11 +55,11 @@ async function fetchWithPuppeteer(url) {
       'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
     );
 
-    // 画像・フォントをブロック（メモリ節約・高速化）
+    // 画像・フォント・メディアをブロック（メモリ節約・高速化）
     await page.setRequestInterception(true);
     page.on('request', (req) => {
-      const t = req.resourceType();
-      if (['image', 'font', 'media', 'stylesheet'].includes(t)) {
+      const blocked = ['image', 'font', 'media', 'stylesheet'];
+      if (blocked.includes(req.resourceType())) {
         req.abort();
       } else {
         req.continue();
@@ -70,22 +72,22 @@ async function fetchWithPuppeteer(url) {
     });
 
     const html = await page.content();
-    console.info(`[renderFetch:puppeteer] ✅ ${html.length} chars — ${url}`);
+    console.info(`[renderFetch] ✅ puppeteer: ${html.length} chars — ${url}`);
     return html;
 
   } finally {
-    // ★ zombie browser 防止: 成功・失敗どちらでも必ず close
-    if (browser) {
-      try { await browser.close(); } catch {}
-    }
+    // ★ zombie browser 完全防止
+    //    page.close() → browser.close() の順で確実に解放
+    if (page)    { try { await page.close();    } catch {} }
+    if (browser) { try { await browser.close(); } catch {} }
+    console.info('[renderFetch] browser closed (cleanup)');
   }
 }
 
 // ================================================================
-//  方法2: Browserless.io  外部サービス
-//  環境変数 BROWSERLESS_TOKEN が設定されている場合に使用。
-//  npm 依存ゼロ。Vercel の容量制限を回避できる。
-//  https://browserless.io  (Free tier: 1000 units/month)
+//  Browserless.io 外部サービス（BROWSERLESS_TOKEN 設定時に優先）
+//  npm 依存ゼロ。Vercel の 250MB bundle 制限を回避できる。
+//  Free tier: 1,000 units/month  https://browserless.io
 // ================================================================
 async function fetchWithBrowserless(url) {
   const token    = process.env.BROWSERLESS_TOKEN;
@@ -96,7 +98,10 @@ async function fetchWithBrowserless(url) {
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify({
       url,
-      gotoOptions: { waitUntil: 'networkidle2', timeout: GOTO_TIMEOUT_MS },
+      gotoOptions: {
+        waitUntil: 'networkidle2',
+        timeout:   GOTO_TIMEOUT_MS,
+      },
       userAgent:
         'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) ' +
         'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
@@ -106,35 +111,39 @@ async function fetchWithBrowserless(url) {
 
   if (!res.ok) throw new Error(`Browserless HTTP ${res.status}`);
   const html = await res.text();
-  console.info(`[renderFetch:browserless] ✅ ${html.length} chars — ${url}`);
+  console.info(`[renderFetch] ✅ browserless: ${html.length} chars — ${url}`);
   return html;
 }
 
 // ================================================================
-//  メイン: 優先順で試行し、どちらも失敗なら error を返す
+//  handler
 // ================================================================
 export default async function handler(req, res) {
-  // POST のみ受け付ける
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, error: 'Method not allowed' });
   }
 
   const { url } = req.body || {};
-
   if (!url || !_isSafeUrl(url)) {
     return res.status(400).json({ ok: false, error: 'Invalid or missing url' });
   }
 
-  // 関数全体タイムアウト（TOTAL_TIMEOUT_MS）
+  console.info('[renderFetch] handler start:', url);
+
+  // handler 全体タイムアウト（TOTAL_TIMEOUT_MS = 25s）
+  // Vercel maxDuration=30s より短く設定し、response 返却を保証する
+  let _timedOut = false;
   const totalTimer = setTimeout(() => {
-    console.warn('[renderFetch] total timeout — response may already be sent');
+    _timedOut = true;
+    console.warn('[renderFetch] ⏱ total timeout 25s:', url);
   }, TOTAL_TIMEOUT_MS);
 
-  try {
-    let html = '';
+  let html = '';
+  let errorMsg = '';
 
-    // ── 優先1: Browserless.io（BROWSERLESS_TOKEN が設定されていれば使う）──
-    if (process.env.BROWSERLESS_TOKEN) {
+  try {
+    // ── 優先1: Browserless.io（BROWSERLESS_TOKEN 設定時）──
+    if (process.env.BROWSERLESS_TOKEN && !_timedOut) {
       try {
         html = await fetchWithBrowserless(url);
       } catch (e) {
@@ -143,26 +152,26 @@ export default async function handler(req, res) {
     }
 
     // ── 優先2: @sparticuz/chromium + puppeteer-core ──
-    if (!html) {
+    if (!html && !_timedOut) {
       try {
         html = await fetchWithPuppeteer(url);
       } catch (e) {
+        errorMsg = e.message;
         console.warn('[renderFetch] puppeteer 失敗:', e.message);
-        return res.status(200).json({ ok: false, error: e.message });
       }
     }
 
+  } finally {
     clearTimeout(totalTimer);
-
-    if (!html || html.length < 100) {
-      return res.status(200).json({ ok: false, error: 'empty html' });
-    }
-
-    return res.status(200).json({ ok: true, html });
-
-  } catch (e) {
-    clearTimeout(totalTimer);
-    console.error('[renderFetch] handler error:', e.message);
-    return res.status(200).json({ ok: false, error: e.message });
   }
+
+  if (_timedOut) {
+    return res.status(200).json({ ok: false, error: 'timeout' });
+  }
+  if (!html || html.length < 100) {
+    return res.status(200).json({ ok: false, error: errorMsg || 'empty html' });
+  }
+
+  console.info(`[renderFetch] ✅ done: ${html.length} chars`);
+  return res.status(200).json({ ok: true, html });
 }

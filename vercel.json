@@ -20,5 +20,11 @@
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "api/renderFetch.js": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  }
 }
