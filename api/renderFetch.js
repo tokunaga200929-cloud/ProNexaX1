@@ -38,11 +38,39 @@ async function fetchWithPuppeteer(url) {
   let page    = null;
 
   try {
+    // ── Vercel Serverless 向け launch オプション ──────────────────
+    // libnss3.so 等の欠落ライブラリを回避するために必須の引数を明示。
+    // chromium.args に含まれないケースがあるため個別に追加する。
+    //
+    // --no-sandbox / --disable-setuid-sandbox
+    //   Lambda 環境では root 権限で動くため sandbox が起動できない。
+    //   これがないと Chromium が即クラッシュする。
+    //
+    // --disable-dev-shm-usage
+    //   /dev/shm が 64MB に制限されている Lambda では共有メモリ不足。
+    //   これがないとレンダリング中に OOM が発生する。
+    //
+    // --single-process / --no-zygote
+    //   子プロセス fork を抑制。Lambda の PID 制限と fork 制約を回避。
+    //
+    // headless: 'new'
+    //   puppeteer-core v22 以降は 'new' を使用。
+    //   旧 chromium.headless (= true) だと非推奨警告 + 動作不安定。
+
+    const EXTRA_ARGS = [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--single-process',
+      '--no-zygote',
+    ];
+
     browser = await puppeteer.launch({
-      args:            chromium.args,
+      args:            [...chromium.args, ...EXTRA_ARGS],
       defaultViewport: chromium.defaultViewport,
       executablePath:  await chromium.executablePath(),
-      headless:        chromium.headless,
+      headless:        'new',
     });
 
     console.info('[renderFetch] browser launched');

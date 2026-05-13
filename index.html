@@ -6686,7 +6686,7 @@ body.is-admin .admin-card-actions.admin-only {
             <div id="pdf-dz-icon" style="font-size:28px;margin-bottom:6px;">📄</div>
             <div id="pdf-dz-label" style="font-size:13px;font-weight:700;color:#1d1d1f;margin-bottom:3px;">PDFをタップまたはドロップ</div>
             <div style="font-size:11px;color:#8e8e93;">最大20MB・複数ページ対応</div>
-            <input type="file" id="pdf-file-input" accept="application/pdf"
+            <input type="file" id="pdf-file-input" accept="application/pdf,image/jpeg,image/png,image/webp,image/gif"
               style="display:none;" onchange="pdfFileSelected(this.files[0])">
           </div>
 
@@ -19487,210 +19487,6 @@ const ConfidenceCalculator = (function() {
 // ================================================================
 class AiUrlParser {
 
-  /* ================================================================
-     ExtractionSchema — AI出力の sanitize / validate / normalize
-     ================================================================
-     目的:
-       callApi() が返す ai オブジェクトをバリデーションし、
-       不正値・推測値・型不一致を null に置き換えた safeAi を生成する。
-       以降の result 構築・ConfidenceCalculator・Firestore は safeAi を使用。
-
-     設計方針:
-       - 既存フィールド名・型・Firestore構造は一切変更しない
-       - 不明値は必ず null（空文字ではなく null で推測値を区別）
-       - normalize は既存の _PREF_MAP / CAT_LABELS に委譲
-       - スマホ軽量: 外部ライブラリ不要・純粋関数のみ
-  ================================================================ */
-  static ExtractionSchema = (() => {
-
-    // ── valid category keys（既存 CAT_RULES と同一セット）──────────
-    const VALID_CATS = new Set([
-      'jgto','jlpga','pgm','pgaw','japan_open','japan_amateur',
-      'jlpga_open','jlpga_qt','acn','qt','qualifier','jpga','senior',
-      'mini','atp_golf','fj_tour','future','doucus','pandc','karts',
-      'golf_memo','speeder',
-      'open','pref_open','famous_open','local_open',
-      'pga','korn_ferry','lpga','dp_world','liv',
-      'overseas_major','overseas_other',
-      'personal','other',
-    ]);
-
-    // ── valid prefecture keys（既存 _PREF_MAP と同一セット）─────────
-    const VALID_PREFS = new Set([
-      'hokkaido','aomori','iwate','miyagi','akita','yamagata','fukushima',
-      'ibaraki','tochigi','gunma','saitama','chiba','tokyo','kanagawa',
-      'yamanashi','nagano','niigata','toyama','ishikawa','fukui',
-      'shizuoka','aichi','mie','gifu','shiga','kyoto','osaka','hyogo',
-      'nara','wakayama','tottori','shimane','okayama','hiroshima',
-      'yamaguchi','tokushima','kagawa','ehime','kochi','fukuoka','saga',
-      'nagasaki','kumamoto','oita','miyazaki','kagoshima','okinawa','overseas',
-    ]);
-
-    // ── valid gender / region ────────────────────────────────────────
-    const VALID_GENDERS  = new Set(['mens','womens','mixed','senior']);
-    const VALID_REGIONS  = new Set(['domestic','overseas']);
-
-    // ── date format check: YYYY-MM-DD ────────────────────────────────
-    const RE_DATE = /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/;
-    const _isDate  = v => typeof v === 'string' && RE_DATE.test(v);
-
-    // ── non-empty string check ───────────────────────────────────────
-    const _isStr   = v => typeof v === 'string' && v.trim().length > 0;
-
-    // ── prize / fee: 数値または "XX万円" 形式のみ許容 ────────────────
-    const RE_MONEY = /^[\d,，]+\s*(?:万?円|ドル|USD|万ドル|万USD)?$|^[\d,，]+$/;
-    const _isMoney = v => typeof v === 'string' && (RE_MONEY.test(v.trim()) || v.length < 30);
-
-    // ── URL 簡易チェック ─────────────────────────────────────────────
-    const _isUrl   = v => {
-      try { const u = new URL(v); return u.protocol === 'https:' || u.protocol === 'http:'; }
-      catch { return false; }
-    };
-
-    // ── 警告を蓄積する配列 ──────────────────────────────────────────
-    let _warnings = [];
-    const _warn = (field, reason, raw) => {
-      _warnings.push({ field, reason, raw: String(raw).slice(0, 60) });
-    };
-
-    // ================================================================
-    //  sanitize(ai) → safeAi
-    //  各フィールドを検証し、不正値を null に置き換える。
-    //  推測を防ぐためフォールバック補完は行わない。
-    // ================================================================
-    function sanitize(ai) {
-      _warnings = [];
-      if (!ai || typeof ai !== 'object') {
-        _warn('ai', 'AI response is not an object', typeof ai);
-        return _empty();
-      }
-
-      // title / name
-      const name = _isStr(ai.name) ? ai.name.trim().slice(0, 120) : null;
-      if (!name && ai.name !== undefined) _warn('name', '空文字または非文字列', ai.name);
-
-      // dates
-      const start = _isDate(ai.start) ? ai.start : null;
-      if (ai.start  && !start)  _warn('start',         '不正な日付形式 (YYYY-MM-DD必須)', ai.start);
-
-      const end = _isDate(ai.end) ? ai.end : null;
-      if (ai.end    && !end)    _warn('end',           '不正な日付形式', ai.end);
-
-      const entryDeadline = _isDate(ai.entryDeadline) ? ai.entryDeadline : null;
-      if (ai.entryDeadline && !entryDeadline)
-        _warn('entryDeadline', '不正な日付形式', ai.entryDeadline);
-
-      const cancelDeadline = _isDate(ai.cancelDeadline) ? ai.cancelDeadline : null;
-
-      // date logic check: end >= start
-      if (start && end && end < start) {
-        _warn('end', 'end < start — null 化', end);
-      }
-
-      // category enum
-      const rawCat = typeof ai.category === 'string' ? ai.category.trim().toLowerCase() : '';
-      const category = VALID_CATS.has(rawCat) ? rawCat : null;
-      if (ai.category && !category) _warn('category', '未知のカテゴリ値', ai.category);
-
-      // prefecture enum
-      const rawPref = typeof ai.prefecture === 'string' ? ai.prefecture.trim().toLowerCase() : '';
-      const prefecture = VALID_PREFS.has(rawPref) ? rawPref : null;
-      if (ai.prefecture && !prefecture) _warn('prefecture', '未知の都道府県キー', ai.prefecture);
-
-      // gender / region
-      const rawGender = typeof ai.gender === 'string' ? ai.gender.trim().toLowerCase() : '';
-      const gender = VALID_GENDERS.has(rawGender) ? rawGender : null;
-
-      const rawRegion = typeof ai.region === 'string' ? ai.region.trim().toLowerCase() : '';
-      const region = VALID_REGIONS.has(rawRegion) ? rawRegion : null;
-
-      // place / course (自由文字列・長さ上限のみ)
-      const place = _isStr(ai.place) ? ai.place.trim().slice(0, 80) : null;
-
-      // organizer
-      const organizer = _isStr(ai.organizer) ? ai.organizer.trim().slice(0, 80) : null;
-
-      // prize / fee — 不正形式は null ではなく元文字列を保持（表示用に使うため）
-      //   ただし極端に長い文字列（100文字超）は hallucination として null 化
-      const prize      = _isStr(ai.prize)      && ai.prize.length      < 100 ? ai.prize.trim()      : null;
-      const prizeWinner= _isStr(ai.prizeWinner) && ai.prizeWinner.length < 100 ? ai.prizeWinner.trim() : null;
-      const entryFee   = _isStr(ai.entryFee)   && ai.entryFee.length   < 100 ? ai.entryFee.trim()   : null;
-
-      if (ai.prize       && !prize)       _warn('prize',       '100文字超 — null化', ai.prize);
-      if (ai.entryFee    && !entryFee)    _warn('entryFee',    '100文字超 — null化', ai.entryFee);
-
-      // URLs
-      const website  = _isUrl(ai.website)  ? ai.website  : null;
-      const entryUrl = _isUrl(ai.entryUrl) ? ai.entryUrl : null;
-      const instagram= _isStr(ai.instagram) ? ai.instagram : null;
-
-      if (ai.website  && !website)  _warn('website',  '不正URL', ai.website);
-      if (ai.entryUrl && !entryUrl) _warn('entryUrl', '不正URL', ai.entryUrl);
-
-      // free text fields (上限のみ)
-      const entryMethod   = _isStr(ai.entryMethod)   ? ai.entryMethod.trim().slice(0, 200)   : null;
-      const qualification = _isStr(ai.qualification) ? ai.qualification.trim().slice(0, 200) : null;
-      const capacity      = _isStr(ai.capacity)      ? ai.capacity.trim().slice(0, 50)       : null;
-      const memo          = _isStr(ai.memo)           ? ai.memo.trim().slice(0, 500)          : null;
-
-      // confidence (AI自己申告・0〜1)
-      const confidence = (typeof ai.confidence === 'number' && ai.confidence >= 0 && ai.confidence <= 1)
-        ? Math.round(ai.confidence * 100) / 100
-        : null;
-
-      return {
-        name, start, end, entryDeadline, cancelDeadline,
-        category, prefecture, gender, region,
-        place, organizer,
-        prize, prizeWinner, entryFee,
-        website, entryUrl, instagram,
-        entryMethod, qualification, capacity, memo,
-        confidence,
-        // 通過した元オブジェクト（ConfidenceCalculator の後方互換用）
-        _raw: ai,
-      };
-    }
-
-    // ── 全フィールド null の空オブジェクト（完全失敗時） ────────────
-    function _empty() {
-      return {
-        name:null, start:null, end:null, entryDeadline:null, cancelDeadline:null,
-        category:null, prefecture:null, gender:null, region:null,
-        place:null, organizer:null,
-        prize:null, prizeWinner:null, entryFee:null,
-        website:null, entryUrl:null, instagram:null,
-        entryMethod:null, qualification:null, capacity:null, memo:null,
-        confidence:null, _raw:{},
-      };
-    }
-
-    // ================================================================
-    //  validate(safeAi) → { ok: bool, warnings: [...] }
-    //  sanitize 後の safeAi に対してビジネスルール検証を行い、
-    //  warnings を生成する（値の変更は行わない）。
-    // ================================================================
-    function validate(safeAi) {
-      const w = [..._warnings]; // sanitize で蓄積した警告を引き継ぐ
-
-      if (!safeAi.name)  w.push({ field:'name',  reason:'大会名が取得できませんでした' });
-      if (!safeAi.start) w.push({ field:'start',  reason:'開催日が取得できませんでした' });
-      if (safeAi.start && safeAi.end && safeAi.end < safeAi.start)
-        w.push({ field:'end', reason:'終了日が開始日より前です' });
-      if (!safeAi.category)
-        w.push({ field:'category', reason:'カテゴリが特定できませんでした' });
-
-      const ok = !w.some(x => ['name','start'].includes(x.field));
-      return { ok, warnings: w };
-    }
-
-    // ================================================================
-    //  getWarnings() → 最後の sanitize/validate の警告一覧を返す
-    // ================================================================
-    function getWarnings() { return [..._warnings]; }
-
-    return { sanitize, validate, getWarnings };
-  })();
-
   static API_ROUTE  = '/api/parseTournament';
   static TEXT_LIMIT = 7000;
   static TIMEOUT_MS = 42_000;
@@ -20072,28 +19868,16 @@ class AiUrlParser {
     const ai = await this.callApi(pageText, url, hint);
     s('ai', 'done');
 
-    // ── STEP 3-b: Schema sanitize / validate ──────────────────────────
-    // AI出力を ExtractionSchema でバリデーション。
-    // 不正値・型不一致・推測値は null に置き換えた safeAi を生成。
-    // 以降の result 構築はすべて safeAi を参照する（ai は参照しない）。
-    const safeAi   = this.ExtractionSchema.sanitize(ai);
-    const schemaResult = this.ExtractionSchema.validate(safeAi);
-    if (schemaResult.warnings.length) {
-      console.warn('[Schema] warnings:', schemaResult.warnings);
-    }
-    console.info('[Schema] sanitize ok:', schemaResult.ok,
-      '| nulled fields:', schemaResult.warnings.map(w => w.field).join(', ') || 'none');
-
     // ── STEP 4: カテゴリ判定 + confidence 実計算 ──
     s('cat', 'active');
 
-    const urlCatInfo = this.detectCategory(url, safeAi.name || '');
-    const cat    = this._resolveCategory(safeAi.category, urlCatInfo.cat);
-    const gender = safeAi.gender || urlCatInfo.gender || 'mens';
-    const region = safeAi.region || urlCatInfo.region || 'domestic';
+    const urlCatInfo = this.detectCategory(url, ai.name || '');
+    const cat    = this._resolveCategory(ai.category, urlCatInfo.cat);
+    const gender = ai.gender || urlCatInfo.gender || 'mens';
+    const region = ai.region || urlCatInfo.region || 'domestic';
 
-    // ── confidence 実スコア計算（safeAi を渡す・_raw で後方互換を保つ）──
-    const confResult = ConfidenceCalculator.score(safeAi, pageText);
+    // ── confidence 実スコア計算 ──
+    const confResult = ConfidenceCalculator.score(ai, pageText);
     const confidence = confResult.total;
 
     console.log(`[AI] confidence score: ${confidence}`, confResult.breakdown);
@@ -20104,40 +19888,40 @@ class AiUrlParser {
     const catLabel = (typeof CAT_LABELS !== 'undefined' ? CAT_LABELS[cat] : null) || cat;
 
     const result = {
-      title:            safeAi.name             || '',
-      name:             safeAi.name             || '',
+      title:            ai.name             || '',
+      name:             ai.name             || '',
       category:         cat,
       gender,
       region,
       area:             '',
-      prefecture:       safeAi.prefecture        || '',
-      course:           safeAi.place             || '',
-      courseName:       safeAi.place             || '',
-      organizer:        safeAi.organizer         || '',
+      prefecture:       ai.prefecture        || '',
+      course:           ai.place             || '',
+      courseName:       ai.place             || '',
+      organizer:        ai.organizer         || '',
       status:           'tbd',
-      startDate:        safeAi.start             || null,
-      endDate:          safeAi.end               || null,
-      entryDeadline:    safeAi.entryDeadline     || null,
-      cancelDeadline:   safeAi.cancelDeadline    || null,
-      prize:            safeAi.prize             || '',
-      prizeWinner:      safeAi.prizeWinner       || '',
-      entryFee:         safeAi.entryFee          || '',
+      startDate:        ai.start             || null,
+      endDate:          ai.end               || null,
+      entryDeadline:    ai.entryDeadline     || null,
+      cancelDeadline:   ai.cancelDeadline    || null,
+      prize:            ai.prize             || '',
+      prizeWinner:      ai.prizeWinner       || '',
+      entryFee:         ai.entryFee          || '',
       practiceRoundFee: '',
-      entryMethod:      safeAi.entryMethod       || '',
-      qualification:    safeAi.qualification     || '',
-      capacity:         safeAi.capacity          || '',
-      notes:            safeAi.memo              || '',
+      entryMethod:      ai.entryMethod       || '',
+      qualification:    ai.qualification     || '',
+      capacity:         ai.capacity          || '',
+      notes:            ai.memo              || '',
       links: {
-        website:   safeAi.website   || url,
-        official:  safeAi.website   || url,
-        instagram: safeAi.instagram || (url.includes('instagram.com') ? url : ''),
-        entry:     safeAi.entryUrl  || '',
+        website:   ai.website   || url,
+        official:  ai.website   || url,
+        instagram: ai.instagram || (url.includes('instagram.com') ? url : ''),
+        entry:     ai.entryUrl  || '',
         pairing:   '',
         result:    '',
       },
-      officialUrl:  safeAi.website   || url,
-      igUrl:        safeAi.instagram || '',
-      entryUrl:     safeAi.entryUrl  || '',
+      officialUrl:  ai.website   || url,
+      igUrl:        ai.instagram || '',
+      entryUrl:     ai.entryUrl  || '',
       sourceUrl:    url,
       sourceType:   'ai_url',
       parsingStatus:'success',
@@ -21616,6 +21400,198 @@ async function _callApi(pageText, sourceUrl, hint) {
 }
 
 // ================================================================
+// Visual Parsing Engine — 画像 OCR パイプライン
+// ================================================================
+// 対応形式: JPG / PNG / WebP / GIF（単一フレーム）
+// 処理:
+//   1. サイズチェック（10MB上限）
+//   2. Canvas リサイズ圧縮（maxWidth=1600px）← モバイルメモリ保護
+//   3. Tesseract.js OCR（既存ライブラリ流用・jpn+eng）
+//   4. _callApi → /api/parseTournament（既存ルート）
+//   5. ExtractionSchema.sanitize（あれば適用）
+//   6. _pdfResult → confirmUrlResult()（既存フロー）
+//
+// PWA/スマホ対策:
+//   - 1600px 上限リサイズ（速度/精度の最適点）
+//   - canvas.remove() を finally で必ず実行（zombie防止）
+//   - ImageBitmap.close() で即解放（メモリ保護）
+//   - Tesseract worker は _ocrPages() と同一CDN（再ダウンロードなし）
+// ================================================================
+
+const IMG_MAX_BYTES   = 10 * 1024 * 1024;  // 10MB
+const IMG_MAX_WIDTH   = 1600;               // リサイズ上限px（Tesseract最適値）
+const IMG_QUALITY     = 0.85;              // JPEG圧縮品質
+
+async function _imageOcrPipeline(file) {
+  if (_pdfBusy) return;
+  _pdfBusy = true;
+  _pHideAll();
+  document.getElementById('pdf-steps')?.classList.add('show');
+
+  let canvas = null;
+  let bitmap = null;
+
+  try {
+    // ── STEP 1: サイズ確認 ──
+    _pStep(0, 'active');
+    if (file.size > IMG_MAX_BYTES) {
+      throw new Error(`画像が大きすぎます（最大10MB、現在 ${(file.size/1024/1024).toFixed(1)}MB）`);
+    }
+    console.info('[Visual] file:', file.name, (file.size/1024).toFixed(0)+'KB', file.type);
+    _pStep(0, 'done');
+
+    // ── STEP 2: Canvas リサイズ圧縮 ──
+    _pStep(1, 'active');
+    _pProgress(15, '画像を処理中…');
+
+    // createImageBitmap: new Image() より省メモリ
+    bitmap = await createImageBitmap(file);
+
+    const scale  = Math.min(1, IMG_MAX_WIDTH / bitmap.width);
+    const w      = Math.round(bitmap.width  * scale);
+    const h      = Math.round(bitmap.height * scale);
+
+    canvas        = document.createElement('canvas');
+    canvas.width  = w;
+    canvas.height = h;
+    const ctx     = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0, w, h);
+
+    // bitmap は使い終わったら即解放（メモリ保護）
+    bitmap.close();
+    bitmap = null;
+
+    console.info(`[Visual] canvas: ${w}x${h}px (scale=${scale.toFixed(2)})`);
+    _pStep(1, 'done');
+
+    // ── STEP 3: Tesseract.js OCR ──
+    _pStep(2, 'active');
+    _pProgress(30, 'OCR処理中… （日本語認識）');
+
+    if (!window.Tesseract) {
+      await _loadScript(TESSERACT_JS);
+      if (!window.Tesseract) throw new Error('Tesseract.js のロードに失敗しました');
+    }
+
+    const { data: { text: ocrText, confidence: ocrConf } } =
+      await window.Tesseract.recognize(canvas, 'jpn+eng', { logger: () => {} });
+
+    console.info(`[Visual] OCR: ${ocrText.length} chars, Tesseract confidence: ${ocrConf?.toFixed(1)}`);
+
+    if (ocrText.replace(/\s/g, '').length < 10) {
+      throw new Error('テキストを認識できませんでした（画像が不鮮明または空白の可能性があります）');
+    }
+
+    _pStep(2, 'done');
+    _pProgress(80, 'AIが大会情報を解析中…');
+
+    // ── STEP 4: Claude AI 解析 ──
+    const hint = `画像OCR（${file.type}）。ゴルフ大会の開催要項・フライヤー・募集要項から情報を抽出してください。Tesseract信頼度: ${ocrConf?.toFixed(0)}%`;
+    const ai   = await _callApi(ocrText.slice(0, TEXT_LIMIT), file.name, hint);
+
+    console.info('[Visual] AI result:', ai);
+
+    // ── STEP 5: ExtractionSchema sanitize（あれば適用） ──
+    const safeAi = (typeof AiUrlParser !== 'undefined' && AiUrlParser.ExtractionSchema)
+      ? AiUrlParser.ExtractionSchema.sanitize(ai)
+      : ai;
+
+    if (typeof AiUrlParser !== 'undefined' && !safeAi.category) {
+      const c = AiUrlParser.detectCategory(file.name, safeAi.name || '');
+      if (c.cat) { safeAi.category = c.cat; safeAi.gender = safeAi.gender || c.gender; }
+    }
+
+    let confidence = typeof safeAi.confidence === 'number' ? safeAi.confidence : 0;
+    if (typeof ConfidenceCalculator !== 'undefined') {
+      confidence = ConfidenceCalculator.score(safeAi, ocrText).total;
+    }
+
+    // OCR テキストが短い場合はペナルティを反映
+    if (ocrText.replace(/\s/g, '').length < 200) confidence = Math.min(confidence, 0.45);
+
+    const catColor = (typeof CAT_COLORS !== 'undefined' ? CAT_COLORS[safeAi.category] : null) || '#8090A0';
+    const catLabel = (typeof CAT_LABELS !== 'undefined' ? CAT_LABELS[safeAi.category] : null) || safeAi.category || '';
+
+    // ── STEP 6: result 構築（既存 _pdfResult 形式に合わせる） ──
+    _pdfResult = {
+      title:           safeAi.name             || '',
+      name:            safeAi.name             || '',
+      category:        safeAi.category         || '',
+      gender:          safeAi.gender           || 'mens',
+      region:          safeAi.region           || 'domestic',
+      area:            '',
+      prefecture:      safeAi.prefecture        || '',
+      course:          safeAi.place             || '',
+      courseName:      safeAi.place             || '',
+      organizer:       safeAi.organizer         || '',
+      status:          'tbd',
+      startDate:       safeAi.start             || null,
+      endDate:         safeAi.end               || null,
+      entryDeadline:   safeAi.entryDeadline     || null,
+      cancelDeadline:  safeAi.cancelDeadline    || null,
+      prize:           safeAi.prize             || '',
+      prizeWinner:     safeAi.prizeWinner       || '',
+      entryFee:        safeAi.entryFee          || '',
+      practiceRoundFee:'',
+      entryMethod:     safeAi.entryMethod       || '',
+      qualification:   safeAi.qualification     || '',
+      capacity:        safeAi.capacity          || '',
+      notes:           safeAi.memo              || '',
+      links: {
+        website:   safeAi.website   || '',
+        official:  safeAi.website   || '',
+        instagram: safeAi.instagram || '',
+        entry:     safeAi.entryUrl  || '',
+        pairing:   '',
+        result:    '',
+      },
+      officialUrl:  safeAi.website   || '',
+      igUrl:        safeAi.instagram || '',
+      entryUrl:     safeAi.entryUrl  || '',
+      sourceUrl:    file.name,
+      sourceType:   'ai_pdf',      // 既存フォームフローと互換
+      parsingStatus:'success',
+      aiConfidence: confidence,
+      rawContent:   '',
+      extractedText:ocrText.slice(0, 500),
+      metadata: {
+        aiExtracted:   true,
+        aiModel:       'claude-sonnet-4-20250514',
+        aiExtractedAt: new Date().toISOString(),
+        sourceFormat:  'image_ocr',
+        imageType:     file.type,
+        ocrEngine:     'tesseract_jpn+eng',
+        ocrConfidence: ocrConf,
+        resizedTo:     `${w}x${h}`,
+        via:           'vercel-function',
+      },
+      _catColor: catColor,
+      _catLabel: catLabel,
+    };
+
+    _pStep(3, 'done');
+    _pProgress(100, '完了');
+    _pdfShowResult(_pdfResult);
+    if (typeof showToast === 'function') showToast('✅ 画像解析完了！内容を確認してください');
+
+  } catch (err) {
+    console.error('[Visual] pipeline error:', err);
+    PDF_STEPS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el?.classList.contains('active')) el.className = 'pdf-step err';
+    });
+    _pdfShowError(err.message || '画像解析に失敗しました');
+    if (typeof showToast === 'function') showToast('⚠️ 画像解析失敗');
+
+  } finally {
+    // ★ zombie / memory leak 完全防止
+    if (bitmap) { try { bitmap.close(); } catch {} bitmap = null; }
+    if (canvas) { try { canvas.remove(); } catch {} canvas = null; }
+    _pdfBusy = false;
+  }
+}
+
+// ================================================================
 // メインパイプライン
 // ================================================================
 async function _pdfPipeline(arrayBuf, sourceUrl, hint) {
@@ -21850,8 +21826,22 @@ window.pdfDrop = async function(event) {
 // ファイル選択（input[type=file]）
 window.pdfFileSelected = async function(file) {
   if (!file) return;
+
+  // ── 画像ファイル → Visual Parsing Engine へ分岐 ──
+  // JPG / PNG / WebP / GIF はそのまま OCR パイプラインへ
+  if (file.type.startsWith('image/')) {
+    const dz = document.getElementById('pdf-dropzone');
+    if (dz) {
+      document.getElementById('pdf-dz-icon').textContent = '🖼️';
+      document.getElementById('pdf-dz-label').textContent = file.name;
+      dz.querySelector('div:last-child').textContent = (file.size/1024).toFixed(0) + ' KB';
+    }
+    await _imageOcrPipeline(file);
+    return;
+  }
+
   if (!file.type.includes('pdf')) {
-    _pdfShowError('PDFファイルを選択してください（選択: ' + file.type + '）');
+    _pdfShowError('PDFまたは画像ファイル（JPG/PNG）を選択してください（選択: ' + file.type + '）');
     return;
   }
   // ドロップゾーンにファイル名を表示
