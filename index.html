@@ -6940,15 +6940,17 @@ body.is-admin .admin-card-actions.admin-only {
         <input type="text" class="form-input" id="input-place" placeholder="例：千葉県 袖ヶ浦CC">
         <label class="form-label">日程</label>
         <div class="wp-trigger-row">
-          <div style="flex:1;">
-            <label class="form-label" style="margin-bottom:4px;">開始日</label>
-            <input type="date" id="input-start" class="form-input" style="width:100%;font-size:15px;" oninput="checkSubmit();syncEndDate();">
+          <div class="wp-trigger" id="wp-start-trigger" onclick="cupertinoOpen('start')">
+            <span class="wp-trigger-lbl">開始日</span>
+            <span class="wp-trigger-val empty" id="wp-start-date-display">日付を選択</span>
           </div>
-          <div style="flex:1;">
-            <label class="form-label" style="margin-bottom:4px;">終了日</label>
-            <input type="date" id="input-end" class="form-input" style="width:100%;font-size:15px;">
+          <div class="wp-trigger" id="wp-end-trigger" onclick="cupertinoOpen('end')">
+            <span class="wp-trigger-lbl">終了日</span>
+            <span class="wp-trigger-val empty" id="wp-end-date-display">日付を選択</span>
           </div>
         </div>
+        <input type="date" id="input-start" style="display:none;" oninput="checkSubmit();syncEndDate();">
+        <input type="date" id="input-end" style="display:none;">
         <input type="time" id="input-start-time" step="900" style="display:none;">
         <input type="time" id="input-end-time" step="900" style="display:none;">
         <label class="form-label">メモ（任意）</label>
@@ -6962,71 +6964,452 @@ body.is-admin .admin-card-actions.admin-only {
   </div>
 </div>
 
-<!-- ★★★ iOSホイールピッカー：body直下に配置（app-frameのoverflow:hiddenを回避） ★★★ -->
-<div class="wp-overlay" id="wp-overlay" onclick="if(event.target===this)wpClose()">
-  <div class="wp-sheet" onclick="event.stopPropagation()">
-    <div class="wp-handle-bar"></div>
-    <div class="wp-header">
-      <button class="wp-cancel-btn" onclick="wpClose()">キャンセル</button>
-      <span class="wp-title" id="wp-sheet-title">日時を選択</span>
-      <button class="wp-done-btn" onclick="wpDone()">完了</button>
+<!-- ★★★ Cupertino Style Wheel Picker ★★★ -->
+<div id="cpk-overlay" onclick="if(event.target===this)cupertinoClose()">
+  <div id="cpk-sheet" onclick="event.stopPropagation()">
+    <div id="cpk-handle"></div>
+    <div id="cpk-header">
+      <button id="cpk-cancel" ontouchend="event.preventDefault();cupertinoClose();" onclick="cupertinoClose()">キャンセル</button>
+      <span id="cpk-title">日付を選択</span>
+      <button id="cpk-done" ontouchend="event.preventDefault();cupertainoDone();" onclick="cupertainoDone()">完了</button>
     </div>
-    <div class="wp-tabs">
-      <button class="wp-tab active" id="wp-tab-start" onclick="wpSwitchTab('start')">
-        <span class="wp-tab-label">開始日時</span>
-        <span class="wp-tab-val" id="wp-tab-start-val">—</span>
-      </button>
-      <button class="wp-tab" id="wp-tab-end" onclick="wpSwitchTab('end')">
-        <span class="wp-tab-label">終了日時</span>
-        <span class="wp-tab-val" id="wp-tab-end-val">—</span>
-      </button>
-    </div>
-    <div class="wp-allday-row">
-      <span class="wp-allday-label">終日</span>
-      <div class="wp-allday-toggle" id="wp-allday-toggle" onclick="wpToggleAllDay()">
-        <div class="wp-allday-knob"></div>
-      </div>
-    </div>
-    <div class="wp-picker-wrap" id="wp-picker-wrap">
-      <div class="wp-selector-line"></div>
-      <div class="wp-fade-top"></div>
-      <div class="wp-fade-bot"></div>
-      <div class="wp-col wp-col-date" id="wp-col-date">
-        <div class="wp-scroll" id="wp-date-scroll"></div>
-      </div>
-      <div class="wp-col wp-col-hour" id="wp-col-hour">
-        <div class="wp-scroll" id="wp-hour-scroll"></div>
-      </div>
-      <div class="wp-col wp-col-min" id="wp-col-min">
-        <div class="wp-scroll" id="wp-minute-scroll"></div>
-      </div>
-    </div>
-    <div class="wp-interval-row" id="wp-interval-row">
-      <span class="wp-interval-label">分の単位</span>
-      <div class="wp-interval-btns" id="wp-interval-btns">
-        <button class="wp-interval-btn" data-interval="1" onclick="wpSetInterval(1)">1</button>
-        <button class="wp-interval-btn is-active" data-interval="5" onclick="wpSetInterval(5)">5</button>
-        <button class="wp-interval-btn" data-interval="10" onclick="wpSetInterval(10)">10</button>
-        <button class="wp-interval-btn" data-interval="15" onclick="wpSetInterval(15)">15</button>
-        <button class="wp-interval-btn" data-interval="30" onclick="wpSetInterval(30)">30</button>
-      </div>
-    </div>
-    <div class="wp-remind">
-      <button class="wp-bell-btn" id="wp-bell-btn" onclick="wpToggleBell()">
-        <svg class="bell-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-      </button>
-      <div class="wp-remind-info">
-        <span class="wp-remind-label">🔔 リマインド</span>
-        <button class="wp-remind-pill" id="wp-remind-pill" onclick="wpOpenRemind()">
-          <span id="wp-remind-text">30分前</span>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-      </div>
+    <div id="cpk-wrap">
+      <div id="cpk-col-y" class="cpk-col"><div class="cpk-scroll" id="cpk-scroll-y"></div></div>
+      <div id="cpk-col-m" class="cpk-col"><div class="cpk-scroll" id="cpk-scroll-m"></div></div>
+      <div id="cpk-col-d" class="cpk-col"><div class="cpk-scroll" id="cpk-scroll-d"></div></div>
+      <div id="cpk-selector"></div>
+      <div id="cpk-fade-top"></div>
+      <div id="cpk-fade-bot"></div>
     </div>
   </div>
 </div>
+
+<style>
+/* ── Cupertino Picker Overlay ── */
+#cpk-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:9000;
+  display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;
+  transition:opacity .25s ease;
+}
+#cpk-overlay.show{opacity:1;pointer-events:auto;}
+
+/* ── Sheet ── */
+#cpk-sheet{
+  width:100%;
+  background:#ffffff;
+  border-radius:16px 16px 0 0;
+  padding-bottom:env(safe-area-inset-bottom,16px);
+  transform:translateY(100%);
+  transition:transform .32s cubic-bezier(.32,.72,.25,1);
+  box-shadow:0 -2px 20px rgba(0,0,0,.15);
+}
+#cpk-overlay.show #cpk-sheet{transform:translateY(0);}
+
+/* ── Handle ── */
+#cpk-handle{
+  width:36px;height:5px;
+  background:#D1D1D6;border-radius:3px;
+  margin:10px auto 0;
+}
+
+/* ── Header ── */
+#cpk-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px 8px;
+  border-bottom:1px solid #F2F2F7;
+}
+#cpk-title{
+  font-size:14px;font-weight:600;color:#1C1C1E;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
+}
+#cpk-cancel,#cpk-done{
+  background:none;border:none;
+  font-size:15px;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
+  padding:4px 8px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+#cpk-cancel{color:#8E8E93;}
+#cpk-done{color:#007AFF;font-weight:600;}
+#cpk-cancel:active{opacity:.5;}
+#cpk-done:active{opacity:.5;}
+
+/* ── Wheel Wrap ── */
+#cpk-wrap{
+  position:relative;
+  height:216px;
+  display:flex;
+  overflow:hidden;
+  margin:0 8px;
+}
+
+/* ── Columns ── */
+.cpk-col{
+  flex:1;
+  overflow:hidden;
+  position:relative;
+  cursor:grab;
+}
+.cpk-col:active{cursor:grabbing;}
+
+/* ── Scroll List ── */
+.cpk-scroll{
+  display:flex;flex-direction:column;
+  will-change:transform;
+}
+.cpk-item{
+  height:36px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;
+  font-weight:400;
+  color:#1C1C1E;
+  white-space:nowrap;
+  user-select:none;
+  -webkit-user-select:none;
+  flex-shrink:0;
+}
+.cpk-item.selected{
+  font-weight:500;
+}
+
+/* ── Selection Bar（中央の選択ライン） ── */
+#cpk-selector{
+  position:absolute;
+  top:50%;left:6px;right:6px;
+  height:36px;
+  transform:translateY(-50%);
+  background:rgba(116,116,128,.12);
+  border-radius:8px;
+  pointer-events:none;
+  z-index:2;
+}
+
+/* ── Fade（上下ぼかし） ── */
+#cpk-fade-top,#cpk-fade-bot{
+  position:absolute;
+  left:0;right:0;
+  height:90px;
+  pointer-events:none;
+  z-index:3;
+}
+#cpk-fade-top{
+  top:0;
+  background:linear-gradient(to bottom,rgba(255,255,255,.98) 0%,rgba(255,255,255,.7) 50%,transparent 100%);
+}
+#cpk-fade-bot{
+  bottom:0;
+  background:linear-gradient(to top,rgba(255,255,255,.98) 0%,rgba(255,255,255,.7) 50%,transparent 100%);
+}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+/* ── 定数 ── */
+const ITEM_H   = 36;   // 1行の高さ px
+const VISIBLE  = 6;    // 表示行数（中央1行 + 上下各2.5行）
+const PADDING  = Math.floor(VISIBLE / 2); // 上下の空白行数
+
+/* ── 状態 ── */
+let _activeTab = 'start'; // 'start' | 'end'
+let _cols = {};            // { y, m, d } → { el, items, cur, min, max }
+
+/* ── ユーティリティ ── */
+const _pad = n => String(n).padStart(2,'0');
+const _daysInMonth = (y,m) => new Date(y,m,0).getDate();
+const DOW = ['日','月','火','水','木','金','土'];
+const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+/* ── 列を構築 ── */
+function _buildCol(scrollEl, items, initIdx){
+  scrollEl.innerHTML = '';
+  // 上パディング
+  for(let i=0;i<PADDING;i++){
+    const d=document.createElement('div');
+    d.className='cpk-item';
+    scrollEl.appendChild(d);
+  }
+  // 実データ
+  items.forEach((label,i)=>{
+    const d=document.createElement('div');
+    d.className='cpk-item'+(i===initIdx?' selected':'');
+    d.textContent=label;
+    scrollEl.appendChild(d);
+  });
+  // 下パディング
+  for(let i=0;i<PADDING;i++){
+    const d=document.createElement('div');
+    d.className='cpk-item';
+    scrollEl.appendChild(d);
+  }
+  // 初期位置
+  scrollEl.style.transform=`translateY(${-initIdx*ITEM_H}px)`;
+}
+
+/* ── 選択インデックスを変更（アニメーション付き） ── */
+function _setIdx(col, idx, animate){
+  idx = Math.max(0, Math.min(col.items.length-1, idx));
+  col.cur = idx;
+  col.el.style.transition = animate ? 'transform .2s cubic-bezier(.25,.46,.45,.94)' : 'none';
+  col.el.style.transform  = `translateY(${-idx*ITEM_H}px)`;
+  // selected クラス更新
+  const children = col.el.querySelectorAll('.cpk-item');
+  children.forEach((c,i)=>{
+    const dataIdx = i - PADDING;
+    c.classList.toggle('selected', dataIdx === idx);
+  });
+}
+
+/* ── 年列アイテム ── */
+function _yearItems(){
+  const now = new Date().getFullYear();
+  const items=[], start=now-3, end=now+5;
+  for(let y=start;y<=end;y++) items.push(y+'年');
+  return {items, offset:start};
+}
+
+/* ── 月列アイテム ── */
+function _monthItems(){ return {items:MONTHS, offset:1}; }
+
+/* ── 日列アイテム ── */
+function _dayItems(y, m){
+  const n = _daysInMonth(y, m);
+  const items=[];
+  for(let d=1;d<=n;d++){
+    const dow = DOW[new Date(y,m-1,d).getDay()];
+    items.push(`${d}日(${dow})`);
+  }
+  return {items, offset:1};
+}
+
+/* ── 日列を再構築（年月変更時） ── */
+function _rebuildDays(){
+  const y = _cols.y.cur + _cols.y.offset;
+  const m = _cols.m.cur + _cols.m.offset;
+  const {items, offset} = _dayItems(y, m);
+  const prevDay = _cols.d.cur + _cols.d.offset;
+  const newIdx  = Math.min(prevDay, items.length) - offset;
+  _buildCol(_cols.d.el, items, newIdx);
+  _cols.d.items  = items;
+  _cols.d.offset = offset;
+  _cols.d.cur    = Math.max(0, newIdx);
+}
+
+/* ── 現在値を YYYY-MM-DD で返す ── */
+function _getValue(){
+  const y = _cols.y.cur + _cols.y.offset;
+  const m = _cols.m.cur + _cols.m.offset;
+  const d = _cols.d.cur + _cols.d.offset;
+  return `${y}-${_pad(m)}-${_pad(d)}`;
+}
+
+/* ── 表示文字列（トリガーボタン用） ── */
+function _getLabel(){
+  const y = _cols.y.cur + _cols.y.offset;
+  const m = _cols.m.cur + _cols.m.offset;
+  const d = _cols.d.cur + _cols.d.offset;
+  const dow = DOW[new Date(y,m-1,d).getDay()];
+  return `${y}/${_pad(m)}/${_pad(d)}(${dow})`;
+}
+
+/* ── タッチ慣性スクロール ── */
+const _boundCols = new Set();
+function _attachTouch(colKey, colObj){
+  const wrap = colObj.el.closest('.cpk-col');
+  if(_boundCols.has(wrap)) return; // 重複登録防止
+  _boundCols.add(wrap);
+  let startY    = 0;
+  let startOff  = 0;
+  let lastY     = 0;
+  let lastT     = 0;
+  let velY      = 0;
+  let rafId     = 0;
+  let curOffset = -colObj.cur * ITEM_H;
+
+  function _getOffset(){ return -colObj.cur * ITEM_H; }
+
+  function _applyOffset(off, animated){
+    el.style.transition = animated ? 'transform .2s cubic-bezier(.25,.46,.45,.94)' : 'none';
+    el.style.transform  = `translateY(${off}px)`;
+  }
+
+  function _snapTo(off, animated){
+    const idx = Math.round(-off / ITEM_H);
+    _setIdx(colObj, idx, animated);
+    // 年・月が変わったら日を再構築
+    if(colKey==='y'||colKey==='m') _rebuildDays();
+  }
+
+  wrap.addEventListener('touchstart', e=>{
+    cancelAnimationFrame(rafId);
+    const t = e.touches[0];
+    startY   = t.clientY;
+    lastY    = t.clientY;
+    lastT    = Date.now();
+    velY     = 0;
+    startOff = -colObj.cur * ITEM_H;
+    curOffset= startOff;
+    el.style.transition='none';
+    e.preventDefault();
+  },{passive:false});
+
+  wrap.addEventListener('touchmove', e=>{
+    const t   = e.touches[0];
+    const now = Date.now();
+    const dt  = Math.max(now - lastT, 1);
+    velY      = (t.clientY - lastY) / dt;
+    lastY     = t.clientY;
+    lastT     = now;
+
+    curOffset = startOff + (t.clientY - startY);
+    // 端のゴムバンド
+    const minOff = -(colObj.items.length-1)*ITEM_H;
+    const maxOff = 0;
+    if(curOffset > maxOff) curOffset = maxOff + (curOffset-maxOff)*0.3;
+    if(curOffset < minOff) curOffset = minOff + (curOffset-minOff)*0.3;
+
+    el.style.transform=`translateY(${curOffset}px)`;
+    e.preventDefault();
+  },{passive:false});
+
+  wrap.addEventListener('touchend', e=>{
+    // 慣性
+    let off = curOffset;
+    const decay = 0.94;
+    let v = velY * 16; // px/frame
+
+    function inertia(){
+      if(Math.abs(v) < 0.5){
+        _snapTo(off, true);
+        return;
+      }
+      off += v;
+      v   *= decay;
+      // 端クランプ
+      const minOff = -(colObj.items.length-1)*ITEM_H;
+      const maxOff = 0;
+      if(off > maxOff){ off=maxOff; v=0; }
+      if(off < minOff){ off=minOff; v=0; }
+      el.style.transform=`translateY(${off}px)`;
+      rafId = requestAnimationFrame(inertia);
+    }
+    rafId = requestAnimationFrame(inertia);
+  },{passive:true});
+
+  // マウス操作（PC用）
+  let mdY=0, mdOff=0, isDragging=false;
+  wrap.addEventListener('mousedown', e=>{
+    cancelAnimationFrame(rafId);
+    isDragging=true;
+    mdY   = e.clientY;
+    mdOff = -colObj.cur*ITEM_H;
+    el.style.transition='none';
+  });
+  wrap.addEventListener('mousemove', e=>{
+    if(!isDragging)return;
+    curOffset = mdOff+(e.clientY-mdY);
+    el.style.transform=`translateY(${curOffset}px)`;
+  });
+  wrap.addEventListener('mouseup', e=>{
+    if(!isDragging)return;
+    isDragging=false;
+    _snapTo(curOffset,true);
+  });
+  wrap.addEventListener('mouseleave', e=>{
+    if(!isDragging)return;
+    isDragging=false;
+    _snapTo(curOffset,true);
+  });
+}
+
+/* ── ピッカーを開く ── */
+window.cupertinoOpen = function(tab){
+  _activeTab = tab || 'start';
+
+  // 現在の値を読む
+  const inS  = document.getElementById('input-start')?.value;
+  const inE  = document.getElementById('input-end')?.value;
+  const ds   = (tab==='end' ? inE : inS) || inS || '';
+  const [iy,im,id] = ds ? ds.split('-').map(Number) : [new Date().getFullYear(), new Date().getMonth()+1, new Date().getDate()];
+
+  // タイトル
+  document.getElementById('cpk-title').textContent = tab==='end' ? '終了日を選択' : '開始日を選択';
+
+  // 年
+  const {items:yItems, offset:yOffset} = _yearItems();
+  const yIdx = Math.max(0, iy - yOffset);
+  const yScroll = document.getElementById('cpk-scroll-y');
+  _buildCol(yScroll, yItems, yIdx);
+  _cols.y = {el:yScroll, items:yItems, offset:yOffset, cur:yIdx};
+
+  // 月
+  const {items:mItems, offset:mOffset} = _monthItems();
+  const mIdx = Math.max(0, im - mOffset);
+  const mScroll = document.getElementById('cpk-scroll-m');
+  _buildCol(mScroll, mItems, mIdx);
+  _cols.m = {el:mScroll, items:mItems, offset:mOffset, cur:mIdx};
+
+  // 日
+  const {items:dItems, offset:dOffset} = _dayItems(iy, im);
+  const dIdx = Math.max(0, id - dOffset);
+  const dScroll = document.getElementById('cpk-scroll-d');
+  _buildCol(dScroll, dItems, dIdx);
+  _cols.d = {el:dScroll, items:dItems, offset:dOffset, cur:dIdx};
+
+  // タッチ登録（列が変わる可能性があるので毎回設定）
+  _attachTouch('y', _cols.y);
+  _attachTouch('m', _cols.m);
+  _attachTouch('d', _cols.d);
+
+  document.getElementById('cpk-overlay').classList.add('show');
+};
+
+/* ── 閉じる ── */
+window.cupertinoClose = function(){
+  document.getElementById('cpk-overlay').classList.remove('show');
+};
+
+/* ── 完了 ── */
+window.cupertainoDone = function(){
+  const val   = _getValue();
+  const label = _getLabel();
+
+  if(_activeTab === 'start'){
+    const inS = document.getElementById('input-start');
+    const inE = document.getElementById('input-end');
+    const sdS = document.getElementById('wp-start-date-display');
+    if(inS) inS.value = val;
+    if(sdS){ sdS.textContent=label; sdS.classList.remove('empty'); }
+    document.getElementById('wp-start-trigger')?.classList.add('is-set');
+    // 終了日が空か開始日より前なら合わせる
+    if(inE && (!inE.value || inE.value < val)){
+      inE.value = val;
+      const sdE = document.getElementById('wp-end-date-display');
+      if(sdE){ sdE.textContent=label; sdE.classList.remove('empty'); }
+      document.getElementById('wp-end-trigger')?.classList.add('is-set');
+    }
+  } else {
+    const inE = document.getElementById('input-end');
+    const sdE = document.getElementById('wp-end-date-display');
+    if(inE) inE.value = val;
+    if(sdE){ sdE.textContent=label; sdE.classList.remove('empty'); }
+    document.getElementById('wp-end-trigger')?.classList.add('is-set');
+  }
+
+  if(typeof checkSubmit==='function') checkSubmit();
+  cupertinoClose();
+};
+
+})();
+</script>
+
 
 
 <script>
