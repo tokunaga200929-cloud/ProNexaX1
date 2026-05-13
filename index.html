@@ -4032,13 +4032,13 @@ button,input,select,textarea{
 
 /* ── オーバーレイ ── */
 .wp-overlay{
-  position:absolute;inset:0;
+  position:fixed;inset:0;
   background:rgba(0,0,0,.48);
-  z-index:200;
+  z-index:400;
   display:flex;align-items:flex-end;
   opacity:0;pointer-events:none;
   transition:opacity .28s ease;
-  border-radius:34px;overflow:hidden;
+  overflow:hidden;
 }
 .wp-overlay.show{opacity:1;pointer-events:all;}
 
