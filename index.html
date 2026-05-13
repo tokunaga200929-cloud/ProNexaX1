@@ -22043,6 +22043,13 @@ function _onSelect(key) {
 
     if (key === 'personal') {
       /* 個人予定 → step3（詳細入力）へ直接 */
+      /* ★ バグ修正: prefillForm(null) が呼ばれる前に input-start / input-end へ
+         ダブルクリック日付(_presetDs)を直接セットする。
+         defaultDateStr() が古い値 or null を返すケースでも確実に日付が入る。 */
+      const _inS = document.getElementById('input-start');
+      const _inE = document.getElementById('input-end');
+      if (_inS && _presetDs) _inS.value = _presetDs;
+      if (_inE && _presetDs && !_inE.value) _inE.value = _presetDs;
       if (typeof goStep      === 'function') goStep(3);
       if (typeof prefillForm === 'function') prefillForm(null);
     } else {
@@ -22093,6 +22100,12 @@ window.catselClose = function(keepMainOv) {
       } else {
         /* 新規追加 → state だけ設定して catsel を開く */
         _orig(ds, null);                              // state(modalPresetDate等)設定
+        /* ★ バグ修正: _orig 内の goStep(1) 等で state が上書きされても
+           ダブルクリック日付(ds)を確実に保持しなおす */
+        if (ds) {
+          if (typeof window.modalPresetDate !== 'undefined') window.modalPresetDate = ds;
+          if (typeof window.selectedDate    !== 'undefined') window.selectedDate    = ds;
+        }
         const mainOv = document.getElementById('modal-overlay');
         if (mainOv) mainOv.classList.remove('show'); // catsel 表示中は非表示
         catselOpen();
