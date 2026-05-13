@@ -6940,21 +6940,15 @@ body.is-admin .admin-card-actions.admin-only {
         <input type="text" class="form-input" id="input-place" placeholder="例：千葉県 袖ヶ浦CC">
         <label class="form-label">日程</label>
         <div class="wp-trigger-row">
-          <div class="wp-trigger" id="wp-start-trigger" onclick="wpOpen('start')">
-            <span class="wp-trigger-lbl">開始日</span>
-            <span class="wp-trigger-val empty" id="wp-start-date-display">日付を選択</span>
+          <div style="flex:1;">
+            <label class="form-label" style="margin-bottom:4px;">開始日</label>
+            <input type="date" id="input-start" class="form-input" style="width:100%;font-size:15px;" oninput="checkSubmit();syncEndDate();">
           </div>
-          <div class="wp-trigger" id="wp-end-trigger" onclick="wpOpen('end')">
-            <span class="wp-trigger-lbl">終了日</span>
-            <span class="wp-trigger-val empty" id="wp-end-date-display">日付を選択</span>
+          <div style="flex:1;">
+            <label class="form-label" style="margin-bottom:4px;">終了日</label>
+            <input type="date" id="input-end" class="form-input" style="width:100%;font-size:15px;">
           </div>
         </div>
-        <div class="wp-time-trigger" id="wp-time-trigger" onclick="wpToggleTimed()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span id="wp-time-trigger-label">終日</span>
-        </div>
-        <input type="date" id="input-start" style="display:none;" oninput="checkSubmit()">
-        <input type="date" id="input-end" style="display:none;">
         <input type="time" id="input-start-time" step="900" style="display:none;">
         <input type="time" id="input-end-time" step="900" style="display:none;">
         <label class="form-label">メモ（任意）</label>
@@ -11765,6 +11759,7 @@ function prefillFormFromEvent(ev){
   document.getElementById('edit-banner').style.display='block';document.getElementById('sel-preview').innerHTML='';checkSubmit();
 }
 function checkSubmit(){const t=document.getElementById('input-title').value.trim(),s=document.getElementById('input-start').value;document.getElementById('modal-next-btn').disabled=!(t&&s);}
+function syncEndDate(){const s=document.getElementById('input-start').value,e=document.getElementById('input-end');if(s&&(!e.value||e.value<s))e.value=s;}
 function handleNextBtn(){if(currentStep===2){if(!selectedTour)return;goStep(3);prefillForm(selectedTour);}else if(currentStep===3){submitEvent();}}
 function submitEvent(){
   const title=document.getElementById('input-title').value.trim();const place=document.getElementById('input-place').value.trim();const start=document.getElementById('input-start').value;const end=document.getElementById('input-end').value||start;const memo=document.getElementById('input-memo').value.trim();
