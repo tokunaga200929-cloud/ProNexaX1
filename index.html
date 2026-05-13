@@ -6964,451 +6964,679 @@ body.is-admin .admin-card-actions.admin-only {
   </div>
 </div>
 
-<!-- ★★★ Cupertino Style Wheel Picker ★★★ -->
-<div id="cpk-overlay" onclick="if(event.target===this)cupertinoClose()">
-  <div id="cpk-sheet" onclick="event.stopPropagation()">
-    <div id="cpk-handle"></div>
+<!-- ★★★ Cupertino Wheel Date Picker v2 ★★★ -->
+<div id="cpk-overlay" ontouchend="if(event.target===this){event.preventDefault();cupertinoClose();}">
+  <div id="cpk-sheet" ontouchend="event.stopPropagation()">
+    <div id="cpk-grip"></div>
+
+    <!-- ヘッダー -->
     <div id="cpk-header">
-      <button id="cpk-cancel" ontouchend="event.preventDefault();cupertinoClose();" onclick="cupertinoClose()">キャンセル</button>
-      <span id="cpk-title">日付を選択</span>
-      <button id="cpk-done" ontouchend="event.preventDefault();cupertainoDone();" onclick="cupertainoDone()">完了</button>
+      <button class="cpk-btn-cancel" id="cpk-cancel-btn"
+        ontouchend="event.preventDefault();event.stopPropagation();cupertinoClose();"
+        onclick="cupertinoClose()">キャンセル</button>
+      <span id="cpk-title-label">日付を選択</span>
+      <button class="cpk-btn-done" id="cpk-done-btn"
+        ontouchend="event.preventDefault();event.stopPropagation();cupertinoApply();"
+        onclick="cupertinoApply()">完了</button>
     </div>
-    <div id="cpk-wrap">
-      <div id="cpk-col-y" class="cpk-col"><div class="cpk-scroll" id="cpk-scroll-y"></div></div>
-      <div id="cpk-col-m" class="cpk-col"><div class="cpk-scroll" id="cpk-scroll-m"></div></div>
-      <div id="cpk-col-d" class="cpk-col"><div class="cpk-scroll" id="cpk-scroll-d"></div></div>
-      <div id="cpk-selector"></div>
-      <div id="cpk-fade-top"></div>
-      <div id="cpk-fade-bot"></div>
+
+    <!-- 開始・終了タブ -->
+    <div id="cpk-tabs">
+      <button class="cpk-tab active" id="cpk-tab-s"
+        ontouchend="event.preventDefault();cupertinoTab('start');"
+        onclick="cupertinoTab('start')">
+        <span class="cpk-tab-top">開始</span>
+        <span class="cpk-tab-val" id="cpk-tab-s-val">—</span>
+      </button>
+      <div id="cpk-tab-arrow">→</div>
+      <button class="cpk-tab" id="cpk-tab-e"
+        ontouchend="event.preventDefault();cupertinoTab('end');"
+        onclick="cupertinoTab('end')">
+        <span class="cpk-tab-top">終了</span>
+        <span class="cpk-tab-val" id="cpk-tab-e-val">—</span>
+      </button>
+      <button class="cpk-allday-btn" id="cpk-allday-btn"
+        ontouchend="event.preventDefault();cupertinoToggleAllday();"
+        onclick="cupertinoToggleAllday()">終日</button>
     </div>
+
+    <!-- ホイール本体 -->
+    <div id="cpk-wheels">
+      <!-- 選択ハイライトバー -->
+      <div id="cpk-bar"></div>
+      <!-- フェード上 -->
+      <div id="cpk-fade-t"></div>
+      <!-- フェード下 -->
+      <div id="cpk-fade-b"></div>
+
+      <!-- 月 -->
+      <div class="cpk-drum" id="cpk-drum-mo">
+        <div class="cpk-drum-inner" id="cpk-inner-mo"></div>
+      </div>
+      <!-- 日 -->
+      <div class="cpk-drum" id="cpk-drum-dy">
+        <div class="cpk-drum-inner" id="cpk-inner-dy"></div>
+      </div>
+      <!-- 年 -->
+      <div class="cpk-drum" id="cpk-drum-yr">
+        <div class="cpk-drum-inner" id="cpk-inner-yr"></div>
+      </div>
+      <!-- 区切り（時間あり時のみ表示） -->
+      <div class="cpk-sep" id="cpk-sep">—</div>
+      <!-- 時 -->
+      <div class="cpk-drum cpk-drum-time" id="cpk-drum-hr">
+        <div class="cpk-drum-inner" id="cpk-inner-hr"></div>
+      </div>
+      <!-- 分 -->
+      <div class="cpk-drum cpk-drum-time" id="cpk-drum-mn">
+        <div class="cpk-drum-inner" id="cpk-inner-mn"></div>
+      </div>
+    </div>
+
+    <!-- 分間隔（時間ありのみ） -->
+    <div id="cpk-interval-row">
+      <span id="cpk-interval-label">分の単位</span>
+      <div id="cpk-interval-btns">
+        <button class="cpk-iv" data-v="1"  ontouchend="event.preventDefault();cupertinoSetInterval(1);"  onclick="cupertinoSetInterval(1)">1</button>
+        <button class="cpk-iv" data-v="5"  ontouchend="event.preventDefault();cupertinoSetInterval(5);"  onclick="cupertinoSetInterval(5)">5</button>
+        <button class="cpk-iv active" data-v="15" ontouchend="event.preventDefault();cupertinoSetInterval(15);" onclick="cupertinoSetInterval(15)">15</button>
+        <button class="cpk-iv" data-v="30" ontouchend="event.preventDefault();cupertinoSetInterval(30);" onclick="cupertinoSetInterval(30)">30</button>
+        <button class="cpk-iv" data-v="60" ontouchend="event.preventDefault();cupertinoSetInterval(60);" onclick="cupertinoSetInterval(60)">60</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <style>
-/* ── Cupertino Picker Overlay ── */
-#cpk-overlay{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.45);
-  z-index:9000;
-  display:flex;align-items:flex-end;
-  opacity:0;pointer-events:none;
-  transition:opacity .25s ease;
+/* ================================================================
+   Cupertino Wheel Picker v2 — CSS
+   ================================================================ */
+
+/* ── Overlay ── */
+#cpk-overlay {
+  position: fixed; inset: 0;
+  z-index: 9000;
+  background: rgba(0,0,0,.48);
+  display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none;
+  transition: opacity .22s ease;
 }
-#cpk-overlay.show{opacity:1;pointer-events:auto;}
+#cpk-overlay.open { opacity: 1; pointer-events: auto; }
 
 /* ── Sheet ── */
-#cpk-sheet{
-  width:100%;
-  background:#ffffff;
-  border-radius:16px 16px 0 0;
-  padding-bottom:env(safe-area-inset-bottom,16px);
-  transform:translateY(100%);
-  transition:transform .32s cubic-bezier(.32,.72,.25,1);
-  box-shadow:0 -2px 20px rgba(0,0,0,.15);
+#cpk-sheet {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 18px 18px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+  box-shadow: 0 -4px 32px rgba(0,0,0,.14);
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.32,.72,.25,1);
+  will-change: transform;
 }
-#cpk-overlay.show #cpk-sheet{transform:translateY(0);}
+:root[data-theme="dark"] #cpk-sheet { background: #1C1C1E; }
+#cpk-overlay.open #cpk-sheet { transform: translateY(0); }
 
-/* ── Handle ── */
-#cpk-handle{
-  width:36px;height:5px;
-  background:#D1D1D6;border-radius:3px;
-  margin:10px auto 0;
+/* ── Grip ── */
+#cpk-grip {
+  width: 36px; height: 5px;
+  background: #D1D1D6; border-radius: 3px;
+  margin: 10px auto 0;
 }
+:root[data-theme="dark"] #cpk-grip { background: #48484A; }
 
 /* ── Header ── */
-#cpk-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 16px 8px;
-  border-bottom:1px solid #F2F2F7;
+#cpk-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px 8px;
+  border-bottom: .5px solid rgba(60,60,67,.18);
 }
-#cpk-title{
-  font-size:14px;font-weight:600;color:#1C1C1E;
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
+:root[data-theme="dark"] #cpk-header { border-bottom-color: rgba(255,255,255,.12); }
+#cpk-title-label {
+  font-size: 14px; font-weight: 600; color: #1C1C1E;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
 }
-#cpk-cancel,#cpk-done{
-  background:none;border:none;
-  font-size:15px;
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
-  padding:4px 8px;
-  cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-}
-#cpk-cancel{color:#8E8E93;}
-#cpk-done{color:#007AFF;font-weight:600;}
-#cpk-cancel:active{opacity:.5;}
-#cpk-done:active{opacity:.5;}
+:root[data-theme="dark"] #cpk-title-label { color: #F2F2F7; }
 
-/* ── Wheel Wrap ── */
-#cpk-wrap{
-  position:relative;
-  height:216px;
-  display:flex;
-  overflow:hidden;
-  margin:0 8px;
+.cpk-btn-cancel, .cpk-btn-done {
+  background: none; border: none; padding: 4px 6px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 15px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.cpk-btn-cancel { color: #8E8E93; font-weight: 400; }
+.cpk-btn-done   { color: #007AFF; font-weight: 600; }
+.cpk-btn-cancel:active, .cpk-btn-done:active { opacity: .5; }
+:root[data-theme="dark"] .cpk-btn-cancel { color: #636366; }
+
+/* ── Tabs ── */
+#cpk-tabs {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 16px 8px;
+  border-bottom: .5px solid rgba(60,60,67,.12);
+}
+:root[data-theme="dark"] #cpk-tabs { border-bottom-color: rgba(255,255,255,.08); }
+.cpk-tab {
+  flex: 1; background: #F2F2F7; border: none;
+  border-radius: 10px; padding: 8px 10px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  cursor: pointer; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .12s;
+}
+:root[data-theme="dark"] .cpk-tab { background: #2C2C2E; }
+.cpk-tab.active {
+  background: rgba(0,122,255,.12);
+  outline: 1.5px solid rgba(0,122,255,.5);
+}
+.cpk-tab:active { opacity: .7; }
+.cpk-tab-top {
+  font-size: 10px; font-weight: 600; color: #8E8E93; text-transform: uppercase; letter-spacing: .4px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+}
+.cpk-tab.active .cpk-tab-top { color: #007AFF; }
+.cpk-tab-val {
+  font-size: 13px; font-weight: 500; color: #1C1C1E;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  white-space: nowrap;
+}
+:root[data-theme="dark"] .cpk-tab-val { color: #F2F2F7; }
+#cpk-tab-arrow {
+  font-size: 14px; color: #C7C7CC; flex-shrink: 0;
+}
+.cpk-allday-btn {
+  background: #F2F2F7; border: none; border-radius: 10px;
+  padding: 8px 12px; font-size: 13px; font-weight: 500; color: #1C1C1E;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  cursor: pointer; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  transition: background .12s, color .12s;
+}
+.cpk-allday-btn.active { background: #007AFF; color: #fff; }
+:root[data-theme="dark"] .cpk-allday-btn { background: #2C2C2E; color: #F2F2F7; }
+:root[data-theme="dark"] .cpk-allday-btn.active { background: #0A84FF; }
+
+/* ── Wheels ── */
+#cpk-wheels {
+  position: relative;
+  display: flex; align-items: center;
+  height: 220px;
+  padding: 0 8px;
+  overflow: hidden;
+  user-select: none; -webkit-user-select: none;
 }
 
-/* ── Columns ── */
-.cpk-col{
-  flex:1;
-  overflow:hidden;
-  position:relative;
-  cursor:grab;
+/* 選択バー */
+#cpk-bar {
+  position: absolute; left: 8px; right: 8px;
+  top: 50%; transform: translateY(-50%);
+  height: 44px;
+  background: rgba(116,116,128,.10);
+  border-radius: 10px;
+  pointer-events: none; z-index: 2;
 }
-.cpk-col:active{cursor:grabbing;}
+:root[data-theme="dark"] #cpk-bar { background: rgba(255,255,255,.10); }
 
-/* ── Scroll List ── */
-.cpk-scroll{
-  display:flex;flex-direction:column;
-  will-change:transform;
+/* フェード */
+#cpk-fade-t, #cpk-fade-b {
+  position: absolute; left: 0; right: 0;
+  height: 88px; pointer-events: none; z-index: 3;
 }
-.cpk-item{
-  height:36px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;
-  font-weight:400;
-  color:#1C1C1E;
-  white-space:nowrap;
-  user-select:none;
-  -webkit-user-select:none;
-  flex-shrink:0;
+#cpk-fade-t {
+  top: 0;
+  background: linear-gradient(to bottom,
+    rgba(255,255,255,1) 0%,
+    rgba(255,255,255,.85) 40%,
+    transparent 100%);
 }
-.cpk-item.selected{
-  font-weight:500;
+#cpk-fade-b {
+  bottom: 0;
+  background: linear-gradient(to top,
+    rgba(255,255,255,1) 0%,
+    rgba(255,255,255,.85) 40%,
+    transparent 100%);
 }
-
-/* ── Selection Bar（中央の選択ライン） ── */
-#cpk-selector{
-  position:absolute;
-  top:50%;left:6px;right:6px;
-  height:36px;
-  transform:translateY(-50%);
-  background:rgba(116,116,128,.12);
-  border-radius:8px;
-  pointer-events:none;
-  z-index:2;
+:root[data-theme="dark"] #cpk-fade-t {
+  background: linear-gradient(to bottom, rgba(28,28,30,1) 0%, rgba(28,28,30,.85) 40%, transparent 100%);
+}
+:root[data-theme="dark"] #cpk-fade-b {
+  background: linear-gradient(to top, rgba(28,28,30,1) 0%, rgba(28,28,30,.85) 40%, transparent 100%);
 }
 
-/* ── Fade（上下ぼかし） ── */
-#cpk-fade-top,#cpk-fade-bot{
-  position:absolute;
-  left:0;right:0;
-  height:90px;
-  pointer-events:none;
-  z-index:3;
+/* ドラム列 */
+.cpk-drum {
+  flex: 1; height: 100%;
+  overflow: hidden; position: relative;
+  touch-action: none;
 }
-#cpk-fade-top{
-  top:0;
-  background:linear-gradient(to bottom,rgba(255,255,255,.98) 0%,rgba(255,255,255,.7) 50%,transparent 100%);
+.cpk-drum-time { flex: .7; }
+.cpk-sep {
+  flex: 0 0 18px; text-align: center;
+  font-size: 18px; font-weight: 300; color: #8E8E93;
+  align-self: center; padding-top: 0;
+  display: none; /* 終日時は非表示 */
 }
-#cpk-fade-bot{
-  bottom:0;
-  background:linear-gradient(to top,rgba(255,255,255,.98) 0%,rgba(255,255,255,.7) 50%,transparent 100%);
+
+/* ドラム内スクロールコンテナ */
+.cpk-drum-inner {
+  display: flex; flex-direction: column;
+  will-change: transform;
+  transform: translateY(0);
 }
+
+/* 各アイテム行 */
+.cpk-cell {
+  height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 21px; font-weight: 300;
+  color: #1C1C1E;
+  white-space: nowrap; flex-shrink: 0;
+  transition: font-weight .1s, color .1s;
+}
+:root[data-theme="dark"] .cpk-cell { color: #F2F2F7; }
+.cpk-cell.sel {
+  font-weight: 500;
+  color: #000000;
+}
+:root[data-theme="dark"] .cpk-cell.sel { color: #FFFFFF; }
+
+/* ── Interval row ── */
+#cpk-interval-row {
+  display: none; /* 終日時は非表示 */
+  align-items: center; justify-content: space-between;
+  padding: 8px 16px 12px;
+  border-top: .5px solid rgba(60,60,67,.12);
+}
+:root[data-theme="dark"] #cpk-interval-row { border-top-color: rgba(255,255,255,.08); }
+#cpk-interval-label {
+  font-size: 12px; color: #8E8E93;
+  font-family: -apple-system, sans-serif;
+}
+#cpk-interval-btns { display: flex; gap: 6px; }
+.cpk-iv {
+  background: #F2F2F7; border: none; border-radius: 8px;
+  padding: 5px 10px; font-size: 13px; font-weight: 500; color: #1C1C1E;
+  font-family: -apple-system, sans-serif;
+  cursor: pointer; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .12s, color .12s;
+}
+.cpk-iv.active { background: #007AFF; color: #fff; }
+:root[data-theme="dark"] .cpk-iv { background: #2C2C2E; color: #F2F2F7; }
+:root[data-theme="dark"] .cpk-iv.active { background: #0A84FF; }
 </style>
 
 <script>
+/* ================================================================
+   Cupertino Wheel Picker v2 — JavaScript
+   ================================================================ */
 (function(){
 'use strict';
 
 /* ── 定数 ── */
-const ITEM_H   = 36;   // 1行の高さ px
-const VISIBLE  = 6;    // 表示行数（中央1行 + 上下各2.5行）
-const PADDING  = Math.floor(VISIBLE / 2); // 上下の空白行数
+const ROW_H   = 44;   // セルの高さ px
+const PAD     = 2;    // 上下パディング行数（空白行）
 
-/* ── 状態 ── */
-let _activeTab = 'start'; // 'start' | 'end'
-let _cols = {};            // { y, m, d } → { el, items, cur, min, max }
+/* ── グローバル状態 ── */
+const S = {
+  tab:      'start',  // 'start'|'end'
+  allday:   true,
+  interval: 15,
+  start: { yr:0, mo:0, dy:0, hr:9,  mn:0  },
+  end:   { yr:0, mo:0, dy:0, hr:10, mn:0  },
+};
 
-/* ── ユーティリティ ── */
-const _pad = n => String(n).padStart(2,'0');
-const _daysInMonth = (y,m) => new Date(y,m,0).getDate();
-const DOW = ['日','月','火','水','木','金','土'];
-const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+/* ── 日付ユーティリティ ── */
+const PAD2 = n => String(n).padStart(2,'0');
+const DOW  = ['日','月','火','水','木','金','土'];
+const MLAB = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const daysInMonth = (y,m) => new Date(y,m,0).getDate();
 
-/* ── 列を構築 ── */
-function _buildCol(scrollEl, items, initIdx){
-  scrollEl.innerHTML = '';
-  // 上パディング
-  for(let i=0;i<PADDING;i++){
-    const d=document.createElement('div');
-    d.className='cpk-item';
-    scrollEl.appendChild(d);
-  }
-  // 実データ
-  items.forEach((label,i)=>{
-    const d=document.createElement('div');
-    d.className='cpk-item'+(i===initIdx?' selected':'');
-    d.textContent=label;
-    scrollEl.appendChild(d);
-  });
-  // 下パディング
-  for(let i=0;i<PADDING;i++){
-    const d=document.createElement('div');
-    d.className='cpk-item';
-    scrollEl.appendChild(d);
-  }
-  // 初期位置
-  scrollEl.style.transform=`translateY(${-initIdx*ITEM_H}px)`;
+function dsToObj(ds, tm){
+  if(!ds) return null;
+  const [y,m,d] = ds.split('-').map(Number);
+  let hr=0,mn=0;
+  if(tm){ const [h,min]=tm.split(':').map(Number); hr=h||0; mn=min||0; }
+  return {yr:y, mo:m, dy:d, hr, mn};
+}
+function objToDs(o){ return `${o.yr}-${PAD2(o.mo)}-${PAD2(o.dy)}`; }
+function objToTm(o){ return `${PAD2(o.hr)}:${PAD2(o.mn)}`; }
+function objLabel(o, allday){
+  const dow = DOW[new Date(o.yr, o.mo-1, o.dy).getDay()];
+  const base = `${o.yr}/${PAD2(o.mo)}/${PAD2(o.dy)}(${dow})`;
+  return allday ? base : `${base} ${PAD2(o.hr)}:${PAD2(o.mn)}`;
 }
 
-/* ── 選択インデックスを変更（アニメーション付き） ── */
-function _setIdx(col, idx, animate){
-  idx = Math.max(0, Math.min(col.items.length-1, idx));
-  col.cur = idx;
-  col.el.style.transition = animate ? 'transform .2s cubic-bezier(.25,.46,.45,.94)' : 'none';
-  col.el.style.transform  = `translateY(${-idx*ITEM_H}px)`;
-  // selected クラス更新
-  const children = col.el.querySelectorAll('.cpk-item');
-  children.forEach((c,i)=>{
-    const dataIdx = i - PADDING;
-    c.classList.toggle('selected', dataIdx === idx);
-  });
-}
+/* ── ドラムコントローラー ── */
+function Drum(innerId, items, initIdx){
+  const el   = document.getElementById(innerId);
+  let cur    = Math.max(0, Math.min(items.length-1, initIdx));
+  let yOff   = -cur * ROW_H;  // 現在のpx位置
+  let rafId  = 0;
 
-/* ── 年列アイテム ── */
-function _yearItems(){
-  const now = new Date().getFullYear();
-  const items=[], start=now-3, end=now+5;
-  for(let y=start;y<=end;y++) items.push(y+'年');
-  return {items, offset:start};
-}
-
-/* ── 月列アイテム ── */
-function _monthItems(){ return {items:MONTHS, offset:1}; }
-
-/* ── 日列アイテム ── */
-function _dayItems(y, m){
-  const n = _daysInMonth(y, m);
-  const items=[];
-  for(let d=1;d<=n;d++){
-    const dow = DOW[new Date(y,m-1,d).getDay()];
-    items.push(`${d}日(${dow})`);
-  }
-  return {items, offset:1};
-}
-
-/* ── 日列を再構築（年月変更時） ── */
-function _rebuildDays(){
-  const y = _cols.y.cur + _cols.y.offset;
-  const m = _cols.m.cur + _cols.m.offset;
-  const {items, offset} = _dayItems(y, m);
-  const prevDay = _cols.d.cur + _cols.d.offset;
-  const newIdx  = Math.min(prevDay, items.length) - offset;
-  _buildCol(_cols.d.el, items, newIdx);
-  _cols.d.items  = items;
-  _cols.d.offset = offset;
-  _cols.d.cur    = Math.max(0, newIdx);
-}
-
-/* ── 現在値を YYYY-MM-DD で返す ── */
-function _getValue(){
-  const y = _cols.y.cur + _cols.y.offset;
-  const m = _cols.m.cur + _cols.m.offset;
-  const d = _cols.d.cur + _cols.d.offset;
-  return `${y}-${_pad(m)}-${_pad(d)}`;
-}
-
-/* ── 表示文字列（トリガーボタン用） ── */
-function _getLabel(){
-  const y = _cols.y.cur + _cols.y.offset;
-  const m = _cols.m.cur + _cols.m.offset;
-  const d = _cols.d.cur + _cols.d.offset;
-  const dow = DOW[new Date(y,m-1,d).getDay()];
-  return `${y}/${_pad(m)}/${_pad(d)}(${dow})`;
-}
-
-/* ── タッチ慣性スクロール ── */
-const _boundCols = new Set();
-function _attachTouch(colKey, colObj){
-  const wrap = colObj.el.closest('.cpk-col');
-  if(_boundCols.has(wrap)) return; // 重複登録防止
-  _boundCols.add(wrap);
-  let startY    = 0;
-  let startOff  = 0;
-  let lastY     = 0;
-  let lastT     = 0;
-  let velY      = 0;
-  let rafId     = 0;
-  let curOffset = -colObj.cur * ITEM_H;
-
-  function _getOffset(){ return -colObj.cur * ITEM_H; }
-
-  function _applyOffset(off, animated){
-    el.style.transition = animated ? 'transform .2s cubic-bezier(.25,.46,.45,.94)' : 'none';
-    el.style.transform  = `translateY(${off}px)`;
+  /* セルを構築 */
+  function build(){
+    el.innerHTML = '';
+    // 上パディング
+    for(let i=0;i<PAD;i++){
+      const c=document.createElement('div');
+      c.className='cpk-cell';
+      el.appendChild(c);
+    }
+    // データ行
+    items.forEach((lbl,i)=>{
+      const c=document.createElement('div');
+      c.className='cpk-cell'+(i===cur?' sel':'');
+      c.textContent=lbl;
+      el.appendChild(c);
+    });
+    // 下パディング
+    for(let i=0;i<PAD;i++){
+      const c=document.createElement('div');
+      c.className='cpk-cell';
+      el.appendChild(c);
+    }
+    _applyTransform(false);
   }
 
-  function _snapTo(off, animated){
-    const idx = Math.round(-off / ITEM_H);
-    _setIdx(colObj, idx, animated);
-    // 年・月が変わったら日を再構築
-    if(colKey==='y'||colKey==='m') _rebuildDays();
+  function _applyTransform(anim){
+    el.style.transition = anim ? 'transform .18s cubic-bezier(.25,.46,.45,.94)' : 'none';
+    el.style.transform  = `translateY(${yOff}px)`;
+  }
+
+  function _clamp(off){
+    return Math.max(-(items.length-1)*ROW_H, Math.min(0, off));
+  }
+
+  function _snapNearest(off, anim){
+    const idx = Math.round(-off / ROW_H);
+    const clamped = Math.max(0, Math.min(items.length-1, idx));
+    cur  = clamped;
+    yOff = -clamped * ROW_H;
+    _applyTransform(anim);
+    // sel クラス更新
+    el.querySelectorAll('.cpk-cell').forEach((c,i)=>{
+      c.classList.toggle('sel', i-PAD === cur);
+    });
+  }
+
+  /* タッチ処理 */
+  const wrap = el.closest('.cpk-drum');
+  let t0=0, y0=0, off0=0, lastY=0, lastT=0, vel=0;
+
+  function onStart(clientY){
+    cancelAnimationFrame(rafId);
+    t0=Date.now(); y0=clientY; off0=yOff;
+    lastY=clientY; lastT=t0; vel=0;
+    el.style.transition='none';
+  }
+  function onMove(clientY){
+    const dy = clientY - y0;
+    let next = off0 + dy;
+    // ゴムバンド
+    const min = -(items.length-1)*ROW_H;
+    if(next>0)  next = next*0.25;
+    if(next<min) next = min + (next-min)*0.25;
+    yOff = next;
+    el.style.transform=`translateY(${yOff}px)`;
+    // 速度計算
+    const now=Date.now(), dt=Math.max(now-lastT,1);
+    vel = (clientY-lastY)/dt;
+    lastY=clientY; lastT=now;
+  }
+  function onEnd(){
+    // 慣性
+    let v = vel * 14;
+    let off = yOff;
+    function step(){
+      if(Math.abs(v)<0.3){
+        _snapNearest(off, true);
+        return;
+      }
+      off += v; v *= 0.92;
+      const min=-(items.length-1)*ROW_H;
+      if(off>0){off=0;v=0;}
+      if(off<min){off=min;v=0;}
+      el.style.transform=`translateY(${off}px)`;
+      rafId=requestAnimationFrame(step);
+    }
+    yOff=off;
+    rafId=requestAnimationFrame(step);
   }
 
   wrap.addEventListener('touchstart', e=>{
-    cancelAnimationFrame(rafId);
-    const t = e.touches[0];
-    startY   = t.clientY;
-    lastY    = t.clientY;
-    lastT    = Date.now();
-    velY     = 0;
-    startOff = -colObj.cur * ITEM_H;
-    curOffset= startOff;
-    el.style.transition='none';
-    e.preventDefault();
+    e.preventDefault(); e.stopPropagation();
+    onStart(e.touches[0].clientY);
   },{passive:false});
-
   wrap.addEventListener('touchmove', e=>{
-    const t   = e.touches[0];
-    const now = Date.now();
-    const dt  = Math.max(now - lastT, 1);
-    velY      = (t.clientY - lastY) / dt;
-    lastY     = t.clientY;
-    lastT     = now;
-
-    curOffset = startOff + (t.clientY - startY);
-    // 端のゴムバンド
-    const minOff = -(colObj.items.length-1)*ITEM_H;
-    const maxOff = 0;
-    if(curOffset > maxOff) curOffset = maxOff + (curOffset-maxOff)*0.3;
-    if(curOffset < minOff) curOffset = minOff + (curOffset-minOff)*0.3;
-
-    el.style.transform=`translateY(${curOffset}px)`;
     e.preventDefault();
+    onMove(e.touches[0].clientY);
   },{passive:false});
-
   wrap.addEventListener('touchend', e=>{
-    // 慣性
-    let off = curOffset;
-    const decay = 0.94;
-    let v = velY * 16; // px/frame
+    e.preventDefault();
+    onEnd();
+  },{passive:false});
+  wrap.addEventListener('touchcancel', e=>{ e.preventDefault(); _snapNearest(yOff,true); },{passive:false});
 
-    function inertia(){
-      if(Math.abs(v) < 0.5){
-        _snapTo(off, true);
-        return;
-      }
-      off += v;
-      v   *= decay;
-      // 端クランプ
-      const minOff = -(colObj.items.length-1)*ITEM_H;
-      const maxOff = 0;
-      if(off > maxOff){ off=maxOff; v=0; }
-      if(off < minOff){ off=minOff; v=0; }
-      el.style.transform=`translateY(${off}px)`;
-      rafId = requestAnimationFrame(inertia);
+  // マウス（PC）
+  let md=false;
+  wrap.addEventListener('mousedown', e=>{ md=true; onStart(e.clientY); });
+  wrap.addEventListener('mousemove', e=>{ if(md) onMove(e.clientY); });
+  wrap.addEventListener('mouseup',   e=>{ if(md){ md=false; onEnd(); } });
+  wrap.addEventListener('mouseleave',e=>{ if(md){ md=false; _snapNearest(yOff,true); } });
+
+  build();
+
+  return {
+    getIdx(){ return cur; },
+    setIdx(idx, anim=false){
+      cur  = Math.max(0, Math.min(items.length-1, idx));
+      yOff = -cur*ROW_H;
+      _applyTransform(anim);
+      el.querySelectorAll('.cpk-cell').forEach((c,i)=>{
+        c.classList.toggle('sel', i-PAD===cur);
+      });
+    },
+    rebuild(newItems, newIdx){
+      items = newItems;
+      cur   = Math.max(0, Math.min(items.length-1, newIdx));
+      yOff  = -cur*ROW_H;
+      build();
+    },
+  };
+}
+
+/* ── ドラムインスタンス ── */
+let drums = {};
+
+/* ── アイテムリスト生成 ── */
+function yearItems(){ const a=[]; for(let y=new Date().getFullYear()-3;y<=new Date().getFullYear()+5;y++) a.push(y+'年'); return a; }
+function yearOffset(){ return new Date().getFullYear()-3; }
+function moItems()  { return MLAB; }
+function dyItems(y,m){ const a=[]; const n=daysInMonth(y,m); for(let d=1;d<=n;d++) a.push(`${d}日(${DOW[new Date(y,m-1,d).getDay()]})`); return a; }
+function hrItems()  { const a=[]; for(let h=0;h<24;h++) a.push(PAD2(h)+'時'); return a; }
+function mnItems(iv){ const a=[]; for(let m=0;m<60;m+=iv) a.push(PAD2(m)+'分'); return a; }
+
+/* ── ドラムをフルビルド ── */
+function buildDrums(obj){
+  const yOff= yearOffset();
+  const yr  = obj.yr || new Date().getFullYear();
+  const mo  = obj.mo || (new Date().getMonth()+1);
+  const dy  = obj.dy || new Date().getDate();
+  const hr  = obj.hr || 0;
+  const mn  = obj.mn || 0;
+  const iv  = S.interval;
+
+  drums.yr = Drum('cpk-inner-yr', yearItems(),  yr - yOff);
+  drums.mo = Drum('cpk-inner-mo', moItems(),     mo - 1);
+  drums.dy = Drum('cpk-inner-dy', dyItems(yr,mo), dy - 1);
+  if(!S.allday){
+    drums.hr = Drum('cpk-inner-hr', hrItems(),    hr);
+    drums.mn = Drum('cpk-inner-mn', mnItems(iv),  Math.round(mn/iv));
+  }
+}
+
+/* ── ドラムから現在値を読む ── */
+function readDrums(){
+  const yOff = yearOffset();
+  const yr = (drums.yr?.getIdx()??0) + yOff;
+  const mo = (drums.mo?.getIdx()??0) + 1;
+  let   dy = (drums.dy?.getIdx()??0) + 1;
+  const maxD = daysInMonth(yr, mo);
+  if(dy>maxD) dy=maxD;
+  const hr = S.allday ? 0 : (drums.hr?.getIdx()??0);
+  const mn = S.allday ? 0 : (drums.mn?.getIdx()??0) * S.interval;
+  return {yr, mo, dy, hr, mn};
+}
+
+/* ── タブラベル更新 ── */
+function refreshTabLabels(){
+  document.getElementById('cpk-tab-s-val').textContent = objLabel(S.start, S.allday);
+  document.getElementById('cpk-tab-e-val').textContent = objLabel(S.end,   S.allday);
+}
+
+/* ── 終日UI切替 ── */
+function applyAlldayUI(){
+  const timeEls = ['cpk-drum-hr','cpk-drum-mn','cpk-sep','cpk-interval-row'];
+  timeEls.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    if(id==='cpk-sep'||id==='cpk-interval-row'){
+      el.style.display = S.allday ? 'none' : (id==='cpk-interval-row'?'flex':'block');
+    } else {
+      el.style.display = S.allday ? 'none' : '';
     }
-    rafId = requestAnimationFrame(inertia);
-  },{passive:true});
-
-  // マウス操作（PC用）
-  let mdY=0, mdOff=0, isDragging=false;
-  wrap.addEventListener('mousedown', e=>{
-    cancelAnimationFrame(rafId);
-    isDragging=true;
-    mdY   = e.clientY;
-    mdOff = -colObj.cur*ITEM_H;
-    el.style.transition='none';
   });
-  wrap.addEventListener('mousemove', e=>{
-    if(!isDragging)return;
-    curOffset = mdOff+(e.clientY-mdY);
-    el.style.transform=`translateY(${curOffset}px)`;
-  });
-  wrap.addEventListener('mouseup', e=>{
-    if(!isDragging)return;
-    isDragging=false;
-    _snapTo(curOffset,true);
-  });
-  wrap.addEventListener('mouseleave', e=>{
-    if(!isDragging)return;
-    isDragging=false;
-    _snapTo(curOffset,true);
-  });
+  document.getElementById('cpk-allday-btn').classList.toggle('active', S.allday);
 }
 
 /* ── ピッカーを開く ── */
 window.cupertinoOpen = function(tab){
-  _activeTab = tab || 'start';
+  S.tab = tab || 'start';
 
-  // 現在の値を読む
-  const inS  = document.getElementById('input-start')?.value;
-  const inE  = document.getElementById('input-end')?.value;
-  const ds   = (tab==='end' ? inE : inS) || inS || '';
-  const [iy,im,id] = ds ? ds.split('-').map(Number) : [new Date().getFullYear(), new Date().getMonth()+1, new Date().getDate()];
+  // 既存inputから値を読み込む
+  const dsS = document.getElementById('input-start')?.value || '';
+  const dsE = document.getElementById('input-end')?.value   || '';
+  const tmS = document.getElementById('input-start-time')?.value || '';
+  const tmE = document.getElementById('input-end-time')?.value   || '';
 
-  // タイトル
-  document.getElementById('cpk-title').textContent = tab==='end' ? '終了日を選択' : '開始日を選択';
+  const today = new Date();
+  const defObj = {yr:today.getFullYear(), mo:today.getMonth()+1, dy:today.getDate(), hr:9, mn:0};
 
-  // 年
-  const {items:yItems, offset:yOffset} = _yearItems();
-  const yIdx = Math.max(0, iy - yOffset);
-  const yScroll = document.getElementById('cpk-scroll-y');
-  _buildCol(yScroll, yItems, yIdx);
-  _cols.y = {el:yScroll, items:yItems, offset:yOffset, cur:yIdx};
+  S.start = dsToObj(dsS, tmS) || defObj;
+  S.end   = dsToObj(dsE, tmE) || {...defObj, hr:10};
 
-  // 月
-  const {items:mItems, offset:mOffset} = _monthItems();
-  const mIdx = Math.max(0, im - mOffset);
-  const mScroll = document.getElementById('cpk-scroll-m');
-  _buildCol(mScroll, mItems, mIdx);
-  _cols.m = {el:mScroll, items:mItems, offset:mOffset, cur:mIdx};
+  // allday判定（時刻inputが空ならallday）
+  S.allday = !tmS;
 
-  // 日
-  const {items:dItems, offset:dOffset} = _dayItems(iy, im);
-  const dIdx = Math.max(0, id - dOffset);
-  const dScroll = document.getElementById('cpk-scroll-d');
-  _buildCol(dScroll, dItems, dIdx);
-  _cols.d = {el:dScroll, items:dItems, offset:dOffset, cur:dIdx};
+  // タブ切替
+  cupertinoTab(S.tab, true); // silent=true でドラムだけ構築
 
-  // タッチ登録（列が変わる可能性があるので毎回設定）
-  _attachTouch('y', _cols.y);
-  _attachTouch('m', _cols.m);
-  _attachTouch('d', _cols.d);
+  // UI
+  applyAlldayUI();
+  refreshTabLabels();
 
-  document.getElementById('cpk-overlay').classList.add('show');
+  document.getElementById('cpk-allday-btn').classList.toggle('active', S.allday);
+  document.getElementById('cpk-overlay').classList.add('open');
+};
+
+/* ── タブ切替 ── */
+window.cupertinoTab = function(tab, silent){
+  // 前のタブの値を保存
+  if(!silent && drums.yr){
+    const prev = readDrums();
+    S[S.tab] = prev;
+    refreshTabLabels();
+  }
+
+  S.tab = tab;
+  document.getElementById('cpk-tab-s').classList.toggle('active', tab==='start');
+  document.getElementById('cpk-tab-e').classList.toggle('active', tab==='end');
+
+  // ドラムを再構築
+  buildDrums(tab==='start' ? S.start : S.end);
+};
+
+/* ── 終日トグル ── */
+window.cupertinoToggleAllday = function(){
+  // 現在値を保存してからトグル
+  if(drums.yr){
+    const cur = readDrums();
+    S[S.tab] = cur;
+  }
+  S.allday = !S.allday;
+  applyAlldayUI();
+  buildDrums(S[S.tab]);
+  refreshTabLabels();
+};
+
+/* ── 分間隔変更 ── */
+window.cupertinoSetInterval = function(iv){
+  S.interval = iv;
+  document.querySelectorAll('.cpk-iv').forEach(b=>{
+    b.classList.toggle('active', Number(b.dataset.v)===iv);
+  });
+  if(!S.allday && drums.mn){
+    const cur = readDrums();
+    S[S.tab] = cur;
+    const newMnItems = mnItems(iv);
+    const nearestIdx = Math.round((cur.mn||0)/iv);
+    drums.mn.rebuild(newMnItems, nearestIdx);
+  }
 };
 
 /* ── 閉じる ── */
 window.cupertinoClose = function(){
-  document.getElementById('cpk-overlay').classList.remove('show');
+  document.getElementById('cpk-overlay').classList.remove('open');
 };
 
 /* ── 完了 ── */
-window.cupertainoDone = function(){
-  const val   = _getValue();
-  const label = _getLabel();
-
-  if(_activeTab === 'start'){
-    const inS = document.getElementById('input-start');
-    const inE = document.getElementById('input-end');
-    const sdS = document.getElementById('wp-start-date-display');
-    if(inS) inS.value = val;
-    if(sdS){ sdS.textContent=label; sdS.classList.remove('empty'); }
-    document.getElementById('wp-start-trigger')?.classList.add('is-set');
-    // 終了日が空か開始日より前なら合わせる
-    if(inE && (!inE.value || inE.value < val)){
-      inE.value = val;
-      const sdE = document.getElementById('wp-end-date-display');
-      if(sdE){ sdE.textContent=label; sdE.classList.remove('empty'); }
-      document.getElementById('wp-end-trigger')?.classList.add('is-set');
-    }
-  } else {
-    const inE = document.getElementById('input-end');
-    const sdE = document.getElementById('wp-end-date-display');
-    if(inE) inE.value = val;
-    if(sdE){ sdE.textContent=label; sdE.classList.remove('empty'); }
-    document.getElementById('wp-end-trigger')?.classList.add('is-set');
+window.cupertinoApply = function(){
+  // 現在のドラム値を保存
+  if(drums.yr){
+    const cur = readDrums();
+    S[S.tab] = cur;
   }
 
-  if(typeof checkSubmit==='function') checkSubmit();
+  // input-hiddenに書き込む
+  function writeToInputs(obj, prefix){
+    const ds = objToDs(obj);
+    const el = document.getElementById(`input-${prefix}`);
+    if(el) el.value = ds;
+
+    const stEl = document.getElementById(`input-${prefix}-time`);
+    if(stEl) stEl.value = S.allday ? '' : objToTm(obj);
+
+    // トリガーボタン表示更新
+    const dispEl = document.getElementById(`wp-${prefix}-date-display`);
+    if(dispEl){
+      dispEl.textContent = objLabel(obj, S.allday);
+      dispEl.classList.remove('empty');
+    }
+    document.getElementById(`wp-${prefix}-trigger`)?.classList.add('is-set');
+  }
+
+  writeToInputs(S.start, 'start');
+  writeToInputs(S.end,   'end');
+
+  // 終了日が開始日より前なら修正
+  const dsS = objToDs(S.start), dsE = objToDs(S.end);
+  if(dsE < dsS){
+    S.end = {...S.start, hr: Math.min(S.start.hr+1,23), mn: S.start.mn};
+    writeToInputs(S.end, 'end');
+  }
+
+  if(typeof checkSubmit === 'function') checkSubmit();
   cupertinoClose();
 };
 
 })();
 </script>
+
 
 
 
