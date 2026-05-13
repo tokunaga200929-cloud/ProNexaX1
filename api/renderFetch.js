@@ -1,29 +1,22 @@
-// api/renderFetch.js  —  ProNexaX Server-side Render Fetch Engine v4
+// api/renderFetch.js  —  ProNexaX Server-side Render Fetch Engine v2
 // ================================================================
 // POST /api/renderFetch  { url: string }
 // → { ok: true,  html: string }
 // → { ok: false, error: string }
 //
-// 構成: Browserless.io のみ（Puppeteer/Chromium を使わない）
+// 依存:
+//   @sparticuz/chromium  123.0.1
+//   puppeteer-core       22.6.1
 //
-// 理由:
-//   Vercel Serverless は Amazon Linux 2023 ベース。
-//   @sparticuz/chromium が要求する libnss3.so が存在しないため、
-//   ローカル Chromium 起動は構造的に不可能。
-//   Browserless.io は外部サービス側で browser を管理するため
-//   Vercel 環境の OS ライブラリに依存しない。
-//
-// 事前設定:
-//   Vercel → Settings → Environment Variables
-//   BROWSERLESS_TOKEN = <your token>
-//   取得: https://browserless.io （Free tier: 1,000 units/month）
-//
-// Vercel config: maxDuration=30, memory=1024 (vercel.json に設定済み)
+// Vercel Serverless (Node 18+)
+//   maxDuration: 30s  / memory: 1024MB  (vercel.json に設定済み)
 // ================================================================
 
-const GOTO_TIMEOUT_MS  = 15000;
-const TOTAL_TIMEOUT_MS = 25000;
+// ── タイムアウト定数 ──────────────────────────────────────────────
+const GOTO_TIMEOUT_MS  = 15000;   // page.goto 上限 15s
+const TOTAL_TIMEOUT_MS = 25000;   // handler 全体の安全上限 25s
 
+// ── URL 安全チェック ─────────────────────────────────────────────
 function _isSafeUrl(url) {
   try {
     const u = new URL(url);
@@ -32,20 +25,109 @@ function _isSafeUrl(url) {
 }
 
 // ================================================================
-//  Browserless.io — /content エンドポイント
-//  POST { url, gotoOptions, userAgent }
-//  → rendered HTML text
+//  Puppeteer + @sparticuz/chromium
+//  Dynamic import: Vercel build 時に require() エラーを防ぐ。
+//  browser は必ず finally で close（zombie 防止）。
+// ================================================================
+async function fetchWithPuppeteer(url) {
+  // dynamic import — Vercel が tree-shake しないようにする
+  const chromium  = (await import('@sparticuz/chromium')).default;
+  const puppeteer = (await import('puppeteer-core')).default;
+
+  let browser = null;
+  let page    = null;
+
+  try {
+    // ── Vercel Serverless 向け launch オプション ──────────────────
+    // libnss3.so 等の欠落ライブラリを回避するために必須の引数を明示。
+    // chromium.args に含まれないケースがあるため個別に追加する。
+    //
+    // --no-sandbox / --disable-setuid-sandbox
+    //   Lambda 環境では root 権限で動くため sandbox が起動できない。
+    //   これがないと Chromium が即クラッシュする。
+    //
+    // --disable-dev-shm-usage
+    //   /dev/shm が 64MB に制限されている Lambda では共有メモリ不足。
+    //   これがないとレンダリング中に OOM が発生する。
+    //
+    // --single-process / --no-zygote
+    //   子プロセス fork を抑制。Lambda の PID 制限と fork 制約を回避。
+    //
+    // headless: 'new'
+    //   puppeteer-core v22 以降は 'new' を使用。
+    //   旧 chromium.headless (= true) だと非推奨警告 + 動作不安定。
+
+    const EXTRA_ARGS = [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--single-process',
+      '--no-zygote',
+    ];
+
+    // executablePath: Vercel Lambda の /tmp に展開されるパスを明示。
+    // 引数なしだと環境により誤パスを返すケースがある。
+    // @sparticuz/chromium v124 以降は同期関数だが await しても動作する。
+    browser = await puppeteer.launch({
+      args:            [...chromium.args, ...EXTRA_ARGS],
+      defaultViewport: chromium.defaultViewport,
+      executablePath:  await chromium.executablePath(),
+      headless:        'new',
+    });
+
+    console.info('[renderFetch] browser launched');
+
+    page = await browser.newPage();
+
+    // モバイル UA（ゴルフサイトはレスポンシブ版の方が軽い）
+    await page.setUserAgent(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) ' +
+      'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+    );
+
+    // 画像・フォント・メディアをブロック（メモリ節約・高速化）
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      const blocked = ['image', 'font', 'media', 'stylesheet'];
+      if (blocked.includes(req.resourceType())) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+
+    await page.goto(url, {
+      waitUntil: 'networkidle2',
+      timeout:   GOTO_TIMEOUT_MS,
+    });
+
+    const html = await page.content();
+    console.info(`[renderFetch] ✅ puppeteer: ${html.length} chars — ${url}`);
+    return html;
+
+  } finally {
+    // ★ zombie browser 完全防止
+    //    page.close() → browser.close() の順で確実に解放
+    if (page)    { try { await page.close();    } catch {} }
+    if (browser) { try { await browser.close(); } catch {} }
+    console.info('[renderFetch] browser closed (cleanup)');
+  }
+}
+
+// ================================================================
+//  Browserless.io 外部サービス（BROWSERLESS_TOKEN 設定時に優先）
+//  npm 依存ゼロ。Vercel の 250MB bundle 制限を回避できる。
+//  Free tier: 1,000 units/month  https://browserless.io
 // ================================================================
 async function fetchWithBrowserless(url) {
-  const token = process.env.BROWSERLESS_TOKEN;
-  if (!token) throw new Error('BROWSERLESS_TOKEN が未設定です');
-
+  const token    = process.env.BROWSERLESS_TOKEN;
   const endpoint = `https://chrome.browserless.io/content?token=${token}`;
 
   const res = await fetch(endpoint, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+    body:    JSON.stringify({
       url,
       gotoOptions: {
         waitUntil: 'networkidle2',
@@ -55,14 +137,10 @@ async function fetchWithBrowserless(url) {
         'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) ' +
         'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
     }),
-    signal: AbortSignal.timeout(GOTO_TIMEOUT_MS + 5000),
+    signal: AbortSignal.timeout(GOTO_TIMEOUT_MS + 3000),
   });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`Browserless HTTP ${res.status}: ${body.slice(0, 100)}`);
-  }
-
+  if (!res.ok) throw new Error(`Browserless HTTP ${res.status}`);
   const html = await res.text();
   console.info(`[renderFetch] ✅ browserless: ${html.length} chars — ${url}`);
   return html;
@@ -81,17 +159,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, error: 'Invalid or missing url' });
   }
 
-  console.info('[renderFetch] start:', url);
+  console.info('[renderFetch] handler start:', url);
 
-  // BROWSERLESS_TOKEN が未設定の場合は即座に失敗を返す
-  if (!process.env.BROWSERLESS_TOKEN) {
-    console.warn('[renderFetch] BROWSERLESS_TOKEN 未設定 — Vercel Environment Variables に設定してください');
-    return res.status(200).json({
-      ok: false,
-      error: 'BROWSERLESS_TOKEN not configured',
-    });
-  }
-
+  // handler 全体タイムアウト（TOTAL_TIMEOUT_MS = 25s）
+  // Vercel maxDuration=30s より短く設定し、response 返却を保証する
   let _timedOut = false;
   const totalTimer = setTimeout(() => {
     _timedOut = true;
@@ -102,10 +173,25 @@ export default async function handler(req, res) {
   let errorMsg = '';
 
   try {
-    html = await fetchWithBrowserless(url);
-  } catch (e) {
-    errorMsg = e.message;
-    console.warn('[renderFetch] ❌ browserless 失敗:', e.message);
+    // ── 優先1: Browserless.io（BROWSERLESS_TOKEN 設定時）──
+    if (process.env.BROWSERLESS_TOKEN && !_timedOut) {
+      try {
+        html = await fetchWithBrowserless(url);
+      } catch (e) {
+        console.warn('[renderFetch] browserless 失敗 → puppeteer へ:', e.message);
+      }
+    }
+
+    // ── 優先2: @sparticuz/chromium + puppeteer-core ──
+    if (!html && !_timedOut) {
+      try {
+        html = await fetchWithPuppeteer(url);
+      } catch (e) {
+        errorMsg = e.message;
+        console.warn('[renderFetch] puppeteer 失敗:', e.message);
+      }
+    }
+
   } finally {
     clearTimeout(totalTimer);
   }
