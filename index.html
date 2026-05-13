@@ -6815,83 +6815,7 @@ body.is-admin .admin-card-actions.admin-only {
     </div>
   </div><!-- /.modal-overlay -->
 
-  <!-- ★★★ iOSホイールピッカー v2（Apple純正カレンダー風） ★★★ -->
-  <div class="wp-overlay" id="wp-overlay" onclick="if(event.target===this)wpClose()">
-    <div class="wp-sheet" onclick="event.stopPropagation()">
-      <!-- ハンドルバー -->
-      <div class="wp-handle-bar"></div>
-      <!-- ヘッダー -->
-      <div class="wp-header">
-        <button class="wp-cancel-btn" onclick="wpClose()">キャンセル</button>
-        <span class="wp-title" id="wp-sheet-title">日時を選択</span>
-        <button class="wp-done-btn" onclick="wpDone()">完了</button>
-      </div>
-      <!-- 開始/終了タブ -->
-      <div class="wp-tabs">
-        <button class="wp-tab active" id="wp-tab-start" onclick="wpSwitchTab('start')">
-          <span class="wp-tab-label">開始日時</span>
-          <span class="wp-tab-val" id="wp-tab-start-val">—</span>
-        </button>
-        <button class="wp-tab" id="wp-tab-end" onclick="wpSwitchTab('end')">
-          <span class="wp-tab-label">終了日時</span>
-          <span class="wp-tab-val" id="wp-tab-end-val">—</span>
-        </button>
-      </div>
-      <!-- 終日トグル -->
-      <div class="wp-allday-row">
-        <span class="wp-allday-label">終日</span>
-        <div class="wp-allday-toggle" id="wp-allday-toggle" onclick="wpToggleAllDay()">
-          <div class="wp-allday-knob"></div>
-        </div>
-      </div>
-      <!-- ピッカー統合エリア：日付 | 時 | 分 (Apple純正風) -->
-      <div class="wp-picker-wrap" id="wp-picker-wrap">
-        <!-- 選択ライン -->
-        <div class="wp-selector-line"></div>
-        <!-- 上下グラデフェード -->
-        <div class="wp-fade-top"></div>
-        <div class="wp-fade-bot"></div>
-        <!-- 日付列（月日曜日合体） -->
-        <div class="wp-col wp-col-date" id="wp-col-date">
-          <div class="wp-scroll" id="wp-date-scroll"></div>
-        </div>
-        <!-- 時間列（終日時は非表示） -->
-        <div class="wp-col wp-col-hour" id="wp-col-hour">
-          <div class="wp-scroll" id="wp-hour-scroll"></div>
-        </div>
-        <!-- 分列（終日時は非表示） -->
-        <div class="wp-col wp-col-min" id="wp-col-min">
-          <div class="wp-scroll" id="wp-minute-scroll"></div>
-        </div>
-      </div>
-      <!-- 分インターバル選択 -->
-      <div class="wp-interval-row" id="wp-interval-row">
-        <span class="wp-interval-label">分の単位</span>
-        <div class="wp-interval-btns" id="wp-interval-btns">
-          <button class="wp-interval-btn" data-interval="1" onclick="wpSetInterval(1)">1</button>
-          <button class="wp-interval-btn is-active" data-interval="5" onclick="wpSetInterval(5)">5</button>
-          <button class="wp-interval-btn" data-interval="10" onclick="wpSetInterval(10)">10</button>
-          <button class="wp-interval-btn" data-interval="15" onclick="wpSetInterval(15)">15</button>
-          <button class="wp-interval-btn" data-interval="30" onclick="wpSetInterval(30)">30</button>
-        </div>
-      </div>
-      <!-- リマインドUI -->
-      <div class="wp-remind">
-        <button class="wp-bell-btn" id="wp-bell-btn" onclick="wpToggleBell()">
-          <svg class="bell-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-        </button>
-        <div class="wp-remind-info">
-          <span class="wp-remind-label">🔔 リマインド</span>
-          <button class="wp-remind-pill" id="wp-remind-pill" onclick="wpOpenRemind()">
-            <span id="wp-remind-text">30分前</span>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- wp-overlay は phone-inner直下（tdm-overlay付近）へ移動 -->
 
   <div class="modal-overlay" id="day-modal-overlay" onclick="closeDayModal()">
     <div class="modal-sheet" onclick="event.stopPropagation()">
@@ -6929,6 +6853,73 @@ body.is-admin .admin-card-actions.admin-only {
   <!-- page-search内に置くと overflow:hidden stacking contextに閉じ込め  -->
   <!-- られ iOS Safariでの表示・タッチイベントが破綻するため必ずここに置く -->
   <!-- ================================================================ -->
+  <!-- ★★★ iOSホイールピッカー v2（Apple純正カレンダー風） ★★★ -->
+  <!-- phone-inner直下に配置：position:fixed がviewport基準で正しく動作するため -->
+  <div class="wp-overlay" id="wp-overlay" onclick="if(event.target===this)wpClose()">
+    <div class="wp-sheet" onclick="event.stopPropagation()">
+      <div class="wp-handle-bar"></div>
+      <div class="wp-header">
+        <button class="wp-cancel-btn" onclick="wpClose()">キャンセル</button>
+        <span class="wp-title" id="wp-sheet-title">日時を選択</span>
+        <button class="wp-done-btn" onclick="wpDone()">完了</button>
+      </div>
+      <div class="wp-tabs">
+        <button class="wp-tab active" id="wp-tab-start" onclick="wpSwitchTab('start')">
+          <span class="wp-tab-label">開始日時</span>
+          <span class="wp-tab-val" id="wp-tab-start-val">—</span>
+        </button>
+        <button class="wp-tab" id="wp-tab-end" onclick="wpSwitchTab('end')">
+          <span class="wp-tab-label">終了日時</span>
+          <span class="wp-tab-val" id="wp-tab-end-val">—</span>
+        </button>
+      </div>
+      <div class="wp-allday-row">
+        <span class="wp-allday-label">終日</span>
+        <div class="wp-allday-toggle" id="wp-allday-toggle" onclick="wpToggleAllDay()">
+          <div class="wp-allday-knob"></div>
+        </div>
+      </div>
+      <div class="wp-picker-wrap" id="wp-picker-wrap">
+        <div class="wp-selector-line"></div>
+        <div class="wp-fade-top"></div>
+        <div class="wp-fade-bot"></div>
+        <div class="wp-col wp-col-date" id="wp-col-date">
+          <div class="wp-scroll" id="wp-date-scroll"></div>
+        </div>
+        <div class="wp-col wp-col-hour" id="wp-col-hour">
+          <div class="wp-scroll" id="wp-hour-scroll"></div>
+        </div>
+        <div class="wp-col wp-col-min" id="wp-col-min">
+          <div class="wp-scroll" id="wp-minute-scroll"></div>
+        </div>
+      </div>
+      <div class="wp-interval-row" id="wp-interval-row">
+        <span class="wp-interval-label">分の単位</span>
+        <div class="wp-interval-btns" id="wp-interval-btns">
+          <button class="wp-interval-btn" data-interval="1" onclick="wpSetInterval(1)">1</button>
+          <button class="wp-interval-btn is-active" data-interval="5" onclick="wpSetInterval(5)">5</button>
+          <button class="wp-interval-btn" data-interval="10" onclick="wpSetInterval(10)">10</button>
+          <button class="wp-interval-btn" data-interval="15" onclick="wpSetInterval(15)">15</button>
+          <button class="wp-interval-btn" data-interval="30" onclick="wpSetInterval(30)">30</button>
+        </div>
+      </div>
+      <div class="wp-remind">
+        <button class="wp-bell-btn" id="wp-bell-btn" onclick="wpToggleBell()">
+          <svg class="bell-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+        <div class="wp-remind-info">
+          <span class="wp-remind-label">🔔 リマインド</span>
+          <button class="wp-remind-pill" id="wp-remind-pill" onclick="wpOpenRemind()">
+            <span id="wp-remind-text">30分前</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="tdm-overlay" id="tdm-overlay" onclick="closeTournamentModal()"></div>
   <div class="tdm-sheet" id="tdm-sheet">
     <!-- グラバーバー -->
