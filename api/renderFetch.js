@@ -5,8 +5,8 @@
 // → { ok: false, error: string }
 //
 // 依存:
-//   @sparticuz/chromium-min  123.0.1
-//   puppeteer-core          21.6.1
+//   @sparticuz/chromium  123.0.1
+//   puppeteer-core       22.6.1
 //
 // Vercel Serverless (Node 18+)
 //   maxDuration: 30s  / memory: 1024MB  (vercel.json に設定済み)
@@ -30,27 +30,18 @@ function _isSafeUrl(url) {
 //  browser は必ず finally で close（zombie 防止）。
 // ================================================================
 async function fetchWithPuppeteer(url) {
-  // @sparticuz/chromium-min: Chromium バイナリを実行時に S3 からダウンロード。
-  // Lambda 環境の libnss3.so 欠落問題を回避できる Vercel 推奨構成。
-  // puppeteer-core 21.x と chromium-min 123.x の組み合わせで動作確認済み。
-  const chromium  = (await import('@sparticuz/chromium-min')).default;
+  const chromium  = (await import('@sparticuz/chromium')).default;
   const puppeteer = (await import('puppeteer-core')).default;
 
   let browser = null;
   let page    = null;
 
   try {
-    // chromium-min は実行時に S3 から Chromium をダウンロードし /tmp に展開する。
-    // executablePath() はそのパスを返す。引数なしで呼ぶこと。
-    const executablePath = await chromium.executablePath(
-      'https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar'
-    );
-
     browser = await puppeteer.launch({
-      args:            chromium.args,   // --no-sandbox 等を含む公式推奨セット
+      args:            chromium.args,
       defaultViewport: chromium.defaultViewport,
-      executablePath,
-      headless:        chromium.headless,  // puppeteer-core 21.x では true が正しい
+      executablePath:  await chromium.executablePath(),
+      headless:        chromium.headless,
     });
 
     console.info('[renderFetch] browser launched');
