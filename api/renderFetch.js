@@ -5,8 +5,8 @@
 // → { ok: false, error: string }
 //
 // 依存:
-//   @sparticuz/chromium  123.0.1
-//   puppeteer-core       22.6.1
+//   @sparticuz/chromium-min  123.0.1
+//   puppeteer-core          21.6.1
 //
 // Vercel Serverless (Node 18+)
 //   maxDuration: 30s  / memory: 1024MB  (vercel.json に設定済み)
@@ -30,50 +30,27 @@ function _isSafeUrl(url) {
 //  browser は必ず finally で close（zombie 防止）。
 // ================================================================
 async function fetchWithPuppeteer(url) {
-  // dynamic import — Vercel が tree-shake しないようにする
-  const chromium  = (await import('@sparticuz/chromium')).default;
+  // @sparticuz/chromium-min: Chromium バイナリを実行時に S3 からダウンロード。
+  // Lambda 環境の libnss3.so 欠落問題を回避できる Vercel 推奨構成。
+  // puppeteer-core 21.x と chromium-min 123.x の組み合わせで動作確認済み。
+  const chromium  = (await import('@sparticuz/chromium-min')).default;
   const puppeteer = (await import('puppeteer-core')).default;
 
   let browser = null;
   let page    = null;
 
   try {
-    // ── Vercel Serverless 向け launch オプション ──────────────────
-    // libnss3.so 等の欠落ライブラリを回避するために必須の引数を明示。
-    // chromium.args に含まれないケースがあるため個別に追加する。
-    //
-    // --no-sandbox / --disable-setuid-sandbox
-    //   Lambda 環境では root 権限で動くため sandbox が起動できない。
-    //   これがないと Chromium が即クラッシュする。
-    //
-    // --disable-dev-shm-usage
-    //   /dev/shm が 64MB に制限されている Lambda では共有メモリ不足。
-    //   これがないとレンダリング中に OOM が発生する。
-    //
-    // --single-process / --no-zygote
-    //   子プロセス fork を抑制。Lambda の PID 制限と fork 制約を回避。
-    //
-    // headless: 'new'
-    //   puppeteer-core v22 以降は 'new' を使用。
-    //   旧 chromium.headless (= true) だと非推奨警告 + 動作不安定。
+    // chromium-min は実行時に S3 から Chromium をダウンロードし /tmp に展開する。
+    // executablePath() はそのパスを返す。引数なしで呼ぶこと。
+    const executablePath = await chromium.executablePath(
+      'https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar'
+    );
 
-    const EXTRA_ARGS = [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--single-process',
-      '--no-zygote',
-    ];
-
-    // executablePath: Vercel Lambda の /tmp に展開されるパスを明示。
-    // 引数なしだと環境により誤パスを返すケースがある。
-    // @sparticuz/chromium v124 以降は同期関数だが await しても動作する。
     browser = await puppeteer.launch({
-      args:            [...chromium.args, ...EXTRA_ARGS],
+      args:            chromium.args,   // --no-sandbox 等を含む公式推奨セット
       defaultViewport: chromium.defaultViewport,
-      executablePath:  await chromium.executablePath(),
-      headless:        'new',
+      executablePath,
+      headless:        chromium.headless,  // puppeteer-core 21.x では true が正しい
     });
 
     console.info('[renderFetch] browser launched');
