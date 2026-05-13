@@ -23,10 +23,10 @@
  *   { "ok": false, "error": "msg", "code": "CODE" }
  */
 
-const MODEL      = 'claude-sonnet-4-5-20251001';
-const MAX_TOKENS = 2000;
+const MODEL      = 'claude-sonnet-4-5';
+const MAX_TOKENS = 1400;
 const TIMEOUT_MS = 28000;
-const TEXT_LIMIT = 8000;
+const TEXT_LIMIT = 7000;
 
 // ── System Prompt（ゴルフ大会専用・精度強化版） ─────────────────────────
 const SYSTEM_PROMPT = `あなたは日本のゴルフ大会情報を抽出する専門AIです。
