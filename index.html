@@ -7050,247 +7050,345 @@ body.is-admin .admin-card-actions.admin-only {
 
 <style>
 /* ================================================================
-   Cupertino Wheel Picker v2 — CSS
+   Cupertino Wheel Picker v3 — Apple-native iOS 18 Level CSS
    ================================================================ */
 
 /* ── Overlay ── */
 #cpk-overlay {
   position: fixed; inset: 0;
   z-index: 9000;
-  background: rgba(0,0,0,.48);
+  background: rgba(0,0,0,.50);
   display: flex; align-items: flex-end;
   opacity: 0; pointer-events: none;
-  transition: opacity .22s ease;
+  transition: opacity .28s ease;
+  -webkit-backdrop-filter: blur(0px);
+  backdrop-filter: blur(0px);
 }
-#cpk-overlay.open { opacity: 1; pointer-events: auto; }
+#cpk-overlay.open {
+  opacity: 1; pointer-events: auto;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
 
 /* ── Sheet ── */
 #cpk-sheet {
   width: 100%;
-  background: #FFFFFF;
-  border-radius: 18px 18px 0 0;
-  padding-bottom: env(safe-area-inset-bottom, 16px);
-  box-shadow: 0 -4px 32px rgba(0,0,0,.14);
+  background: rgba(242,242,247,0.96);
+  -webkit-backdrop-filter: saturate(180%) blur(40px);
+  backdrop-filter: saturate(180%) blur(40px);
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+  box-shadow:
+    0 -1px 0 rgba(255,255,255,.9) inset,
+    0 -2px 32px rgba(0,0,0,.18),
+    0 -1px 2px rgba(0,0,0,.08);
   transform: translateY(100%);
-  transition: transform .3s cubic-bezier(.32,.72,.25,1);
+  transition: transform .36s cubic-bezier(.32,.72,.25,1);
   will-change: transform;
 }
-:root[data-theme="dark"] #cpk-sheet { background: #1C1C1E; }
+:root[data-theme="dark"] #cpk-sheet {
+  background: rgba(28,28,32,0.95);
+  box-shadow:
+    0 -1px 0 rgba(255,255,255,.08) inset,
+    0 -2px 32px rgba(0,0,0,.45),
+    0 -1px 2px rgba(0,0,0,.25);
+}
 #cpk-overlay.open #cpk-sheet { transform: translateY(0); }
 
 /* ── Grip ── */
 #cpk-grip {
   width: 36px; height: 5px;
-  background: #D1D1D6; border-radius: 3px;
+  background: rgba(60,60,67,.28);
+  border-radius: 3px;
   margin: 10px auto 0;
 }
-:root[data-theme="dark"] #cpk-grip { background: #48484A; }
+:root[data-theme="dark"] #cpk-grip { background: rgba(255,255,255,.22); }
 
 /* ── Header ── */
 #cpk-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px 8px;
+  padding: 10px 20px 10px;
   border-bottom: .5px solid rgba(60,60,67,.18);
 }
-:root[data-theme="dark"] #cpk-header { border-bottom-color: rgba(255,255,255,.12); }
+:root[data-theme="dark"] #cpk-header { border-bottom-color: rgba(255,255,255,.10); }
 #cpk-title-label {
   font-size: 14px; font-weight: 600; color: #1C1C1E;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  letter-spacing: -0.01em;
 }
 :root[data-theme="dark"] #cpk-title-label { color: #F2F2F7; }
 
 .cpk-btn-cancel, .cpk-btn-done {
   background: none; border: none; padding: 4px 6px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 15px; cursor: pointer;
+  font-size: 16px; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  letter-spacing: -0.01em;
 }
 .cpk-btn-cancel { color: #8E8E93; font-weight: 400; }
 .cpk-btn-done   { color: #007AFF; font-weight: 600; }
-.cpk-btn-cancel:active, .cpk-btn-done:active { opacity: .5; }
+.cpk-btn-cancel:active, .cpk-btn-done:active { opacity: .45; }
 :root[data-theme="dark"] .cpk-btn-cancel { color: #636366; }
 
 /* ── Tabs ── */
 #cpk-tabs {
-  display: flex; align-items: center; gap: 6px;
-  padding: 10px 16px 8px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px 10px;
   border-bottom: .5px solid rgba(60,60,67,.12);
 }
-:root[data-theme="dark"] #cpk-tabs { border-bottom-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] #cpk-tabs { border-bottom-color: rgba(255,255,255,.07); }
 .cpk-tab {
-  flex: 1; background: #F2F2F7; border: none;
-  border-radius: 10px; padding: 8px 10px;
+  flex: 1;
+  background: rgba(118,118,128,.12);
+  border: none;
+  border-radius: 12px; padding: 9px 12px;
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
   cursor: pointer; touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: background .12s;
+  transition: background .15s, box-shadow .15s;
 }
-:root[data-theme="dark"] .cpk-tab { background: #2C2C2E; }
+:root[data-theme="dark"] .cpk-tab { background: rgba(255,255,255,.08); }
 .cpk-tab.active {
-  background: rgba(0,122,255,.12);
-  outline: 1.5px solid rgba(0,122,255,.5);
+  background: rgba(0,122,255,.10);
+  box-shadow: 0 0 0 1.5px rgba(0,122,255,.45);
 }
-.cpk-tab:active { opacity: .7; }
+.cpk-tab:active { opacity: .65; }
 .cpk-tab-top {
-  font-size: 10px; font-weight: 600; color: #8E8E93; text-transform: uppercase; letter-spacing: .4px;
+  font-size: 10px; font-weight: 600; color: #8E8E93;
+  text-transform: uppercase; letter-spacing: .5px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
 }
 .cpk-tab.active .cpk-tab-top { color: #007AFF; }
 .cpk-tab-val {
   font-size: 13px; font-weight: 500; color: #1C1C1E;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  white-space: nowrap;
+  white-space: nowrap; letter-spacing: -0.01em;
 }
 :root[data-theme="dark"] .cpk-tab-val { color: #F2F2F7; }
 #cpk-tab-arrow {
   font-size: 14px; color: #C7C7CC; flex-shrink: 0;
 }
 .cpk-allday-btn {
-  background: #F2F2F7; border: none; border-radius: 10px;
-  padding: 8px 12px; font-size: 13px; font-weight: 500; color: #1C1C1E;
+  background: rgba(118,118,128,.12); border: none; border-radius: 12px;
+  padding: 9px 14px; font-size: 13px; font-weight: 600; color: #1C1C1E;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   cursor: pointer; touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   flex-shrink: 0;
-  transition: background .12s, color .12s;
+  letter-spacing: -0.01em;
+  transition: background .15s, color .15s;
 }
-.cpk-allday-btn.active { background: #007AFF; color: #fff; }
-:root[data-theme="dark"] .cpk-allday-btn { background: #2C2C2E; color: #F2F2F7; }
+.cpk-allday-btn.active {
+  background: #007AFF; color: #fff;
+  box-shadow: 0 2px 8px rgba(0,122,255,.35);
+}
+:root[data-theme="dark"] .cpk-allday-btn { background: rgba(255,255,255,.08); color: #F2F2F7; }
 :root[data-theme="dark"] .cpk-allday-btn.active { background: #0A84FF; }
 
-/* ── Wheels ── */
+/* ── Wheels container ── */
 #cpk-wheels {
   position: relative;
   display: flex; align-items: center;
-  height: 220px;
-  padding: 0 8px;
+  height: 228px;
+  padding: 0 12px;
   overflow: hidden;
   user-select: none; -webkit-user-select: none;
+  /* 3D perspective for drum depth */
+  perspective: 700px;
+  perspective-origin: 50% 50%;
 }
 
-/* 選択バー */
+/* ── Selection highlight bar — iOS frosted glass ── */
 #cpk-bar {
-  position: absolute; left: 8px; right: 8px;
+  position: absolute; left: 12px; right: 12px;
   top: 50%; transform: translateY(-50%);
   height: 44px;
-  background: rgba(116,116,128,.10);
-  border-radius: 10px;
+  /* Frosted glass selection row */
+  background: rgba(116,116,128,.11);
+  border-radius: 11px;
   pointer-events: none; z-index: 2;
+  /* Subtle top/bottom hairlines */
+  box-shadow:
+    0 .5px 0 rgba(255,255,255,.9),
+    0 -.5px 0 rgba(60,60,67,.14),
+    0 2px 8px rgba(0,0,0,.04);
 }
-:root[data-theme="dark"] #cpk-bar { background: rgba(255,255,255,.10); }
+:root[data-theme="dark"] #cpk-bar {
+  background: rgba(255,255,255,.12);
+  box-shadow:
+    0 .5px 0 rgba(255,255,255,.12),
+    0 -.5px 0 rgba(0,0,0,.3),
+    0 2px 8px rgba(0,0,0,.15);
+}
 
-/* フェード */
+/* ── Gradient fade masks — deep immersive iOS style ── */
 #cpk-fade-t, #cpk-fade-b {
   position: absolute; left: 0; right: 0;
-  height: 88px; pointer-events: none; z-index: 3;
+  height: 94px; pointer-events: none; z-index: 3;
 }
 #cpk-fade-t {
   top: 0;
   background: linear-gradient(to bottom,
-    rgba(255,255,255,1) 0%,
-    rgba(255,255,255,.85) 40%,
-    transparent 100%);
+    rgba(242,242,247,1.00)  0%,
+    rgba(242,242,247,.96)  20%,
+    rgba(242,242,247,.82)  45%,
+    rgba(242,242,247,.40)  72%,
+    transparent           100%);
 }
 #cpk-fade-b {
   bottom: 0;
   background: linear-gradient(to top,
-    rgba(255,255,255,1) 0%,
-    rgba(255,255,255,.85) 40%,
-    transparent 100%);
+    rgba(242,242,247,1.00)  0%,
+    rgba(242,242,247,.96)  20%,
+    rgba(242,242,247,.82)  45%,
+    rgba(242,242,247,.40)  72%,
+    transparent           100%);
 }
 :root[data-theme="dark"] #cpk-fade-t {
-  background: linear-gradient(to bottom, rgba(28,28,30,1) 0%, rgba(28,28,30,.85) 40%, transparent 100%);
+  background: linear-gradient(to bottom,
+    rgba(28,28,32,1.00)  0%,
+    rgba(28,28,32,.96)  20%,
+    rgba(28,28,32,.82)  45%,
+    rgba(28,28,32,.40)  72%,
+    transparent        100%);
 }
 :root[data-theme="dark"] #cpk-fade-b {
-  background: linear-gradient(to top, rgba(28,28,30,1) 0%, rgba(28,28,30,.85) 40%, transparent 100%);
+  background: linear-gradient(to top,
+    rgba(28,28,32,1.00)  0%,
+    rgba(28,28,32,.96)  20%,
+    rgba(28,28,32,.82)  45%,
+    rgba(28,28,32,.40)  72%,
+    transparent        100%);
 }
 
-/* ドラム列 */
+/* ── Drum columns ── */
 .cpk-drum {
   flex: 1; height: 100%;
   overflow: hidden; position: relative;
   touch-action: none;
 }
-.cpk-drum-time { flex: .7; }
+.cpk-drum-time { flex: .72; }
 .cpk-sep {
-  flex: 0 0 18px; text-align: center;
-  font-size: 18px; font-weight: 300; color: #8E8E93;
-  align-self: center; padding-top: 0;
-  display: none; /* 終日時は非表示 */
+  flex: 0 0 16px; text-align: center;
+  font-size: 20px; font-weight: 300; color: #8E8E93;
+  align-self: center;
+  display: none;
 }
 
-/* ドラム内スクロールコンテナ */
+/* ── Drum inner scroll container ── */
 .cpk-drum-inner {
   display: flex; flex-direction: column;
   will-change: transform;
-  transform: translateY(0);
+  transform: translateY(0) translateZ(0);
+  -webkit-transform: translateY(0) translateZ(0);
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
 }
 
-/* 各アイテム行 */
+/* ── Cell items ── */
 .cpk-cell {
   height: 44px;
   display: flex; align-items: center; justify-content: center;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-size: 21px; font-weight: 300;
-  color: #1C1C1E;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Hiragino Sans", sans-serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: rgba(28,28,30,.28);
   white-space: nowrap; flex-shrink: 0;
-  transition: font-weight .1s, color .1s;
+  letter-spacing: -0.02em;
+  will-change: transform, opacity;
+  /* GPU layer */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
-:root[data-theme="dark"] .cpk-cell { color: #F2F2F7; }
+:root[data-theme="dark"] .cpk-cell { color: rgba(242,242,247,.25); }
+
+/* ── Non-selected items with perspective depth ── */
+/* ±1 row from center */
+.cpk-cell.near1 {
+  color: rgba(28,28,30,.52);
+  font-weight: 300;
+}
+:root[data-theme="dark"] .cpk-cell.near1 { color: rgba(242,242,247,.50); }
+
+/* ±2 rows from center */
+.cpk-cell.near2 {
+  color: rgba(28,28,30,.34);
+  font-weight: 300;
+}
+:root[data-theme="dark"] .cpk-cell.near2 { color: rgba(242,242,247,.32); }
+
+/* ── Selected (center) cell ── */
 .cpk-cell.sel {
-  font-weight: 500;
+  font-weight: 700;
+  font-size: 23px;
   color: #000000;
+  letter-spacing: -0.03em;
+  text-shadow: none;
 }
-:root[data-theme="dark"] .cpk-cell.sel { color: #FFFFFF; }
+:root[data-theme="dark"] .cpk-cell.sel {
+  color: #FFFFFF;
+}
 
 /* ── Interval row ── */
 #cpk-interval-row {
-  display: none; /* 終日時は非表示 */
+  display: none;
   align-items: center; justify-content: space-between;
-  padding: 8px 16px 12px;
-  border-top: .5px solid rgba(60,60,67,.12);
+  padding: 10px 20px 14px;
+  border-top: .5px solid rgba(60,60,67,.10);
 }
-:root[data-theme="dark"] #cpk-interval-row { border-top-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] #cpk-interval-row { border-top-color: rgba(255,255,255,.07); }
 #cpk-interval-label {
-  font-size: 12px; color: #8E8E93;
+  font-size: 12px; font-weight: 500; color: #8E8E93;
   font-family: -apple-system, sans-serif;
+  letter-spacing: .2px;
 }
-#cpk-interval-btns { display: flex; gap: 6px; }
+#cpk-interval-btns { display: flex; gap: 7px; }
 .cpk-iv {
-  background: #F2F2F7; border: none; border-radius: 8px;
-  padding: 5px 10px; font-size: 13px; font-weight: 500; color: #1C1C1E;
+  background: rgba(118,118,128,.12); border: none; border-radius: 9px;
+  padding: 6px 12px; font-size: 13px; font-weight: 600; color: #1C1C1E;
   font-family: -apple-system, sans-serif;
+  letter-spacing: -0.01em;
   cursor: pointer; touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: background .12s, color .12s;
+  transition: background .14s, color .14s, box-shadow .14s;
 }
-.cpk-iv.active { background: #007AFF; color: #fff; }
-:root[data-theme="dark"] .cpk-iv { background: #2C2C2E; color: #F2F2F7; }
+.cpk-iv.active {
+  background: #007AFF; color: #fff;
+  box-shadow: 0 2px 6px rgba(0,122,255,.3);
+}
+:root[data-theme="dark"] .cpk-iv { background: rgba(255,255,255,.08); color: #F2F2F7; }
 :root[data-theme="dark"] .cpk-iv.active { background: #0A84FF; }
 </style>
 
 <script>
 /* ================================================================
-   Cupertino Wheel Picker v2 — JavaScript
+   Cupertino Wheel Picker v3 — iOS 18 native-level JavaScript
    ================================================================ */
 (function(){
 'use strict';
 
-/* ── 定数 ── */
-const ROW_H   = 44;   // セルの高さ px
-const PAD     = 2;    // 上下パディング行数（空白行）
+/* ── Constants ── */
+const ROW_H = 44;
+const PAD   = 2;   // padding rows top/bottom
 
-/* ── グローバル状態 ── */
+/* ── Deceleration physics matching iOS UIScrollView ── */
+const DECEL_RATE   = 0.9935;  // iOS default deceleration rate
+const MIN_VEL      = 0.5;     // px/ms threshold
+const ELASTIC_K    = 0.22;    // rubber-band coefficient
+
+/* ── Global state ── */
 const S = {
-  tab:      'start',  // 'start'|'end'
+  tab:      'start',
   allday:   true,
   interval: 15,
-  start: { yr:0, mo:0, dy:0, hr:9,  mn:0  },
-  end:   { yr:0, mo:0, dy:0, hr:10, mn:0  },
+  start: { yr:0, mo:0, dy:0, hr:9,  mn:0 },
+  end:   { yr:0, mo:0, dy:0, hr:10, mn:0 },
 };
 
-/* ── 日付ユーティリティ ── */
+/* ── Date utilities ── */
 const PAD2 = n => String(n).padStart(2,'0');
 const DOW  = ['日','月','火','水','木','金','土'];
 const MLAB = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
@@ -7311,176 +7409,240 @@ function objLabel(o, allday){
   return allday ? base : `${base} ${PAD2(o.hr)}:${PAD2(o.mn)}`;
 }
 
-/* ── ドラムコントローラー ── */
+/* ================================================================
+   Drum controller — iOS UIPickerView equivalent
+   ================================================================ */
 function Drum(innerId, items, initIdx){
   const el   = document.getElementById(innerId);
+  const wrap = el.closest('.cpk-drum');
   let cur    = Math.max(0, Math.min(items.length-1, initIdx));
-  let yOff   = -cur * ROW_H;  // 現在のpx位置
+  let yOff   = -cur * ROW_H;
   let rafId  = 0;
 
-  /* セルを構築 */
+  /* ── Apply transform (GPU-accelerated) ── */
+  function _applyY(y, transition){
+    el.style.transition = transition || 'none';
+    const t = `translateY(${y}px) translateZ(0)`;
+    el.style.transform         = t;
+    el.style.webkitTransform   = t;
+    yOff = y;
+  }
+
+  /* ── Clamp to valid range ── */
+  function _min(){ return -(items.length-1)*ROW_H; }
+
+  /* ── Rubber-band elastic overscroll ── */
+  function _elastic(raw){
+    const mn = _min();
+    if(raw > 0)   return raw * ELASTIC_K;
+    if(raw < mn)  return mn + (raw - mn) * ELASTIC_K;
+    return raw;
+  }
+
+  /* ── Nearest snap index from pixel offset ── */
+  function _idxFromY(y){
+    return Math.max(0, Math.min(items.length-1, Math.round(-y/ROW_H)));
+  }
+
+  /* ── Update sel + near1/near2 classes for depth effect ── */
+  function _updateClasses(idx){
+    el.querySelectorAll('.cpk-cell').forEach((c,i)=>{
+      const row = i - PAD;
+      const dist = Math.abs(row - idx);
+      c.classList.remove('sel','near1','near2');
+      if(row === idx)     c.classList.add('sel');
+      else if(dist === 1) c.classList.add('near1');
+      else if(dist === 2) c.classList.add('near2');
+    });
+  }
+
+  /* ── Snap with spring animation ── */
+  function _snapTo(idx, animate){
+    cur  = Math.max(0, Math.min(items.length-1, idx));
+    const target = -cur * ROW_H;
+    _applyY(target, animate ? 'transform .22s cubic-bezier(.25,.46,.45,.94)' : 'none');
+    _updateClasses(cur);
+  }
+
+  /* ── Build DOM cells ── */
   function build(){
     el.innerHTML = '';
-    // 上パディング
     for(let i=0;i<PAD;i++){
       const c=document.createElement('div');
       c.className='cpk-cell';
       el.appendChild(c);
     }
-    // データ行
     items.forEach((lbl,i)=>{
       const c=document.createElement('div');
-      c.className='cpk-cell'+(i===cur?' sel':'');
+      c.className='cpk-cell';
       c.textContent=lbl;
       el.appendChild(c);
     });
-    // 下パディング
     for(let i=0;i<PAD;i++){
       const c=document.createElement('div');
       c.className='cpk-cell';
       el.appendChild(c);
     }
-    _applyTransform(false);
+    _applyY(-cur*ROW_H, 'none');
+    _updateClasses(cur);
   }
 
-  function _applyTransform(anim){
-    el.style.transition = anim ? 'transform .18s cubic-bezier(.25,.46,.45,.94)' : 'none';
-    el.style.transform  = `translateY(${yOff}px)`;
-  }
+  /* ── Touch/Mouse input ── */
+  let t0=0, y0=0, startOff=0;
+  let lastY=0, lastT=0, vel=0;   // vel = px/ms
+  let isDown=false;
 
-  function _clamp(off){
-    return Math.max(-(items.length-1)*ROW_H, Math.min(0, off));
-  }
-
-  function _snapNearest(off, anim){
-    const idx = Math.round(-off / ROW_H);
-    const clamped = Math.max(0, Math.min(items.length-1, idx));
-    cur  = clamped;
-    yOff = -clamped * ROW_H;
-    _applyTransform(anim);
-    // sel クラス更新
-    el.querySelectorAll('.cpk-cell').forEach((c,i)=>{
-      c.classList.toggle('sel', i-PAD === cur);
-    });
-  }
-
-  /* タッチ処理 */
-  const wrap = el.closest('.cpk-drum');
-  let t0=0, y0=0, off0=0, lastY=0, lastT=0, vel=0;
-
-  function onStart(clientY){
+  function _onStart(cy){
     cancelAnimationFrame(rafId);
-    t0=Date.now(); y0=clientY; off0=yOff;
-    lastY=clientY; lastT=t0; vel=0;
     el.style.transition='none';
-  }
-  function onMove(clientY){
-    const dy = clientY - y0;
-    let next = off0 + dy;
-    // ゴムバンド
-    const min = -(items.length-1)*ROW_H;
-    if(next>0)  next = next*0.25;
-    if(next<min) next = min + (next-min)*0.25;
-    yOff = next;
-    el.style.transform=`translateY(${yOff}px)`;
-    // 速度計算
-    const now=Date.now(), dt=Math.max(now-lastT,1);
-    vel = (clientY-lastY)/dt;
-    lastY=clientY; lastT=now;
-  }
-  function onEnd(){
-    // 慣性
-    let v = vel * 14;
-    let off = yOff;
-    function step(){
-      if(Math.abs(v)<0.3){
-        _snapNearest(off, true);
-        return;
-      }
-      off += v; v *= 0.92;
-      const min=-(items.length-1)*ROW_H;
-      if(off>0){off=0;v=0;}
-      if(off<min){off=min;v=0;}
-      el.style.transform=`translateY(${off}px)`;
-      rafId=requestAnimationFrame(step);
-    }
-    yOff=off;
-    rafId=requestAnimationFrame(step);
+    el.style.webkitTransition='none';
+    t0=Date.now(); y0=cy; startOff=yOff;
+    lastY=cy; lastT=t0; vel=0;
+    isDown=true;
   }
 
+  function _onMove(cy){
+    if(!isDown) return;
+    const dy = cy - y0;
+    const raw = startOff + dy;
+    const next = _elastic(raw);
+    _applyY(next, 'none');
+    const now=Date.now();
+    const dt=Math.max(now-lastT, 8);
+    vel = (cy-lastY)/dt;
+    lastY=cy; lastT=now;
+  }
+
+  function _onEnd(){
+    if(!isDown) return;
+    isDown=false;
+
+    /* iOS UIScrollView deceleration physics */
+    let v   = vel * 1000;  // convert to px/s
+    let off = yOff;
+    const mn = _min();
+
+    function step(ts){
+      /* dampen */
+      v *= DECEL_RATE;
+
+      const move = v * 0.016;  // ~60fps frame
+      off += move;
+
+      /* hard boundary */
+      if(off > 0)  { off=0; v=0; }
+      if(off < mn) { off=mn; v=0; }
+
+      _applyY(off,'none');
+
+      if(Math.abs(v) > MIN_VEL){
+        rafId = requestAnimationFrame(step);
+      } else {
+        /* snap */
+        _snapTo(_idxFromY(off), true);
+        if(typeof onChangeCallback==='function') onChangeCallback();
+      }
+    }
+
+    /* if nearly stopped, snap immediately */
+    if(Math.abs(v)*0.016 < 1){
+      _snapTo(_idxFromY(off), true);
+      if(typeof onChangeCallback==='function') onChangeCallback();
+    } else {
+      rafId = requestAnimationFrame(step);
+    }
+  }
+
+  /* Touch events — passive:false to prevent scroll hijack */
   wrap.addEventListener('touchstart', e=>{
     e.preventDefault(); e.stopPropagation();
-    onStart(e.touches[0].clientY);
+    _onStart(e.touches[0].clientY);
   },{passive:false});
   wrap.addEventListener('touchmove', e=>{
     e.preventDefault();
-    onMove(e.touches[0].clientY);
+    _onMove(e.touches[0].clientY);
   },{passive:false});
   wrap.addEventListener('touchend', e=>{
-    e.preventDefault();
-    onEnd();
+    e.preventDefault(); _onEnd();
   },{passive:false});
-  wrap.addEventListener('touchcancel', e=>{ e.preventDefault(); _snapNearest(yOff,true); },{passive:false});
+  wrap.addEventListener('touchcancel', e=>{
+    e.preventDefault(); isDown=false; _snapTo(_idxFromY(yOff),true);
+  },{passive:false});
 
-  // マウス（PC）
+  /* Mouse (desktop) */
   let md=false;
-  wrap.addEventListener('mousedown', e=>{ md=true; onStart(e.clientY); });
-  wrap.addEventListener('mousemove', e=>{ if(md) onMove(e.clientY); });
-  wrap.addEventListener('mouseup',   e=>{ if(md){ md=false; onEnd(); } });
-  wrap.addEventListener('mouseleave',e=>{ if(md){ md=false; _snapNearest(yOff,true); } });
+  wrap.addEventListener('mousedown', e=>{ md=true; _onStart(e.clientY); e.preventDefault(); });
+  window.addEventListener('mousemove', e=>{ if(md) _onMove(e.clientY); });
+  window.addEventListener('mouseup',   e=>{ if(md){ md=false; _onEnd(); } });
+
+  /* Scroll wheel (desktop) */
+  wrap.addEventListener('wheel', e=>{
+    e.preventDefault();
+    cancelAnimationFrame(rafId);
+    const delta = Math.sign(e.deltaY) * ROW_H;
+    _snapTo(Math.max(0,Math.min(items.length-1, cur + Math.sign(delta))), true);
+    if(typeof onChangeCallback==='function') onChangeCallback();
+  },{passive:false});
+
+  let onChangeCallback = null;
 
   build();
 
   return {
     getIdx(){ return cur; },
-    setIdx(idx, anim=false){
-      cur  = Math.max(0, Math.min(items.length-1, idx));
-      yOff = -cur*ROW_H;
-      _applyTransform(anim);
-      el.querySelectorAll('.cpk-cell').forEach((c,i)=>{
-        c.classList.toggle('sel', i-PAD===cur);
-      });
-    },
+    setIdx(idx, anim=false){ _snapTo(idx, anim); },
+    onchange(fn){ onChangeCallback=fn; },
     rebuild(newItems, newIdx){
       items = newItems;
       cur   = Math.max(0, Math.min(items.length-1, newIdx));
-      yOff  = -cur*ROW_H;
       build();
     },
   };
 }
 
-/* ── ドラムインスタンス ── */
+/* ── Drum instances ── */
 let drums = {};
 
-/* ── アイテムリスト生成 ── */
-function yearItems(){ const a=[]; for(let y=new Date().getFullYear()-3;y<=new Date().getFullYear()+5;y++) a.push(y+'年'); return a; }
-function yearOffset(){ return new Date().getFullYear()-3; }
+/* ── Item list generators ── */
+const yearOffset = ()=> new Date().getFullYear()-3;
+function yearItems(){ const a=[]; const base=new Date().getFullYear(); for(let y=base-3;y<=base+5;y++) a.push(y+'年'); return a; }
 function moItems()  { return MLAB; }
 function dyItems(y,m){ const a=[]; const n=daysInMonth(y,m); for(let d=1;d<=n;d++) a.push(`${d}日(${DOW[new Date(y,m-1,d).getDay()]})`); return a; }
 function hrItems()  { const a=[]; for(let h=0;h<24;h++) a.push(PAD2(h)+'時'); return a; }
 function mnItems(iv){ const a=[]; for(let m=0;m<60;m+=iv) a.push(PAD2(m)+'分'); return a; }
 
-/* ── ドラムをフルビルド ── */
+/* ── Full drum rebuild ── */
 function buildDrums(obj){
-  const yOff= yearOffset();
-  const yr  = obj.yr || new Date().getFullYear();
-  const mo  = obj.mo || (new Date().getMonth()+1);
-  const dy  = obj.dy || new Date().getDate();
-  const hr  = obj.hr || 0;
-  const mn  = obj.mn || 0;
-  const iv  = S.interval;
+  const yOff = yearOffset();
+  const yr = obj.yr || new Date().getFullYear();
+  const mo = obj.mo || (new Date().getMonth()+1);
+  const dy = obj.dy || new Date().getDate();
+  const hr = obj.hr || 0;
+  const mn = obj.mn || 0;
+  const iv = S.interval;
 
-  drums.yr = Drum('cpk-inner-yr', yearItems(),  yr - yOff);
-  drums.mo = Drum('cpk-inner-mo', moItems(),     mo - 1);
+  drums.yr = Drum('cpk-inner-yr', yearItems(),   yr - yOff);
+  drums.mo = Drum('cpk-inner-mo', moItems(),      mo - 1);
   drums.dy = Drum('cpk-inner-dy', dyItems(yr,mo), dy - 1);
+
+  /* Update days when year/month changes */
+  function syncDays(){
+    const y2 = (drums.yr.getIdx()||0) + yOff;
+    const m2 = (drums.mo.getIdx()||0) + 1;
+    const cur = drums.dy.getIdx();
+    const newItems = dyItems(y2,m2);
+    drums.dy.rebuild(newItems, Math.min(cur, newItems.length-1));
+  }
+  drums.yr.onchange(syncDays);
+  drums.mo.onchange(syncDays);
+
   if(!S.allday){
-    drums.hr = Drum('cpk-inner-hr', hrItems(),    hr);
-    drums.mn = Drum('cpk-inner-mn', mnItems(iv),  Math.round(mn/iv));
+    drums.hr = Drum('cpk-inner-hr', hrItems(),   hr);
+    drums.mn = Drum('cpk-inner-mn', mnItems(iv), Math.round(mn/iv));
   }
 }
 
-/* ── ドラムから現在値を読む ── */
+/* ── Read current drum values ── */
 function readDrums(){
   const yOff = yearOffset();
   const yr = (drums.yr?.getIdx()??0) + yOff;
@@ -7493,13 +7655,13 @@ function readDrums(){
   return {yr, mo, dy, hr, mn};
 }
 
-/* ── タブラベル更新 ── */
+/* ── Tab label update ── */
 function refreshTabLabels(){
   document.getElementById('cpk-tab-s-val').textContent = objLabel(S.start, S.allday);
   document.getElementById('cpk-tab-e-val').textContent = objLabel(S.end,   S.allday);
 }
 
-/* ── 終日UI切替 ── */
+/* ── All-day UI toggle ── */
 function applyAlldayUI(){
   const timeEls = ['cpk-drum-hr','cpk-drum-mn','cpk-sep','cpk-interval-row'];
   timeEls.forEach(id=>{
@@ -7514,11 +7676,10 @@ function applyAlldayUI(){
   document.getElementById('cpk-allday-btn').classList.toggle('active', S.allday);
 }
 
-/* ── ピッカーを開く ── */
+/* ── Open picker ── */
 window.cupertinoOpen = function(tab){
   S.tab = tab || 'start';
 
-  // 既存inputから値を読み込む
   const dsS = document.getElementById('input-start')?.value || '';
   const dsE = document.getElementById('input-end')?.value   || '';
   const tmS = document.getElementById('input-start-time')?.value || '';
@@ -7529,14 +7690,9 @@ window.cupertinoOpen = function(tab){
 
   S.start = dsToObj(dsS, tmS) || defObj;
   S.end   = dsToObj(dsE, tmE) || {...defObj, hr:10};
-
-  // allday判定（時刻inputが空ならallday）
   S.allday = !tmS;
 
-  // タブ切替
-  cupertinoTab(S.tab, true); // silent=true でドラムだけ構築
-
-  // UI
+  cupertinoTab(S.tab, true);
   applyAlldayUI();
   refreshTabLabels();
 
@@ -7544,37 +7700,28 @@ window.cupertinoOpen = function(tab){
   document.getElementById('cpk-overlay').classList.add('open');
 };
 
-/* ── タブ切替 ── */
+/* ── Tab switch ── */
 window.cupertinoTab = function(tab, silent){
-  // 前のタブの値を保存
   if(!silent && drums.yr){
-    const prev = readDrums();
-    S[S.tab] = prev;
+    S[S.tab] = readDrums();
     refreshTabLabels();
   }
-
   S.tab = tab;
   document.getElementById('cpk-tab-s').classList.toggle('active', tab==='start');
   document.getElementById('cpk-tab-e').classList.toggle('active', tab==='end');
-
-  // ドラムを再構築
   buildDrums(tab==='start' ? S.start : S.end);
 };
 
-/* ── 終日トグル ── */
+/* ── All-day toggle ── */
 window.cupertinoToggleAllday = function(){
-  // 現在値を保存してからトグル
-  if(drums.yr){
-    const cur = readDrums();
-    S[S.tab] = cur;
-  }
+  if(drums.yr){ S[S.tab] = readDrums(); }
   S.allday = !S.allday;
   applyAlldayUI();
   buildDrums(S[S.tab]);
   refreshTabLabels();
 };
 
-/* ── 分間隔変更 ── */
+/* ── Minute interval change ── */
 window.cupertinoSetInterval = function(iv){
   S.interval = iv;
   document.querySelectorAll('.cpk-iv').forEach(b=>{
@@ -7589,29 +7736,21 @@ window.cupertinoSetInterval = function(iv){
   }
 };
 
-/* ── 閉じる ── */
+/* ── Close ── */
 window.cupertinoClose = function(){
   document.getElementById('cpk-overlay').classList.remove('open');
 };
 
-/* ── 完了 ── */
+/* ── Apply / Done ── */
 window.cupertinoApply = function(){
-  // 現在のドラム値を保存
-  if(drums.yr){
-    const cur = readDrums();
-    S[S.tab] = cur;
-  }
+  if(drums.yr){ S[S.tab] = readDrums(); }
 
-  // input-hiddenに書き込む
   function writeToInputs(obj, prefix){
     const ds = objToDs(obj);
     const el = document.getElementById(`input-${prefix}`);
     if(el) el.value = ds;
-
     const stEl = document.getElementById(`input-${prefix}-time`);
     if(stEl) stEl.value = S.allday ? '' : objToTm(obj);
-
-    // トリガーボタン表示更新
     const dispEl = document.getElementById(`wp-${prefix}-date-display`);
     if(dispEl){
       dispEl.textContent = objLabel(obj, S.allday);
@@ -7623,7 +7762,6 @@ window.cupertinoApply = function(){
   writeToInputs(S.start, 'start');
   writeToInputs(S.end,   'end');
 
-  // 終了日が開始日より前なら修正
   const dsS = objToDs(S.start), dsE = objToDs(S.end);
   if(dsE < dsS){
     S.end = {...S.start, hr: Math.min(S.start.hr+1,23), mn: S.start.mn};
