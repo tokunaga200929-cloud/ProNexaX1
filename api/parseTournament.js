@@ -1,63 +1,59 @@
 /**
- * ProNexaX — /api/parseTournament  v2.2
+ * ProNexaX — /api/parseTournament  v3.0
  * Vercel Serverless Function
  *
- * 配置場所: /api/parseTournament.js  ← Vercel が自動認識するパス
- * エンドポイント: POST /api/parseTournament
- *
- * ■ export default 形式（Vercel Functions 推奨）
- * ■ Node.js 20.x / ESM 不要（Vercel はファイル単体でデプロイ）
- *
- * ■ 環境変数（Vercel Dashboard > Settings > Environment Variables）
- *   ANTHROPIC_API_KEY   sk-ant-...
- *   ALLOWED_ORIGIN      https://your-app.vercel.app  （省略時 *）
- *
- * ■ リクエスト
- *   POST /api/parseTournament
- *   Content-Type: application/json
- *   { "pageText": "...", "sourceUrl": "https://...", "hint": "" }
- *
- * ■ レスポンス 成功
- *   { "ok": true, "data": { ...fields... }, "model": "...", "usage": {...} }
- * ■ レスポンス エラー
- *   { "ok": false, "error": "msg", "code": "CODE" }
+ * 変更点 v3.0:
+ *   - 複数大会の配列を返すように変更
+ *   - MAX_TOKENS を 4000 に増量（複数大会対応）
+ *   - TEXT_LIMIT を 12000 に増量（一覧ページ対応）
+ *   - extractJson が配列・オブジェクト両方に対応
  */
 
 const MODEL      = 'claude-sonnet-4-5-20251001';
-const MAX_TOKENS = 2000;
+const MAX_TOKENS = 4000;
 const TIMEOUT_MS = 28000;
-const TEXT_LIMIT = 8000;
+const TEXT_LIMIT = 12000;
 
-// ── System Prompt（ゴルフ大会専用・精度強化版） ─────────────────────────
+// ── System Prompt（複数大会対応版） ──────────────────────────────────────
 const SYSTEM_PROMPT = `あなたは日本のゴルフ大会情報を抽出する専門AIです。
 ウェブページテキストから大会情報をJSONのみで返してください。
 説明・前置き・コードブロック（\`\`\`）は絶対に含めないでください。純粋なJSONだけを返してください。
 
-【出力形式】キー名・型を厳守。不明はnull。
-{
-  "name": "大会の正式名称",
-  "start": "YYYY-MM-DD",
-  "end": "YYYY-MM-DD",
-  "entryDeadline": "YYYY-MM-DD",
-  "cancelDeadline": "YYYY-MM-DD",
-  "place": "ゴルフ場の正式名称",
-  "prefecture": "都道府県キー（下記参照）",
-  "category": "カテゴリキー（下記参照）",
-  "gender": "mens または womens",
-  "region": "domestic または overseas",
-  "entryFee": "参加費（例: 30,000円）",
-  "prize": "賞金総額（例: 15,000万円）",
-  "prizeWinner": "優勝賞金",
-  "organizer": "主催者・主管団体名",
-  "entryMethod": "エントリー方法",
-  "qualification": "出場資格",
-  "capacity": "定員（例: 144名）",
-  "website": "公式サイトURL",
-  "instagram": "Instagram URL",
-  "entryUrl": "エントリーフォームURL",
-  "memo": "特記事項",
-  "confidence": 0.0から1.0の数値
-}
+【重要】必ず配列形式で返してください。1大会でも複数大会でも必ず [ ] で囲んでください。
+
+【出力形式】必ず配列。キー名・型を厳守。不明はnull。
+[
+  {
+    "name": "大会の正式名称",
+    "start": "YYYY-MM-DD",
+    "end": "YYYY-MM-DD",
+    "entryDeadline": "YYYY-MM-DD",
+    "cancelDeadline": "YYYY-MM-DD",
+    "place": "ゴルフ場の正式名称",
+    "prefecture": "都道府県キー（下記参照）",
+    "category": "カテゴリキー（下記参照）",
+    "gender": "mens または womens",
+    "region": "domestic または overseas",
+    "entryFee": "参加費（例: 30,000円）",
+    "prize": "賞金総額（例: 50万円）",
+    "prizeWinner": "優勝賞金",
+    "organizer": "主催者・主管団体名",
+    "entryMethod": "エントリー方法",
+    "qualification": "出場資格",
+    "capacity": "定員（例: 144名）",
+    "website": "公式サイトURL",
+    "instagram": "Instagram URL",
+    "entryUrl": "エントリーフォームURL",
+    "memo": "特記事項",
+    "confidence": 0.0から1.0の数値
+  }
+]
+
+【複数大会ページの扱い】
+・スケジュール一覧ページは全大会を抽出して配列に含める
+・各大会の情報が部分的でも抽出できるものはすべて含める
+・同じ大会が重複する場合は1件のみ
+・情報が少ない大会も name と start があれば含める
 
 【都道府県キー】
 hokkaido, aomori, iwate, miyagi, akita, yamagata, fukushima,
@@ -104,6 +100,7 @@ JGTO・ジャパンゴルフツアー→jgto / JLPGA・女子プロ→jlpga / JP
 シニアツアー・シニア選手権→senior / QT・クォリファイング・予選会→qt
 ステップアップツアー→stepup / ○○県オープン・地区オープン→pref_open
 PGAツアー・USオープン→pga / アジアンツアー→asian_tour
+ATP GOLF TOUR・ATPゴルフ→atp_golf
 `;
 
 // ── ユーティリティ ────────────────────────────────────────────────────
@@ -124,25 +121,47 @@ function json(res, status, body) {
   res.status(status).json(body);
 }
 
+// 配列・オブジェクト両対応のJSON抽出
 function extractJson(raw) {
   if (!raw) return null;
   const cleaned = raw.replace(/^```(?:json)?\s*/im, '').replace(/```\s*$/m, '').trim();
-  try { return JSON.parse(cleaned); } catch { /* fall */ }
-  const m = raw.match(/\{[\s\S]*\}/);
-  if (m) { try { return JSON.parse(m[0]); } catch { /* fall */ } }
+
+  // まず配列として試みる
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed && typeof parsed === 'object') return [parsed];
+  } catch { /* fall */ }
+
+  // 配列パターンを探す
+  const arrM = cleaned.match(/\[[\s\S]*\]/);
+  if (arrM) {
+    try {
+      const parsed = JSON.parse(arrM[0]);
+      if (Array.isArray(parsed)) return parsed;
+    } catch { /* fall */ }
+  }
+
+  // オブジェクトパターンを探す
+  const objM = cleaned.match(/\{[\s\S]*\}/);
+  if (objM) {
+    try {
+      const parsed = JSON.parse(objM[0]);
+      return [parsed];
+    } catch { /* fall */ }
+  }
+
   return null;
 }
 
-// ── メインハンドラ（export default 形式） ────────────────────────────────
+// ── メインハンドラ ───────────────────────────────────────────────────────
 export default async function handler(req, res) {
   const origin = req.headers.origin || '';
   setCors(res, origin);
 
-  // OPTIONS プリフライト
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (req.method !== 'POST')    { json(res, 405, { ok:false, error:'Method Not Allowed', code:'METHOD_NOT_ALLOWED' }); return; }
 
-  // APIキー確認
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey || !apiKey.startsWith('sk-ant-')) {
     console.error('[parseTournament] ANTHROPIC_API_KEY 未設定');
@@ -150,7 +169,6 @@ export default async function handler(req, res) {
     return;
   }
 
-  // ボディ取得
   let body;
   try { body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}); }
   catch { json(res, 400, { ok:false, error:'JSONパースエラー', code:'INVALID_JSON' }); return; }
@@ -168,7 +186,6 @@ export default async function handler(req, res) {
     `解析対象URL: ${sourceUrl}${hint ? '\n補足: ' + hint : ''}\n\n` +
     `--- ページテキスト ---\n${truncated}\n---`;
 
-  // Claude API 呼び出し
   let claudeRes;
   try {
     const ctrl  = new AbortController();
@@ -196,7 +213,6 @@ export default async function handler(req, res) {
     return;
   }
 
-  // HTTPエラー
   if (!claudeRes.ok) {
     let msg = `HTTP ${claudeRes.status}`, code = 'CLAUDE_ERROR';
     try { const e = await claudeRes.json(); msg = e?.error?.message || msg; } catch {}
@@ -216,11 +232,12 @@ export default async function handler(req, res) {
   if (!rawText) { json(res, 502, { ok:false, error:'AIから空レスポンス', code:'EMPTY_RESPONSE' }); return; }
 
   const parsed = extractJson(rawText);
-  if (!parsed) {
+  if (!parsed || !Array.isArray(parsed)) {
     console.error('[parseTournament] JSON抽出失敗:', rawText.slice(0,300));
     json(res, 502, { ok:false, error:'AIレスポンスをJSONとして解析できませんでした', code:'JSON_PARSE_ERROR', raw:rawText.slice(0,200) });
     return;
   }
 
-  json(res, 200, { ok:true, data:parsed, model:MODEL, usage:claudeData?.usage||null });
+  console.info(`[parseTournament] 抽出成功: ${parsed.length}件`);
+  json(res, 200, { ok:true, data:parsed, tournaments:parsed, count:parsed.length, model:MODEL, usage:claudeData?.usage||null });
 }
