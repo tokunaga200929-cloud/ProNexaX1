@@ -8976,12 +8976,13 @@ const LP=500,DC=350,SW=50,MAX_CHIPS=3;
 const drag={
   pressTimer:null,
   startX:0,startY:0,
-  eventId:null,         // 長押し対象のイベントID
-  active:false,         // 長押し成立後（ドラッグ可能状態）
-  started:false,        // 実際のドラッグ移動が始まった
-  origChipEl:null,      // 元のチップ要素（プレースホルダー化）
-  cardEl:null,          // 浮遊カード要素
-  currentDropTarget:null
+  eventId:null,
+  active:false,
+  started:false,
+  origChipEl:null,
+  cardEl:null,
+  currentDropTarget:null,
+  suppressSwipeUntil:0
 };
 const DRAG_LP_MS=380;   // 長押し判定（チップ用）
 const DRAG_THRESHOLD=6;
@@ -9652,6 +9653,7 @@ function endDrag(e){
   drag.eventId=null;drag.active=false;drag.started=false;
   drag.origChipEl=null;drag.cardEl=null;drag.currentDropTarget=null;
   drag.suppressClickUntil=Date.now()+400;
+  drag.suppressSwipeUntil=Date.now()+600;
 }
 
 // ★★★ セル全体ドラッグ：その日の予定をまとめて移動 ★★★
@@ -9810,6 +9812,7 @@ function endCellDrag(e){
   cellDrag.sourceDs=null;cellDrag.sourceCellEl=null;
   cellDrag.active=false;cellDrag.started=false;
   cellDrag.cardEl=null;cellDrag.currentDropTarget=null;
+  drag.suppressSwipeUntil=Date.now()+600;
 }
 
 function initSwipe(){
@@ -9838,6 +9841,7 @@ function initSwipe(){
     // ★ 長押し確定（active）中のみ月切り替えをキャンセル
     if(rangeSelect.active){swiping=false;swipeLocked=false;return;}
     if(drag.eventId||drag.started||cellDrag.active||cellDrag.started){swipeLocked=false;swiping=false;return;}
+    if(Date.now()<drag.suppressSwipeUntil){swipeLocked=false;swiping=false;return;}
     if(!swiping){swipeLocked=false;return;}
     const dx=e.changedTouches[0].clientX-swipeX,dy=e.changedTouches[0].clientY-swipeY;
     swiping=false;if(Math.abs(dy)>Math.abs(dx)){swipeLocked=false;return;}
