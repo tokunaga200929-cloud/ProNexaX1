@@ -12411,10 +12411,7 @@ function prefillFormFromEvent(ev){
 }
 function checkSubmit(){document.getElementById('modal-next-btn').disabled=false;}
 function syncEndDate(){const s=document.getElementById('input-start').value,e=document.getElementById('input-end');if(s&&(!e.value||e.value<s))e.value=s;}
-function handleNextBtn(){
-  alert('ボタンタップ確認！ currentStep=' + currentStep + ' / disabled=' + document.getElementById('modal-next-btn').disabled);
-  if(currentStep===2){if(!selectedTour)return;goStep(3);prefillForm(selectedTour);}else if(currentStep===3){submitEvent();}
-}
+function handleNextBtn(){if(currentStep===2){if(!selectedTour)return;goStep(3);prefillForm(selectedTour);}else if(currentStep===3){submitEvent();}}
 function submitEvent(){
   const title=document.getElementById('input-title').value.trim();const place=document.getElementById('input-place').value.trim();const start=document.getElementById('input-start').value;const end=document.getElementById('input-end').value||start;const memo=document.getElementById('input-memo').value.trim();
   if(!title){showToast('予定名を入力してください');return;}
@@ -22654,8 +22651,8 @@ function _onSelect(key) {
 
   setTimeout(function(){
     /* selectedCat・selectedTour をセット */
-    if (typeof window.selectedCat  !== 'undefined') window.selectedCat  = key;
-    if (typeof window.selectedTour !== 'undefined') window.selectedTour = null;
+    selectedCat  = key;
+    selectedTour = null;
 
     /* ★ 修正①: modalPresetDate / selectedDate を prefillForm 呼び出し直前に
        確実に保持しておく。patchOpenModal が _orig(ds,null) で設定済みの値を
@@ -22735,8 +22732,8 @@ window.catselClose = function(keepMainOv) {
         if (typeof window.modalPresetDate !== 'undefined') window.modalPresetDate = ds2;
         if (typeof window.selectedDate    !== 'undefined') window.selectedDate    = ds2;
         if (typeof window.editingId       !== 'undefined') window.editingId       = null;
-        if (typeof window.selectedCat     !== 'undefined') window.selectedCat     = null;
-        if (typeof window.selectedTour    !== 'undefined') window.selectedTour    = null;
+        selectedCat  = null;
+        selectedTour = null;
         /* modal-overlay は catsel 表示中は非表示のまま */
         const mainOv = document.getElementById('modal-overlay');
         if (mainOv) mainOv.classList.remove('show');
