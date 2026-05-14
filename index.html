@@ -12829,8 +12829,8 @@ function snapToNearest(calRatio){
 
 function initSplitHandle(){
   const {cal,list,handle}=getSplitElems();
-  // 初期比率：カレンダー62% / リスト38%（バランス寄りカレンダー優先）
-  setSplitRatio(0.62,false);
+  // 初期比率：カレンダー45% / リスト55%
+  setSplitRatio(0.45,false);
 
   const onStart=(e)=>{
     SPLIT.pressed=true;
