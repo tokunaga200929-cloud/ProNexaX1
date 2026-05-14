@@ -8884,24 +8884,10 @@ const POPULAR_SEARCHES=['日本オープン','ミニツアー','JGTO','予選会
 // ★ NEW: リマインドシート状態（単一選択）
 let _remindTargetId=null;
 let _remindSelected=null; // "weekBefore" | "dayBefore" | "sameDay" | null
-let EVENTS=[
-  {id:1,name:'関西オープン',date:'2025-05-01',end:'2025-05-04',place:'大阪府 茨木CC',cat:'jgto',memo:'スタート 8:32（10番ホール）\n前泊：茨木グランドホテル\nキャディ：田中さん'},
-  {id:2,name:'ヤマハレディース',date:'2025-05-01',end:'2025-05-04',place:'静岡県 葛城GC',cat:'jlpga',memo:'プロアマ 4/30 ／ 1日目スタート 7:50'},
-  {id:4,name:'QT第2戦',date:'2025-05-19',end:'2025-05-20',place:'埼玉県 大宮GC',cat:'qualifier',memo:''},
-  {id:5,name:'ミズノオープン',date:'2025-05-22',end:'2025-05-25',place:'愛知県 名古屋GC',cat:'open',memo:'5/21 練習ラウンド予約済み'},
-  {id:7,name:'練習ラウンド',date:'2025-05-08',end:'2025-05-08',place:'地元CC',cat:'personal',memo:'ドライバー試打 ／ アプローチ重点'},
-  // ★★★ Day View 用：時刻つきの予定（5/15 を試合当日に想定） ★★★
-  {id:10,name:'スタート（10番H）',date:'2025-05-15',end:'2025-05-15',start_datetime:'2025-05-15T08:32',end_datetime:'2025-05-15T12:10',place:'宝塚GC 10番ホール',cat:'jgto',memo:'前半ラウンド'},
-  {id:11,name:'昼食 / クールダウン',date:'2025-05-15',end:'2025-05-15',start_datetime:'2025-05-15T12:10',end_datetime:'2025-05-15T13:00',place:'クラブハウス',cat:'personal',memo:''},
-  {id:12,name:'後半ラウンド（1番H）',date:'2025-05-15',end:'2025-05-15',start_datetime:'2025-05-15T13:00',end_datetime:'2025-05-15T16:30',place:'宝塚GC 1番ホール',cat:'jgto',memo:''},
-  {id:13,name:'記者対応',date:'2025-05-15',end:'2025-05-15',start_datetime:'2025-05-15T16:45',end_datetime:'2025-05-15T17:15',place:'メディアテント',cat:'jgto',memo:''},
-  {id:14,name:'練習場 (Range)',date:'2025-05-15',end:'2025-05-15',start_datetime:'2025-05-15T07:30',end_datetime:'2025-05-15T08:20',place:'ドライビングレンジ',cat:'personal',memo:'ウォームアップ'},
-  {id:15,name:'夕食ミーティング',date:'2025-05-15',end:'2025-05-15',start_datetime:'2025-05-15T18:30',end_datetime:'2025-05-15T20:00',place:'ホテルラウンジ',cat:'personal',memo:'スポンサー同席'},
-  {id:16,name:'日本プロゴルフ選手権',date:'2025-05-15',end:'2025-05-18',place:'兵庫県 宝塚GC',cat:'jgto',memo:'4日間競技'},
-];
-const addedIds=new Set(EVENTS.map(e=>{const arr=DB[e.cat]||[];const idx=arr.findIndex(t=>t.name===e.name);return idx>=0?`${e.cat}-${idx}`:null;}).filter(Boolean));
+let EVENTS=[];
+const addedIds=new Set();
 
-let year=2025,month=4,selectedDate=null,newlyAddedDate=null,modalPresetDate=null;
+let year=new Date().getFullYear(),month=new Date().getMonth(),selectedDate=null,newlyAddedDate=null,modalPresetDate=null;
 let currentStep=1,selectedCat=null,selectedTour=null,nextId=20;
 let editingId=null;
 let calCatFilter=null; // ★ カレンダー上のカテゴリフィルタ：null=すべて、カテゴリkey指定で絞り込み
