@@ -15832,18 +15832,26 @@ async function startUrlFetch() {
 
     if (typeof AiUrlParser !== 'undefined') {
       _setUrlProgress(60, 'AIが大会情報を抽出中...');
-      const aiResult = await AiUrlParser.parse(url, (step, status) => {
-        const labels = { fetch:'ページ取得中...', parse:'テキスト解析中...', ai:'AI抽出中...', cat:'カテゴリ判定中...' };
-        if (labels[step]) _setUrlProgress(60, labels[step]);
-      });
+      try {
+        const aiResult = await AiUrlParser.parse(url, (step, status) => {
+          const labels = { fetch:'ページ取得中...', parse:'テキスト解析中...', ai:'AI抽出中...', cat:'カテゴリ判定中...' };
+          if (labels[step]) _setUrlProgress(60, labels[step]);
+        });
+        console.log('[DEBUG] AiUrlParser.parse result:', aiResult);
 
-      // AiUrlParser は1件オブジェクトを返すが、data が配列の場合も考慮
-      if (Array.isArray(aiResult)) {
-        results = aiResult;
-      } else if (aiResult && typeof aiResult === 'object') {
-        // 単一オブジェクトを配列に
-        results = [aiResult];
+        if (Array.isArray(aiResult)) {
+          results = aiResult;
+        } else if (aiResult && typeof aiResult === 'object') {
+          results = [aiResult];
+        }
+        console.log('[DEBUG] results:', results.length, '件');
+      } catch(parseErr) {
+        console.error('[DEBUG] AiUrlParser.parse エラー:', parseErr);
+        throw parseErr;
       }
+    } else {
+      console.error('[DEBUG] AiUrlParser が未定義です');
+      throw new Error('AiUrlParser が見つかりません');
     }
 
     if (!results.length) {
