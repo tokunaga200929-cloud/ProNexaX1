@@ -7017,9 +7017,9 @@ body.is-admin .admin-card-actions.admin-only {
       <div class="cpk-drum" id="cpk-drum-dy">
         <div class="cpk-drum-inner" id="cpk-inner-dy"></div>
       </div>
-      <!-- 年 -->
-      <div class="cpk-drum" id="cpk-drum-yr">
-        <div class="cpk-drum-inner" id="cpk-inner-yr"></div>
+      <!-- 曜日（自動・読取専用） -->
+      <div class="cpk-drum cpk-drum-dow" id="cpk-drum-dow">
+        <div class="cpk-drum-inner" id="cpk-inner-dow"></div>
       </div>
       <!-- 区切り（時間あり時のみ表示） -->
       <div class="cpk-sep" id="cpk-sep">—</div>
@@ -7269,6 +7269,7 @@ body.is-admin .admin-card-actions.admin-only {
   touch-action: none;
 }
 .cpk-drum-time { flex: .72; }
+.cpk-drum-dow  { flex: .65; pointer-events: none; }
 .cpk-sep {
   flex: 0 0 16px; text-align: center;
   font-size: 20px; font-weight: 300; color: #8E8E93;
@@ -7382,7 +7383,7 @@ const ELASTIC_K    = 0.22;    // rubber-band coefficient
 /* ── Global state ── */
 const S = {
   tab:      'start',
-  allday:   true,
+  allday:   false,
   interval: 15,
   start: { yr:0, mo:0, dy:0, hr:9,  mn:0 },
   end:   { yr:0, mo:0, dy:0, hr:10, mn:0 },
@@ -7405,7 +7406,7 @@ function objToDs(o){ return `${o.yr}-${PAD2(o.mo)}-${PAD2(o.dy)}`; }
 function objToTm(o){ return `${PAD2(o.hr)}:${PAD2(o.mn)}`; }
 function objLabel(o, allday){
   const dow = DOW[new Date(o.yr, o.mo-1, o.dy).getDay()];
-  const base = `${o.yr}/${PAD2(o.mo)}/${PAD2(o.dy)}(${dow})`;
+  const base = `${o.mo}/${PAD2(o.dy)}(${dow})`;
   return allday ? base : `${base} ${PAD2(o.hr)}:${PAD2(o.mn)}`;
 }
 
@@ -7607,34 +7608,43 @@ let drums = {};
 const yearOffset = ()=> new Date().getFullYear()-3;
 function yearItems(){ const a=[]; const base=new Date().getFullYear(); for(let y=base-3;y<=base+5;y++) a.push(y+'年'); return a; }
 function moItems()  { return MLAB; }
-function dyItems(y,m){ const a=[]; const n=daysInMonth(y,m); for(let d=1;d<=n;d++) a.push(`${d}日(${DOW[new Date(y,m-1,d).getDay()]})`); return a; }
+function dyItems(y,m){ const a=[]; const n=daysInMonth(y,m); for(let d=1;d<=n;d++) a.push(`${d}日`); return a; }
 function hrItems()  { const a=[]; for(let h=0;h<24;h++) a.push(PAD2(h)+'時'); return a; }
 function mnItems(iv){ const a=[]; for(let m=0;m<60;m+=iv) a.push(PAD2(m)+'分'); return a; }
 
 /* ── Full drum rebuild ── */
 function buildDrums(obj){
-  const yOff = yearOffset();
-  const yr = obj.yr || new Date().getFullYear();
+  const fixedYr = new Date().getFullYear();
+  const yr = fixedYr;
   const mo = obj.mo || (new Date().getMonth()+1);
   const dy = obj.dy || new Date().getDate();
   const hr = obj.hr || 0;
   const mn = obj.mn || 0;
   const iv = S.interval;
 
-  drums.yr = Drum('cpk-inner-yr', yearItems(),   yr - yOff);
   drums.mo = Drum('cpk-inner-mo', moItems(),      mo - 1);
   drums.dy = Drum('cpk-inner-dy', dyItems(yr,mo), dy - 1);
 
-  /* Update days when year/month changes */
+  /* 曜日ドラム：自動計算（スクロール不可） */
+  function _syncDow(){
+    const m2 = (drums.mo.getIdx()||0) + 1;
+    const d2 = (drums.dy.getIdx()||0) + 1;
+    const dow = DOW[new Date(fixedYr, m2-1, d2).getDay()];
+    if(drums.dow) drums.dow.rebuild([dow], 0);
+  }
+
+  drums.dow = Drum('cpk-inner-dow', [DOW[new Date(yr,mo-1,dy).getDay()]], 0);
+
+  /* Update days when month changes, then sync dow */
   function syncDays(){
-    const y2 = (drums.yr.getIdx()||0) + yOff;
     const m2 = (drums.mo.getIdx()||0) + 1;
     const cur = drums.dy.getIdx();
-    const newItems = dyItems(y2,m2);
+    const newItems = dyItems(fixedYr, m2);
     drums.dy.rebuild(newItems, Math.min(cur, newItems.length-1));
+    _syncDow();
   }
-  drums.yr.onchange(syncDays);
   drums.mo.onchange(syncDays);
+  drums.dy.onchange(_syncDow);
 
   if(!S.allday){
     drums.hr = Drum('cpk-inner-hr', hrItems(),   hr);
@@ -7644,8 +7654,7 @@ function buildDrums(obj){
 
 /* ── Read current drum values ── */
 function readDrums(){
-  const yOff = yearOffset();
-  const yr = (drums.yr?.getIdx()??0) + yOff;
+  const yr = new Date().getFullYear();
   const mo = (drums.mo?.getIdx()??0) + 1;
   let   dy = (drums.dy?.getIdx()??0) + 1;
   const maxD = daysInMonth(yr, mo);
@@ -7690,7 +7699,7 @@ window.cupertinoOpen = function(tab){
 
   S.start = dsToObj(dsS, tmS) || defObj;
   S.end   = dsToObj(dsE, tmE) || {...defObj, hr:10};
-  S.allday = !tmS;
+  S.allday = (tmS === '__allday__');
 
   cupertinoTab(S.tab, true);
   applyAlldayUI();
@@ -7702,7 +7711,7 @@ window.cupertinoOpen = function(tab){
 
 /* ── Tab switch ── */
 window.cupertinoTab = function(tab, silent){
-  if(!silent && drums.yr){
+  if(!silent && drums.mo){
     S[S.tab] = readDrums();
     refreshTabLabels();
   }
@@ -7714,7 +7723,7 @@ window.cupertinoTab = function(tab, silent){
 
 /* ── All-day toggle ── */
 window.cupertinoToggleAllday = function(){
-  if(drums.yr){ S[S.tab] = readDrums(); }
+  if(drums.mo){ S[S.tab] = readDrums(); }
   S.allday = !S.allday;
   applyAlldayUI();
   buildDrums(S[S.tab]);
@@ -7743,14 +7752,14 @@ window.cupertinoClose = function(){
 
 /* ── Apply / Done ── */
 window.cupertinoApply = function(){
-  if(drums.yr){ S[S.tab] = readDrums(); }
+  if(drums.mo){ S[S.tab] = readDrums(); }
 
   function writeToInputs(obj, prefix){
     const ds = objToDs(obj);
     const el = document.getElementById(`input-${prefix}`);
     if(el) el.value = ds;
     const stEl = document.getElementById(`input-${prefix}-time`);
-    if(stEl) stEl.value = S.allday ? '' : objToTm(obj);
+    if(stEl) stEl.value = S.allday ? '__allday__' : objToTm(obj);
     const dispEl = document.getElementById(`wp-${prefix}-date-display`);
     if(dispEl){
       dispEl.textContent = objLabel(obj, S.allday);
@@ -13996,8 +14005,8 @@ submitEvent=function(){
   const enEl=document.getElementById('input-end-time');
   const startDate=document.getElementById('input-start').value;
   const endDate=document.getElementById('input-end').value||startDate;
-  const stT=stEl?stEl.value:'';
-  const enT=enEl?enEl.value:'';
+  const stT=(stEl?stEl.value:'').replace('__allday__','');
+  const enT=(enEl?enEl.value:'').replace('__allday__','');
 
   // バリデーション：時間指定で 終了 <= 開始 は不可（同日内）
   if(isTimed&&stT&&enT&&startDate===endDate){
