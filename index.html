@@ -12411,12 +12411,13 @@ function prefillFormFromEvent(ev){
   document.getElementById('edit-banner').innerHTML=`<div class="edit-banner"><span style="font-size:14px;">✎</span><div style="flex:1;"><div class="edit-banner-text">編集中：${cat.label||ev.cat}</div><div style="font-size:9px;color:var(--green-dark);opacity:.7;margin-top:1px;">変更後「変更を保存する」を押してください</div></div><span class="cat-color-dot" style="background:${cat.color||'#1AAF7A'};width:14px;height:14px;border-radius:4px;"></span></div>`;
   document.getElementById('edit-banner').style.display='block';document.getElementById('sel-preview').innerHTML='';checkSubmit();
 }
-function checkSubmit(){const t=document.getElementById('input-title').value.trim(),s=document.getElementById('input-start').value;document.getElementById('modal-next-btn').disabled=!(t&&s);}
+function checkSubmit(){const s=document.getElementById('input-start').value;document.getElementById('modal-next-btn').disabled=!s;}
 function syncEndDate(){const s=document.getElementById('input-start').value,e=document.getElementById('input-end');if(s&&(!e.value||e.value<s))e.value=s;}
 function handleNextBtn(){if(currentStep===2){if(!selectedTour)return;goStep(3);prefillForm(selectedTour);}else if(currentStep===3){submitEvent();}}
 function submitEvent(){
   const title=document.getElementById('input-title').value.trim();const place=document.getElementById('input-place').value.trim();const start=document.getElementById('input-start').value;const end=document.getElementById('input-end').value||start;const memo=document.getElementById('input-memo').value.trim();
-  if(!selectedCat||!title||!start)return;
+  if(!title){showToast('予定名を入力してください');return;}
+  if(!selectedCat||!start)return;
   if(editingId){
     const idx=EVENTS.findIndex(e=>e.id===editingId);
     if(idx>=0){const old=EVENTS[idx];const oldDb=DB[old.cat]||[];const oldIdx=oldDb.findIndex(t=>t.name===old.name);if(oldIdx>=0)addedIds.delete(`${old.cat}-${oldIdx}`);
