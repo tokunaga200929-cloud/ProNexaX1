@@ -6701,8 +6701,8 @@ body.is-admin .admin-card-actions.admin-only {
             <input class="url-input" id="url-modal-input" type="url"
               placeholder="https://... または Instagram URL"
               oninput="onUrlInputChange()"
-              onkeydown="if(event.key==='Enter')_aiStartFetch()">
-            <button class="url-fetch-btn" id="url-fetch-btn" onclick="_aiStartFetch()">解析</button>
+              onkeydown="if(event.key==='Enter')startUrlFetch()">
+            <button class="url-fetch-btn" id="url-fetch-btn" onclick="startUrlFetch()">解析</button>
           </div>
           <div id="url-type-display" style="margin-bottom:10px;display:none;">
             <span class="url-type-chip" id="url-type-chip">🌐 website</span>
@@ -15807,44 +15807,10 @@ function _setUrlProgress(pct, label) {
 
 /** メイン解析フロー */
 async function startUrlFetch() {
-  const url = document.getElementById('url-modal-input')?.value?.trim();
-  if (!url || !url.startsWith('http')) {
-    _showUrlError('有効なURLを入力してください（https://... ）');
-    return;
+  if (typeof window._aiStartFetch === 'function') {
+    return window._aiStartFetch();
   }
-  const btn = document.getElementById('url-fetch-btn');
-  btn.disabled = true;
-  _hideUrlResults();
-
-  const sourceType = detectSourceType(url);
-
-  // progress 表示
-  document.getElementById('url-progress').classList.add('show');
-  _setUrlProgress(10, 'URLを解析中...');
-
-  try {
-    // ① parsingStatus: fetching
-    _setUrlProgress(30, 'データを取得中...');
-    const rawData = await fetchUrlContent(url);
-
-    _setUrlProgress(60, '大会情報を抽出中...');
-    // ② parser layer へ
-    const parsed = await parseTournamentUrl(url, sourceType, rawData);
-
-    _setUrlProgress(90, 'AI正規化中...');
-    // ③ AI正規化（現在はダミー、将来OpenAI接続）
-    const normalized = await normalizeTournamentData(parsed, sourceType);
-
-    _setUrlProgress(100, '完了');
-    _urlParseResult = { ...normalized, sourceUrl: url, sourceType };
-    _showUrlResult(_urlParseResult);
-
-  } catch(err) {
-    console.warn('[URL Parse]', err);
-    _showUrlError(err.message || '解析に失敗しました');
-  } finally {
-    btn.disabled = false;
-  }
+  _showUrlError('解析エンジンを読み込み中です。少し待ってから再度お試しください。');
 }
 
 function _showUrlResult(data) {
@@ -21375,6 +21341,7 @@ window.ConfidenceCalculator = ConfidenceCalculator;
 let _aiResults = [];
 
 window._aiStartFetch = async function() {
+  console.log('[AI] _aiStartFetch called');
   const url = document.getElementById('url-modal-input')?.value?.trim();
   if (!url || !url.startsWith('http')) {
     _aiShowError('有効なURLを入力してください（https://... ）');
