@@ -15830,10 +15830,10 @@ async function startUrlFetch() {
     // AiUrlParser を使って解析（配列で返ってくる）
     let results = [];
 
-    if (typeof AiUrlParser !== 'undefined') {
+    if (typeof window.AiUrlParser !== 'undefined') {
       _setUrlProgress(60, 'AIが大会情報を抽出中...');
       try {
-        const aiResult = await AiUrlParser.parse(url, (step, status) => {
+        const aiResult = await window.AiUrlParser.parse(url, (step, status) => {
           const labels = { fetch:'ページ取得中...', parse:'テキスト解析中...', ai:'AI抽出中...', cat:'カテゴリ判定中...' };
           if (labels[step]) _setUrlProgress(60, labels[step]);
         });
