@@ -7013,8 +7013,6 @@ body.is-admin .admin-card-actions.admin-only {
       <div class="cpk-drum cpk-drum-date" id="cpk-drum-date">
         <div class="cpk-drum-inner" id="cpk-inner-date"></div>
       </div>
-      <!-- 区切り（時間あり時のみ表示） -->
-      <div class="cpk-sep" id="cpk-sep">—</div>
       <!-- 時 -->
       <div class="cpk-drum cpk-drum-time" id="cpk-drum-hr">
         <div class="cpk-drum-inner" id="cpk-inner-hr"></div>
@@ -7262,13 +7260,6 @@ body.is-admin .admin-card-actions.admin-only {
 }
 .cpk-drum-time { flex: .72; }
 .cpk-drum-date { flex: 2.2; }
-.cpk-sep {
-  flex: 0 0 16px; text-align: center;
-  font-size: 20px; font-weight: 300; color: #8E8E93;
-  align-self: center;
-  display: none;
-}
-
 /* ── Drum inner scroll container ── */
 .cpk-drum-inner {
   display: flex; flex-direction: column;
@@ -7677,12 +7668,12 @@ function refreshTabLabels(){
 
 /* ── All-day UI toggle ── */
 function applyAlldayUI(){
-  const timeEls = ['cpk-drum-hr','cpk-drum-mn','cpk-sep','cpk-interval-row'];
+  const timeEls = ['cpk-drum-hr','cpk-drum-mn','cpk-interval-row'];
   timeEls.forEach(id=>{
     const el=document.getElementById(id);
     if(!el) return;
-    if(id==='cpk-sep'||id==='cpk-interval-row'){
-      el.style.display = S.allday ? 'none' : (id==='cpk-interval-row'?'flex':'block');
+    if(id==='cpk-interval-row'){
+      el.style.display = S.allday ? 'none' : 'flex';
     } else {
       el.style.display = S.allday ? 'none' : '';
     }
