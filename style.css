@@ -1,3 +1,33 @@
+/* ===== L37 からの移植 ===== */
+
+    #portrait-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: #000;
+      color: #fff;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      font-family: -apple-system, sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+      padding: 24px;
+    }
+    #portrait-overlay svg {
+      animation: rotateHint 1.5s ease-in-out infinite;
+    }
+    @keyframes rotateHint {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-90deg); }
+    }
+  
+
+/* ===== L93 からの移植 ===== */
+
 *{box-sizing:border-box;margin:0;padding:0;}
 /* ================================================================ */
 /* ★★★ Apple純正カレンダー風フォントシステム ★★★                    */
@@ -16,9 +46,10 @@ html,body{
   margin:0;
   padding:0;
   background:#ffffff;
-  overflow:hidden;
-  /* Phase3: iPhone縦固定 */
-  touch-action:pan-y;
+  /* ★ overflow:hidden を削除：body直下のposition:fixedモーダルのタッチを封じないため */
+  overflow:visible;
+  /* ★ touch-action:manipulation：pan-yではなくmanipulationでタップも確実に通す */
+  touch-action:manipulation;
 }
 body{
   position:relative;
@@ -247,7 +278,7 @@ button,input,select,textarea{
 .app-frame{
   position:fixed;
   inset:0;
-  overflow:hidden;
+  overflow:visible;
   border-radius:0;
   /* ステータスバー背面：白背景で統一 */
   background:#ffffff;
@@ -313,7 +344,7 @@ button,input,select,textarea{
   flex-shrink:0;
   box-shadow:none;
   color:#1d1d1f;
-  border-bottom:1.5px solid #39C892;
+  border-bottom:1.5px solid var(--green-main);
 }
 .app-header-top{
   display:flex;
@@ -455,11 +486,17 @@ button,input,select,textarea{
 }
 .drawer-item:active{background:#F0F7F4;}
 .drawer-item-icon{
-  width:18px;height:18px;flex-shrink:0;
+  width:20px;height:20px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  color:var(--text-secondary);
+  color:#8e8e93;
   font-size:14px;
 }
+.drawer-item-icon svg{
+  width:18px;height:18px;
+  stroke:#8e8e93;
+  transition:stroke .15s;
+}
+.drawer-item.is-active .drawer-item-icon svg{stroke:var(--green-main);}
 .drawer-item-label{flex:1;font-weight:500;}
 
 /* 表示モード選択 */
@@ -3232,7 +3269,7 @@ button,input,select,textarea{
 .modal-overlay{
   position:fixed;inset:0;
   background:rgba(5,20,14,.5);
-  z-index:100;
+  z-index:500;
   display:flex;
   align-items:flex-end;
   opacity:0;
@@ -3370,6 +3407,15 @@ button,input,select,textarea{
 .tour-search:focus{border-color:var(--green-main);box-shadow:0 0 0 3px rgba(26,175,122,.1);}
 .form-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--text-primary);outline:none;margin-bottom:11px;background:var(--bg);}
 .form-input:focus{border-color:var(--green-main);box-shadow:0 0 0 3px rgba(26,175,122,.1);}
+/* ── カラーピッカー ── */
+.color-picker-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:2px 0;}
+.color-dot-wrap{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s;-webkit-tap-highlight-color:transparent;position:relative;}
+.color-dot-wrap:active{transform:scale(.88);}
+.color-dot{width:26px;height:26px;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.18);transition:transform .15s,box-shadow .15s;}
+.color-dot-wrap.selected .color-dot{transform:scale(1.15);box-shadow:0 2px 8px rgba(0,0,0,.22);}
+.color-dot-wrap.selected::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:2px solid rgba(0,0,0,.15);pointer-events:none;}
+.color-dot-check{position:absolute;color:#fff;font-size:13px;font-weight:700;pointer-events:none;opacity:0;transition:opacity .15s;}
+.color-dot-wrap.selected .color-dot-check{opacity:1;}
 /* ★ メモ用 textarea：複数行対応 */
 .form-textarea{
   width:100%;border:1.5px solid var(--border);border-radius:10px;
@@ -3421,7 +3467,7 @@ button,input,select,textarea{
 .bnav-btn.active{background:none;}
 .bnav-btn.active .bnav-label{color:var(--green-main);font-weight:600;}
 .home-bar{height:3px;width:68px;background:#DDE8E4;border-radius:2px;margin:2px auto 1px;}
-.toast{position:fixed;bottom:calc(max(env(safe-area-inset-bottom,0px),0px) + 68px);left:14px;right:14px;background:linear-gradient(135deg,var(--green-main),var(--green-dark));color:#fff;font-size:11px;font-weight:600;padding:8px 14px;border-radius:11px;text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;z-index:30;box-shadow:0 4px 16px rgba(10,107,71,.3);}
+.toast{position:fixed;bottom:calc(max(env(safe-area-inset-bottom,0px),0px) + 68px);left:14px;right:14px;background:linear-gradient(135deg,var(--green-main),var(--green-dark));color:#fff;font-size:11px;font-weight:600;padding:8px 14px;border-radius:11px;text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99999;box-shadow:0 4px 16px rgba(10,107,71,.3);}
 .toast.show{opacity:1;}
 
 /* ================================================================ */
@@ -3850,7 +3896,7 @@ button,input,select,textarea{
   padding:env(safe-area-inset-top,0px) 16px 16px;
   flex-shrink:0;
   box-shadow:0 1px 0 rgba(0,0,0,.06);
-  border-bottom:1.5px solid #39C892;
+  border-bottom:1.5px solid var(--green-main);
   display:flex;align-items:center;gap:10px;
   color:#1d1d1f;
 }
@@ -3991,13 +4037,13 @@ button,input,select,textarea{
 
 /* ── オーバーレイ ── */
 .wp-overlay{
-  position:absolute;inset:0;
+  position:fixed;inset:0;
   background:rgba(0,0,0,.48);
-  z-index:200;
+  z-index:400;
   display:flex;align-items:flex-end;
   opacity:0;pointer-events:none;
   transition:opacity .28s ease;
-  border-radius:34px;overflow:hidden;
+  overflow:hidden;
 }
 .wp-overlay.show{opacity:1;pointer-events:all;}
 
@@ -4350,7 +4396,8 @@ button,input,select,textarea{
   }
   /* ev-chip クランプ */
   .ev-chip {
-    font-size:clamp(10px,2.5vw,12px) !important;
+    font-size:clamp(8.5px,2.2vw,9px) !important;
+    letter-spacing:-0.03em !important;
     max-width:100% !important;
     overflow:hidden !important;
     text-overflow:ellipsis !important;
@@ -5256,8 +5303,9 @@ body { overflow-x:hidden !important; width:100% !important; max-width:100% !impo
   display:block !important;
   height:14px !important;
   line-height:14px !important;
-  font-size:10.5px !important;
-  padding:0 4px !important;
+  font-size:9px !important;
+  letter-spacing:-0.03em !important;
+  padding:0 3px !important;
   border-radius:4px !important;
   flex-shrink:0 !important;
   white-space:nowrap !important;
@@ -5690,6 +5738,22 @@ body.is-admin .admin-badge{display:block;}
 .url-confirm-btn:active{opacity:.8;transform:scale(.975);}
 .url-cancel-btn{width:80px;height:48px;background:#f0f0f4;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);transition:opacity .1s;}
 .url-cancel-btn:active{opacity:.6;}
+/* ── 複数大会一括登録UI ── */
+.url-bulk-btn{flex:1;height:48px;background:linear-gradient(135deg,#39C892,#22A874);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 12px rgba(34,168,116,.28);-webkit-tap-highlight-color:transparent;transition:opacity .1s,transform .1s;}
+.url-bulk-btn:active{opacity:.8;transform:scale(.975);}
+.url-bulk-btn:disabled{opacity:.4;cursor:not-allowed;}
+.ai-tour-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.ai-tour-list::-webkit-scrollbar{display:none;}
+.ai-tour-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.ai-tour-count{font-size:12px;font-weight:700;color:#1d1d1f;}
+.ai-tour-selall{font-size:11px;font-weight:600;color:#39C892;cursor:pointer;padding:3px 6px;-webkit-tap-highlight-color:transparent;}
+.ai-tour-item{display:flex;align-items:flex-start;gap:8px;border:1.5px solid rgba(57,200,146,.2);border-radius:10px;padding:8px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s;}
+.ai-tour-item.on{border-color:#39C892;background:#f0faf5;}
+.ai-tour-cb{width:18px;height:18px;border-radius:5px;border:2px solid #ccc;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-top:1px;transition:background .15s,border-color .15s;}
+.ai-tour-item.on .ai-tour-cb{background:#39C892;border-color:#39C892;}
+.ai-tour-name{font-size:12px;font-weight:700;color:#1d1d1f;margin-bottom:2px;}
+.ai-tour-meta{font-size:10px;color:#8e8e93;display:flex;flex-wrap:wrap;gap:3px;}
+.ai-tour-chip{background:#f0f0f5;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:600;color:#555;}
 
 /* ── 管理者ログインモーダル ── */
 .admin-login-overlay{position:fixed;inset:0;z-index:7000;background:rgba(0,0,0,.48);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s ease;}
@@ -5864,7 +5928,322 @@ body.is-admin .admin-card-actions.admin-only {
 }
 
 
-/* ===== tdm-v2-css ===== */
+
+/* ===== L6330 からの移植 ===== */
+@keyframes authSpin{to{transform:rotate(360deg)}}
+
+/* ===== L7171 からの移植 ===== */
+
+/* ================================================================
+   Cupertino Wheel Picker v3 — Apple-native iOS 18 Level CSS
+   ================================================================ */
+
+/* ── Overlay ── */
+#cpk-overlay {
+  position: fixed; inset: 0;
+  z-index: 9000;
+  background: rgba(0,0,0,.50);
+  display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none;
+  transition: opacity .28s ease;
+  -webkit-backdrop-filter: blur(0px);
+  backdrop-filter: blur(0px);
+}
+#cpk-overlay.open {
+  opacity: 1; pointer-events: auto;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+/* ── Sheet ── */
+#cpk-sheet {
+  width: 100%;
+  background: rgba(242,242,247,0.96);
+  -webkit-backdrop-filter: saturate(180%) blur(40px);
+  backdrop-filter: saturate(180%) blur(40px);
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+  box-shadow:
+    0 -1px 0 rgba(255,255,255,.9) inset,
+    0 -2px 32px rgba(0,0,0,.18),
+    0 -1px 2px rgba(0,0,0,.08);
+  transform: translateY(100%);
+  transition: transform .36s cubic-bezier(.32,.72,.25,1);
+  will-change: transform;
+}
+:root[data-theme="dark"] #cpk-sheet {
+  background: rgba(28,28,32,0.95);
+  box-shadow:
+    0 -1px 0 rgba(255,255,255,.08) inset,
+    0 -2px 32px rgba(0,0,0,.45),
+    0 -1px 2px rgba(0,0,0,.25);
+}
+#cpk-overlay.open #cpk-sheet { transform: translateY(0); }
+
+/* ── Grip ── */
+#cpk-grip {
+  width: 36px; height: 5px;
+  background: rgba(60,60,67,.28);
+  border-radius: 3px;
+  margin: 10px auto 0;
+}
+:root[data-theme="dark"] #cpk-grip { background: rgba(255,255,255,.22); }
+
+/* ── Header ── */
+#cpk-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px 10px;
+  border-bottom: .5px solid rgba(60,60,67,.18);
+}
+:root[data-theme="dark"] #cpk-header { border-bottom-color: rgba(255,255,255,.10); }
+#cpk-title-label {
+  font-size: 14px; font-weight: 600; color: #1C1C1E;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  letter-spacing: -0.01em;
+}
+:root[data-theme="dark"] #cpk-title-label { color: #F2F2F7; }
+
+.cpk-btn-cancel, .cpk-btn-done {
+  background: none; border: none; padding: 4px 6px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 16px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  letter-spacing: -0.01em;
+}
+.cpk-btn-cancel { color: #8E8E93; font-weight: 400; }
+.cpk-btn-done   { color: #007AFF; font-weight: 600; }
+.cpk-btn-cancel:active, .cpk-btn-done:active { opacity: .45; }
+:root[data-theme="dark"] .cpk-btn-cancel { color: #636366; }
+
+/* ── Tabs ── */
+#cpk-tabs {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px 10px;
+  border-bottom: .5px solid rgba(60,60,67,.12);
+}
+:root[data-theme="dark"] #cpk-tabs { border-bottom-color: rgba(255,255,255,.07); }
+.cpk-tab {
+  flex: 1;
+  background: rgba(118,118,128,.12);
+  border: none;
+  border-radius: 12px; padding: 9px 12px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  cursor: pointer; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s, box-shadow .15s;
+}
+:root[data-theme="dark"] .cpk-tab { background: rgba(255,255,255,.08); }
+.cpk-tab.active {
+  background: rgba(0,122,255,.10);
+  box-shadow: 0 0 0 1.5px rgba(0,122,255,.45);
+}
+.cpk-tab:active { opacity: .65; }
+.cpk-tab-top {
+  font-size: 10px; font-weight: 600; color: #8E8E93;
+  text-transform: uppercase; letter-spacing: .5px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+}
+.cpk-tab.active .cpk-tab-top { color: #007AFF; }
+.cpk-tab-val {
+  font-size: 13px; font-weight: 500; color: #1C1C1E;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  white-space: nowrap; letter-spacing: -0.01em;
+}
+:root[data-theme="dark"] .cpk-tab-val { color: #F2F2F7; }
+#cpk-tab-arrow {
+  font-size: 14px; color: #C7C7CC; flex-shrink: 0;
+}
+.cpk-allday-btn {
+  background: rgba(118,118,128,.12); border: none; border-radius: 12px;
+  padding: 9px 14px; font-size: 13px; font-weight: 600; color: #1C1C1E;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  cursor: pointer; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  letter-spacing: -0.01em;
+  transition: background .15s, color .15s;
+}
+.cpk-allday-btn.active {
+  background: #007AFF; color: #fff;
+  box-shadow: 0 2px 8px rgba(0,122,255,.35);
+}
+:root[data-theme="dark"] .cpk-allday-btn { background: rgba(255,255,255,.08); color: #F2F2F7; }
+:root[data-theme="dark"] .cpk-allday-btn.active { background: #0A84FF; }
+
+/* ── Wheels container ── */
+#cpk-wheels {
+  position: relative;
+  display: flex; align-items: center;
+  height: 192px;
+  padding: 0 12px;
+  overflow: hidden;
+  user-select: none; -webkit-user-select: none;
+  /* 3D perspective for drum depth */
+  perspective: 700px;
+  perspective-origin: 50% 50%;
+}
+
+/* ── Selection highlight bar — iOS frosted glass ── */
+#cpk-bar {
+  position: absolute; left: 12px; right: 12px;
+  top: 50%; transform: translateY(-50%);
+  height: 36px;
+  /* Frosted glass selection row */
+  background: rgba(116,116,128,.11);
+  border-radius: 11px;
+  pointer-events: none; z-index: 2;
+  /* Subtle top/bottom hairlines */
+  box-shadow:
+    0 .5px 0 rgba(255,255,255,.9),
+    0 -.5px 0 rgba(60,60,67,.14),
+    0 2px 8px rgba(0,0,0,.04);
+}
+:root[data-theme="dark"] #cpk-bar {
+  background: rgba(255,255,255,.12);
+  box-shadow:
+    0 .5px 0 rgba(255,255,255,.12),
+    0 -.5px 0 rgba(0,0,0,.3),
+    0 2px 8px rgba(0,0,0,.15);
+}
+
+/* ── Gradient fade masks — deep immersive iOS style ── */
+#cpk-fade-t, #cpk-fade-b {
+  position: absolute; left: 0; right: 0;
+  height: 94px; pointer-events: none; z-index: 3;
+}
+#cpk-fade-t {
+  top: 0;
+  background: linear-gradient(to bottom,
+    rgba(242,242,247,1.00)  0%,
+    rgba(242,242,247,.96)  20%,
+    rgba(242,242,247,.82)  45%,
+    rgba(242,242,247,.40)  72%,
+    transparent           100%);
+}
+#cpk-fade-b {
+  bottom: 0;
+  background: linear-gradient(to top,
+    rgba(242,242,247,1.00)  0%,
+    rgba(242,242,247,.96)  20%,
+    rgba(242,242,247,.82)  45%,
+    rgba(242,242,247,.40)  72%,
+    transparent           100%);
+}
+:root[data-theme="dark"] #cpk-fade-t {
+  background: linear-gradient(to bottom,
+    rgba(28,28,32,1.00)  0%,
+    rgba(28,28,32,.96)  20%,
+    rgba(28,28,32,.82)  45%,
+    rgba(28,28,32,.40)  72%,
+    transparent        100%);
+}
+:root[data-theme="dark"] #cpk-fade-b {
+  background: linear-gradient(to top,
+    rgba(28,28,32,1.00)  0%,
+    rgba(28,28,32,.96)  20%,
+    rgba(28,28,32,.82)  45%,
+    rgba(28,28,32,.40)  72%,
+    transparent        100%);
+}
+
+/* ── Drum columns ── */
+.cpk-drum {
+  flex: 1; height: 100%;
+  overflow: hidden; position: relative;
+  touch-action: none;
+}
+.cpk-drum-time { flex: .72; }
+.cpk-drum-date { flex: 2.2; }
+/* ── Drum inner scroll container ── */
+.cpk-drum-inner {
+  display: flex; flex-direction: column;
+  will-change: transform;
+  transform: translateY(0) translateZ(0);
+  -webkit-transform: translateY(0) translateZ(0);
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+/* ── Cell items ── */
+.cpk-cell {
+  height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Hiragino Sans", sans-serif;
+  font-size: 20px;
+  font-weight: 300;
+  color: rgba(28,28,30,.28);
+  white-space: nowrap; flex-shrink: 0;
+  letter-spacing: -0.02em;
+  will-change: transform, opacity;
+  /* GPU layer */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+:root[data-theme="dark"] .cpk-cell { color: rgba(242,242,247,.25); }
+
+/* ── Non-selected items with perspective depth ── */
+/* ±1 row from center */
+.cpk-cell.near1 {
+  color: rgba(28,28,30,.52);
+  font-weight: 300;
+}
+:root[data-theme="dark"] .cpk-cell.near1 { color: rgba(242,242,247,.50); }
+
+/* ±2 rows from center */
+.cpk-cell.near2 {
+  color: rgba(28,28,30,.34);
+  font-weight: 300;
+}
+:root[data-theme="dark"] .cpk-cell.near2 { color: rgba(242,242,247,.32); }
+
+/* ── Selected (center) cell ── */
+.cpk-cell.sel {
+  font-weight: 700;
+  font-size: 21px;
+  color: #000000;
+  letter-spacing: -0.03em;
+  text-shadow: none;
+}
+:root[data-theme="dark"] .cpk-cell.sel {
+  color: #FFFFFF;
+}
+
+/* ── Interval row ── */
+#cpk-interval-row {
+  display: none;
+  align-items: center; justify-content: space-between;
+  padding: 10px 20px 14px;
+  border-top: .5px solid rgba(60,60,67,.10);
+}
+:root[data-theme="dark"] #cpk-interval-row { border-top-color: rgba(255,255,255,.07); }
+#cpk-interval-label {
+  font-size: 12px; font-weight: 500; color: #8E8E93;
+  font-family: -apple-system, sans-serif;
+  letter-spacing: .2px;
+}
+#cpk-interval-btns { display: flex; gap: 7px; }
+.cpk-iv {
+  background: rgba(118,118,128,.12); border: none; border-radius: 9px;
+  padding: 6px 12px; font-size: 13px; font-weight: 600; color: #1C1C1E;
+  font-family: -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+  cursor: pointer; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .14s, color .14s, box-shadow .14s;
+}
+.cpk-iv.active {
+  background: #007AFF; color: #fff;
+  box-shadow: 0 2px 6px rgba(0,122,255,.3);
+}
+:root[data-theme="dark"] .cpk-iv { background: rgba(255,255,255,.08); color: #F2F2F7; }
+:root[data-theme="dark"] .cpk-iv.active { background: #0A84FF; }
+
+
+/* ===== L19107 からの移植 ===== */
+
 
 /* ================================================================
    tdm v2 — 追加スタイル（既存を上書きしない、新クラスのみ）
@@ -6246,7 +6625,9 @@ body.is-admin .admin-card-actions.admin-only {
 /* 末尾余白 */
 .tdmv2-bottom-pad { height: 16px; }
 
-/* ===== pdf-ui-css ===== */
+
+/* ===== L22227 からの移植 ===== */
+
 /* ── タブ ── */
 .pmt-tabs{display:flex;gap:4px;background:#f2f2f7;border-radius:11px;padding:3px;margin-bottom:14px;}
 .pmt-tab{flex:1;height:36px;border:none;border-radius:9px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;color:#8e8e93;background:transparent;transition:background .15s,color .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
@@ -6281,7 +6662,9 @@ body.is-admin .admin-card-actions.admin-only {
 .url-modal-sheet{max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .url-modal-body{padding:12px 20px 20px;}
 
-/* ===== catsel-css ===== */
+
+/* ===== L22785 からの移植 ===== */
+
 #catsel-overlay {
   position: fixed; inset: 0; z-index: 200;
   background: rgba(5,20,14,.5);
