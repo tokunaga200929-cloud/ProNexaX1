@@ -34,8 +34,61 @@
   <link rel="apple-touch-startup-image" media="(device-width:375px)and(device-height:812px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
   <link rel="apple-touch-startup-image" media="(device-width:430px)and(device-height:932px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
   <title>ProNexaX</title>
+  <style>
+    /* ★ 横向き時：縦向きレイアウトを維持 */
+    @media (orientation: landscape) {
+      html, body {
+        transform-origin: top left;
+      }
+      #portrait-overlay {
+        display: flex !important;
+      }
+    }
+    #portrait-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: #000;
+      color: #fff;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      font-family: -apple-system, sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+      padding: 24px;
+    }
+    #portrait-overlay svg {
+      animation: rotateHint 1.5s ease-in-out infinite;
+    }
+    @keyframes rotateHint {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-90deg); }
+    }
+  </style>
 </head>
 <body>
+
+<!-- ★ 横向き時の縦向き案内オーバーレイ -->
+<div id="portrait-overlay">
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="14" y="4" width="20" height="32" rx="3" stroke="white" stroke-width="2.5"/>
+    <circle cx="24" cy="31" r="2" fill="white"/>
+  </svg>
+  <div>縦向きでご利用ください</div>
+</div>
+
+<script>
+/* ★ 縦向きロック（対応ブラウザ） */
+(function(){
+  if(screen.orientation && screen.orientation.lock){
+    screen.orientation.lock('portrait').catch(function(){});
+  }
+})();
+</script>
 
 
 <style>
