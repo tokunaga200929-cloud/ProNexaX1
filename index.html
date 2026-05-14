@@ -8015,6 +8015,9 @@ function _showApp(user) {
   );
 }
 
+// ゲスト用ローカルストレージをクリア（テストデータ除去）
+try { localStorage.removeItem('pronexax.events.guest'); } catch(e) {}
+
 // ユーザー固有のイベントデータ読み込み
 function _loadUserEvents() {
   const key = 'pronexax.events.' + (_currentUser ? (_currentUser.uid || 'guest') : 'guest');
@@ -9216,7 +9219,7 @@ function buildMultidayLayerHTML(bars){
 function buildCalHTML(y,m){
   const fd=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate();
   const ts=dsFromDate(new Date()),ym=`${y}-${String(m+1).padStart(2,'0')}`;
-  const rows=Math.ceil((fd+dim)/7);
+  const rows=Math.min(5,Math.ceil((fd+dim)/7));
   let cells=[];
   for(let i=0;i<fd;i++){const pd=new Date(y,m,-fd+i+1);cells.push({day:pd.getDate(),ds:dsFromDate(pd),other:true,isToday:false});}
   for(let d=1;d<=dim;d++){const ds=`${ym}-${String(d).padStart(2,'0')}`;cells.push({day:d,ds,other:false,isToday:ds===ts});}
