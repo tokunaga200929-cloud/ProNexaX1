@@ -8011,8 +8011,7 @@ function _showApp(user) {
 
 // ユーザー固有のイベントデータ読み込み
 function _loadUserEvents() {
-  if (!_currentUser) return;
-  const key = 'pronexax.events.' + (_currentUser.uid || 'guest');
+  const key = 'pronexax.events.' + (_currentUser ? (_currentUser.uid || 'guest') : 'guest');
   try {
     const raw = localStorage.getItem(key);
     if (raw) {
@@ -8037,8 +8036,7 @@ function _loadUserEvents() {
 
 // ユーザー固有のイベントデータ保存
 function _saveUserEvents() {
-  if (!_currentUser) return;
-  const key = 'pronexax.events.' + (_currentUser.uid || 'guest');
+  const key = 'pronexax.events.' + (_currentUser ? (_currentUser.uid || 'guest') : 'guest');
   try {
     // ID 20以上はユーザー追加データ
     const userEvs = EVENTS.filter(e => e.id >= 20);
@@ -12112,7 +12110,7 @@ function goStep(n){
   const footer=document.getElementById('modal-footer'),btn=document.getElementById('modal-next-btn');
   if(n===1){selectedCat=null;selectedTour=null;tourLastClick={t:0,idx:-1,q:''};renderCatGrid();footer.classList.add('footer-hidden');}
   else if(n===2){footer.classList.remove('footer-hidden');btn.textContent='次へ';btn.disabled=!selectedTour;}
-  else{footer.classList.remove('footer-hidden');btn.textContent=isEdit?'変更を保存する':'カレンダーに追加する';checkSubmit();const backBtn=document.getElementById('btn-back-step3');if(isEdit){backBtn.style.display='none';}else{backBtn.style.display='';}}
+  else{footer.classList.remove('footer-hidden');btn.textContent=isEdit?'変更を保存する':'カレンダーに追加する';btn.disabled=false;setTimeout(checkSubmit,80);const backBtn=document.getElementById('btn-back-step3');if(isEdit){backBtn.style.display='none';}else{backBtn.style.display='';}}
   document.getElementById('modal-scroll').scrollTop=0;
 }
 function renderCatGrid(){
@@ -12411,7 +12409,7 @@ function prefillFormFromEvent(ev){
   document.getElementById('edit-banner').innerHTML=`<div class="edit-banner"><span style="font-size:14px;">✎</span><div style="flex:1;"><div class="edit-banner-text">編集中：${cat.label||ev.cat}</div><div style="font-size:9px;color:var(--green-dark);opacity:.7;margin-top:1px;">変更後「変更を保存する」を押してください</div></div><span class="cat-color-dot" style="background:${cat.color||'#1AAF7A'};width:14px;height:14px;border-radius:4px;"></span></div>`;
   document.getElementById('edit-banner').style.display='block';document.getElementById('sel-preview').innerHTML='';checkSubmit();
 }
-function checkSubmit(){const s=document.getElementById('input-start').value;document.getElementById('modal-next-btn').disabled=!s;}
+function checkSubmit(){document.getElementById('modal-next-btn').disabled=false;}
 function syncEndDate(){const s=document.getElementById('input-start').value,e=document.getElementById('input-end');if(s&&(!e.value||e.value<s))e.value=s;}
 function handleNextBtn(){if(currentStep===2){if(!selectedTour)return;goStep(3);prefillForm(selectedTour);}else if(currentStep===3){submitEvent();}}
 function submitEvent(){
@@ -13996,8 +13994,6 @@ closeModal=function(){
 // submitEvent 拡張：「時間指定」モードなら datetime を保存
 const _origSubmitEvent=submitEvent;
 submitEvent=function(){
-  // 既存処理に委譲する前に、現在のモード/時刻を覚えておく
-  const isTimed=document.getElementById('time-row')&&!document.getElementById('time-row').classList.contains('hidden');
   const stEl=document.getElementById('input-start-time');
   const enEl=document.getElementById('input-end-time');
   const startDate=document.getElementById('input-start').value;
@@ -14005,38 +14001,27 @@ submitEvent=function(){
   const stT=(stEl?stEl.value:'').replace('__allday__','');
   const enT=(enEl?enEl.value:'').replace('__allday__','');
 
-  // バリデーション：時間指定で 終了 <= 開始 は不可（同日内）
-  if(isTimed&&stT&&enT&&startDate===endDate){
-    if(_hhmmToMin(enT)<=_hhmmToMin(stT)){
-      showToast('終了時刻は開始時刻より後に設定してください');
-      return;
-    }
-  }
-
   const wasEdit=!!editingId;
   const editId=editingId;
 
   _origSubmitEvent();
 
   // 既存処理が成功した直後の EVENTS を更新（datetime 付与/除去）
-  // 直前の EVENTS は既に更新済み。最新のイベントを特定して datetime を付与
   let target=null;
   if(wasEdit){
     target=EVENTS.find(e=>e.id===editId);
   }else{
-    // 新規：直前 push されたもの（id 最大）
     if(EVENTS.length>0)target=EVENTS[EVENTS.length-1];
   }
   if(!target)return;
 
-  if(isTimed&&stT&&enT&&startDate){
+  if(stT&&enT&&startDate&&stT!==''&&enT!==''){
     target.start_datetime=`${startDate}T${stT}`;
     target.end_datetime=`${endDate}T${enT}`;
   }else{
     delete target.start_datetime;
     delete target.end_datetime;
   }
-  // Day View に再描画反映
   if(typeof renderAllPanels==='function')renderAllPanels();
 };
 
@@ -14981,31 +14966,12 @@ setTimeout(()=>{['input-title','input-start'].forEach(id=>{const el=document.get
 // 認証チェック：予定追加・編集をログイン必須に
 // ================================================================
 (function patchAuthRequired(){
-  const _origOpenModal = window.openModal;
-  window.openModal = function(ds, editId) {
-    if (!_currentUser) {
-      showToast('ログインが必要です');
-      document.getElementById('auth-screen')?.classList.remove('hidden');
-      return;
-    }
-    if (typeof _origOpenModal === 'function') _origOpenModal(ds, editId);
-  };
-
   // saveEvent フックでユーザーデータ保存
   const _origSaveEvent = window.saveEvent;
   window.saveEvent = function() {
     if (typeof _origSaveEvent === 'function') _origSaveEvent();
     _saveUserEvents();
   };
-
-  // section-add-btn クリックで認証チェック（カレンダーページ）
-  document.querySelector('.section-add-btn')?.addEventListener('click', e => {
-    if (!_currentUser) {
-      e.stopImmediatePropagation();
-      showToast('ログインが必要です');
-      document.getElementById('auth-screen')?.classList.remove('hidden');
-    }
-  }, true);
 })();
 
 // ================================================================
