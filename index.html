@@ -7009,17 +7009,9 @@ body.is-admin .admin-card-actions.admin-only {
       <!-- フェード下 -->
       <div id="cpk-fade-b"></div>
 
-      <!-- 月 -->
-      <div class="cpk-drum" id="cpk-drum-mo">
-        <div class="cpk-drum-inner" id="cpk-inner-mo"></div>
-      </div>
-      <!-- 日 -->
-      <div class="cpk-drum" id="cpk-drum-dy">
-        <div class="cpk-drum-inner" id="cpk-inner-dy"></div>
-      </div>
-      <!-- 曜日（自動・読取専用） -->
-      <div class="cpk-drum cpk-drum-dow" id="cpk-drum-dow">
-        <div class="cpk-drum-inner" id="cpk-inner-dow"></div>
+      <!-- 日付（月・日・曜日 統合） -->
+      <div class="cpk-drum cpk-drum-date" id="cpk-drum-date">
+        <div class="cpk-drum-inner" id="cpk-inner-date"></div>
       </div>
       <!-- 区切り（時間あり時のみ表示） -->
       <div class="cpk-sep" id="cpk-sep">—</div>
@@ -7190,7 +7182,7 @@ body.is-admin .admin-card-actions.admin-only {
 #cpk-wheels {
   position: relative;
   display: flex; align-items: center;
-  height: 228px;
+  height: 192px;
   padding: 0 12px;
   overflow: hidden;
   user-select: none; -webkit-user-select: none;
@@ -7203,7 +7195,7 @@ body.is-admin .admin-card-actions.admin-only {
 #cpk-bar {
   position: absolute; left: 12px; right: 12px;
   top: 50%; transform: translateY(-50%);
-  height: 44px;
+  height: 36px;
   /* Frosted glass selection row */
   background: rgba(116,116,128,.11);
   border-radius: 11px;
@@ -7269,7 +7261,7 @@ body.is-admin .admin-card-actions.admin-only {
   touch-action: none;
 }
 .cpk-drum-time { flex: .72; }
-.cpk-drum-dow  { flex: .65; pointer-events: none; }
+.cpk-drum-date { flex: 2.2; }
 .cpk-sep {
   flex: 0 0 16px; text-align: center;
   font-size: 20px; font-weight: 300; color: #8E8E93;
@@ -7289,10 +7281,10 @@ body.is-admin .admin-card-actions.admin-only {
 
 /* ── Cell items ── */
 .cpk-cell {
-  height: 44px;
+  height: 36px;
   display: flex; align-items: center; justify-content: center;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Hiragino Sans", sans-serif;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 300;
   color: rgba(28,28,30,.28);
   white-space: nowrap; flex-shrink: 0;
@@ -7324,7 +7316,7 @@ body.is-admin .admin-card-actions.admin-only {
 /* ── Selected (center) cell ── */
 .cpk-cell.sel {
   font-weight: 700;
-  font-size: 23px;
+  font-size: 21px;
   color: #000000;
   letter-spacing: -0.03em;
   text-shadow: none;
@@ -7372,7 +7364,7 @@ body.is-admin .admin-card-actions.admin-only {
 'use strict';
 
 /* ── Constants ── */
-const ROW_H = 44;
+const ROW_H = 36;
 const PAD   = 2;   // padding rows top/bottom
 
 /* ── Deceleration physics matching iOS UIScrollView ── */
@@ -7608,43 +7600,58 @@ let drums = {};
 const yearOffset = ()=> new Date().getFullYear()-3;
 function yearItems(){ const a=[]; const base=new Date().getFullYear(); for(let y=base-3;y<=base+5;y++) a.push(y+'年'); return a; }
 function moItems()  { return MLAB; }
-function dyItems(y,m){ const a=[]; const n=daysInMonth(y,m); for(let d=1;d<=n;d++) a.push(`${d}日`); return a; }
 function hrItems()  { const a=[]; for(let h=0;h<24;h++) a.push(PAD2(h)+'時'); return a; }
 function mnItems(iv){ const a=[]; for(let m=0;m<60;m+=iv) a.push(PAD2(m)+'分'); return a; }
+
+/* ── 統合日付アイテム生成（月・日・曜日 1行） ── */
+function dateItems(yr) {
+  const today = new Date();
+  const todayYr = today.getFullYear();
+  const todayMo = today.getMonth() + 1;
+  const todayDy = today.getDate();
+  const a = [];
+  for (let mo = 1; mo <= 12; mo++) {
+    const days = daysInMonth(yr, mo);
+    for (let dy = 1; dy <= days; dy++) {
+      const isToday = (yr === todayYr && mo === todayMo && dy === todayDy);
+      const dow = DOW[new Date(yr, mo - 1, dy).getDay()];
+      a.push(isToday ? '今日' : `${mo}月${dy}日 ${dow}`);
+    }
+  }
+  return a;
+}
+
+/* ── 日付→インデックス変換 ── */
+function dateToIdx(yr, mo, dy) {
+  let idx = 0;
+  for (let m = 1; m < mo; m++) idx += daysInMonth(yr, m);
+  return idx + (dy - 1);
+}
+
+/* ── インデックス→{mo,dy}変換 ── */
+function idxToDate(yr, idx) {
+  let mo = 1;
+  while (mo <= 12) {
+    const days = daysInMonth(yr, mo);
+    if (idx < days) return { mo, dy: idx + 1 };
+    idx -= days;
+    mo++;
+  }
+  return { mo: 12, dy: 31 };
+}
 
 /* ── Full drum rebuild ── */
 function buildDrums(obj){
   const fixedYr = new Date().getFullYear();
-  const yr = fixedYr;
   const mo = obj.mo || (new Date().getMonth()+1);
   const dy = obj.dy || new Date().getDate();
   const hr = obj.hr || 0;
   const mn = obj.mn || 0;
   const iv = S.interval;
 
-  drums.mo = Drum('cpk-inner-mo', moItems(),      mo - 1);
-  drums.dy = Drum('cpk-inner-dy', dyItems(yr,mo), dy - 1);
-
-  /* 曜日ドラム：自動計算（スクロール不可） */
-  function _syncDow(){
-    const m2 = (drums.mo.getIdx()||0) + 1;
-    const d2 = (drums.dy.getIdx()||0) + 1;
-    const dow = DOW[new Date(fixedYr, m2-1, d2).getDay()];
-    if(drums.dow) drums.dow.rebuild([dow], 0);
-  }
-
-  drums.dow = Drum('cpk-inner-dow', [DOW[new Date(yr,mo-1,dy).getDay()]], 0);
-
-  /* Update days when month changes, then sync dow */
-  function syncDays(){
-    const m2 = (drums.mo.getIdx()||0) + 1;
-    const cur = drums.dy.getIdx();
-    const newItems = dyItems(fixedYr, m2);
-    drums.dy.rebuild(newItems, Math.min(cur, newItems.length-1));
-    _syncDow();
-  }
-  drums.mo.onchange(syncDays);
-  drums.dy.onchange(_syncDow);
+  const items = dateItems(fixedYr);
+  const initIdx = dateToIdx(fixedYr, mo, dy);
+  drums.date = Drum('cpk-inner-date', items, initIdx);
 
   if(!S.allday){
     drums.hr = Drum('cpk-inner-hr', hrItems(),   hr);
@@ -7655,10 +7662,8 @@ function buildDrums(obj){
 /* ── Read current drum values ── */
 function readDrums(){
   const yr = new Date().getFullYear();
-  const mo = (drums.mo?.getIdx()??0) + 1;
-  let   dy = (drums.dy?.getIdx()??0) + 1;
-  const maxD = daysInMonth(yr, mo);
-  if(dy>maxD) dy=maxD;
+  const idx = drums.date?.getIdx() ?? 0;
+  const { mo, dy } = idxToDate(yr, idx);
   const hr = S.allday ? 0 : (drums.hr?.getIdx()??0);
   const mn = S.allday ? 0 : (drums.mn?.getIdx()??0) * S.interval;
   return {yr, mo, dy, hr, mn};
@@ -7711,7 +7716,7 @@ window.cupertinoOpen = function(tab){
 
 /* ── Tab switch ── */
 window.cupertinoTab = function(tab, silent){
-  if(!silent && drums.mo){
+  if(!silent && drums.date){
     S[S.tab] = readDrums();
     refreshTabLabels();
   }
@@ -7723,7 +7728,7 @@ window.cupertinoTab = function(tab, silent){
 
 /* ── All-day toggle ── */
 window.cupertinoToggleAllday = function(){
-  if(drums.mo){ S[S.tab] = readDrums(); }
+  if(drums.date){ S[S.tab] = readDrums(); }
   S.allday = !S.allday;
   applyAlldayUI();
   buildDrums(S[S.tab]);
@@ -7752,7 +7757,7 @@ window.cupertinoClose = function(){
 
 /* ── Apply / Done ── */
 window.cupertinoApply = function(){
-  if(drums.mo){ S[S.tab] = readDrums(); }
+  if(drums.date){ S[S.tab] = readDrums(); }
 
   function writeToInputs(obj, prefix){
     const ds = objToDs(obj);
