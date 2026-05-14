@@ -35,15 +35,6 @@
   <link rel="apple-touch-startup-image" media="(device-width:430px)and(device-height:932px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
   <title>ProNexaX</title>
   <style>
-    /* ★ 横向き時：縦向きレイアウトを維持 */
-    @media (orientation: landscape) {
-      html, body {
-        transform-origin: top left;
-      }
-      #portrait-overlay {
-        display: flex !important;
-      }
-    }
     #portrait-overlay {
       display: none;
       position: fixed;
@@ -82,11 +73,19 @@
 </div>
 
 <script>
-/* ★ 縦向きロック（対応ブラウザ） */
+/* ★ 縦向きオーバーレイ：iOS Safari のみ表示 */
 (function(){
-  if(screen.orientation && screen.orientation.lock){
-    screen.orientation.lock('portrait').catch(function(){});
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if(!isIOS) return;
+  function checkOrientation(){
+    const ov = document.getElementById('portrait-overlay');
+    if(!ov) return;
+    const isLandscape = window.innerWidth > window.innerHeight;
+    ov.style.display = isLandscape ? 'flex' : 'none';
   }
+  window.addEventListener('resize', checkOrientation);
+  window.addEventListener('orientationchange', function(){ setTimeout(checkOrientation, 100); });
+  document.addEventListener('DOMContentLoaded', checkOrientation);
 })();
 </script>
 
