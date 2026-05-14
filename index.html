@@ -15810,64 +15810,13 @@ function _setUrlProgress(pct, label) {
   if (lbl) lbl.textContent = label;
 }
 
-/** メイン解析フロー — AiUrlParser を使って複数大会対応 */
+/** メイン解析フロー — 実装は AiUrlParser 定義後のスクリプトブロックで上書き */
 async function startUrlFetch() {
-  const url = document.getElementById('url-modal-input')?.value?.trim();
-  if (!url || !url.startsWith('http')) {
-    _showUrlError('有効なURLを入力してください（https://... ）');
-    return;
+  // AiUrlParser が後のスクリプトブロックで定義されるため window 経由で呼ぶ
+  if (typeof window._startUrlFetchImpl === 'function') {
+    return window._startUrlFetchImpl();
   }
-  const btn = document.getElementById('url-fetch-btn');
-  btn.disabled = true;
-  _hideUrlResults();
-
-  document.getElementById('url-progress').classList.add('show');
-  _setUrlProgress(10, 'URLを解析中...');
-
-  try {
-    _setUrlProgress(30, 'ページを取得中...');
-
-    // AiUrlParser を使って解析（配列で返ってくる）
-    let results = [];
-
-    if (typeof window.AiUrlParser !== 'undefined') {
-      _setUrlProgress(60, 'AIが大会情報を抽出中...');
-      try {
-        const aiResult = await window.AiUrlParser.parse(url, (step, status) => {
-          const labels = { fetch:'ページ取得中...', parse:'テキスト解析中...', ai:'AI抽出中...', cat:'カテゴリ判定中...' };
-          if (labels[step]) _setUrlProgress(60, labels[step]);
-        });
-        console.log('[DEBUG] AiUrlParser.parse result:', aiResult);
-
-        if (Array.isArray(aiResult)) {
-          results = aiResult;
-        } else if (aiResult && typeof aiResult === 'object') {
-          results = [aiResult];
-        }
-        console.log('[DEBUG] results:', results.length, '件');
-      } catch(parseErr) {
-        console.error('[DEBUG] AiUrlParser.parse エラー:', parseErr);
-        throw parseErr;
-      }
-    } else {
-      console.error('[DEBUG] AiUrlParser が未定義です');
-      throw new Error('AiUrlParser が見つかりません');
-    }
-
-    if (!results.length) {
-      throw new Error('大会情報を抽出できませんでした。URLを確認してください。');
-    }
-
-    _setUrlProgress(100, `${results.length}件の大会を抽出しました`);
-    _urlParseResults = results.map(r => ({ ...r, sourceUrl: url }));
-    _showUrlMultiResult(_urlParseResults);
-
-  } catch(err) {
-    console.warn('[URL Parse]', err);
-    _showUrlError(err.message || '解析に失敗しました');
-  } finally {
-    btn.disabled = false;
-  }
+  _showUrlError('解析エンジンの読み込みが完了していません。ページを再読み込みしてください。');
 }
 
 // 複数大会の解析結果を表示
@@ -21476,6 +21425,52 @@ window.AiUrlParser     = AiUrlParser;
 window.TextCleaner     = TextCleaner;
 window.DateNormalizer  = DateNormalizer;
 window.ConfidenceCalculator = ConfidenceCalculator;
+
+// ── startUrlFetch の実装（AiUrlParser 定義後に登録） ──
+window._startUrlFetchImpl = async function() {
+  const url = document.getElementById('url-modal-input')?.value?.trim();
+  if (!url || !url.startsWith('http')) {
+    _showUrlError('有効なURLを入力してください（https://... ）');
+    return;
+  }
+  const btn = document.getElementById('url-fetch-btn');
+  btn.disabled = true;
+  _hideUrlResults();
+
+  document.getElementById('url-progress').classList.add('show');
+  _setUrlProgress(10, 'URLを解析中...');
+
+  try {
+    _setUrlProgress(30, 'ページを取得中...');
+    let results = [];
+
+    _setUrlProgress(60, 'AIが大会情報を抽出中...');
+    const aiResult = await AiUrlParser.parse(url, (step) => {
+      const labels = { fetch:'ページ取得中...', parse:'テキスト解析中...', ai:'AI抽出中...', cat:'カテゴリ判定中...' };
+      if (labels[step]) _setUrlProgress(60, labels[step]);
+    });
+
+    if (Array.isArray(aiResult)) {
+      results = aiResult;
+    } else if (aiResult && typeof aiResult === 'object') {
+      results = [aiResult];
+    }
+
+    if (!results.length) {
+      throw new Error('大会情報を抽出できませんでした。URLを確認してください。');
+    }
+
+    _setUrlProgress(100, `${results.length}件の大会を抽出しました`);
+    _urlParseResults = results.map(r => ({ ...r, sourceUrl: url }));
+    _showUrlMultiResult(_urlParseResults);
+
+  } catch(err) {
+    console.warn('[URL Parse]', err);
+    _showUrlError(err.message || '解析に失敗しました');
+  } finally {
+    btn.disabled = false;
+  }
+};
 
 // ================================================================
 // § 4-EX  TournamentWatcher — 大会URL自動監視・差分検知
