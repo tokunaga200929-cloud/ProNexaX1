@@ -3470,6 +3470,15 @@ button,input,select,textarea{
 .tour-search:focus{border-color:var(--green-main);box-shadow:0 0 0 3px rgba(26,175,122,.1);}
 .form-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--text-primary);outline:none;margin-bottom:11px;background:var(--bg);}
 .form-input:focus{border-color:var(--green-main);box-shadow:0 0 0 3px rgba(26,175,122,.1);}
+/* ── カラーピッカー ── */
+.color-picker-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:2px 0;}
+.color-dot-wrap{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s;-webkit-tap-highlight-color:transparent;position:relative;}
+.color-dot-wrap:active{transform:scale(.88);}
+.color-dot{width:26px;height:26px;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.18);transition:transform .15s,box-shadow .15s;}
+.color-dot-wrap.selected .color-dot{transform:scale(1.15);box-shadow:0 2px 8px rgba(0,0,0,.22);}
+.color-dot-wrap.selected::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:2px solid rgba(0,0,0,.15);pointer-events:none;}
+.color-dot-check{position:absolute;color:#fff;font-size:13px;font-weight:700;pointer-events:none;opacity:0;transition:opacity .15s;}
+.color-dot-wrap.selected .color-dot-check{opacity:1;}
 /* ★ メモ用 textarea：複数行対応 */
 .form-textarea{
   width:100%;border:1.5px solid var(--border);border-radius:10px;
@@ -7044,6 +7053,34 @@ body.is-admin .admin-card-actions.admin-only {
         <input type="date" id="input-end" style="display:none;">
         <input type="time" id="input-start-time" step="900" style="display:none;">
         <input type="time" id="input-end-time" step="900" style="display:none;">
+        <label class="form-label">カラー</label>
+        <div class="color-picker-row" id="color-picker-row">
+          <div class="color-dot-wrap selected" data-color="#34C759" onclick="_selectEventColor(this)">
+            <div class="color-dot" style="background:#34C759;"></div>
+            <span class="color-dot-check"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+          <div class="color-dot-wrap" data-color="#007AFF" onclick="_selectEventColor(this)">
+            <div class="color-dot" style="background:#007AFF;"></div>
+            <span class="color-dot-check"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+          <div class="color-dot-wrap" data-color="#FF3B30" onclick="_selectEventColor(this)">
+            <div class="color-dot" style="background:#FF3B30;"></div>
+            <span class="color-dot-check"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+          <div class="color-dot-wrap" data-color="#FF9500" onclick="_selectEventColor(this)">
+            <div class="color-dot" style="background:#FF9500;"></div>
+            <span class="color-dot-check"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+          <div class="color-dot-wrap" data-color="#AF52DE" onclick="_selectEventColor(this)">
+            <div class="color-dot" style="background:#AF52DE;"></div>
+            <span class="color-dot-check"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+          <div class="color-dot-wrap" data-color="#8E8E93" onclick="_selectEventColor(this)">
+            <div class="color-dot" style="background:#8E8E93;"></div>
+            <span class="color-dot-check"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+        </div>
+        <input type="hidden" id="input-event-color" value="#34C759">
         <label class="form-label">メモ（任意）</label>
         <textarea class="form-textarea" id="input-memo" rows="3" placeholder="例：&#10;・スタート時間 8:32（10番ホール）&#10;・宿泊先：◯◯ホテル（前泊）&#10;・キャディ：田中さん"></textarea>
       </div>
@@ -9217,7 +9254,8 @@ function buildChipsHTML(ds,occupiedLanes){
   // ※ 複数日イベントはバー化されているため "+N件" にはカウントしない
   let html=spacerHtml+shown.map(e=>{
     const s=e.name.length>6?e.name.slice(0,6)+'…':e.name;
-    return`<span class="ev-chip chip-${e.cat}" data-event-id="${e.id}">${s}</span>`;
+    const colorStyle=e.color?` style="background:${e.color};color:#fff;"` : '';
+    return`<span class="ev-chip chip-${e.cat}"${colorStyle} data-event-id="${e.id}">${s}</span>`;
   }).join('');
   // ＋N件：単日イベントのうち表示しきれなかった件数
   const hiddenSingles=Math.max(0,total-remain);
@@ -10201,11 +10239,13 @@ function renderCalList(){
     const dim=e.entryStatus==='entered'?' deadline-event-dim':'';
     const dlInline=dl?` <span class="deadline-badge ${dl.cls}" style="margin-left:6px;">${dl.label}</span>`:'';
     const notifBtn=dl&&dl.cls!=='past'?`<button class="notif-mini-btn" onclick="event.stopPropagation();openNotifSettings(${e.id})">🔔 通知</button>`:'';
-    return`<div class="event-card${hl}${dim}" onclick="openModal(null,${e.id})"><div class="event-card-inner"><div class="event-stripe stripe-${e.cat}"></div><div class="event-content">
+    const stripeStyle=e.color?` style="background:${e.color};"` : '';
+    const badgeStyle=e.color?` style="background:${e.color}22;color:${e.color};"` : '';
+    return`<div class="event-card${hl}${dim}" onclick="openModal(null,${e.id})"><div class="event-card-inner"><div class="event-stripe stripe-${e.cat}"${stripeStyle}></div><div class="event-content">
       <div class="event-top"><div class="event-name">${e.name}</div><div class="event-actions"><span class="event-edit-hint">✎ 編集</span><button class="event-del-btn" onclick="event.stopPropagation();deleteEvent(${e.id})">削除</button></div></div>
       <div class="event-meta">${e.date.slice(5).replace('-','/')}${endTxt}${e.place?' | '+e.place:''}</div>
       ${memoHtml}
-      <div class="badge-row"><span class="badge badge-${e.cat}">${cat.label||e.cat}</span>${dlInline}${notifBtn?' '+notifBtn:''}</div>
+      <div class="badge-row"><span class="badge badge-${e.cat}"${badgeStyle}>${cat.label||e.cat}</span>${dlInline}${notifBtn?' '+notifBtn:''}</div>
     </div></div></div>`;
   }).join('');
 }
@@ -12476,6 +12516,12 @@ function prefillForm(tour){
     const stEl=document.getElementById('input-start-time');const enEl=document.getElementById('input-end-time');
     if(stEl)stEl.value='__allday__';if(enEl)enEl.value='__allday__';
     document.getElementById('sel-preview').innerHTML='';
+    // カラーリセット（グリーンをデフォルト）
+    const colorInput=document.getElementById('input-event-color');
+    if(colorInput)colorInput.value='#34C759';
+    document.querySelectorAll('#color-picker-row .color-dot-wrap').forEach((el,i)=>{
+      el.classList.toggle('selected',i===0);
+    });
     // ★ 個人予定：ホイールピッカーの表示ボタンにも日付をセット
     if(def){
       const[_y,_m,_d]=def.split('-').map(Number);
@@ -12500,26 +12546,43 @@ function prefillForm(tour){
 function prefillFormFromEvent(ev){
   const cat=CATEGORIES.find(c=>c.key===ev.cat)||{};
   document.getElementById('input-title').value=ev.name;document.getElementById('input-place').value=ev.place||'';document.getElementById('input-start').value=ev.date;document.getElementById('input-end').value=ev.end;document.getElementById('input-memo').value=ev.memo||'';
+  // カラー復元
+  const savedColor=ev.color||'#34C759';
+  const colorInput=document.getElementById('input-event-color');
+  if(colorInput)colorInput.value=savedColor;
+  document.querySelectorAll('#color-picker-row .color-dot-wrap').forEach(el=>{
+    el.classList.toggle('selected',el.dataset.color===savedColor);
+  });
   document.getElementById('edit-banner').innerHTML=`<div class="edit-banner"><span style="font-size:14px;">✎</span><div style="flex:1;"><div class="edit-banner-text">編集中：${cat.label||ev.cat}</div><div style="font-size:9px;color:var(--green-dark);opacity:.7;margin-top:1px;">変更後「変更を保存する」を押してください</div></div><span class="cat-color-dot" style="background:${cat.color||'#1AAF7A'};width:14px;height:14px;border-radius:4px;"></span></div>`;
   document.getElementById('edit-banner').style.display='block';document.getElementById('sel-preview').innerHTML='';checkSubmit();
 }
 function checkSubmit(){document.getElementById('modal-next-btn').disabled=false;}
 function syncEndDate(){const s=document.getElementById('input-start').value,e=document.getElementById('input-end');if(s&&(!e.value||e.value<s))e.value=s;}
 function handleNextBtn(){if(currentStep===2){if(!selectedTour)return;goStep(3);prefillForm(selectedTour);}else if(currentStep===3){submitEvent();}}
+
+/* ── カラー選択 ── */
+function _selectEventColor(el) {
+  document.querySelectorAll('#color-picker-row .color-dot-wrap').forEach(d=>d.classList.remove('selected'));
+  el.classList.add('selected');
+  const colorInput = document.getElementById('input-event-color');
+  if(colorInput) colorInput.value = el.dataset.color;
+}
 function submitEvent(){
   const title=document.getElementById('input-title').value.trim();const place=document.getElementById('input-place').value.trim();const start=document.getElementById('input-start').value;const end=document.getElementById('input-end').value||start;const memo=document.getElementById('input-memo').value.trim();
+  const eventColor=document.getElementById('input-event-color')?.value||'#34C759';
   if(!title){showToast('予定名を入力してください');return;}
   if(!selectedCat||!start)return;
   if(editingId){
     const idx=EVENTS.findIndex(e=>e.id===editingId);
     if(idx>=0){const old=EVENTS[idx];const oldDb=DB[old.cat]||[];const oldIdx=oldDb.findIndex(t=>t.name===old.name);if(oldIdx>=0)addedIds.delete(`${old.cat}-${oldIdx}`);
-      EVENTS[idx]={...EVENTS[idx],name:title,date:start,end:end,place,memo,cat:selectedCat};
+      EVENTS[idx]={...EVENTS[idx],name:title,date:start,end:end,place,memo,cat:selectedCat,color:eventColor};
       const newDb=DB[selectedCat]||[];const newIdx=newDb.findIndex(t=>t.name===title);if(newIdx>=0)addedIds.add(`${selectedCat}-${newIdx}`);}
     closeModal();newlyAddedDate=start;selectedDate=start;modalPresetDate=null;renderAllPanels();renderCalList();_saveUserEvents();showToast(`「${title}」を更新しました ✎`);
   } else {
     const _dl=(()=>{if(!start)return null;const[_sy,_sm,_sd]=start.split('-').map(Number);const d=new Date(_sy,_sm-1,_sd);d.setDate(d.getDate()-7);return dsFromDate(d);})();
     EVENTS.push({
       id:nextId++,name:title,date:start,end:end||start,place,memo,cat:selectedCat,
+      color:eventColor,
       entryDeadline:_dl,
       entryStatus:'open',
       notif:Object.assign({},NOTIF_DEFAULTS),
