@@ -3463,7 +3463,7 @@ button,input,select,textarea{
 .bnav-btn.active{background:none;}
 .bnav-btn.active .bnav-label{color:var(--green-main);font-weight:600;}
 .home-bar{height:3px;width:68px;background:#DDE8E4;border-radius:2px;margin:2px auto 1px;}
-.toast{position:fixed;bottom:calc(max(env(safe-area-inset-bottom,0px),0px) + 68px);left:14px;right:14px;background:linear-gradient(135deg,var(--green-main),var(--green-dark));color:#fff;font-size:11px;font-weight:600;padding:8px 14px;border-radius:11px;text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;z-index:30;box-shadow:0 4px 16px rgba(10,107,71,.3);}
+.toast{position:fixed;bottom:calc(max(env(safe-area-inset-bottom,0px),0px) + 68px);left:14px;right:14px;background:linear-gradient(135deg,var(--green-main),var(--green-dark));color:#fff;font-size:11px;font-weight:600;padding:8px 14px;border-radius:11px;text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99999;box-shadow:0 4px 16px rgba(10,107,71,.3);}
 .toast.show{opacity:1;}
 
 /* ================================================================ */
@@ -7381,8 +7381,9 @@ const daysInMonth = (y,m) => new Date(y,m,0).getDate();
 function dsToObj(ds, tm){
   if(!ds) return null;
   const [y,m,d] = ds.split('-').map(Number);
+  if(!y||!m||!d) return null;
   let hr=0,mn=0;
-  if(tm){ const [h,min]=tm.split(':').map(Number); hr=h||0; mn=min||0; }
+  if(tm && tm !== '__allday__'){ const [h,min]=tm.split(':').map(Number); hr=isNaN(h)?0:h; mn=isNaN(min)?0:min; }
   return {yr:y, mo:m, dy:d, hr, mn};
 }
 function objToDs(o){ return `${o.yr}-${PAD2(o.mo)}-${PAD2(o.dy)}`; }
@@ -7633,7 +7634,7 @@ function idxToDate(yr, idx) {
 
 /* ── Full drum rebuild ── */
 function buildDrums(obj){
-  const fixedYr = new Date().getFullYear();
+  const fixedYr = (typeof year !== 'undefined') ? year : new Date().getFullYear();
   const mo = obj.mo || (new Date().getMonth()+1);
   const dy = obj.dy || new Date().getDate();
   const hr = obj.hr || 0;
@@ -7652,7 +7653,7 @@ function buildDrums(obj){
 
 /* ── Read current drum values ── */
 function readDrums(){
-  const yr = new Date().getFullYear();
+  const yr = (typeof year !== 'undefined') ? year : new Date().getFullYear();
   const idx = drums.date?.getIdx() ?? 0;
   const { mo, dy } = idxToDate(yr, idx);
   const hr = S.allday ? 0 : (drums.hr?.getIdx()??0);
@@ -7690,8 +7691,9 @@ window.cupertinoOpen = function(tab){
   const tmS = document.getElementById('input-start-time')?.value || '';
   const tmE = document.getElementById('input-end-time')?.value   || '';
 
+  const calYr = (typeof year !== 'undefined') ? year : new Date().getFullYear();
   const today = new Date();
-  const defObj = {yr:today.getFullYear(), mo:today.getMonth()+1, dy:today.getDate(), hr:9, mn:0};
+  const defObj = {yr:calYr, mo:today.getMonth()+1, dy:today.getDate(), hr:9, mn:0};
 
   S.start = dsToObj(dsS, tmS) || defObj;
   S.end   = dsToObj(dsE, tmE) || {...defObj, hr:10};
@@ -7708,12 +7710,14 @@ window.cupertinoOpen = function(tab){
 /* ── Tab switch ── */
 window.cupertinoTab = function(tab, silent){
   if(!silent && drums.date){
+    /* 現在のタブの値を保存してから切り替え */
     S[S.tab] = readDrums();
     refreshTabLabels();
   }
   S.tab = tab;
   document.getElementById('cpk-tab-s').classList.toggle('active', tab==='start');
   document.getElementById('cpk-tab-e').classList.toggle('active', tab==='end');
+  /* 切り替え先のタブの値でドラムを再構築 */
   buildDrums(tab==='start' ? S.start : S.end);
 };
 
@@ -7748,6 +7752,7 @@ window.cupertinoClose = function(){
 
 /* ── Apply / Done ── */
 window.cupertinoApply = function(){
+  /* 現在表示中のタブの値を必ず保存 */
   if(drums.date){ S[S.tab] = readDrums(); }
 
   function writeToInputs(obj, prefix){
@@ -7767,6 +7772,7 @@ window.cupertinoApply = function(){
   writeToInputs(S.start, 'start');
   writeToInputs(S.end,   'end');
 
+  /* 終了日が開始日より前なら開始日に合わせる */
   const dsS = objToDs(S.start), dsE = objToDs(S.end);
   if(dsE < dsS){
     S.end = {...S.start, hr: Math.min(S.start.hr+1,23), mn: S.start.mn};
@@ -12418,7 +12424,6 @@ function syncEndDate(){const s=document.getElementById('input-start').value,e=do
 function handleNextBtn(){if(currentStep===2){if(!selectedTour)return;goStep(3);prefillForm(selectedTour);}else if(currentStep===3){submitEvent();}}
 function submitEvent(){
   const title=document.getElementById('input-title').value.trim();const place=document.getElementById('input-place').value.trim();const start=document.getElementById('input-start').value;const end=document.getElementById('input-end').value||start;const memo=document.getElementById('input-memo').value.trim();
-  alert('start="'+start+'" / end="'+end+'" / title="'+title+'"');
   if(!title){showToast('予定名を入力してください');return;}
   if(!selectedCat||!start)return;
   if(editingId){
@@ -12741,7 +12746,7 @@ function saveNotifSettings(){
   showToast('通知設定を保存しました ✓');
 }
 
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
+function showToast(msg){const t=document.getElementById('toast');if(!t)return;t.classList.remove('show');void t.offsetWidth;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
 
 // ★★★ スプリットハンドル：ドラッグで上下比率を変更 ★★★
 // flex-grow を比率として扱う（合計10）
