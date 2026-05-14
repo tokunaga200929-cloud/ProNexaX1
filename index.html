@@ -355,7 +355,7 @@ button,input,select,textarea{
   flex-shrink:0;
   box-shadow:none;
   color:#1d1d1f;
-  border-bottom:1.5px solid #39C892;
+  border-bottom:1.5px solid var(--green-main);
 }
 .app-header-top{
   display:flex;
@@ -3892,7 +3892,7 @@ button,input,select,textarea{
   padding:env(safe-area-inset-top,0px) 16px 16px;
   flex-shrink:0;
   box-shadow:0 1px 0 rgba(0,0,0,.06);
-  border-bottom:1.5px solid #39C892;
+  border-bottom:1.5px solid var(--green-main);
   display:flex;align-items:center;gap:10px;
   color:#1d1d1f;
 }
@@ -6380,24 +6380,6 @@ body.is-admin .admin-card-actions.admin-only {
       <button class="settings-close" id="settings-close" aria-label="閉じる">×</button>
     </div>
     <div class="settings-scroll">
-      <!-- ① テーマ選択 -->
-      <div class="settings-section">
-        <div class="settings-section-title">テーマ</div>
-        <div class="theme-row">
-          <div class="theme-card" data-theme="light">
-            <div class="theme-card-icon">☀️</div>
-            <div class="theme-card-label">ライト</div>
-          </div>
-          <div class="theme-card" data-theme="dark">
-            <div class="theme-card-icon">🌙</div>
-            <div class="theme-card-label">ダーク</div>
-          </div>
-          <div class="theme-card" data-theme="system">
-            <div class="theme-card-icon">⚙️</div>
-            <div class="theme-card-label">システム</div>
-          </div>
-        </div>
-      </div>
       <!-- ② カラーテーマ -->
       <div class="settings-section">
         <div class="settings-section-title">カラーテーマ</div>
@@ -13595,7 +13577,7 @@ const COLOR_THEME_PRIMARY={
     if(!raw)return;
     const obj=JSON.parse(raw);
     if(!obj||typeof obj!=='object')return;
-    if(['light','dark','system'].includes(obj.theme))designConfig.theme=obj.theme;
+    if(['light','dark','system'].includes(obj.theme))designConfig.theme='light'; // 常にライト固定
     if(['green','blue','black','gold','mono','sakura','lavender','mint','peach'].includes(obj.colorTheme))designConfig.colorTheme=obj.colorTheme;
     if(obj.categoryColors&&typeof obj.categoryColors==='object'){
       Object.keys(designConfig.categoryColors).forEach(k=>{
@@ -13628,10 +13610,7 @@ function getContrastTextColor(hex){
 // システムのダーク優先設定を検知
 const sysDarkMql=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
 function effectiveTheme(){
-  if(designConfig.theme==='system'){
-    return(sysDarkMql&&sysDarkMql.matches)?'dark':'light';
-  }
-  return designConfig.theme;
+  return 'light';
 }
 
 // CSS 変数とルート属性を反映
