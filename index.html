@@ -9253,7 +9253,7 @@ function buildChipsHTML(ds,occupiedLanes){
   const shown=singleDayEvs.slice(0,remain);
   // ※ 複数日イベントはバー化されているため "+N件" にはカウントしない
   let html=spacerHtml+shown.map(e=>{
-    const s=e.name.length>6?e.name.slice(0,6)+'…':e.name;
+    const s=e.name.length>5?e.name.slice(0,5)+'…':e.name;
     const colorStyle=e.color?` style="background:${e.color};color:#fff;"` : '';
     return`<span class="ev-chip chip-${e.cat}"${colorStyle} data-event-id="${e.id}">${s}</span>`;
   }).join('');
