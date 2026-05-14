@@ -12381,7 +12381,11 @@ function onTourClick(idx,q){
 function prefillForm(tour){
   const banner=document.getElementById('edit-banner');banner.style.display='none';
   if(tour){document.getElementById('input-title').value=tour.name;document.getElementById('input-place').value=tour.place;document.getElementById('input-start').value=tour.start;document.getElementById('input-end').value=tour.end;document.getElementById('input-memo').value='';const cat=CATEGORIES.find(c=>c.key===selectedCat);document.getElementById('sel-preview').innerHTML=`<div class="sel-preview" style="border-left-color:${cat?cat.color:'#1AAF7A'}"><div class="sel-preview-name">${tour.name}</div><div class="sel-preview-meta">${tour.start.slice(5).replace('-','/')} 〜 ${tour.end.slice(5).replace('-','/')} ｜ ${tour.place}</div></div>`;}
-  else{const def=defaultDateStr();['input-title','input-place','input-memo'].forEach(id=>document.getElementById(id).value='');document.getElementById('input-start').value=def;document.getElementById('input-end').value=def;document.getElementById('sel-preview').innerHTML='';
+  else{const def=defaultDateStr();['input-title','input-place','input-memo'].forEach(id=>document.getElementById(id).value='');document.getElementById('input-start').value=def;document.getElementById('input-end').value=def;
+    // 時刻フィールドを終日マーカーでリセット（日付ズレ防止）
+    const stEl=document.getElementById('input-start-time');const enEl=document.getElementById('input-end-time');
+    if(stEl)stEl.value='__allday__';if(enEl)enEl.value='__allday__';
+    document.getElementById('sel-preview').innerHTML='';
     // ★ 個人予定：ホイールピッカーの表示ボタンにも日付をセット
     if(def){
       const[_y,_m,_d]=def.split('-').map(Number);
@@ -12414,6 +12418,7 @@ function syncEndDate(){const s=document.getElementById('input-start').value,e=do
 function handleNextBtn(){if(currentStep===2){if(!selectedTour)return;goStep(3);prefillForm(selectedTour);}else if(currentStep===3){submitEvent();}}
 function submitEvent(){
   const title=document.getElementById('input-title').value.trim();const place=document.getElementById('input-place').value.trim();const start=document.getElementById('input-start').value;const end=document.getElementById('input-end').value||start;const memo=document.getElementById('input-memo').value.trim();
+  alert('start="'+start+'" / end="'+end+'" / title="'+title+'"');
   if(!title){showToast('予定名を入力してください');return;}
   if(!selectedCat||!start)return;
   if(editingId){
@@ -13994,6 +13999,10 @@ closeModal=function(){
 // submitEvent 拡張：「時間指定」モードなら datetime を保存
 const _origSubmitEvent=submitEvent;
 submitEvent=function(){
+  // タイトル未入力チェック
+  const _title=document.getElementById('input-title')?.value.trim();
+  if(!_title){showToast('予定名を入力してください');return;}
+
   const stEl=document.getElementById('input-start-time');
   const enEl=document.getElementById('input-end-time');
   const startDate=document.getElementById('input-start').value;
