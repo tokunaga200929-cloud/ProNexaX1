@@ -5784,21 +5784,22 @@ body.is-admin .admin-badge{display:block;}
 .url-confirm-btn:active{opacity:.8;transform:scale(.975);}
 .url-cancel-btn{width:80px;height:48px;background:#f0f0f4;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);transition:opacity .1s;}
 .url-cancel-btn:active{opacity:.6;}
+/* ── 複数大会一括登録UI ── */
 .url-bulk-btn{flex:1;height:48px;background:linear-gradient(135deg,#39C892,#22A874);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 12px rgba(34,168,116,.28);-webkit-tap-highlight-color:transparent;transition:opacity .1s,transform .1s;}
 .url-bulk-btn:active{opacity:.8;transform:scale(.975);}
 .url-bulk-btn:disabled{opacity:.4;cursor:not-allowed;}
-.url-multi-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.url-multi-count{font-size:12px;font-weight:700;color:#1d1d1f;}
-.url-multi-selall{font-size:11px;font-weight:600;color:#39C892;cursor:pointer;padding:3px 6px;-webkit-tap-highlight-color:transparent;}
-.url-tour-list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-.url-tour-list::-webkit-scrollbar{display:none;}
-.url-tour-item{display:flex;align-items:flex-start;gap:8px;border:1.5px solid rgba(57,200,146,.2);border-radius:10px;padding:9px 10px;cursor:pointer;transition:border-color .15s,background .15s;-webkit-tap-highlight-color:transparent;}
-.url-tour-item.checked{border-color:#39C892;background:#f0faf5;}
-.url-tour-cb{width:20px;height:20px;border-radius:6px;border:2px solid #ccc;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:background .15s,border-color .15s;}
-.url-tour-item.checked .url-tour-cb{background:#39C892;border-color:#39C892;color:#fff;}
-.url-tour-name{font-size:12.5px;font-weight:700;color:#1d1d1f;margin-bottom:3px;}
-.url-tour-meta{font-size:10.5px;color:#8e8e93;display:flex;flex-wrap:wrap;gap:3px;}
-.url-tour-chip{background:#f0f0f5;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:600;color:#555;}
+.ai-tour-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.ai-tour-list::-webkit-scrollbar{display:none;}
+.ai-tour-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.ai-tour-count{font-size:12px;font-weight:700;color:#1d1d1f;}
+.ai-tour-selall{font-size:11px;font-weight:600;color:#39C892;cursor:pointer;padding:3px 6px;-webkit-tap-highlight-color:transparent;}
+.ai-tour-item{display:flex;align-items:flex-start;gap:8px;border:1.5px solid rgba(57,200,146,.2);border-radius:10px;padding:8px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s;}
+.ai-tour-item.on{border-color:#39C892;background:#f0faf5;}
+.ai-tour-cb{width:18px;height:18px;border-radius:5px;border:2px solid #ccc;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-top:1px;transition:background .15s,border-color .15s;}
+.ai-tour-item.on .ai-tour-cb{background:#39C892;border-color:#39C892;}
+.ai-tour-name{font-size:12px;font-weight:700;color:#1d1d1f;margin-bottom:2px;}
+.ai-tour-meta{font-size:10px;color:#8e8e93;display:flex;flex-wrap:wrap;gap:3px;}
+.ai-tour-chip{background:#f0f0f5;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:600;color:#555;}
 
 /* ── 管理者ログインモーダル ── */
 .admin-login-overlay{position:fixed;inset:0;z-index:7000;background:rgba(0,0,0,.48);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s ease;}
@@ -6700,8 +6701,8 @@ body.is-admin .admin-card-actions.admin-only {
             <input class="url-input" id="url-modal-input" type="url"
               placeholder="https://... または Instagram URL"
               oninput="onUrlInputChange()"
-              onkeydown="if(event.key==='Enter')startUrlFetch()">
-            <button class="url-fetch-btn" id="url-fetch-btn" onclick="startUrlFetch()">解析</button>
+              onkeydown="if(event.key==='Enter')_aiStartFetch()">
+            <button class="url-fetch-btn" id="url-fetch-btn" onclick="_aiStartFetch()">解析</button>
           </div>
           <div id="url-type-display" style="margin-bottom:10px;display:none;">
             <span class="url-type-chip" id="url-type-chip">🌐 website</span>
@@ -6720,7 +6721,7 @@ body.is-admin .admin-card-actions.admin-only {
             <button class="url-confirm-btn" id="url-confirm-btn" style="display:none;" onclick="confirmUrlResult()">
               この内容で追加する
             </button>
-            <button class="url-bulk-btn" id="url-bulk-btn" style="display:none;" onclick="bulkRegisterTournaments()">
+            <button class="url-bulk-btn" id="url-bulk-btn" style="display:none;" onclick="_aiBulkRegister()">
               選択した大会を追加
             </button>
           </div>
@@ -15804,12 +15805,46 @@ function _setUrlProgress(pct, label) {
   if (lbl) lbl.textContent = label;
 }
 
-/** メイン解析フロー — AiUrlParser 定義後に window._doStartUrlFetch で上書きされる */
+/** メイン解析フロー */
 async function startUrlFetch() {
-  if (typeof window._doStartUrlFetch === 'function') {
-    return window._doStartUrlFetch();
+  const url = document.getElementById('url-modal-input')?.value?.trim();
+  if (!url || !url.startsWith('http')) {
+    _showUrlError('有効なURLを入力してください（https://... ）');
+    return;
   }
-  _showUrlError('解析エンジン読み込み中です。少し待ってから再度お試しください。');
+  const btn = document.getElementById('url-fetch-btn');
+  btn.disabled = true;
+  _hideUrlResults();
+
+  const sourceType = detectSourceType(url);
+
+  // progress 表示
+  document.getElementById('url-progress').classList.add('show');
+  _setUrlProgress(10, 'URLを解析中...');
+
+  try {
+    // ① parsingStatus: fetching
+    _setUrlProgress(30, 'データを取得中...');
+    const rawData = await fetchUrlContent(url);
+
+    _setUrlProgress(60, '大会情報を抽出中...');
+    // ② parser layer へ
+    const parsed = await parseTournamentUrl(url, sourceType, rawData);
+
+    _setUrlProgress(90, 'AI正規化中...');
+    // ③ AI正規化（現在はダミー、将来OpenAI接続）
+    const normalized = await normalizeTournamentData(parsed, sourceType);
+
+    _setUrlProgress(100, '完了');
+    _urlParseResult = { ...normalized, sourceUrl: url, sourceType };
+    _showUrlResult(_urlParseResult);
+
+  } catch(err) {
+    console.warn('[URL Parse]', err);
+    _showUrlError(err.message || '解析に失敗しました');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function _showUrlResult(data) {
@@ -21335,123 +21370,138 @@ window.DateNormalizer  = DateNormalizer;
 window.ConfidenceCalculator = ConfidenceCalculator;
 
 // ================================================================
-// ★ startUrlFetch 実装（AiUrlParser 定義後にここで登録）
-// ★ 複数大会一括登録対応版
+// ★ URL解析 複数大会一括登録（AiUrlParser 定義後に配置）
 // ================================================================
-let _urlParseResults = [];
+let _aiResults = [];
 
-window._doStartUrlFetch = async function() {
+window._aiStartFetch = async function() {
   const url = document.getElementById('url-modal-input')?.value?.trim();
   if (!url || !url.startsWith('http')) {
-    _showUrlError('有効なURLを入力してください（https://... ）');
+    _aiShowError('有効なURLを入力してください（https://... ）');
     return;
   }
   const btn = document.getElementById('url-fetch-btn');
   btn.disabled = true;
-  _hideUrlResults();
+  _aiHideAll();
   document.getElementById('url-progress').classList.add('show');
   _setUrlProgress(10, 'URLを解析中...');
 
   try {
-    _setUrlProgress(30, 'ページを取得中...');
-    const aiResult = await AiUrlParser.parse(url, (step) => {
-      const labels = { fetch:'ページ取得中...', parse:'テキスト解析中...', ai:'AI解析中...', cat:'カテゴリ判定中...' };
-      if (labels[step]) _setUrlProgress(60, labels[step]);
+    const aiRaw = await AiUrlParser.parse(url, (step) => {
+      const map = { fetch:'ページ取得中...', parse:'テキスト解析中...', ai:'AI解析中...', cat:'カテゴリ判定中...' };
+      if (map[step]) _setUrlProgress(60, map[step]);
     });
 
-    // 配列・単一オブジェクト両対応
-    let results = Array.isArray(aiResult) ? aiResult : (aiResult ? [aiResult] : []);
-    if (!results.length) throw new Error('大会情報を抽出できませんでした');
+    const list = Array.isArray(aiRaw) ? aiRaw : (aiRaw ? [aiRaw] : []);
+    if (!list.length) throw new Error('大会情報を抽出できませんでした');
 
-    _setUrlProgress(100, `${results.length}件の大会を抽出しました`);
-    _urlParseResults = results.map(r => ({ ...r, sourceUrl: url }));
-    _showUrlMultiResult(_urlParseResults);
+    _setUrlProgress(100, `${list.length}件の大会を抽出しました`);
+    _aiResults = list.map(r => ({ ...r, _srcUrl: url }));
+    _aiShowList(_aiResults);
 
-  } catch(err) {
-    console.warn('[URL Parse]', err);
-    _showUrlError(err.message || '解析に失敗しました');
+  } catch(e) {
+    console.warn('[AI URL]', e);
+    _aiShowError(e.message || '解析に失敗しました');
   } finally {
     btn.disabled = false;
   }
 };
 
-function _showUrlMultiResult(results) {
+function _aiHideAll() {
+  ['url-progress','url-result-box','url-error-box'].forEach(id => {
+    document.getElementById(id)?.classList.remove('show');
+  });
+  document.getElementById('url-confirm-btn').style.display = 'none';
+  document.getElementById('url-bulk-btn').style.display   = 'none';
+  _setUrlProgress(0, '');
+}
+
+function _aiShowError(msg) {
+  _aiHideAll();
+  const eb = document.getElementById('url-error-box');
+  if (eb) { eb.textContent = '⚠️ ' + msg; eb.classList.add('show'); }
+}
+
+function _aiShowList(list) {
   const box  = document.getElementById('url-result-box');
   const rows = document.getElementById('url-result-rows');
   if (!box) return;
 
-  rows.innerHTML = `
-    <div class="url-multi-header">
-      <span class="url-multi-count">${results.length}件の大会が見つかりました</span>
-      <span class="url-multi-selall" onclick="_urlToggleAll()">すべて選択</span>
-    </div>
-    <div class="url-tour-list" id="url-tour-list">
-      ${results.map((t, i) => {
-        const name  = escapeHtml(t.name || t.title || '(大会名不明)');
-        const start = t.start || t.startDate || '';
-        const end   = t.end   || t.endDate   || '';
-        const place = escapeHtml(t.place || t.course || '');
-        const cat   = escapeHtml(t.category || '');
-        const prize = escapeHtml(t.prize || '');
-        const fee   = escapeHtml(t.entryFee || '');
-        const chips = [
-          start ? `<span class="url-tour-chip">📅 ${start}${end && end!==start?' 〜 '+end:''}</span>` : '',
-          place ? `<span class="url-tour-chip">📍 ${place}</span>` : '',
-          cat   ? `<span class="url-tour-chip">${cat}</span>` : '',
-          prize ? `<span class="url-tour-chip">💰 ${prize}</span>` : '',
-          fee   ? `<span class="url-tour-chip">💳 ${fee}</span>` : '',
-        ].filter(Boolean).join('');
-        return `<div class="url-tour-item checked" data-idx="${i}" onclick="_urlToggleItem(this)">
-          <div class="url-tour-cb">✓</div>
-          <div><div class="url-tour-name">${name}</div><div class="url-tour-meta">${chips || '<span class="url-tour-chip">情報少</span>'}</div></div>
-        </div>`;
-      }).join('')}
-    </div>`;
+  rows.innerHTML =
+    `<div class="ai-tour-header">
+       <span class="ai-tour-count">${list.length}件の大会が見つかりました</span>
+       <span class="ai-tour-selall" onclick="_aiToggleAll()">すべて選択</span>
+     </div>
+     <div class="ai-tour-list" id="ai-tour-list">
+       ${list.map((t, i) => {
+         const nm  = escapeHtml(t.name || t.title || '(大会名不明)');
+         const s   = t.start || t.startDate || '';
+         const e   = t.end   || t.endDate   || '';
+         const pl  = escapeHtml(t.place || t.course || '');
+         const cat = escapeHtml(t.category || '');
+         const pr  = escapeHtml(t.prize || '');
+         const fe  = escapeHtml(t.entryFee || '');
+         const chips = [
+           s  ? `<span class="ai-tour-chip">📅 ${s}${e && e!==s?' 〜 '+e:''}</span>` : '',
+           pl ? `<span class="ai-tour-chip">📍 ${pl}</span>` : '',
+           cat? `<span class="ai-tour-chip">${cat}</span>` : '',
+           pr ? `<span class="ai-tour-chip">💰 ${pr}</span>` : '',
+           fe ? `<span class="ai-tour-chip">💳 ${fe}</span>` : '',
+         ].filter(Boolean).join('');
+         return `<div class="ai-tour-item on" data-i="${i}" onclick="_aiToggle(this)">
+           <div class="ai-tour-cb">✓</div>
+           <div>
+             <div class="ai-tour-name">${nm}</div>
+             <div class="ai-tour-meta">${chips || '<span class="ai-tour-chip">情報少</span>'}</div>
+           </div>
+         </div>`;
+       }).join('')}
+     </div>`;
 
   box.classList.add('show');
   document.getElementById('url-error-box').classList.remove('show');
   document.getElementById('url-confirm-btn').style.display = 'none';
-  document.getElementById('url-bulk-btn').style.display = '';
-  _updateBulkBtn();
+  const bulkBtn = document.getElementById('url-bulk-btn');
+  bulkBtn.style.display = '';
+  _aiUpdateBtn();
 }
 
-window._urlToggleItem = function(el) { el.classList.toggle('checked'); _updateBulkBtn(); };
-window._urlToggleAll  = function() {
-  const items = document.querySelectorAll('#url-tour-list .url-tour-item');
-  const all   = [...items].every(el => el.classList.contains('checked'));
-  items.forEach(el => all ? el.classList.remove('checked') : el.classList.add('checked'));
-  _updateBulkBtn();
+window._aiToggle = function(el) { el.classList.toggle('on'); _aiUpdateBtn(); };
+window._aiToggleAll = function() {
+  const items = [...document.querySelectorAll('#ai-tour-list .ai-tour-item')];
+  const allOn = items.every(el => el.classList.contains('on'));
+  items.forEach(el => allOn ? el.classList.remove('on') : el.classList.add('on'));
+  _aiUpdateBtn();
 };
-function _updateBulkBtn() {
-  const btn   = document.getElementById('url-bulk-btn');
+function _aiUpdateBtn() {
+  const btn = document.getElementById('url-bulk-btn');
   if (!btn) return;
-  const count = document.querySelectorAll('#url-tour-list .url-tour-item.checked').length;
-  btn.textContent = count > 0 ? `選択した ${count} 件を追加` : '大会を選択してください';
-  btn.disabled    = count === 0;
+  const n = document.querySelectorAll('#ai-tour-list .ai-tour-item.on').length;
+  btn.textContent = n ? `選択した ${n} 件を追加` : '大会を選択してください';
+  btn.disabled    = !n;
 }
 
-window.bulkRegisterTournaments = function() {
-  if (!_urlParseResults.length) return;
-  const checked = [...document.querySelectorAll('#url-tour-list .url-tour-item.checked')];
-  const selected = checked.map(el => _urlParseResults[parseInt(el.dataset.idx)]).filter(Boolean);
-  if (!selected.length) { showToast('大会を選択してください'); return; }
+window._aiBulkRegister = function() {
+  const checked = [...document.querySelectorAll('#ai-tour-list .ai-tour-item.on')];
+  const sel = checked.map(el => _aiResults[+el.dataset.i]).filter(Boolean);
+  if (!sel.length) { showToast('大会を選択してください'); return; }
 
   let added = 0;
-  selected.forEach(t => {
+  sel.forEach(t => {
     const name  = t.name || t.title || '';
     const start = t.start || t.startDate || '';
     if (!name || !start) return;
-    const end = t.end || t.endDate || start;
-    const cat = t.category || 'personal';
-    const memoLines = [
+    const end   = t.end || t.endDate || start;
+    const cat   = t.category || 'personal';
+    const memo  = [
       t.qualification ? `出場資格: ${t.qualification}` : '',
-      t.capacity      ? `定員: ${t.capacity}`           : '',
-      t.organizer     ? `主催: ${t.organizer}`           : '',
-      t.entryFee      ? `参加費: ${t.entryFee}`          : '',
-      t.prize         ? `賞金: ${t.prize}`               : '',
-      t.entryUrl      ? `エントリー: ${t.entryUrl}`      : '',
-      t.instagram     ? `Instagram: ${t.instagram}`      : '',
-      t.memo || t.notes ? (t.memo || t.notes)            : '',
+      t.capacity      ? `定員: ${t.capacity}`          : '',
+      t.organizer     ? `主催: ${t.organizer}`          : '',
+      t.entryFee      ? `参加費: ${t.entryFee}`         : '',
+      t.prize         ? `賞金: ${t.prize}`              : '',
+      t.entryUrl      ? `エントリー: ${t.entryUrl}`     : '',
+      t.instagram     ? `Instagram: ${t.instagram}`     : '',
+      t.memo || t.notes || '',
     ].filter(Boolean).join('\n');
 
     EVENTS.push({
@@ -21460,41 +21510,25 @@ window.bulkRegisterTournaments = function() {
       date:  start,
       end,
       place: t.place || t.course || '',
-      memo:  memoLines,
+      memo,
       cat,
       entryDeadline: t.entryDeadline || null,
       entryStatus:   'open',
       notif:         {},
-      _fromUrl:      t.sourceUrl || '',
+      _fromUrl:      t._srcUrl || '',
     });
     added++;
   });
 
-  if (added > 0) {
+  if (added) {
     closeUrlModal();
     renderAllPanels();
     renderCalList();
     _saveUserEvents();
     showToast(`✅ ${added}件の大会を追加しました`);
   } else {
-    showToast('追加できる大会がありませんでした（大会名・開始日が必要）');
+    showToast('追加できませんでした（大会名・開始日が必要）');
   }
-};
-
-// _hideUrlResults に bulk-btn 非表示を追加
-const _origHideUrlResults = window._hideUrlResults || null;
-window._hideUrlResults = function() {
-  const prog = document.getElementById('url-progress');
-  const box  = document.getElementById('url-result-box');
-  const err  = document.getElementById('url-error-box');
-  const conf = document.getElementById('url-confirm-btn');
-  const bulk = document.getElementById('url-bulk-btn');
-  if (prog) prog.classList.remove('show');
-  if (box)  box.classList.remove('show');
-  if (err)  err.classList.remove('show');
-  if (conf) conf.style.display = 'none';
-  if (bulk) bulk.style.display = 'none';
-  _setUrlProgress(0,'');
 };
 
 // ================================================================
