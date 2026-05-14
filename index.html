@@ -12110,7 +12110,7 @@ function goStep(n){
   const footer=document.getElementById('modal-footer'),btn=document.getElementById('modal-next-btn');
   if(n===1){selectedCat=null;selectedTour=null;tourLastClick={t:0,idx:-1,q:''};renderCatGrid();footer.classList.add('footer-hidden');}
   else if(n===2){footer.classList.remove('footer-hidden');btn.textContent='次へ';btn.disabled=!selectedTour;}
-  else{footer.classList.remove('footer-hidden');btn.textContent=isEdit?'変更を保存する':'カレンダーに追加する';btn.disabled=false;setTimeout(checkSubmit,80);const backBtn=document.getElementById('btn-back-step3');if(isEdit){backBtn.style.display='none';}else{backBtn.style.display='';}}
+  else{footer.classList.remove('footer-hidden');btn.textContent=isEdit?'変更を保存する':'カレンダーに追加する';btn.disabled=false;setTimeout(function(){btn.disabled=false;},200);const backBtn=document.getElementById('btn-back-step3');if(isEdit){backBtn.style.display='none';}else{backBtn.style.display='';}}
   document.getElementById('modal-scroll').scrollTop=0;
 }
 function renderCatGrid(){
@@ -12411,7 +12411,10 @@ function prefillFormFromEvent(ev){
 }
 function checkSubmit(){document.getElementById('modal-next-btn').disabled=false;}
 function syncEndDate(){const s=document.getElementById('input-start').value,e=document.getElementById('input-end');if(s&&(!e.value||e.value<s))e.value=s;}
-function handleNextBtn(){if(currentStep===2){if(!selectedTour)return;goStep(3);prefillForm(selectedTour);}else if(currentStep===3){submitEvent();}}
+function handleNextBtn(){
+  alert('ボタンタップ確認！ currentStep=' + currentStep + ' / disabled=' + document.getElementById('modal-next-btn').disabled);
+  if(currentStep===2){if(!selectedTour)return;goStep(3);prefillForm(selectedTour);}else if(currentStep===3){submitEvent();}
+}
 function submitEvent(){
   const title=document.getElementById('input-title').value.trim();const place=document.getElementById('input-place').value.trim();const start=document.getElementById('input-start').value;const end=document.getElementById('input-end').value||start;const memo=document.getElementById('input-memo').value.trim();
   if(!title){showToast('予定名を入力してください');return;}
@@ -22727,16 +22730,16 @@ window.catselClose = function(keepMainOv) {
         /* 編集モード → 既存フローそのまま */
         _orig(ds, editId);
       } else {
-        /* 新規追加 → state だけ設定して catsel を開く */
-        _orig(ds, null);                              // state(modalPresetDate等)設定
-        /* ★ バグ修正: _orig 内の goStep(1) 等で state が上書きされても
-           ダブルクリック日付(ds)を確実に保持しなおす */
-        if (ds) {
-          if (typeof window.modalPresetDate !== 'undefined') window.modalPresetDate = ds;
-          if (typeof window.selectedDate    !== 'undefined') window.selectedDate    = ds;
-        }
+        /* 新規追加 → state だけセットして catsel を開く（_origは呼ばない） */
+        const ds2 = (ds && typeof ds === 'string') ? ds : (typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0,10));
+        if (typeof window.modalPresetDate !== 'undefined') window.modalPresetDate = ds2;
+        if (typeof window.selectedDate    !== 'undefined') window.selectedDate    = ds2;
+        if (typeof window.editingId       !== 'undefined') window.editingId       = null;
+        if (typeof window.selectedCat     !== 'undefined') window.selectedCat     = null;
+        if (typeof window.selectedTour    !== 'undefined') window.selectedTour    = null;
+        /* modal-overlay は catsel 表示中は非表示のまま */
         const mainOv = document.getElementById('modal-overlay');
-        if (mainOv) mainOv.classList.remove('show'); // catsel 表示中は非表示
+        if (mainOv) mainOv.classList.remove('show');
         catselOpen();
       }
     };
