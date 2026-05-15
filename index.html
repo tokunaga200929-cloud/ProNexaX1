@@ -3537,33 +3537,36 @@ button,input,select,textarea{
   flex:0 0 auto;
   width:64px;height:64px;
   border-radius:50%;
-  background:#fff;
+  /* 画像自体に白丸・影が含まれているため背景・影はなし */
+  background:transparent;
+  box-shadow:none;
   transform:translateY(-14px);
-  box-shadow:0 8px 22px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06),0 0 0 1px rgba(0,0,0,0.04);
   padding:0;gap:0;
-  transition:transform .15s cubic-bezier(.34,1.56,.64,1),box-shadow .15s ease;
+  transition:transform .15s cubic-bezier(.34,1.56,.64,1),opacity .1s ease;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
-  /* ガラス感 */
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
 }
 .bnav-btn.center-tab:active{
   transform:translateY(-11px) scale(.92);
-  box-shadow:0 4px 12px rgba(0,0,0,0.10),0 1px 4px rgba(0,0,0,0.06);
+  opacity:.85;
 }
 .p-tab-icon{
-  width:32px;height:32px;
-  object-fit:contain;
+  /* 画像をボタンいっぱいに表示し、角をクリップ */
+  width:64px;height:64px;
+  border-radius:50%;
+  object-fit:cover;
   pointer-events:none;
   display:block;
+  flex-shrink:0;
 }
 .p-tab-fallback{
-  width:32px;height:32px;
+  /* 画像なし時のフォールバック（白丸＋緑P）*/
+  width:64px;height:64px;
   border-radius:50%;
-  background:linear-gradient(145deg,#1AAF7A,#0D8C60);
-  color:#fff;
-  font-size:19px;font-weight:800;
+  background:#fff;
+  box-shadow:0 8px 22px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06);
+  color:#1AAF7A;
+  font-size:26px;font-weight:800;
   font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;
   display:flex;align-items:center;justify-content:center;
   letter-spacing:-.5px;
@@ -6640,7 +6643,7 @@ body.is-admin .admin-card-actions.admin-only {
     <!-- ★★★ 中央Pロゴタブ（ProNexaX ブランドタブ） ★★★ -->
     <!-- 画像差し替え：images/p-tab-icon.png を置くだけでOK -->
     <button class="bnav-btn center-tab" id="nav-center" onclick="alert('開発中')" aria-label="ProNexaX">
-      <img class="p-tab-icon" src="images/p-tab-icon.png.PNG" alt="P"
+      <img class="p-tab-icon" src="images/p-tab-icon.png" alt="P"
         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
       <span class="p-tab-fallback" style="display:none;">P</span>
     </button>
