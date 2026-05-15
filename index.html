@@ -3529,6 +3529,50 @@ button,input,select,textarea{
 .bnav-label{font-size:11px;color:var(--text-tertiary);line-height:1;font-weight:400;transition:color .15s;}
 .bnav-btn.active{background:none;}
 .bnav-btn.active .bnav-label{color:var(--green-main);font-weight:600;}
+
+/* ================================================================ */
+/* ★★★ 中央Pロゴタブ（ProNexaX ブランドタブ）                        */
+/* ================================================================ */
+.bnav-btn.center-tab{
+  flex:0 0 auto;
+  width:64px;height:64px;
+  border-radius:50%;
+  background:#fff;
+  transform:translateY(-14px);
+  box-shadow:0 8px 22px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06),0 0 0 1px rgba(0,0,0,0.04);
+  padding:0;gap:0;
+  transition:transform .15s cubic-bezier(.34,1.56,.64,1),box-shadow .15s ease;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  /* ガラス感 */
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.bnav-btn.center-tab:active{
+  transform:translateY(-11px) scale(.92);
+  box-shadow:0 4px 12px rgba(0,0,0,0.10),0 1px 4px rgba(0,0,0,0.06);
+}
+.p-tab-icon{
+  width:32px;height:32px;
+  object-fit:contain;
+  pointer-events:none;
+  display:block;
+}
+.p-tab-fallback{
+  width:32px;height:32px;
+  border-radius:50%;
+  background:linear-gradient(145deg,#1AAF7A,#0D8C60);
+  color:#fff;
+  font-size:19px;font-weight:800;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;
+  display:flex;align-items:center;justify-content:center;
+  letter-spacing:-.5px;
+  pointer-events:none;
+  flex-shrink:0;
+}
+/* 管理者時：マイページタブを非表示 */
+body.is-admin #nav-mypage{display:none !important;}
+
 .home-bar{height:3px;width:68px;background:#DDE8E4;border-radius:2px;margin:2px auto 1px;}
 .toast{position:fixed;bottom:calc(max(env(safe-area-inset-bottom,0px),0px) + 68px);left:14px;right:14px;background:linear-gradient(135deg,var(--green-main),var(--green-dark));color:#fff;font-size:11px;font-weight:600;padding:8px 14px;border-radius:11px;text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99999;box-shadow:0 4px 16px rgba(10,107,71,.3);}
 .toast.show{opacity:1;}
@@ -6592,6 +6636,13 @@ body.is-admin .admin-card-actions.admin-only {
         <line x1="14.5" y1="14.5" x2="19" y2="19" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>
       </svg>
       <span class="bnav-label">試合検索</span>
+    </button>
+    <!-- ★★★ 中央Pロゴタブ（ProNexaX ブランドタブ） ★★★ -->
+    <!-- 画像差し替え：images/p-tab-icon.png を置くだけでOK -->
+    <button class="bnav-btn center-tab" id="nav-center" onclick="alert('開発中')" aria-label="ProNexaX">
+      <img class="p-tab-icon" src="images/p-tab-icon.png" alt="P"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <span class="p-tab-fallback" style="display:none;">P</span>
     </button>
     <button class="bnav-btn" id="nav-finance" onclick="switchPage('finance')">
       <svg id="icon-finance" width="20" height="20" viewBox="0 0 22 22" fill="none">
@@ -16138,8 +16189,10 @@ function _initAdminNav() {
       openAdminLogin();
     }
   };
+  // ★ 管理者時のみラベルを「管理」に変更。
+  //    非管理者は「マイページ」のまま維持（CSSで管理者時は非表示）。
   const lbl = btn.querySelector('.bnav-label');
-  if (lbl) lbl.textContent = '管理';
+  if (lbl && _isAdmin) lbl.textContent = '管理';
 }
 
 // ================================================================
