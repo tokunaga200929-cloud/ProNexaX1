@@ -3542,17 +3542,16 @@ button,input,select,textarea{
   border-radius:50%;
   background:transparent;
   box-shadow:none;
-  /* translateY で自然な浮遊感。overflow:visible により確実に表示される */
-  transform:translateY(-12px);
+  transform:none;
   padding:0;gap:0;
-  transition:transform .15s cubic-bezier(.34,1.56,.64,1),opacity .12s ease;
+  transition:transform .15s ease,opacity .12s ease;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
   position:relative;
   z-index:10;
 }
 .bnav-btn.center-tab:active{
-  transform:translateY(-9px) scale(.91);
+  transform:scale(.91);
   opacity:.82;
 }
 /* 画像本体 */
