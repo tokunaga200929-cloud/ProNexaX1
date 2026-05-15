@@ -3523,7 +3523,9 @@ button,input,select,textarea{
 .day-event-del{font-size:11px;border:1px solid #FFD5D5;border-radius:6px;padding:2px 6px;background:#FFF5F5;color:#C84444;cursor:pointer;align-self:center;margin-right:8px;flex-shrink:0;}
 .longpress-ring{position:absolute;border-radius:50%;border:2px solid var(--green-main);pointer-events:none;z-index:50;opacity:0;transform:scale(0);transition:none;}
 .longpress-ring.animating{opacity:1;transform:scale(1);transition:transform .5s ease-out,opacity .5s ease-out;}
+/* bottom-nav 本体（overflow:visible は後述ルールで確定） */
 .bottom-nav{background:#fff;border-top:none;box-shadow:none;display:flex;align-items:center;padding:4px 0 max(env(safe-area-inset-bottom,4px),4px);flex-shrink:0;}
+/* 通常タブボタン：アイコンを縦中央揃え */
 .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:12px;transition:background .08s ease-out,transform .1s;-webkit-tap-highlight-color:transparent;}
 .bnav-btn:active{background:rgba(26,175,122,0.12);transform:scale(.92);}
 .bnav-label{font-size:11px;color:var(--text-tertiary);line-height:1;font-weight:400;transition:color .15s;}
@@ -3533,38 +3535,41 @@ button,input,select,textarea{
 /* ================================================================ */
 /* ★★★ 中央Pロゴタブ（ProNexaX ブランドタブ）                        */
 /* ================================================================ */
+/* 画像差し替え方法：images/p-tab-icon.png を置くだけでOK             */
 .bnav-btn.center-tab{
   flex:0 0 auto;
-  width:54px;height:54px;
+  width:52px;height:52px;
   border-radius:50%;
-  /* 画像自体に白丸・影が含まれているため背景・影はなし */
   background:transparent;
   box-shadow:none;
+  /* translateY で自然な浮遊感。overflow:visible により確実に表示される */
   transform:translateY(-12px);
   padding:0;gap:0;
-  transition:transform .15s cubic-bezier(.34,1.56,.64,1),opacity .1s ease;
+  transition:transform .15s cubic-bezier(.34,1.56,.64,1),opacity .12s ease;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
+  position:relative;
+  z-index:10;
 }
 .bnav-btn.center-tab:active{
-  transform:translateY(-9px) scale(.92);
-  opacity:.85;
+  transform:translateY(-9px) scale(.91);
+  opacity:.82;
 }
+/* 画像本体 */
 .p-tab-icon{
-  /* 画像をボタンいっぱいに表示し、角をクリップ */
-  width:54px;height:54px;
+  width:52px;height:52px;
   border-radius:50%;
   object-fit:cover;
   pointer-events:none;
   display:block;
   flex-shrink:0;
 }
+/* 画像未設定時のフォールバック（白丸＋緑P） */
 .p-tab-fallback{
-  /* 画像なし時のフォールバック（白丸＋緑P）*/
-  width:54px;height:54px;
+  width:52px;height:52px;
   border-radius:50%;
   background:#fff;
-  box-shadow:0 8px 22px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06);
+  box-shadow:0 6px 18px rgba(0,0,0,0.13),0 2px 6px rgba(0,0,0,0.07);
   color:#1AAF7A;
   font-size:22px;font-weight:800;
   font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;
@@ -5123,12 +5128,8 @@ html, body {
 .bottom-nav {
   padding-bottom: max(env(safe-area-inset-bottom, 4px), 4px) !important;
   width: 100% !important;
-  overflow: hidden !important;
-  flex-shrink: 0 !important;
-}
-/* ★ 中央Pロゴタブが overflow:hidden でクリップされないよう override */
-.bottom-nav {
   overflow: visible !important;
+  flex-shrink: 0 !important;
 }
 
 /* ================================================================
