@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
+  <title>試合検索 — ProNexaX</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div id="app-shell">
+
+  <!-- ================================================================
+       ヘッダー
+       ================================================================ -->
+  <header class="s-header">
+    <!-- ロゴ行 + アクションアイコン -->
+    <div class="s-header-top">
+      <div class="s-header-logo">
+        <div class="s-logo-mark"><span>P</span></div>
+        <div class="s-logo-text-wrap">
+          <span class="s-logo-name">ProNexaX</span>
+          <span class="s-logo-sub">PRO GOLFER PLATFORM</span>
+        </div>
+      </div>
+      <div class="s-header-actions">
+        <button class="s-icon-btn" aria-label="通知">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="s-notif-dot"></span>
+        </button>
+        <div class="s-avatar" role="button" aria-label="プロフィール">K</div>
+      </div>
+    </div>
+    <!-- ページタイトル行 -->
+    <div class="s-header-title-row">
+      <h1 class="s-page-title">試合検索</h1>
+      <p class="s-page-sub">大会を探して、エントリー・スケジュール管理をもっと簡単に。</p>
+    </div>
+  </header>
+
+  <!-- ================================================================
+       メインスクロール領域
+       ================================================================ -->
+  <main class="s-scroll-area" id="scroll-area">
+
+    <!-- 検索バー -->
+    <section class="s-search-section">
+      <div class="s-search-bar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="search" class="s-search-input" id="search-input"
+          placeholder="大会名・主催者・会場で検索"
+          autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="s-filter-btn" id="btn-filter" aria-label="詳細フィルター">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- カテゴリチップ -->
+    <section class="s-chips-section">
+      <div class="s-chips-scroll" id="category-chips" role="group" aria-label="カテゴリ選択">
+        <!-- JS で描画 -->
+      </div>
+    </section>
+
+    <!-- 条件フィルターバー -->
+    <div class="s-filters-section">
+      <div class="s-filters-scroll" id="condition-filters" role="group" aria-label="絞り込み条件">
+        <!-- JS で描画 -->
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- クイックアクセス -->
+    <section class="s-section" aria-label="クイックアクセス">
+      <div class="s-section-header">
+        <h2 class="s-section-title">クイックアクセス</h2>
+        <button class="s-section-more">すべて見る</button>
+      </div>
+      <div class="s-quick-scroll" id="quick-cards">
+        <!-- JS で描画 -->
+      </div>
+    </section>
+
+    <!-- 大会一覧 -->
+    <section class="s-list-section">
+      <div class="s-section-header">
+        <h2 class="s-section-title">募集中の大会</h2>
+        <button class="s-section-more">一覧へ</button>
+      </div>
+      <!-- ソートタブ -->
+      <div class="s-sort-tabs" id="sort-tabs" role="tablist">
+        <button class="s-sort-tab active" data-sort="recommend" role="tab" aria-selected="true">おすすめ</button>
+        <button class="s-sort-tab" data-sort="date"     role="tab" aria-selected="false">開催日順</button>
+        <button class="s-sort-tab" data-sort="deadline" role="tab" aria-selected="false">締切日順</button>
+        <button class="s-sort-tab" data-sort="new"      role="tab" aria-selected="false">新着順</button>
+      </div>
+      <!-- 大会カード（JS で描画） -->
+      <div id="tournament-list" aria-live="polite"></div>
+    </section>
+
+  </main>
+
+  <!-- ================================================================
+       Bottom Sheet — 大会詳細
+       ================================================================ -->
+  <div id="bs-overlay" aria-hidden="true"></div>
+
+  <div id="bs-sheet" role="dialog" aria-modal="true" aria-label="大会詳細" aria-hidden="true">
+    <!-- ドラッグハンドル -->
+    <div class="bs-handle-wrap">
+      <div class="bs-handle"></div>
+    </div>
+    <!-- ヘッダー -->
+    <div class="bs-header">
+      <span class="bs-title-text" id="bs-header-title">大会詳細</span>
+      <button class="bs-close-btn" id="bs-close-btn" aria-label="閉じる">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <!-- スクロール本文 -->
+    <div class="bs-body" id="bs-body">
+      <!-- 画像エリア -->
+      <div class="bs-image-wrap">
+        <div class="bs-image-placeholder" id="bs-image-placeholder">🏌️</div>
+        <div class="bs-image-overlay"></div>
+        <div class="bs-image-badges" id="bs-image-badges"></div>
+      </div>
+      <!-- コンテンツ -->
+      <div class="bs-content">
+        <h2 class="bs-content-title" id="bs-name"></h2>
+        <div class="bs-status-row" id="bs-status-row"></div>
+        <div class="bs-info-grid" id="bs-info-grid"></div>
+        <p class="bs-section-label">スケジュール</p>
+        <div class="bs-schedule-list" id="bs-schedule-list"></div>
+      </div>
+    </div>
+    <!-- 固定フッターCTA -->
+    <div class="bs-footer">
+      <button class="bs-cta-btn bs-cta-detail" id="bs-cta-detail">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        公式サイトを見る
+      </button>
+      <button class="bs-cta-btn bs-cta-add" id="bs-cta-add">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>
+          <line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/>
+        </svg>
+        カレンダーに追加
+      </button>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       開催地フィルター Bottom Sheet
+       ※ 大会詳細シートより低い z-index (490/491) で競合しない
+       ================================================================ -->
+  <div id="area-overlay" aria-hidden="true"></div>
+
+  <div id="area-sheet" role="dialog" aria-modal="true" aria-label="開催地を選ぶ" aria-hidden="true">
+    <!-- ドラッグハンドル -->
+    <div class="bs-handle-wrap" id="area-handle-wrap">
+      <div class="bs-handle"></div>
+    </div>
+    <!-- ヘッダー -->
+    <div class="bs-header">
+      <span class="bs-title-text">開催地を選ぶ</span>
+      <button class="bs-close-btn" id="area-close-btn" aria-label="閉じる">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <!-- エリアグリッド -->
+    <div class="area-body" id="area-body">
+      <div class="area-grid" id="area-grid">
+        <!-- JS で描画 -->
+      </div>
+    </div>
+    <!-- 適用ボタン -->
+    <div class="bs-footer">
+      <button class="bs-cta-btn bs-cta-detail" id="area-apply-btn" style="flex:1;">
+        この地域で絞り込む
+      </button>
+      <button class="bs-cta-btn bs-cta-add" id="area-reset-btn">
+        リセット
+      </button>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       下部タブバー
+       ================================================================ -->
+  <nav id="tab-bar" aria-label="メインナビゲーション">
+    <!-- カレンダー -->
+    <button class="tab-item" data-page="calendar" aria-label="カレンダー">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span class="tab-label">カレンダー</span>
+    </button>
+    <!-- 試合（アクティブ） -->
+    <button class="tab-item active" data-page="search" aria-label="試合検索" aria-current="page">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <span class="tab-label">試合</span>
+    </button>
+    <!-- 中央Pロゴ -->
+    <div class="tab-center-wrap" id="tab-p-logo" role="button" aria-label="注目" tabindex="0">
+      <div class="tab-p-logo">
+        <img src="../../images/p-tab-icon.png" alt="ProNexaX" id="p-tab-img"
+          onerror="this.style.display='none'; document.getElementById('p-tab-fallback').style.display='flex';">
+        <span class="tab-p-fallback" id="p-tab-fallback" style="display:none;">P</span>
+      </div>
+      <span class="tab-center-label">注目</span>
+    </div>
+    <!-- 収支 -->
+    <button class="tab-item" data-page="finance" aria-label="収支">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"/>
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+      <span class="tab-label">収支</span>
+    </button>
+    <!-- マイページ -->
+    <button class="tab-item" data-page="mypage" aria-label="マイページ">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span class="tab-label">マイページ</span>
+    </button>
+  </nav>
+
+</div><!-- /app-shell -->
+<script src="script.js"></script>
+</body>
+</html>

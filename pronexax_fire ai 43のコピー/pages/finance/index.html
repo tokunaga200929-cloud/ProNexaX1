@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
+  <title>収支 — ProNexaX</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div id="app-shell">
+
+  <!-- ================================================================
+       ヘッダー
+       ================================================================ -->
+  <header class="f-header">
+    <div class="f-header-top">
+      <!-- ロゴ -->
+      <div class="f-header-logo">
+        <div class="f-logo-mark"><span>P</span></div>
+        <div class="f-logo-text-wrap">
+          <span class="f-logo-name">ProNexaX</span>
+          <span class="f-logo-sub">PRO GOLFER PLATFORM</span>
+        </div>
+      </div>
+      <!-- アクション -->
+      <div class="f-header-actions">
+        <button class="f-icon-btn" aria-label="通知">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="f-notif-dot"></span>
+        </button>
+        <div class="f-avatar" role="button" aria-label="プロフィール">K</div>
+      </div>
+    </div>
+    <!-- ページタイトル行 -->
+    <div class="f-header-title-row">
+      <div class="f-greeting-wrap">
+        <p class="f-greeting">こんにちは、<strong>ケイさん</strong></p>
+        <p class="f-page-sub">今月も収支をしっかり管理しましょう。</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================================================================
+       メインスクロール領域
+       ================================================================ -->
+  <main class="f-scroll-area" id="scroll-area">
+
+    <!-- ============================================================
+         収支サマリーカード（STEP 4 リニューアル）
+         ============================================================ -->
+    <section class="f-summary-section" aria-label="収支サマリー">
+
+      <!-- 期間切替タブ -->
+      <div class="f-period-tabs" id="period-tabs" role="tablist" aria-label="集計期間">
+        <button class="f-period-tab active" data-period="month" role="tab" aria-selected="true">今月</button>
+        <button class="f-period-tab"        data-period="year"  role="tab" aria-selected="false">今年</button>
+        <button class="f-period-tab"        data-period="all"   role="tab" aria-selected="false">全期間</button>
+      </div>
+
+      <!-- メインカード -->
+      <div class="f-summary-card" id="summary-card">
+
+        <!-- カード上部：ラベル + 期間ピル -->
+        <div class="f-sc-top">
+          <span class="f-sc-label" id="sc-label">収支サマリー</span>
+          <span class="f-sc-period" id="sc-period">2025年6月</span>
+        </div>
+
+        <!-- 利益 ヒーロー -->
+        <div class="f-sc-profit-row">
+          <div class="f-sc-profit-main">
+            <span class="f-sc-profit-num" id="summary-profit">+¥182,400</span>
+          </div>
+          <div class="f-sc-profit-meta">
+            <!-- 前月比バッジ -->
+            <span class="f-sc-badge" id="summary-badge"></span>
+            <!-- 増減額 -->
+            <span class="f-sc-delta" id="summary-delta"></span>
+          </div>
+        </div>
+
+        <!-- ミニスパークライン（JS で描画） -->
+        <div class="f-sparkline-wrap" id="sparkline-wrap" aria-hidden="true">
+          <!-- SVG を JS で生成 -->
+        </div>
+
+        <!-- 収入・支出・利益率 3列 -->
+        <div class="f-sc-stats">
+          <div class="f-sc-stat">
+            <span class="f-sc-stat-label">収入</span>
+            <span class="f-sc-stat-val income" id="summary-income">¥348,000</span>
+          </div>
+          <div class="f-sc-stat-sep"></div>
+          <div class="f-sc-stat">
+            <span class="f-sc-stat-label">支出</span>
+            <span class="f-sc-stat-val expense" id="summary-expense">¥165,600</span>
+          </div>
+          <div class="f-sc-stat-sep"></div>
+          <div class="f-sc-stat">
+            <span class="f-sc-stat-label">利益率</span>
+            <span class="f-sc-stat-val profit-rate" id="summary-rate">52%</span>
+          </div>
+        </div>
+
+        <!-- 収支バー（収入に対する支出の割合を視覚化） -->
+        <div class="f-sc-bar-wrap" aria-hidden="true">
+          <div class="f-sc-bar-track">
+            <div class="f-sc-bar-fill income-fill"  id="sc-bar-income"></div>
+            <div class="f-sc-bar-fill expense-fill" id="sc-bar-expense"></div>
+          </div>
+          <div class="f-sc-bar-labels">
+            <span class="f-sc-bar-lbl income-lbl">収入</span>
+            <span class="f-sc-bar-lbl expense-lbl">支出</span>
+          </div>
+        </div>
+
+      </div><!-- /f-summary-card -->
+    </section>
+
+    <!-- ============================================================
+         支出カテゴリ分析（簡易）
+         ============================================================ -->
+    <section class="f-section f-analysis-section" aria-label="支出カテゴリ">
+      <div class="f-section-header">
+        <h2 class="f-section-title">支出カテゴリ</h2>
+        <span class="f-analysis-period-label" id="analysis-period-label">今月</span>
+      </div>
+      <div class="f-cat-analysis" id="cat-analysis">
+        <!-- JS で描画 -->
+      </div>
+    </section>
+
+    <!-- ============================================================
+         クイックアクセス
+         ============================================================ -->
+    <section class="f-section" aria-label="クイックアクセス">
+      <div class="f-section-header">
+        <h2 class="f-section-title">クイックアクセス</h2>
+      </div>
+      <div class="f-quick-grid" id="quick-grid">
+        <!-- JS で描画 -->
+      </div>
+    </section>
+
+    <!-- ============================================================
+         直近の大会と収支
+         ============================================================ -->
+    <section class="f-section" aria-label="直近の大会">
+      <div class="f-section-header">
+        <h2 class="f-section-title">直近の大会</h2>
+        <button class="f-section-more" id="btn-all-tournaments">すべて見る</button>
+      </div>
+      <div class="f-tournament-list" id="tournament-list">
+        <!-- JS で描画 -->
+      </div>
+    </section>
+
+    <!-- ============================================================
+         レポート（STEP 4）
+         ============================================================ -->
+    <section class="f-section f-report-section" aria-label="レポート">
+      <div class="f-section-header">
+        <h2 class="f-section-title">レポート</h2>
+        <button class="f-section-more" id="btn-report-all">詳細へ</button>
+      </div>
+
+      <!-- 年間レポートプレミアムカード -->
+      <div class="f-yearly-card" id="yearly-card">
+        <div class="f-yc-eyebrow">
+          <span class="f-yc-label">年間レポート</span>
+          <span class="f-yc-period" id="yc-period">2025年</span>
+        </div>
+        <div class="f-yc-profit-row">
+          <div>
+            <span class="f-yc-profit-sub">年間利益</span>
+            <span class="f-yc-profit-num" id="yc-profit">+¥0</span>
+          </div>
+          <div class="f-yc-rate-badge" id="yc-rate-badge">利益率 —%</div>
+        </div>
+        <div class="f-yc-stats">
+          <div class="f-yc-stat">
+            <span class="f-yc-stat-label">収入</span>
+            <span class="f-yc-stat-val income" id="yc-income">¥0</span>
+          </div>
+          <div class="f-yc-stat-sep"></div>
+          <div class="f-yc-stat">
+            <span class="f-yc-stat-label">支出</span>
+            <span class="f-yc-stat-val expense" id="yc-expense">¥0</span>
+          </div>
+          <div class="f-yc-stat-sep"></div>
+          <div class="f-yc-stat">
+            <span class="f-yc-stat-label">参加大会</span>
+            <span class="f-yc-stat-val neutral" id="yc-tournaments">0試合</span>
+          </div>
+        </div>
+        <!-- 月別棒グラフ -->
+        <div class="f-monthly-bars-wrap">
+          <div class="f-monthly-bars" id="monthly-bars"><!-- JS --></div>
+          <div class="f-monthly-bars-labels" id="monthly-bars-labels"><!-- JS --></div>
+        </div>
+      </div>
+
+      <!-- レポートカードグリッド（2列） -->
+      <div class="f-report-grid">
+
+        <!-- 月別収支カード -->
+        <div class="f-report-card" id="rcard-monthly">
+          <div class="f-rc-header">
+            <span class="f-rc-icon">📅</span>
+            <span class="f-rc-title">月別収支</span>
+          </div>
+          <div class="f-rc-chart" id="rc-monthly-chart"><!-- JS --></div>
+          <span class="f-rc-sub" id="rc-monthly-sub">直近6ヶ月</span>
+        </div>
+
+        <!-- 経費割合カード -->
+        <div class="f-report-card" id="rcard-expense">
+          <div class="f-rc-header">
+            <span class="f-rc-icon">🥧</span>
+            <span class="f-rc-title">経費割合</span>
+          </div>
+          <div class="f-rc-donut-wrap" id="rc-donut-wrap"><!-- JS --></div>
+          <span class="f-rc-sub" id="rc-expense-sub">今月</span>
+        </div>
+
+      </div><!-- /f-report-grid -->
+
+      <!-- 大会別収支 -->
+      <div class="f-section-header" style="margin-top:20px; margin-bottom:10px;">
+        <h2 class="f-section-title">大会別収支</h2>
+      </div>
+      <div class="f-tournament-report-list" id="tournament-report-list"><!-- JS --></div>
+
+      <!-- 出力・確定申告カード -->
+      <div class="f-section-header" style="margin-top:20px; margin-bottom:10px;">
+        <h2 class="f-section-title">確定申告・出力</h2>
+      </div>
+      <div class="f-export-grid" id="export-grid"><!-- JS --></div>
+
+    </section>
+
+    <!-- ============================================================
+         収支一覧
+         ============================================================ -->
+    <section class="f-section f-ledger-section" aria-label="収支一覧">
+      <div class="f-section-header">
+        <h2 class="f-section-title">収支一覧</h2>
+        <!-- 月フィルター -->
+        <div class="f-month-nav" id="month-nav">
+          <button class="f-month-arrow" id="btn-month-prev" aria-label="前月">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="f-month-label" id="ledger-month-label">2025年6月</span>
+          <button class="f-month-arrow" id="btn-month-next" aria-label="翌月">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- 収入/支出フィルタータブ -->
+      <div class="f-ledger-tabs" id="ledger-tabs" role="tablist">
+        <button class="f-ledger-tab active" data-filter="all"     role="tab" aria-selected="true">すべて</button>
+        <button class="f-ledger-tab"        data-filter="income"  role="tab" aria-selected="false">収入</button>
+        <button class="f-ledger-tab"        data-filter="expense" role="tab" aria-selected="false">支出</button>
+      </div>
+
+      <!-- 月集計バー -->
+      <div class="f-ledger-summary-bar" id="ledger-summary-bar">
+        <!-- JS で描画 -->
+      </div>
+
+      <!-- 収支カードリスト -->
+      <div class="f-ledger-list" id="ledger-list" aria-live="polite">
+        <!-- JS で描画 -->
+      </div>
+    </section>
+
+    <!-- 下タブ分の余白 -->
+    <div class="f-tab-spacer"></div>
+
+  </main>
+
+  <!-- ================================================================
+       Bottom Sheet — 収支入力（STEP 3 リニューアル）
+       ================================================================ -->
+  <div id="bs-overlay" aria-hidden="true"></div>
+
+  <div id="bs-sheet" role="dialog" aria-modal="true" aria-label="収支を入力" aria-hidden="true">
+
+    <!-- ドラッグハンドル -->
+    <div class="bs-handle-wrap">
+      <div class="bs-handle"></div>
+    </div>
+
+    <!-- ヘッダー（収入/支出トグル一体型） -->
+    <div class="bs-header-integrated">
+      <!-- 左：閉じるボタン -->
+      <button class="bs-close-btn" id="bs-close-btn" aria-label="閉じる">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <!-- 中央：収入 / 支出 セグメントコントロール -->
+      <div class="bs-segment" role="group" aria-label="収入または支出" id="bs-segment">
+        <button class="bs-seg-btn active" data-type="income"  id="btn-type-income">収入</button>
+        <button class="bs-seg-btn"        data-type="expense" id="btn-type-expense">支出</button>
+      </div>
+      <!-- 右：スペーサー（対称） -->
+      <div style="width:30px;"></div>
+    </div>
+
+    <!-- 金額ヒーロー入力エリア -->
+    <div class="bs-amount-hero" id="bs-amount-hero">
+      <div class="bs-amount-hero-label">金額</div>
+      <div class="bs-amount-hero-row">
+        <span class="bs-amount-hero-yen" id="bs-hero-yen">¥</span>
+        <!-- 表示用（桁区切り） -->
+        <span class="bs-amount-hero-display" id="bs-amount-display">0</span>
+        <!-- 実際の入力（透明で重ねる） -->
+        <input type="tel" class="bs-amount-hero-input" id="input-amount"
+          inputmode="numeric" pattern="[0-9]*"
+          autocomplete="off" placeholder="0" aria-label="金額">
+      </div>
+      <div class="bs-amount-hero-sub" id="bs-amount-sub">タップして金額を入力</div>
+    </div>
+
+    <!-- スクロール本文 -->
+    <div class="bs-body" id="bs-body">
+
+      <!-- 日付 -->
+      <div class="bs-field">
+        <label class="bs-field-label" for="input-date">
+          <span class="bs-field-icon">📅</span>日付
+        </label>
+        <input type="date" class="bs-input" id="input-date">
+      </div>
+
+      <!-- カテゴリ（収入/支出連動チップ選択） -->
+      <div class="bs-field">
+        <label class="bs-field-label">
+          <span class="bs-field-icon">🏷</span>カテゴリ
+          <span class="bs-field-required">必須</span>
+        </label>
+        <div class="bs-category-chips" id="bs-category-chips" role="group" aria-label="カテゴリ選択">
+          <!-- JS で描画 -->
+        </div>
+      </div>
+
+      <!-- 内容 -->
+      <div class="bs-field">
+        <label class="bs-field-label" for="input-title">
+          <span class="bs-field-icon">📌</span>内容
+        </label>
+        <input type="text" class="bs-input" id="input-title"
+          placeholder="例：ABCカップ 参加費" autocomplete="off">
+      </div>
+
+      <!-- 大会名 -->
+      <div class="bs-field">
+        <label class="bs-field-label" for="input-tournament">
+          <span class="bs-field-icon">⛳</span>大会名
+          <span class="bs-field-optional">任意</span>
+        </label>
+        <!-- 候補ドロップダウン付き -->
+        <div class="bs-tournament-wrap">
+          <input type="text" class="bs-input" id="input-tournament"
+            placeholder="例：ACNツアー 第6戦" autocomplete="off"
+            list="tournament-datalist">
+          <datalist id="tournament-datalist">
+            <option value="ACNツアー 第6戦 ABCカップ">
+            <option value="JAPAN PRO QT ファイナル">
+            <option value="ACNツアー 第4戦 XYZオープン">
+            <option value="県オープン選手権">
+            <option value="プロテスト 最終予選">
+          </datalist>
+        </div>
+      </div>
+
+      <!-- メモ -->
+      <div class="bs-field">
+        <label class="bs-field-label" for="input-memo">
+          <span class="bs-field-icon">📝</span>メモ
+          <span class="bs-field-optional">任意</span>
+        </label>
+        <textarea class="bs-input bs-textarea" id="input-memo"
+          placeholder="補足メモを入力（領収書番号・備考など）" rows="2"></textarea>
+      </div>
+
+    </div><!-- /bs-body -->
+
+    <!-- 固定フッターCTA -->
+    <div class="bs-footer">
+      <button class="bs-cta-btn bs-cta-cancel" id="bs-cta-cancel">キャンセル</button>
+      <button class="bs-cta-btn bs-cta-save" id="bs-cta-save">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        保存する
+      </button>
+    </div>
+
+  </div><!-- /bs-sheet -->
+
+  <!-- ================================================================
+       Bottom Sheet — 収支詳細
+       ================================================================ -->
+  <div id="detail-overlay" aria-hidden="true"></div>
+
+  <div id="detail-sheet" role="dialog" aria-modal="true" aria-label="収支詳細" aria-hidden="true">
+    <!-- ドラッグハンドル -->
+    <div class="bs-handle-wrap">
+      <div class="bs-handle"></div>
+    </div>
+    <!-- ヘッダー -->
+    <div class="bs-header">
+      <span class="bs-title-text" id="detail-sheet-title">収支詳細</span>
+      <button class="bs-close-btn" id="detail-close-btn" aria-label="閉じる">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <!-- 本文 -->
+    <div class="bs-body detail-bs-body" id="detail-bs-body">
+
+      <!-- 金額ヒーロー -->
+      <div class="detail-hero" id="detail-hero">
+        <div class="detail-hero-type" id="detail-hero-type">収入</div>
+        <div class="detail-hero-amount" id="detail-hero-amount">+¥0</div>
+      </div>
+
+      <!-- 情報グリッド -->
+      <div class="detail-info-list" id="detail-info-list">
+        <!-- JS で描画 -->
+      </div>
+
+      <!-- メモエリア -->
+      <div class="detail-memo-wrap" id="detail-memo-wrap" style="display:none;">
+        <p class="detail-memo-label">メモ</p>
+        <p class="detail-memo-text" id="detail-memo-text"></p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================================================================
+       保存完了トースト
+       ================================================================ -->
+  <div id="toast" aria-live="assertive" aria-atomic="true">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    <span id="toast-msg">保存しました</span>
+  </div>
+
+  <!-- ================================================================
+       下部タブバー
+       ================================================================ -->
+  <nav id="tab-bar" aria-label="メインナビゲーション">
+    <!-- カレンダー -->
+    <button class="tab-item" data-page="calendar" aria-label="カレンダー">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span class="tab-label">カレンダー</span>
+    </button>
+    <!-- 試合 -->
+    <button class="tab-item" data-page="search" aria-label="試合検索">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <span class="tab-label">試合</span>
+    </button>
+    <!-- 中央Pロゴ（pages/search と同構造） -->
+    <div class="tab-center-wrap" id="tab-p-logo" role="button" aria-label="注目" tabindex="0">
+      <div class="tab-p-logo">
+        <img src="../../images/p-tab-icon.png" alt="ProNexaX" id="p-tab-img"
+          onerror="this.style.display='none'; document.getElementById('p-tab-fallback').style.display='flex';">
+        <span class="tab-p-fallback" id="p-tab-fallback" style="display:none;">P</span>
+      </div>
+      <span class="tab-center-label">注目</span>
+    </div>
+    <!-- 収支（アクティブ） -->
+    <button class="tab-item active" data-page="finance" aria-label="収支" aria-current="page">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"/>
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+      <span class="tab-label">収支</span>
+    </button>
+    <!-- マイページ -->
+    <button class="tab-item" data-page="mypage" aria-label="マイページ">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span class="tab-label">マイページ</span>
+    </button>
+  </nav>
+
+</div><!-- /app-shell -->
+<script src="script.js"></script>
+</body>
+</html>
