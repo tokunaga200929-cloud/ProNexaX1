@@ -9184,6 +9184,12 @@ function switchPage(page){
   if(activeBtn){activeBtn.classList.add('active');const lbl=activeBtn.querySelector('.bnav-label');lbl.style.color='#1AAF7A';lbl.style.fontWeight='600';if(activeIcon&&NAV_ICONS[page])activeIcon.innerHTML=NAV_ICONS[page].active;}
 
   // ── ページ別処理 ──
+  // ================================================================
+  // [LEGACY DISABLED 2026-05] 旧検索・旧管理ページの呼び出しを無効化。
+  // page-search / page-admin は空プレースホルダーになっているため、
+  // 旧 render 関数を呼び出さない。関数本体は下部に温存（カレンダー機能保護）。
+  // ================================================================
+  /* ----- 旧検索ページ呼び出し（無効化済み）-----
   if(page==='search'){
     // ★ Firestore ロード中なら Skeleton を表示
     if (typeof FirestoreDB !== 'undefined' && !FirestoreDB.isLoaded) {
@@ -9208,6 +9214,8 @@ function switchPage(page){
     if(_o){ _o.classList.remove('show'); }
     if(typeof closeTournamentModal === 'function' && typeof _tdmCurrentId !== 'undefined' && _tdmCurrentId){ closeTournamentModal(); }
   }
+  ----- 旧検索ページ呼び出し ここまで ----- */
+
   if(page==='calendar'){
     // カレンダーに戻った時: visibility を確実に解除してから再描画
     renderAllPanels();renderCalList();
@@ -9215,8 +9223,8 @@ function switchPage(page){
   if(page==='mypage'    && typeof mypageRender   ==='function') mypageRender();
   if(page==='featured'  && typeof featuredRender ==='function') featuredRender();
   if(page==='finance'   && typeof finRender      ==='function') finRender();
-  if(page==='search'    && typeof searchRender   ==='function') searchRender();
-  if(page==='admin'     && typeof adminRender    ==='function') adminRender();
+  // [LEGACY DISABLED] if(page==='search'    && typeof searchRender   ==='function') searchRender();
+  // [LEGACY DISABLED] if(page==='admin'     && typeof adminRender    ==='function') adminRender();
 }
 
 function todayStr(){const t=new Date();return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;}
