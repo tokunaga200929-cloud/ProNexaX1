@@ -1,0 +1,11 @@
+{
+  "root_index_exists": true,
+  "p_icon_css_exists": true,
+  "p_icon_img_markup_exists": true,
+  "p_icon_assets_dir_exists": true,
+  "nav_featured_exists": false,
+  "calendar_page_exists": true,
+  "search_frame_exists": true,
+  "finance_frame_exists": true,
+  "featured_frame_exists": true
+}

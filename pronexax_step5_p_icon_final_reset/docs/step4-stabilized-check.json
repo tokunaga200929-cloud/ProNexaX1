@@ -1,0 +1,12 @@
+{
+  "root_index_exists": true,
+  "calendar_page_exists": true,
+  "search_frame_exists": true,
+  "finance_frame_exists": true,
+  "featured_frame_exists": true,
+  "step4_css_exists": true,
+  "search_embed_exists": true,
+  "finance_embed_exists": true,
+  "featured_embed_exists": true,
+  "cms_exists": true
+}

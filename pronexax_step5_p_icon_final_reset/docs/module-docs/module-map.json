@@ -1,0 +1,39 @@
+{
+  "search": {
+    "html": "app/pages/search/search.html",
+    "css": "app/styles/search/search.css",
+    "js": "app/scripts/search/search.js",
+    "openFrom": "本体下部ナビの試合検索アイコン",
+    "mount": "page-search",
+    "removeWhenIntegrating": [
+      "nav#tab-bar",
+      "単独ページ用のbody/app-shell/headerが本体と重複する場合"
+    ]
+  },
+  "featured": {
+    "html": "app/pages/featured/featured.html",
+    "css": "app/styles/featured/featured.css",
+    "js": "app/scripts/featured/featured.js",
+    "openFrom": "本体下部ナビ中央Pアイコン",
+    "mount": "page-featured",
+    "removeWhenIntegrating": [
+      "nav.bottom-nav"
+    ]
+  },
+  "finance": {
+    "html": "app/pages/finance/finance.html",
+    "css": "app/styles/finance/finance.css",
+    "js": "app/scripts/finance/finance.js",
+    "openFrom": "本体下部ナビの収支アイコン",
+    "mount": "page-finance",
+    "requires": [
+      "Chart.js"
+    ]
+  },
+  "cms": {
+    "html": "cms/index.html",
+    "css": "cms/styles.css",
+    "js": "cms/cms.js",
+    "role": "PC管理画面。アプリ内には入れず、別URL /cms として使う"
+  }
+}

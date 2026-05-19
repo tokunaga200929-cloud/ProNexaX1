@@ -1,0 +1,12 @@
+{
+  "root_index_exists": true,
+  "preview_exists": true,
+  "search_index_exists": true,
+  "search_style_exists": true,
+  "search_script_exists": true,
+  "finance_index_exists": true,
+  "finance_css_exists": true,
+  "finance_js_exists": true,
+  "preview_points_search_index": true,
+  "preview_points_finance_index": true
+}

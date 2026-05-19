@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#F2F2F7">
+  <title>収支 — ProNexaX</title>
+  <link rel="stylesheet" href="finance.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+  <script src="finance.js" defer></script>
+</head>
+
+<body>
+
+<!--
+  ProNexaX 収支モジュール v4
+  統合メモ: .finance-root を ProNexaX 本体の収支タブコンテナへ移植
+-->
+<div class="finance-root" id="finance-root">
+
+  <!-- ══════════════════════════════════════════════
+       ヘッダー — ブランド + 下線タブ
+       ══════════════════════════════════════════════ -->
+  <header class="fin-header">
+    <div class="fin-header-top">
+      <div class="fin-brand">
+        <div class="fin-brand-name">ProNexaX</div>
+        <div class="fin-brand-sub">finance</div>
+      </div>
+      <div class="fin-header-icons">
+        <button class="fin-icon-btn" aria-label="通知">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+        <button class="fin-avatar" aria-label="プロフィール">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- タブバー — 下線スタイル -->
+    <div class="fin-tabs" role="tablist" aria-label="収支タブ">
+      <button class="fin-tab active" data-tab="overview"      role="tab" aria-selected="true" >概要</button>
+      <button class="fin-tab"        data-tab="transactions"  role="tab" aria-selected="false">取引</button>
+      <button class="fin-tab"        data-tab="analysis"      role="tab" aria-selected="false">分析</button>
+      <button class="fin-tab"        data-tab="filing"        role="tab" aria-selected="false">申告</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════
+       タブパネル群
+       ══════════════════════════════════════════════ -->
+  <div class="fin-panels">
+
+    <!-- ────────────────────────────────────────────
+         ① 概要
+         ──────────────────────────────────────────── -->
+    <section class="fin-panel active" id="tab-overview" role="tabpanel">
+
+      <!-- 月バー -->
+      <div class="month-bar">
+        <div>
+          <div class="month-bar-title" id="month-label">2024年5月</div>
+          <div class="month-bar-range" id="month-sub">5/1 〜 5/31</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="month-btn" id="btn-prev-month" aria-label="前の月">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            前月
+          </button>
+          <button class="month-btn" id="btn-next-month" aria-label="次の月">
+            翌月
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- メトリクス — 収入 / 支出 2列 -->
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-label">収入</div>
+          <div class="metric-value blue" id="overview-income">¥563,000</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">支出</div>
+          <div class="metric-value red" id="overview-expense">¥314,500</div>
+        </div>
+      </div>
+
+      <!-- 利益カード -->
+      <div class="profit-card" style="margin: 0 var(--pad) 16px;">
+        <div class="metric-label">利益</div>
+        <div class="profit-value" id="overview-profit">¥248,500</div>
+        <div style="margin-top:12px; display:flex; align-items:center; gap:8px;">
+          <div style="flex:1; height:5px; background:var(--border); border-radius:3px; overflow:hidden;">
+            <div id="profit-bar" style="height:100%; background:var(--blue); border-radius:3px; width:44%; transition:width 0.6s cubic-bezier(0.22,1,0.36,1);"></div>
+          </div>
+          <span id="profit-ratio" style="font-size:12px; font-weight:700; color:var(--blue); min-width:36px; text-align:right; font-feature-settings:'tnum';">44%</span>
+          <span id="overview-margin" style="font-size:11px; color:var(--t3);">利益率</span>
+        </div>
+      </div>
+
+      <!-- 最近の取引 -->
+      <div class="section-hd">
+        <div class="section-hd-title">最近の取引</div>
+        <span class="section-hd-link" id="link-all-tx">すべて表示</span>
+      </div>
+
+      <div class="tx-card" id="overview-tx-list">
+        <!-- JS が .tx-row を挿入 -->
+      </div>
+
+      <!-- 大会紐付けリンク -->
+      <div style="margin: 12px var(--pad) 0; background:var(--surface); border-radius:var(--r-md); overflow:hidden; box-shadow:var(--sh-sm); border:1px solid var(--border);">
+        <div style="display:flex; align-items:center; padding:13px 16px; gap:10px; cursor:pointer; min-height:48px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <span style="font-size:14px; color:var(--blue); flex:1; font-weight:500;">大会と取引を紐付ける</span>
+          <span style="font-size:13px; color:var(--t3);">›</span>
+        </div>
+      </div>
+
+      <div style="height:110px;"></div>
+    </section>
+
+
+    <!-- ────────────────────────────────────────────
+         ② 取引
+         ──────────────────────────────────────────── -->
+    <section class="fin-panel" id="tab-transactions" role="tabpanel">
+
+      <!-- 検索バー -->
+      <div class="search-bar-wrap">
+        <div class="search-bar">
+          <span class="search-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
+          <input type="search" class="search-input" id="tx-search"
+                 placeholder="取引を検索" autocomplete="off" spellcheck="false">
+          <button class="filter-select" id="btn-filter" style="flex-shrink:0;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+            絞込
+          </button>
+        </div>
+      </div>
+
+      <!-- カテゴリチップ -->
+      <div class="chips-scroll" id="chips-scroll" role="group" aria-label="カテゴリ">
+        <button class="chip active" data-cat="all">すべて</button>
+        <button class="chip" data-cat="交通費">交通費</button>
+        <button class="chip" data-cat="宿泊費">宿泊費</button>
+        <button class="chip" data-cat="エントリー費">エントリー費</button>
+        <button class="chip" data-cat="練習場代">練習場代</button>
+        <button class="chip" data-cat="ラウンド代">ラウンド代</button>
+        <button class="chip" data-cat="キャディ代">キャディ代</button>
+        <button class="chip" data-cat="賞金">賞金</button>
+        <button class="chip" data-cat="スポンサー料">スポンサー料</button>
+      </div>
+
+      <!-- 取引グループ（JS が挿入） -->
+      <div id="tx-groups-container"></div>
+
+      <div style="height:32px;"></div>
+    </section>
+
+
+    <!-- ────────────────────────────────────────────
+         ③ 分析
+         ──────────────────────────────────────────── -->
+    <section class="fin-panel" id="tab-analysis" role="tabpanel">
+
+      <!-- 期間バー -->
+      <div class="period-bar">
+        <button class="period-select">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <span id="year-label">2024年</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="period-type" id="btn-prev-year" aria-label="前年">‹ 前年</button>
+        <button class="period-type" id="btn-next-year" aria-label="翌年">翌年 ›</button>
+      </div>
+
+      <!-- 年間サマリー — 3列 -->
+      <div class="annual-row">
+        <div class="annual-col">
+          <div class="annual-col-label">収入</div>
+          <div class="annual-col-value blue">¥5.68M</div>
+        </div>
+        <div class="annual-col">
+          <div class="annual-col-label">支出</div>
+          <div class="annual-col-value red">¥3.23M</div>
+        </div>
+        <div class="annual-col">
+          <div class="annual-col-label">利益</div>
+          <div class="annual-col-value">¥2.45M</div>
+        </div>
+      </div>
+
+      <!-- 月別収支バーチャート -->
+      <div class="chart-card">
+        <div class="chart-card-title">月別収支</div>
+        <div class="chart-legend-row">
+          <span class="chart-legend-item">
+            <span class="chart-legend-dot" style="background:var(--blue);"></span>収入
+          </span>
+          <span class="chart-legend-item">
+            <span class="chart-legend-dot" style="background:rgba(0,0,0,0.12);"></span>支出
+          </span>
+        </div>
+        <div class="chart-container chart-container-bar">
+          <canvas id="chart-monthly"></canvas>
+        </div>
+      </div>
+
+      <!-- 支出内訳ドーナツ -->
+      <div class="chart-card">
+        <div class="chart-card-title">支出の内訳</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center;">
+          <div class="chart-container chart-container-pie">
+            <canvas id="chart-donut"></canvas>
+          </div>
+          <div class="legend" id="donut-legend"></div>
+        </div>
+      </div>
+
+      <div style="height:32px;"></div>
+    </section>
+
+
+    <!-- ────────────────────────────────────────────
+         ④ 申告 — 画面1: 申告準備
+         ──────────────────────────────────────────── -->
+    <section class="fin-panel" id="tab-filing" role="tabpanel">
+
+      <!-- ページタイトル -->
+      <div class="filing-page-title">申告準備</div>
+
+      <!-- 今年の申告準備率カード -->
+      <div class="filing-prep-card">
+        <div class="filing-prep-title">今年の申告準備率</div>
+        <div class="filing-prep-sub">あと少しで申告準備完了です！</div>
+
+        <div class="filing-prep-body">
+          <div class="ring-wrap" id="filing-ring-wrap">
+            <svg width="110" height="110" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle class="ring-track" cx="55" cy="55" r="46"></circle>
+              <circle class="ring-fill"  cx="55" cy="55" r="46" id="ring-fill"></circle>
+            </svg>
+            <div class="ring-label" id="ring-label"><span class="ring-text"><span class="ring-num">78</span><span class="ring-pct">%</span></span></div>
+          </div>
+
+          <div class="filing-checklist">
+            <div class="filing-check-row done">
+              <span class="fc-text">収入の確認</span>
+              <span class="fc-mark">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg>
+              </span>
+            </div>
+            <div class="filing-check-row done">
+              <span class="fc-text">経費の確認</span>
+              <span class="fc-mark">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg>
+              </span>
+            </div>
+            <div class="filing-check-row done">
+              <span class="fc-text">不足レシートの追加</span>
+              <span class="fc-mark">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg>
+              </span>
+            </div>
+            <div class="filing-check-row empty">
+              <span class="fc-text">PDF出力</span>
+              <span class="fc-mark fc-mark-empty"></span>
+            </div>
+            <div class="filing-check-row empty">
+              <span class="fc-text">e-Tax提出</span>
+              <span class="fc-mark fc-mark-empty"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- やることリスト -->
+      <div class="filing-section-label">やることリスト</div>
+      <div class="todo-card">
+        <div class="todo-item">
+          <span class="todo-circle red" aria-hidden="true"></span>
+          <div class="todo-text">不足しているレシートがあります</div>
+          <span class="todo-badge-pill red">3件</span>
+        </div>
+        <div class="todo-item">
+          <span class="todo-circle gray" aria-hidden="true"></span>
+          <div class="todo-text">未分類の取引を確認する</div>
+          <span class="todo-badge-pill blue">2件</span>
+        </div>
+        <div class="todo-item">
+          <span class="todo-circle gray" aria-hidden="true"></span>
+          <div class="todo-text">大会との紐付けを確認する</div>
+          <span class="todo-badge-pill orange">1件</span>
+        </div>
+      </div>
+
+      <!-- 申告書類を作成する CTA -->
+      <button class="filing-cta-btn" id="btn-open-doc-list">申告書類を作成する（PDF/CSV）</button>
+
+      <div style="height:32px;"></div>
+    </section>
+
+  </div><!-- /fin-panels -->
+
+
+  <!-- ══════════════════════════════════════════════
+       申告書類作成フロー — スタックビュー（画面2〜6）
+       ══════════════════════════════════════════════ -->
+  <div class="filing-stack" id="filing-stack" aria-hidden="true">
+
+    <!-- 画面2: 申告書類の作成（一覧） -->
+    <section class="filing-screen" id="screen-doc-list" data-screen="doc-list" data-screen-label="02 申告書類の作成">
+      <header class="screen-nav">
+        <button class="nav-back" data-nav-back aria-label="戻る">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="nav-title">申告書類の作成</div>
+        <div class="nav-spacer"></div>
+      </header>
+
+      <div class="screen-scroll">
+        <div class="filing-section-label">作成できる書類</div>
+        <div class="docs-card" id="doc-list-card">
+          <div class="docs-item" data-doc="ippan" data-pro="1">
+            <span class="docs-icon-line">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </span>
+            <div class="docs-name">収支内訳書（一般用）</div>
+            <span class="pro-badge">PRO</span>
+          </div>
+          <div class="docs-item" data-doc="kani" data-pro="1">
+            <span class="docs-icon-line">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </span>
+            <div class="docs-name">収支内訳書（簡易版）</div>
+            <span class="pro-badge">PRO</span>
+          </div>
+          <div class="docs-item" data-doc="nenkan" data-pro="1">
+            <span class="docs-icon-line">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </span>
+            <div class="docs-name">年間収支一覧（詳細）</div>
+            <span class="pro-badge">PRO</span>
+          </div>
+          <div class="docs-item" data-doc="keihi" data-pro="1">
+            <span class="docs-icon-line">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </span>
+            <div class="docs-name">経費一覧表</div>
+            <span class="pro-badge">PRO</span>
+          </div>
+          <div class="docs-item" data-doc="taikai" data-pro="1">
+            <span class="docs-icon-line">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </span>
+            <div class="docs-name">大会別収支一覧（任意）</div>
+            <span class="pro-badge">PRO</span>
+          </div>
+        </div>
+
+        <div class="etax-card-v2" id="etax-card">
+          <div class="etax-card-title">e-Taxに進む</div>
+          <div class="etax-card-sub">e-Taxの申請にはPROプランが必要です。</div>
+        </div>
+
+        <button class="pro-cta-btn" id="btn-pro-cta">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          PROプランで利用する
+        </button>
+
+        <div class="deadline-section">
+          <div class="deadline-section-title">申告期限</div>
+          <div class="deadline-row-v2">
+            <div class="deadline-label-v2">所得税・復興特別所得税</div>
+            <div class="deadline-date-v2">2025年3月17日（月）まで</div>
+          </div>
+          <div class="deadline-note-v2">※ 消費税（個人事業者）は3月31日（月）まで</div>
+        </div>
+
+        <div style="height:120px;"></div>
+      </div>
+    </section>
+
+
+    <!-- 画面4: ProNexaX PRO ランディング -->
+    <section class="filing-screen" id="screen-pro-landing" data-screen="pro-landing" data-screen-label="04 PRO案内">
+      <header class="screen-nav">
+        <button class="nav-back nav-back-text" data-nav-back aria-label="戻る">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>戻る</span>
+        </button>
+        <div class="nav-title"></div>
+        <div class="nav-spacer"></div>
+      </header>
+
+      <div class="screen-scroll">
+        <div class="pro-hero">
+          <div class="pro-hero-title">ProNexaX <span class="pro-hero-pro">PRO</span></div>
+          <div class="pro-hero-sub">確定申告を、もっとかんたんに。</div>
+        </div>
+
+        <div class="pro-features-card">
+          <div class="pro-feature-row">
+            <span class="pro-feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            </span>
+            <div class="pro-feature-text">
+              <div class="pro-feature-title">レシート撮影で自動入力（OCR）</div>
+              <div class="pro-feature-sub">手入力の手間を大幅カット</div>
+            </div>
+          </div>
+          <div class="pro-feature-row">
+            <span class="pro-feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 10v6M4.22 4.22l4.24 4.24m7.08 7.08l4.24 4.24M1 12h6m10 0h6M4.22 19.78l4.24-4.24m7.08-7.08l4.24-4.24"></path></svg>
+            </span>
+            <div class="pro-feature-text">
+              <div class="pro-feature-title">AIが自動で仕訳・分類</div>
+              <div class="pro-feature-sub">取引の内容を正確に自動判定</div>
+            </div>
+          </div>
+          <div class="pro-feature-row">
+            <span class="pro-feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg>
+            </span>
+            <div class="pro-feature-text">
+              <div class="pro-feature-title">申告書類を自動作成</div>
+              <div class="pro-feature-sub">PDF/CSVで出力、すぐに提出OK</div>
+            </div>
+          </div>
+          <div class="pro-feature-row">
+            <span class="pro-feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><polyline points="8 12 11 15 16 9"></polyline></svg>
+            </span>
+            <div class="pro-feature-text">
+              <div class="pro-feature-title">e-Tax連携</div>
+              <div class="pro-feature-sub">ワンクリックでe-Taxに進む</div>
+            </div>
+          </div>
+          <div class="pro-feature-row">
+            <span class="pro-feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </span>
+            <div class="pro-feature-text">
+              <div class="pro-feature-title">税理士とデータ共有</div>
+              <div class="pro-feature-sub">必要なデータを安全に共有可能</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="pro-primary-btn" id="btn-select-plan">プランを選択する</button>
+        <button class="pro-later-link" data-nav-close>あとで</button>
+
+        <div style="height:120px;"></div>
+      </div>
+    </section>
+
+
+    <!-- 画面5: 税理士監修で安心 -->
+    <section class="filing-screen" id="screen-tax-accountant" data-screen="tax-accountant" data-screen-label="05 税理士監修">
+      <header class="screen-nav">
+        <button class="nav-back nav-back-text" data-nav-back aria-label="戻る">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>戻る</span>
+        </button>
+        <div class="nav-title"></div>
+        <div class="nav-spacer"></div>
+      </header>
+
+      <div class="screen-scroll">
+        <div class="tax-hero">
+          <div class="tax-hero-title">税理士監修で安心</div>
+          <div class="tax-hero-sub">税理士が監修したルールに基づき、<br>正確な申告をサポートします。</div>
+        </div>
+
+        <div class="tax-photo-wrap">
+          <div class="tax-photo" id="tax-accountant-photo" aria-label="監修税理士の写真">
+            <svg viewBox="0 0 140 140" width="140" height="140" aria-hidden="true">
+              <defs>
+                <linearGradient id="taxBg" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stop-color="#EEF4FF"></stop>
+                  <stop offset="1" stop-color="#C7D9FD"></stop>
+                </linearGradient>
+              </defs>
+              <rect width="140" height="140" fill="url(#taxBg)"></rect>
+              <circle cx="70" cy="56" r="22" fill="#3478F6" opacity="0.92"></circle>
+              <path d="M26 130 C32 100, 54 88, 70 88 C86 88, 108 100, 114 130 Z" fill="#3478F6" opacity="0.92"></path>
+              <path d="M58 110 L58 130 L82 130 L82 110 L76 106 L70 108 L64 106 Z" fill="#fff"></path>
+              <rect x="68" y="106" width="4" height="24" fill="#3478F6"></rect>
+            </svg>
+          </div>
+          <div class="tax-name-block">
+            <div class="tax-role">監修税理士</div>
+            <div class="tax-name">山田 太郎 税理士</div>
+            <div class="tax-affil">（東京税理士会所属）</div>
+          </div>
+        </div>
+
+        <div class="user-voice-card">
+          <div class="user-voice-label">ユーザーの声</div>
+          <div class="user-voice-quote">申告が驚くほどラクになりました！</div>
+          <div class="user-voice-rating">
+            <span class="stars" aria-label="5つ星評価">
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="#F5A623" aria-hidden="true"><polygon points="8,1 10,6 15,6 11,9.5 12.5,15 8,12 3.5,15 5,9.5 1,6 6,6"></polygon></svg>
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="#F5A623" aria-hidden="true"><polygon points="8,1 10,6 15,6 11,9.5 12.5,15 8,12 3.5,15 5,9.5 1,6 6,6"></polygon></svg>
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="#F5A623" aria-hidden="true"><polygon points="8,1 10,6 15,6 11,9.5 12.5,15 8,12 3.5,15 5,9.5 1,6 6,6"></polygon></svg>
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="#F5A623" aria-hidden="true"><polygon points="8,1 10,6 15,6 11,9.5 12.5,15 8,12 3.5,15 5,9.5 1,6 6,6"></polygon></svg>
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="#F5A623" aria-hidden="true"><polygon points="8,1 10,6 15,6 11,9.5 12.5,15 8,12 3.5,15 5,9.5 1,6 6,6"></polygon></svg>
+            </span>
+            <span class="rating-num">5.0</span>
+          </div>
+        </div>
+
+        <button class="pro-primary-btn" id="btn-start-pro">機能を使い始める</button>
+
+        <div style="height:120px;"></div>
+      </div>
+    </section>
+
+
+    <!-- 画面6: PRO登録完了 -->
+    <section class="filing-screen" id="screen-pro-success" data-screen="pro-success" data-screen-label="06 PRO登録完了">
+      <div class="screen-scroll success-scroll">
+        <div class="success-content">
+          <div class="success-check-wrap" id="success-check-wrap">
+            <span class="sparkle s1"></span>
+            <span class="sparkle s2"></span>
+            <span class="sparkle s3"></span>
+            <span class="sparkle s4"></span>
+            <span class="sparkle s5"></span>
+            <span class="sparkle s6"></span>
+            <span class="sparkle s7"></span>
+            <span class="sparkle s8"></span>
+            <div class="success-check-circle">
+              <svg viewBox="0 0 60 60" width="60" height="60" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="14,32 25,43 46,18" id="success-check-path"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <h2 class="success-title">PRO登録が完了しました！</h2>
+          <p class="success-sub">すべてのPRO機能がご利用いただけます。</p>
+
+          <div class="success-feature-card">
+            <div class="success-feat-row">
+              <span class="success-feat-mark">
+                <svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4,9 7.5,12.5 14,5.5"></polyline></svg>
+              </span>
+              <span class="success-feat-text">レシート自動入力</span>
+            </div>
+            <div class="success-feat-row">
+              <span class="success-feat-mark">
+                <svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4,9 7.5,12.5 14,5.5"></polyline></svg>
+              </span>
+              <span class="success-feat-text">AI自動仕訳</span>
+            </div>
+            <div class="success-feat-row">
+              <span class="success-feat-mark">
+                <svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4,9 7.5,12.5 14,5.5"></polyline></svg>
+              </span>
+              <span class="success-feat-text">申告書類の自動作成</span>
+            </div>
+            <div class="success-feat-row">
+              <span class="success-feat-mark">
+                <svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4,9 7.5,12.5 14,5.5"></polyline></svg>
+              </span>
+              <span class="success-feat-text">e-Tax連携</span>
+            </div>
+            <div class="success-feat-row">
+              <span class="success-feat-mark">
+                <svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4,9 7.5,12.5 14,5.5"></polyline></svg>
+              </span>
+              <span class="success-feat-text">税理士共有・サポート</span>
+            </div>
+          </div>
+
+          <button class="pro-primary-btn" id="btn-finish-pro">機能を使い始める</button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /filing-stack -->
+
+
+  <!-- ══════════════════════════════════════════════
+       PRO案内モーダル（画面3）
+       ══════════════════════════════════════════════ -->
+  <div class="pro-modal-overlay" id="pro-modal" role="dialog" aria-modal="true" aria-label="PRO案内">
+    <div class="pro-modal-sheet">
+      <div class="pro-modal-lock">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      </div>
+
+      <h3 class="pro-modal-title">この機能はPROでご利用いただけます</h3>
+      <p class="pro-modal-desc">確定申告をもっと簡単・正確に。PROなら自動化とサポートで、申告準備をスムーズに。</p>
+
+      <ul class="pro-modal-bullets">
+        <li><span class="pm-check"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg></span>レシートを自動で読み取り・分類</li>
+        <li><span class="pm-check"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg></span>AIが取引を自動で仕訳</li>
+        <li><span class="pm-check"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg></span>申告書類を自動作成（PDF/CSV）</li>
+        <li><span class="pm-check"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg></span>e-Tax連携で提出までサポート</li>
+        <li><span class="pm-check"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg></span>不足レシートを自動チェック</li>
+      </ul>
+
+      <button class="pro-primary-btn pro-modal-cta" id="btn-try-free">7日間無料で試す</button>
+      <button class="pro-later-link" id="btn-modal-later">あとで</button>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       固定 追加ボタン
+       ══════════════════════════════════════════════ -->
+  <button class="add-btn-fixed" id="btn-add-tx">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    収入・支出を追加
+  </button>
+
+
+  <!-- ══════════════════════════════════════════════
+       入力モーダル
+       ══════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="add-modal" role="dialog" aria-modal="true" aria-label="取引を追加">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+
+      <div class="modal-header">
+        <span class="modal-title">取引を追加</span>
+        <button class="modal-close" id="modal-close-btn" aria-label="閉じる">×</button>
+      </div>
+
+      <!-- 収入 / 支出 切り替え -->
+      <div class="type-selector">
+        <button class="type-btn active-expense" data-type="expense" id="type-expense">
+          <span class="type-icon">💸</span>
+          <span class="type-label">支出</span>
+        </button>
+        <button class="type-btn" data-type="income" id="type-income">
+          <span class="type-icon">💰</span>
+          <span class="type-label">収入</span>
+        </button>
+      </div>
+
+      <!-- 金額 -->
+      <div class="form-group">
+        <label class="form-label">金額</label>
+        <div class="amount-input-wrap">
+          <span class="currency-symbol">¥</span>
+          <input type="number" class="amount-input" id="modal-amount"
+                 placeholder="0" inputmode="numeric" min="0">
+        </div>
+      </div>
+
+      <!-- 内容 -->
+      <div class="form-group">
+        <label class="form-label">内容</label>
+        <input type="text" class="form-input" id="modal-desc" placeholder="例：新幹線代（東京→大阪）">
+      </div>
+
+      <!-- カテゴリ -->
+      <div class="form-group">
+        <label class="form-label">カテゴリ</label>
+      </div>
+      <div class="cat-grid" id="cat-grid">
+        <button class="cat-grid-item" data-cat="交通費">
+          <span class="cat-emoji">🚄</span><span class="cat-text">交通費</span>
+        </button>
+        <button class="cat-grid-item" data-cat="宿泊費">
+          <span class="cat-emoji">🏨</span><span class="cat-text">宿泊費</span>
+        </button>
+        <button class="cat-grid-item" data-cat="エントリー費">
+          <span class="cat-emoji">🏆</span><span class="cat-text">エントリー費</span>
+        </button>
+        <button class="cat-grid-item" data-cat="練習場代">
+          <span class="cat-emoji">🏌️</span><span class="cat-text">練習場代</span>
+        </button>
+        <button class="cat-grid-item" data-cat="ラウンド代">
+          <span class="cat-emoji">⛳</span><span class="cat-text">ラウンド代</span>
+        </button>
+        <button class="cat-grid-item" data-cat="キャディ代">
+          <span class="cat-emoji">👜</span><span class="cat-text">キャディ代</span>
+        </button>
+        <button class="cat-grid-item" data-cat="賞金">
+          <span class="cat-emoji">💰</span><span class="cat-text">賞金</span>
+        </button>
+        <button class="cat-grid-item" data-cat="スポンサー料">
+          <span class="cat-emoji">🤝</span><span class="cat-text">スポンサー料</span>
+        </button>
+      </div>
+
+      <!-- 大会 -->
+      <div class="form-group">
+        <label class="form-label">大会（任意）</label>
+        <input type="text" class="form-input" id="modal-tournament" placeholder="例：日本プロゴルフ選手権">
+      </div>
+
+      <!-- 日付 -->
+      <div class="form-group">
+        <label class="form-label">日付</label>
+        <input type="date" class="form-input" id="modal-date">
+      </div>
+
+      <button class="modal-save-btn" id="modal-save-btn">保存する</button>
+      <div style="height:10px;"></div>
+
+    </div>
+  </div><!-- /add-modal -->
+
+</div><!-- /finance-root -->
+
+</body>
+</html>

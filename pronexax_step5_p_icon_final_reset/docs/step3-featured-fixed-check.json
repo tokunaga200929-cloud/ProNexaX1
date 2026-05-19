@@ -1,0 +1,10 @@
+{
+  "method": "replace_featured_until_nav_or_script",
+  "featured_page_count": 1,
+  "featured_frame_exists": true,
+  "featured_fix_css_exists": true,
+  "featured_embed_exists": true,
+  "search_frame_still_exists": true,
+  "finance_frame_still_exists": true,
+  "calendar_page_still_exists": true
+}

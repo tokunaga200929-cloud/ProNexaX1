@@ -1,0 +1,8 @@
+{
+  "method": "replace_content_until_next_page",
+  "page_finance_exists": true,
+  "finance_frame_exists": true,
+  "finance_embed_exists": true,
+  "search_frame_still_exists": true,
+  "calendar_page_still_exists": true
+}

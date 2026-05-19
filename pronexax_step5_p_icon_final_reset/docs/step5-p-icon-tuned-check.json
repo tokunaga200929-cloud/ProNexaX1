@@ -1,0 +1,10 @@
+{
+  "root_index_exists": true,
+  "new_tuned_css_exists": true,
+  "contains_transform_up": true,
+  "contains_42px_icon": true,
+  "calendar_page_exists": true,
+  "search_frame_exists": true,
+  "finance_frame_exists": true,
+  "featured_frame_exists": true
+}

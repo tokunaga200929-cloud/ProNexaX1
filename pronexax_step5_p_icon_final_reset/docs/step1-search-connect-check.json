@@ -1,0 +1,10 @@
+{
+  "replace_page_search_count": 1,
+  "root_index_exists": true,
+  "search_embed_exists": true,
+  "search_original_exists": true,
+  "iframe_in_root": true,
+  "hide_tabbar_in_embed": true,
+  "calendar_page_still_exists": true,
+  "finance_still_placeholder_or_exists": true
+}

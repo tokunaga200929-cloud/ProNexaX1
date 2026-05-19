@@ -1,0 +1,31 @@
+{
+  "root_index": "index.html",
+  "search": {
+    "html": "pages/search/search.html",
+    "css": "styles/search/search.css",
+    "js": "scripts/search/search.js",
+    "mount": "page-search",
+    "openFrom": "本体下部ナビの試合検索アイコン"
+  },
+  "featured": {
+    "html": "pages/featured/featured.html",
+    "css": "styles/featured/featured.css",
+    "js": "scripts/featured/featured.js",
+    "mount": "page-featured",
+    "openFrom": "中央Pアイコン"
+  },
+  "finance": {
+    "html": "pages/finance/finance.html",
+    "css": "styles/finance/finance.css",
+    "js": "scripts/finance/finance.js",
+    "mount": "page-finance",
+    "openFrom": "本体下部ナビの収支アイコン",
+    "requires": "Chart.js"
+  },
+  "cms": {
+    "html": "cms/index.html",
+    "css": "cms/styles.css",
+    "js": "cms/cms.js",
+    "role": "PC用管理画面。アプリ内ページではない"
+  }
+}

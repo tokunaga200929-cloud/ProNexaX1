@@ -1,0 +1,10 @@
+{
+  "root_index_exists": true,
+  "final_reset_exists": true,
+  "before_after_disabled": true,
+  "p_icon_48px": true,
+  "calendar_page_exists": true,
+  "search_frame_exists": true,
+  "finance_frame_exists": true,
+  "featured_frame_exists": true
+}
