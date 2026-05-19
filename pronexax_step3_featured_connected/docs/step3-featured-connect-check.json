@@ -1,0 +1,10 @@
+{
+  "method": "replace_until_first_closing_div",
+  "page_featured_exists": true,
+  "featured_frame_exists": true,
+  "featured_embed_exists": true,
+  "featured_embed_hides_bottom_nav": true,
+  "search_frame_still_exists": true,
+  "finance_frame_still_exists": true,
+  "calendar_page_still_exists": true
+}

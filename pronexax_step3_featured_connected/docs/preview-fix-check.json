@@ -1,0 +1,14 @@
+{
+  "root_index": true,
+  "preview": true,
+  "search_html": true,
+  "search_css": true,
+  "search_js": true,
+  "featured_html": true,
+  "featured_css": true,
+  "featured_js": true,
+  "finance_html": true,
+  "finance_css": true,
+  "finance_js": true,
+  "cms": true
+}
