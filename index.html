@@ -31,6 +31,54 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+
+<script id="pnx-step123-admin-preboot">
+(function(){
+  if (window.__PNX_STEP123_ADMIN_PREBOOT__) return;
+  window.__PNX_STEP123_ADMIN_PREBOOT__ = true;
+
+  const ADMIN_KEYS = [
+    "PNX_LAST_ADMIN_MODE",
+    "pronexax.lastAdminMode",
+    "PNX_IS_ADMIN",
+    "isAdmin"
+  ];
+
+  function readAdminMemory(){
+    try {
+      if (localStorage.getItem("PNX_FORCE_ADMIN_MODE") === "1") return true;
+      return ADMIN_KEYS.some(k => localStorage.getItem(k) === "1" || localStorage.getItem(k) === "true");
+    } catch(e) {
+      return false;
+    }
+  }
+
+  if (readAdminMemory()) {
+    document.documentElement.classList.add("pnx-admin-preboot");
+    document.documentElement.dataset.pnxAdminPreboot = "1";
+  }
+})();
+</script>
+<style id="pnx-step123-admin-preboot-css">
+html.pnx-admin-preboot body:not(.auth-guest) #auth-screen,
+html.pnx-admin-preboot #auth-screen.hidden{
+  display:none !important;
+}
+
+html.pnx-admin-preboot .admin-only,
+html.pnx-admin-preboot [data-admin-only="true"],
+html.pnx-admin-preboot .is-admin-only{
+  display:initial;
+}
+
+html.pnx-admin-preboot .guest-only,
+html.pnx-admin-preboot .normal-user-only,
+html.pnx-admin-preboot .non-admin-only,
+html.pnx-admin-preboot [data-non-admin-only="true"]{
+  display:none !important;
+}
+</style>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
@@ -40,29 +88,29 @@
   <meta name="application-name" content="ProNexaX">
   <meta name="theme-color" content="#39C892">
   <meta name="msapplication-TileColor" content="#000000">
-  <meta name="msapplication-TileImage" content="pronexaX_logo.png">
+  <meta name="msapplication-TileImage" content="assets/logos/pronexaX_logo.png">
   <link rel="manifest" href="manifest.json">
   <!-- iPhone / iPad ホーム画面アイコン -->
-  <link rel="apple-touch-icon" href="pronexaX_logo.png">
-  <link rel="apple-touch-icon" sizes="57x57"   href="pronexaX_logo.png">
-  <link rel="apple-touch-icon" sizes="60x60"   href="pronexaX_logo.png">
-  <link rel="apple-touch-icon" sizes="72x72"   href="pronexaX_logo.png">
-  <link rel="apple-touch-icon" sizes="76x76"   href="pronexaX_logo.png">
-  <link rel="apple-touch-icon" sizes="114x114" href="pronexaX_logo.png">
-  <link rel="apple-touch-icon" sizes="120x120" href="pronexaX_logo.png">
-  <link rel="apple-touch-icon" sizes="144x144" href="pronexaX_logo.png">
-  <link rel="apple-touch-icon" sizes="152x152" href="pronexaX_logo.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="pronexaX_logo.png">
+  <link rel="apple-touch-icon" href="assets/logos/pronexaX_logo.png">
+  <link rel="apple-touch-icon" sizes="57x57"   href="assets/logos/pronexaX_logo.png">
+  <link rel="apple-touch-icon" sizes="60x60"   href="assets/logos/pronexaX_logo.png">
+  <link rel="apple-touch-icon" sizes="72x72"   href="assets/logos/pronexaX_logo.png">
+  <link rel="apple-touch-icon" sizes="76x76"   href="assets/logos/pronexaX_logo.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="assets/logos/pronexaX_logo.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="assets/logos/pronexaX_logo.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="assets/logos/pronexaX_logo.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="assets/logos/pronexaX_logo.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/logos/pronexaX_logo.png">
   <!-- Favicon -->
-  <link rel="icon" type="image/png" sizes="192x192" href="pronexaX_logo.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="pronexaX_logo.png">
-  <link rel="shortcut icon" href="pronexaX_logo.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/logos/pronexaX_logo.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/logos/pronexaX_logo.png">
+  <link rel="shortcut icon" href="assets/logos/pronexaX_logo.png">
   <!-- iOS Splash Screens (startup image) — 黒背景 -->
   <meta name="apple-mobile-web-app-status-bar-style" content="white">
-  <link rel="apple-touch-startup-image" media="(device-width:390px)and(device-height:844px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
-  <link rel="apple-touch-startup-image" media="(device-width:414px)and(device-height:896px)and(-webkit-device-pixel-ratio:2)" href="pronexaX_logo.png">
-  <link rel="apple-touch-startup-image" media="(device-width:375px)and(device-height:812px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
-  <link rel="apple-touch-startup-image" media="(device-width:430px)and(device-height:932px)and(-webkit-device-pixel-ratio:3)" href="pronexaX_logo.png">
+  <link rel="apple-touch-startup-image" media="(device-width:390px)and(device-height:844px)and(-webkit-device-pixel-ratio:3)" href="assets/logos/pronexaX_logo.png">
+  <link rel="apple-touch-startup-image" media="(device-width:414px)and(device-height:896px)and(-webkit-device-pixel-ratio:2)" href="assets/logos/pronexaX_logo.png">
+  <link rel="apple-touch-startup-image" media="(device-width:375px)and(device-height:812px)and(-webkit-device-pixel-ratio:3)" href="assets/logos/pronexaX_logo.png">
+  <link rel="apple-touch-startup-image" media="(device-width:430px)and(device-height:932px)and(-webkit-device-pixel-ratio:3)" href="assets/logos/pronexaX_logo.png">
   <title>ProNexaX — Integration Base</title>
   <style>
     #portrait-overlay {
@@ -90,6 +138,955 @@
       50% { transform: rotate(-90deg); }
     }
   </style>
+
+<style id="pnx-p-icon-final-reset">
+/* ================================================================
+   FINAL RESET: 中央Pアイコンの二重三重表示を完全リセット
+   既存CSSより後ろで読み込ませるため head末尾に配置
+   ================================================================ */
+
+/* 中央Pボタン本体 */
+.bnav-btn.center-tab,
+#nav-featured.center-tab,
+button.center-tab {
+  flex: 0 0 56px !important;
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transform: translateY(-5px) !important;
+  position: relative !important;
+  z-index: 1002 !important;
+}
+
+/* CSSで作った外側の丸を全消し */
+.bnav-btn.center-tab::before,
+.bnav-btn.center-tab::after,
+#nav-featured.center-tab::before,
+#nav-featured.center-tab::after,
+button.center-tab::before,
+button.center-tab::after {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 実画像だけを表示 */
+.bnav-btn.center-tab .p-tab-icon,
+#nav-featured.center-tab .p-tab-icon,
+button.center-tab .p-tab-icon {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  display: block !important;
+  box-shadow: 0 5px 14px rgba(0,0,0,.13) !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+/* フォールバックは画像エラー時だけ */
+.bnav-btn.center-tab .p-tab-fallback,
+#nav-featured.center-tab .p-tab-fallback,
+button.center-tab .p-tab-fallback {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  color: #1AAF7A !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 5px 14px rgba(0,0,0,.13) !important;
+}
+
+/* active/押下時も外側が増えない */
+.bnav-btn.center-tab.active,
+#nav-featured.center-tab.active,
+button.center-tab.active {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.bnav-btn.center-tab:active,
+#nav-featured.center-tab:active,
+button.center-tab:active {
+  transform: translateY(-5px) scale(.94) !important;
+}
+</style>
+
+
+<!-- STEP10 Firestore準備: 本番接続時に有効化する土台 -->
+<script src="scripts/firebase/firestore-config.js"></script>
+<script src="scripts/firebase/firebase-sdk-loader.js"></script>
+<script src="scripts/firebase/firestore-bridge.js"></script>
+<!-- STEP11 Firebase/Auth準備 -->
+<script src="scripts/firebase/firebase-app.js"></script>
+<script src="scripts/firebase/auth-bridge.js"></script>
+<script src="scripts/firebase/user-scoped-store.js"></script>
+
+
+<script src="scripts/firebase/firebase-diagnostics.js"></script>
+
+<style id="pnx-step30-firebase-diagnostics-style">
+.pnx-fb-diag-panel{
+  max-width:900px;
+  margin:24px auto;
+  padding:20px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-fb-diag-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:14px;
+}
+.pnx-fb-kicker{
+  margin:0 0 5px;
+  color:#3478f6;
+  font-size:12px;
+  font-weight:900;
+}
+.pnx-fb-diag-head h2{
+  margin:0 0 5px;
+  font-size:20px;
+  color:#101828;
+}
+.pnx-fb-diag-head p{
+  margin:0;
+  color:#667085;
+  font-size:13px;
+}
+.pnx-fb-main-btn{
+  border:0;
+  border-radius:14px;
+  height:40px;
+  padding:0 15px;
+  background:#3478f6;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+}
+.pnx-fb-diag-result{
+  border-radius:18px;
+  background:#f9fafb;
+  border:1px solid #eef2f6;
+  padding:14px;
+  color:#667085;
+  font-size:13px;
+}
+.pnx-fb-diag-card{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.pnx-fb-diag-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:9px 10px;
+  border-radius:13px;
+  background:#fff;
+  border:1px solid #eef2f6;
+}
+.pnx-fb-diag-row span{
+  color:#344054;
+  font-weight:800;
+}
+.pnx-fb-diag-row strong{
+  color:#101828;
+}
+.pnx-fb-diag-row strong.ok{
+  color:#027a48;
+}
+.pnx-fb-diag-row strong.ng{
+  color:#b42318;
+}
+.pnx-fb-diag-note{
+  margin-top:12px;
+  padding:11px 12px;
+  border-radius:14px;
+  background:#eef4ff;
+  color:#175cd3;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.6;
+}
+</style>
+
+
+<style id="pnx-step33-auth-style">
+.pnx-auth-panel{
+  max-width:900px;
+  margin:24px auto;
+  padding:20px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-auth-kicker{
+  margin:0 0 5px;
+  color:#3478f6;
+  font-size:12px;
+  font-weight:900;
+}
+.pnx-auth-head h2{
+  margin:0 0 5px;
+  font-size:20px;
+  color:#101828;
+}
+.pnx-auth-head p{
+  margin:0 0 14px;
+  color:#667085;
+  font-size:13px;
+  line-height:1.65;
+}
+.pnx-auth-user-card{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:13px;
+  border-radius:18px;
+  background:#f9fafb;
+  border:1px solid #eef2f6;
+}
+.pnx-auth-avatar{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  background:#eef4ff;
+  color:#3478f6;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:950;
+}
+.pnx-auth-name{
+  font-size:14px;
+  font-weight:900;
+  color:#101828;
+}
+.pnx-auth-email{
+  margin-top:2px;
+  font-size:12px;
+  color:#667085;
+}
+.pnx-auth-actions{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+.pnx-auth-main-btn,
+.pnx-auth-sub-btn,
+.pnx-auth-ghost-btn{
+  height:40px;
+  border:0;
+  border-radius:14px;
+  padding:0 14px;
+  font-weight:900;
+  cursor:pointer;
+}
+.pnx-auth-main-btn{background:#3478f6;color:#fff;}
+.pnx-auth-sub-btn{background:#eef4ff;color:#175cd3;}
+.pnx-auth-ghost-btn{background:#f2f4f7;color:#475467;}
+.pnx-auth-status{
+  margin-top:12px;
+  padding:10px 12px;
+  border-radius:14px;
+  background:#f9fafb;
+  color:#667085;
+  font-size:12px;
+  font-weight:800;
+}
+.pnx-auth-status.is-success{background:#ecfdf3;color:#027a48;}
+.pnx-auth-status.is-error{background:#fef3f2;color:#b42318;}
+</style>
+
+<script src="scripts/firebase/favorites-bridge.js"></script>
+<script src="scripts/firebase/calendar-sync-bridge.js"></script>
+<script src="scripts/firebase/reminder-bridge.js"></script>
+<script src="scripts/firebase/notification-settings-bridge.js"></script>
+<script src="scripts/firebase/notification-center.js"></script>
+<script src="scripts/firebase/notification-event-link.js"></script>
+<script src="scripts/firebase/realtime-bridge.js"></script>
+
+<style id="pnx-step42-restore-main-ui">
+/* ================================================================
+   STEP42: Restore Main Calendar UI
+   追加した診断/開発パネルを本体画面から隠し、カレンダーUIを前面に戻す
+   ================================================================ */
+html, body{
+  overflow-x:hidden !important;
+}
+
+body:not(.pnx-dev-mode) #pnx-firebase-diagnostics-panel,
+body:not(.pnx-dev-mode) #pnx-firebase-setup-guide-panel,
+body:not(.pnx-dev-mode) #pnx-security-rules-panel,
+body:not(.pnx-dev-mode) #pnx-auth-panel,
+body:not(.pnx-dev-mode) #pnx-user-scope-panel,
+body:not(.pnx-dev-mode) #pnx-favorites-panel,
+body:not(.pnx-dev-mode) #pnx-calendar-sync-panel,
+body:not(.pnx-dev-mode) #pnx-reminder-panel,
+body:not(.pnx-dev-mode) #pnx-notification-settings-panel,
+body:not(.pnx-dev-mode) #pnx-notification-center-panel,
+body:not(.pnx-dev-mode) #pnx-notification-link-panel,
+body:not(.pnx-dev-mode) #pnx-realtime-panel,
+body:not(.pnx-dev-mode) .pnx-fb-diag-panel,
+body:not(.pnx-dev-mode) .pnx-auth-panel{
+  display:none !important;
+}
+
+body.pnx-dev-mode{
+  overflow-x:auto !important;
+}
+
+#pnx-dev-toggle{
+  position:fixed;
+  right:12px;
+  top:12px;
+  z-index:999999;
+  border:0;
+  border-radius:999px;
+  padding:8px 12px;
+  background:#111827;
+  color:#fff;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.04em;
+  box-shadow:0 10px 30px rgba(15,23,42,.22);
+  opacity:.78;
+}
+
+#pnx-dev-toggle:hover{
+  opacity:1;
+}
+
+body.pnx-dev-mode #pnx-dev-toggle{
+  background:#3478f6;
+}
+
+/* 本体ページを横に押し出さないための保険 */
+body:not(.pnx-dev-mode) > section[id^="pnx-"]{
+  display:none !important;
+}
+
+/* iframe統合ページが余白で潰れないようにする */
+#search-module-frame,
+#finance-module-frame,
+#featured-module-frame{
+  max-width:100%;
+}
+</style>
+
+
+<style id="pnx-step43-main-mobile-reintegration">
+/* ================================================================
+   STEP43: Main Mobile UI Reintegration
+   本体入口 index.html から見た時のモバイル表示を安定化
+   ================================================================ */
+
+/* 通常時は本体アプリを中央寄せのスマホ幅へ戻す */
+body:not(.pnx-dev-mode){
+  background:#f3f4f8 !important;
+}
+
+/* 開発パネルが横幅を押し出さないための保険 */
+body:not(.pnx-dev-mode) .pnx-fb-diag-panel,
+body:not(.pnx-dev-mode) .pnx-auth-panel{
+  display:none !important;
+}
+
+/* 本体の各ページが存在する場合の基本制御 */
+body:not(.pnx-dev-mode) .pnx-page,
+body:not(.pnx-dev-mode) [data-pnx-page]{
+  max-width:430px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+/* iframe module を本体スマホ幅に収める */
+#search-module-frame,
+#finance-module-frame,
+#featured-module-frame{
+  width:100% !important;
+  max-width:430px !important;
+  min-height:calc(100vh - 88px) !important;
+  border:0 !important;
+  display:block;
+  margin:0 auto !important;
+  background:#f3f4f8 !important;
+}
+
+/* ページ切替用。既存実装と衝突しにくいように is-active も見る */
+.pnx-integrated-page{
+  display:none;
+  width:100%;
+  max-width:430px;
+  min-height:100vh;
+  margin:0 auto;
+  background:#fff;
+}
+
+.pnx-integrated-page.is-active{
+  display:block;
+}
+
+/* 下部ナビ保険 */
+#tab-bar,
+.bottom-nav,
+.pnx-bottom-nav,
+nav[aria-label="Main Navigation"]{
+  max-width:430px;
+  left:50% !important;
+  transform:translateX(-50%);
+}
+
+/* カレンダー画面を押し潰さない */
+#page-calendar,
+[data-page-id="calendar"]{
+  max-width:430px;
+  margin:0 auto;
+  background:#fff;
+}
+
+/* PCで本体入口を開いても巨大横並びになりにくくする */
+@media (min-width: 768px){
+  body:not(.pnx-dev-mode) #app,
+  body:not(.pnx-dev-mode) .app,
+  body:not(.pnx-dev-mode) .phone,
+  body:not(.pnx-dev-mode) .app-shell{
+    max-width:430px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+}
+</style>
+
+
+<style id="pnx-step44-calendar-visible-fix">
+/* ================================================================
+   STEP44: Calendar Visible Fix
+   本体カレンダー表示を最優先で復旧
+   ================================================================ */
+
+/* 開発パネルだけ隠す。通常ページやカレンダーDOMは触らない */
+body:not(.pnx-dev-mode) #pnx-firebase-diagnostics-panel,
+body:not(.pnx-dev-mode) #pnx-firebase-setup-guide-panel,
+body:not(.pnx-dev-mode) #pnx-security-rules-panel,
+body:not(.pnx-dev-mode) #pnx-auth-panel,
+body:not(.pnx-dev-mode) #pnx-user-scope-panel,
+body:not(.pnx-dev-mode) #pnx-favorites-panel,
+body:not(.pnx-dev-mode) #pnx-calendar-sync-panel,
+body:not(.pnx-dev-mode) #pnx-reminder-panel,
+body:not(.pnx-dev-mode) #pnx-notification-settings-panel,
+body:not(.pnx-dev-mode) #pnx-notification-center-panel,
+body:not(.pnx-dev-mode) #pnx-notification-link-panel,
+body:not(.pnx-dev-mode) #pnx-realtime-panel,
+body:not(.pnx-dev-mode) .pnx-fb-diag-panel,
+body:not(.pnx-dev-mode) .pnx-auth-panel{
+  display:none !important;
+}
+
+/* STEP43の広すぎる非表示指定を打ち消す */
+body:not(.pnx-dev-mode) > section[id^="pnx-"]:not(#pnx-firebase-diagnostics-panel):not(#pnx-firebase-setup-guide-panel):not(#pnx-security-rules-panel):not(#pnx-auth-panel):not(#pnx-user-scope-panel):not(#pnx-favorites-panel):not(#pnx-calendar-sync-panel):not(#pnx-reminder-panel):not(#pnx-notification-settings-panel):not(#pnx-notification-center-panel):not(#pnx-notification-link-panel):not(#pnx-realtime-panel){
+  display:initial !important;
+}
+
+/* カレンダー本体は必ず表示候補に戻す */
+#page-calendar,
+[data-page-id="calendar"],
+.page-calendar,
+.calendar-page{
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+/* 本体幅はスマホ幅を維持 */
+body:not(.pnx-dev-mode) #app,
+body:not(.pnx-dev-mode) .app,
+body:not(.pnx-dev-mode) .phone,
+body:not(.pnx-dev-mode) .app-shell{
+  max-width:430px;
+  margin-left:auto;
+  margin-right:auto;
+}
+</style>
+
+
+<style id="pnx-step45-calendar-fit-fix">
+/* ================================================================
+   STEP45: Calendar Fit Fix
+   iPhoneフレーム内の余白を減らし、カレンダーを画面幅へ近づける
+   ================================================================ */
+
+/* 通常表示ではプレビュー用の外側余白を抑える */
+body:not(.pnx-dev-mode){
+  background:#eef0f5 !important;
+}
+
+/* iPhone/phone mock系の内側余白を縮小 */
+body:not(.pnx-dev-mode) .phone,
+body:not(.pnx-dev-mode) .iphone,
+body:not(.pnx-dev-mode) .iphone-frame,
+body:not(.pnx-dev-mode) .device,
+body:not(.pnx-dev-mode) .device-frame{
+  padding-left:8px !important;
+  padding-right:8px !important;
+}
+
+/* アプリ本体の横幅を広めに使う */
+body:not(.pnx-dev-mode) #app,
+body:not(.pnx-dev-mode) .app,
+body:not(.pnx-dev-mode) .app-shell,
+body:not(.pnx-dev-mode) .screen,
+body:not(.pnx-dev-mode) .app-screen{
+  width:100% !important;
+  max-width:100% !important;
+}
+
+/* カレンダーエリアの左右余白を抑える */
+body:not(.pnx-dev-mode) #page-calendar,
+body:not(.pnx-dev-mode) .page-calendar,
+body:not(.pnx-dev-mode) .calendar-page,
+body:not(.pnx-dev-mode) [data-page-id="calendar"]{
+  width:100% !important;
+  max-width:100% !important;
+  margin-left:0 !important;
+  margin-right:0 !important;
+}
+
+/* カレンダーグリッドが内側で細くならないようにする */
+body:not(.pnx-dev-mode) .calendar,
+body:not(.pnx-dev-mode) .calendar-wrap,
+body:not(.pnx-dev-mode) .calendar-grid,
+body:not(.pnx-dev-mode) .month-grid,
+body:not(.pnx-dev-mode) .cal-grid{
+  width:100% !important;
+  max-width:100% !important;
+}
+
+/* ヘッダーも幅いっぱいに */
+body:not(.pnx-dev-mode) header,
+body:not(.pnx-dev-mode) .header,
+body:not(.pnx-dev-mode) .app-header,
+body:not(.pnx-dev-mode) .topbar{
+  width:100% !important;
+  max-width:100% !important;
+}
+
+/* 下部ナビが切れないように */
+body:not(.pnx-dev-mode) .bottom-nav,
+body:not(.pnx-dev-mode) .pnx-bottom-nav,
+body:not(.pnx-dev-mode) #tab-bar{
+  max-width:100% !important;
+  width:100% !important;
+}
+
+/* PCブラウザで見た時もスマホプレビューは中央維持 */
+@media (min-width: 768px){
+  body:not(.pnx-dev-mode) .phone,
+  body:not(.pnx-dev-mode) .iphone,
+  body:not(.pnx-dev-mode) .iphone-frame,
+  body:not(.pnx-dev-mode) .device,
+  body:not(.pnx-dev-mode) .device-frame{
+    max-width:430px !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+  }
+}
+</style>
+
+<script src="scripts/firebase/calendar-backend-safe-link.js"></script>
+
+<style id="pnx-step56-clean-main-ui">
+/* ================================================================
+   STEP56: Clean Main UI / Hide Dev Panels
+   通常画面では開発確認パネルを完全非表示。
+   処理/Bridgeは残し、DEVモード時だけ確認可能にする。
+   ================================================================ */
+
+/* 通常時は必ず横スクロールを止める */
+html,
+body{
+  overflow-x:hidden !important;
+}
+
+/* 通常画面で隠す開発・診断・確認パネル */
+body:not(.pnx-dev-mode) #pnx-firebase-diagnostics-panel,
+body:not(.pnx-dev-mode) #pnx-firebase-setup-guide-panel,
+body:not(.pnx-dev-mode) #pnx-security-rules-panel,
+body:not(.pnx-dev-mode) #pnx-auth-panel,
+body:not(.pnx-dev-mode) #pnx-user-scope-panel,
+body:not(.pnx-dev-mode) #pnx-favorites-panel,
+body:not(.pnx-dev-mode) #pnx-calendar-sync-panel,
+body:not(.pnx-dev-mode) #pnx-reminder-panel,
+body:not(.pnx-dev-mode) #pnx-notification-settings-panel,
+body:not(.pnx-dev-mode) #pnx-notification-center-panel,
+body:not(.pnx-dev-mode) #pnx-notification-link-panel,
+body:not(.pnx-dev-mode) #pnx-realtime-panel,
+body:not(.pnx-dev-mode) #pnx-calendar-backend-safe-link-panel,
+
+/* STEP系の確認パネル類 */
+body:not(.pnx-dev-mode) #pnx-step30-panel,
+body:not(.pnx-dev-mode) #pnx-step31-panel,
+body:not(.pnx-dev-mode) #pnx-step32-panel,
+body:not(.pnx-dev-mode) #pnx-step33-panel,
+body:not(.pnx-dev-mode) #pnx-step34-panel,
+body:not(.pnx-dev-mode) #pnx-step35-panel,
+body:not(.pnx-dev-mode) #pnx-step36-panel,
+body:not(.pnx-dev-mode) #pnx-step37-panel,
+body:not(.pnx-dev-mode) #pnx-step38-panel,
+body:not(.pnx-dev-mode) #pnx-step39-panel,
+body:not(.pnx-dev-mode) #pnx-step40-panel,
+body:not(.pnx-dev-mode) #pnx-step41-panel,
+body:not(.pnx-dev-mode) #pnx-step42-panel,
+body:not(.pnx-dev-mode) #pnx-step43-panel,
+body:not(.pnx-dev-mode) #pnx-step44-panel,
+body:not(.pnx-dev-mode) #pnx-step45-panel,
+body:not(.pnx-dev-mode) #pnx-step46-panel,
+body:not(.pnx-dev-mode) #pnx-step47-panel,
+body:not(.pnx-dev-mode) #pnx-step48-panel,
+body:not(.pnx-dev-mode) #pnx-step49-panel,
+body:not(.pnx-dev-mode) #pnx-step50-panel,
+body:not(.pnx-dev-mode) #pnx-step51-panel,
+body:not(.pnx-dev-mode) #pnx-step52-panel,
+body:not(.pnx-dev-mode) #pnx-step53-panel,
+body:not(.pnx-dev-mode) #pnx-step54-panel,
+body:not(.pnx-dev-mode) #pnx-step55-panel,
+
+/* 共通開発パネルclass */
+body:not(.pnx-dev-mode) .pnx-fb-diag-panel,
+body:not(.pnx-dev-mode) .pnx-auth-panel,
+body:not(.pnx-dev-mode) .pnx-dev-panel,
+body:not(.pnx-dev-mode) .pnx-debug-panel,
+body:not(.pnx-dev-mode) .pnx-diagnostics-panel{
+  display:none !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+/* 本体アプリ/カレンダーは通常表示を維持 */
+body:not(.pnx-dev-mode) #page-calendar,
+body:not(.pnx-dev-mode) .page-calendar,
+body:not(.pnx-dev-mode) .calendar-page,
+body:not(.pnx-dev-mode) [data-page-id="calendar"]{
+  display:revert;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+/* DEVボタン自体は小さく邪魔にならない位置へ */
+#pnx-dev-toggle{
+  position:fixed !important;
+  right:10px !important;
+  top:10px !important;
+  z-index:999999 !important;
+  border:0 !important;
+  border-radius:999px !important;
+  padding:7px 10px !important;
+  background:rgba(17,24,39,.82) !important;
+  color:#fff !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  letter-spacing:.04em !important;
+  box-shadow:0 10px 26px rgba(15,23,42,.22) !important;
+  opacity:.42 !important;
+}
+#pnx-dev-toggle:hover{
+  opacity:1 !important;
+}
+body.pnx-dev-mode #pnx-dev-toggle{
+  background:#3478f6 !important;
+  opacity:.95 !important;
+}
+
+/* DEVモード時だけ開発パネルを右側へ並べてもよい */
+body.pnx-dev-mode{
+  overflow-x:auto !important;
+}
+body.pnx-dev-mode .pnx-auth-panel,
+body.pnx-dev-mode .pnx-fb-diag-panel{
+  display:block !important;
+  visibility:visible !important;
+  pointer-events:auto !important;
+}
+
+/* 通常画面の余計な右側空間を防止 */
+body:not(.pnx-dev-mode) > .pnx-auth-panel,
+body:not(.pnx-dev-mode) > .pnx-fb-diag-panel{
+  width:0 !important;
+  height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+}
+</style>
+
+
+<style id="pnx-step57-restore-calendar-flex">
+/* ================================================================
+   STEP57: Restore Calendar Flex After Cleanup
+   STEP56で #page-calendar を display:block にした影響を修正。
+   元の本体カレンダーは .page.active { display:flex; } が前提。
+   ================================================================ */
+
+/* 通常画面でも、カレンダーページは元のflex構造を維持する */
+body:not(.pnx-dev-mode) #page-calendar.active,
+body:not(.pnx-dev-mode) .page.active#page-calendar{
+  display:flex !important;
+  flex:1 1 auto !important;
+  flex-direction:column !important;
+  min-height:0 !important;
+  height:0 !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+/* 非アクティブ時は元の仕様どおり非表示 */
+body:not(.pnx-dev-mode) #page-calendar:not(.active){
+  display:none !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+/* カレンダー内部のスクロール/描画エリアを復旧 */
+body:not(.pnx-dev-mode) #page-calendar.active .cal-scroll,
+body:not(.pnx-dev-mode) #page-calendar.active .cal-panel,
+body:not(.pnx-dev-mode) #page-calendar.active .calendar-page,
+body:not(.pnx-dev-mode) #page-calendar.active .calendar-wrap{
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+/* STEP56の display:block 指定より後で勝たせる保険 */
+body:not(.pnx-dev-mode) .page.active{
+  display:flex !important;
+}
+</style>
+
+
+<style id="pnx-step58-module-pages-display-stability">
+/* ================================================================
+   STEP58: Module Pages Display Stability
+   試合検索・収支・注目ページの表示安定化
+   カレンダーUIは触らず、module iframeページだけを安全補強
+   ================================================================ */
+
+/* moduleページは元の .page 構造を維持する */
+body:not(.pnx-dev-mode) #page-search,
+body:not(.pnx-dev-mode) #page-finance,
+body:not(.pnx-dev-mode) #page-featured{
+  flex:1 1 auto !important;
+  height:0 !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+  background:#F2F2F7 !important;
+  position:relative !important;
+}
+
+/* active時だけ表示。display:blockにせず、必ずflex */
+body:not(.pnx-dev-mode) #page-search.active,
+body:not(.pnx-dev-mode) #page-finance.active,
+body:not(.pnx-dev-mode) #page-featured.active{
+  display:flex !important;
+  flex-direction:column !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+/* 非active時は完全に触れない */
+body:not(.pnx-dev-mode) #page-search:not(.active),
+body:not(.pnx-dev-mode) #page-finance:not(.active),
+body:not(.pnx-dev-mode) #page-featured:not(.active){
+  display:none !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+/* iframeは親pageの残り高さを全部使う */
+body:not(.pnx-dev-mode) #search-module-frame,
+body:not(.pnx-dev-mode) #finance-module-frame,
+body:not(.pnx-dev-mode) #featured-module-frame{
+  display:block !important;
+  width:100% !important;
+  max-width:none !important;
+  height:100% !important;
+  min-height:0 !important;
+  flex:1 1 auto !important;
+  border:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  background:#F2F2F7 !important;
+}
+
+/* Step43の max-width:430px や min-height:calc(...) が残ってもここで打ち消す */
+body:not(.pnx-dev-mode) #page-search.active > iframe,
+body:not(.pnx-dev-mode) #page-finance.active > iframe,
+body:not(.pnx-dev-mode) #page-featured.active > iframe{
+  max-width:100% !important;
+  min-height:0 !important;
+}
+
+/* iframeページの白チラ防止 */
+body:not(.pnx-dev-mode) #page-search::before,
+body:not(.pnx-dev-mode) #page-finance::before,
+body:not(.pnx-dev-mode) #page-featured::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:#F2F2F7;
+  z-index:0;
+  pointer-events:none;
+}
+
+body:not(.pnx-dev-mode) #page-search > iframe,
+body:not(.pnx-dev-mode) #page-finance > iframe,
+body:not(.pnx-dev-mode) #page-featured > iframe{
+  position:relative;
+  z-index:1;
+}
+
+/* 下部ナビはmodule iframeより常に前 */
+body:not(.pnx-dev-mode) .bottom-nav{
+  z-index:10000 !important;
+}
+</style>
+
+<style id="pnx-step116-pure-router-css-guard">
+.app-frame,
+#app-frame{
+  opacity:1 !important;
+  visibility:visible !important;
+  transition:none !important;
+}
+
+body:not(.auth-guest) #auth-screen,
+body.is-admin #auth-screen,
+body[data-current-page]:not(.auth-guest) #auth-screen,
+#auth-screen.hidden{
+  display:none !important;
+}
+</style>
+
+<style id="pnx-step122-css-only-route-lock">
+/* STEP122: Observerを使わず、表示はbody[data-current-page]だけで制御 */
+body[data-current-page="calendar"] #page-calendar,
+body[data-current-page="search"] #page-search,
+body[data-current-page="featured"] #page-featured,
+body[data-current-page="finance"] #page-finance,
+body[data-current-page="admin"] #page-admin,
+body[data-current-page="mypage"] #page-mypage{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+body[data-current-page="calendar"] .page:not(#page-calendar),
+body[data-current-page="search"] .page:not(#page-search),
+body[data-current-page="featured"] .page:not(#page-featured),
+body[data-current-page="finance"] .page:not(#page-finance),
+body[data-current-page="admin"] .page:not(#page-admin),
+body[data-current-page="mypage"] .page:not(#page-mypage){
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+
+body[data-current-page="search"] #search-module-frame,
+body[data-current-page="finance"] #finance-module-frame,
+body[data-current-page="featured"] #featured-module-frame{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+.app-frame,
+#app-frame{
+  opacity:1 !important;
+  visibility:visible !important;
+}
+</style>
+
+
+<style id="pnx-step125-admin-canonical-css">
+/* STEP125: 管理者判定前でも管理者ナビを固定し、一般UIを出さない */
+html.pnx-admin-preboot #nav-admin,
+html.pnx-admin-preboot .admin-nav-btn,
+body.is-admin #nav-admin,
+body.is-admin .admin-nav-btn{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+html.pnx-admin-preboot #nav-mypage,
+body.is-admin #nav-mypage{
+  display:none !important;
+}
+
+html.pnx-admin-preboot .guest-only,
+html.pnx-admin-preboot .normal-user-only,
+html.pnx-admin-preboot .non-admin-only,
+html.pnx-admin-preboot [data-non-admin-only="true"],
+body.is-admin .guest-only,
+body.is-admin .normal-user-only,
+body.is-admin .non-admin-only,
+body.is-admin [data-non-admin-only="true"]{
+  display:none !important;
+}
+
+html.pnx-admin-preboot .admin-only,
+html.pnx-admin-preboot [data-admin-only="true"],
+html.pnx-admin-preboot .is-admin-only,
+body.is-admin .admin-only,
+body.is-admin [data-admin-only="true"],
+body.is-admin .is-admin-only{
+  display:initial;
+}
+</style>
+
 </head>
 <body>
 
@@ -3565,7 +4562,7 @@ button,input,select,textarea{
 /* ================================================================ */
 /* ★★★ 中央Pロゴタブ（ProNexaX ブランドタブ）                        */
 /* ================================================================ */
-/* 画像差し替え方法：images/p-tab-icon.png を置くだけでOK             */
+/* 画像差し替え方法：assets/images/p-tab-icon.png を置くだけでOK             */
 .bnav-btn.center-tab{
   flex:0 0 auto;
   width:52px;height:52px;
@@ -6071,6 +7068,367 @@ body.is-admin .admin-card-actions.admin-only {
   display: block;
 }
 
+
+/* ================================================================ */
+/* ★★★ Module iframe mount：試合検索 接続 STEP1 ★★★ */
+/* ================================================================ */
+.module-frame{
+  width:100%;
+  height:100%;
+  flex:1 1 auto;
+  min-height:0;
+  border:0;
+  display:block;
+  background:#F2F2F7;
+}
+#page-search{
+  background:#F2F2F7;
+  overflow:hidden;
+}
+#page-search.active{
+  display:flex;
+  flex-direction:column;
+}
+
+
+/* ================================================================ */
+/* ★★★ Module iframe mount：収支 接続 STEP2 ★★★ */
+/* ================================================================ */
+#page-finance{
+  background:#F2F2F7;
+  overflow:hidden;
+}
+#page-finance.active{
+  display:flex;
+  flex-direction:column;
+}
+.module-frame-finance{
+  background:#F2F2F7;
+}
+
+
+/* ================================================================ */
+/* ★★★ Module iframe mount：収支 接続 FIX ★★★ */
+/* ================================================================ */
+.module-frame{
+  width:100%;
+  height:100%;
+  flex:1 1 auto;
+  min-height:0;
+  border:0;
+  display:block;
+}
+#page-finance{
+  background:#F2F2F7;
+  overflow:hidden;
+}
+#page-finance.active{
+  display:flex;
+  flex-direction:column;
+}
+.module-frame-finance{
+  background:#F2F2F7;
+}
+
+
+/* ================================================================ */
+/* ★★★ Module iframe mount：注目/広告 接続 STEP3 ★★★ */
+/* ================================================================ */
+#page-featured{
+  background:#F2F2F7;
+  overflow:hidden;
+}
+#page-featured.active{
+  display:flex;
+  flex-direction:column;
+}
+.module-frame-featured{
+  background:#F2F2F7;
+}
+
+
+/* ================================================================ */
+/* ★★★ STEP3 FIX：中央P featured 表示高さ修正 ★★★ */
+/* ================================================================ */
+#page-featured{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  height:0 !important;
+  background:#F2F2F7 !important;
+  overflow:hidden !important;
+}
+#page-featured.active{
+  display:flex !important;
+  flex-direction:column !important;
+}
+#featured-module-frame,
+.module-frame-featured{
+  width:100% !important;
+  height:100% !important;
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  border:0 !important;
+  display:block !important;
+  background:#F2F2F7 !important;
+}
+
+
+/* ================================================================ */
+/* ★★★ STEP4 統合安定化：ナビ切替・高さ・余白・iframe安定化 ★★★ */
+/* ================================================================ */
+
+/* モジュールページ共通：本体下部ナビの上までを確実に使う */
+#page-search,
+#page-finance,
+#page-featured{
+  flex: 1 1 auto !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  background: #F2F2F7 !important;
+  position: relative !important;
+}
+
+/* active時のみflex表示を強制 */
+#page-search.active,
+#page-finance.active,
+#page-featured.active{
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* iframe共通 */
+#search-module-frame,
+#finance-module-frame,
+#featured-module-frame,
+.module-frame{
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  border: 0 !important;
+  display: block !important;
+  background: #F2F2F7 !important;
+}
+
+/* iframe読み込み時の白チラつき軽減 */
+.module-frame-search,
+.module-frame-finance,
+.module-frame-featured{
+  background: #F2F2F7 !important;
+}
+
+/* 本体下部ナビは常に最前面 */
+.bottom-nav{
+  position: relative;
+  z-index: 1000;
+}
+
+/* 中央Pがiframeの背面に隠れないようにする */
+.bnav-btn.center-tab{
+  z-index: 1002;
+}
+
+/* iframeページでは横スクロールを絶対に出さない */
+#page-search iframe,
+#page-finance iframe,
+#page-featured iframe{
+  overflow: hidden !important;
+}
+
+
+/* ================================================================ */
+.bnav-btn.center-tab,
+#nav-featured.center-tab{
+  flex:0 0 auto !important;
+  width:52px !important;
+  height:52px !important;
+  border-radius:50% !important;
+  padding:0 !important;
+  background:transparent !important;
+  overflow:visible !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  position:relative !important;
+  z-index:1002 !important;
+}
+.p-tab-icon{
+  width:52px !important;
+  height:52px !important;
+  border-radius:50% !important;
+  object-fit:cover !important;
+  display:block;
+  pointer-events:none;
+  flex-shrink:0;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.12));
+}
+.p-tab-fallback{
+  width:52px !important;
+  height:52px !important;
+  border-radius:50% !important;
+  background:#fff !important;
+  color:#1AAF7A !important;
+  font-size:22px !important;
+  font-weight:800 !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 18px rgba(0,0,0,0.13),0 2px 6px rgba(0,0,0,0.07);
+  pointer-events:none;
+}
+.bnav-btn.center-tab.active .p-tab-icon,
+#nav-featured.center-tab.active .p-tab-icon{
+  transform:scale(1.03);
+}
+
+
+/* ================================================================ */
+
+.bnav-btn.center-tab,
+#nav-featured.center-tab{
+  flex:0 0 auto !important;
+  width:58px !important;
+  height:58px !important;
+  border-radius:50% !important;
+  padding:0 !important;
+  background:transparent !important;
+  overflow:visible !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  position:relative !important;
+  z-index:1002 !important;
+}
+
+/* 外側の浮いてる感 */
+.bnav-btn.center-tab::before,
+#nav-featured.center-tab::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:
+    0 10px 24px rgba(0,0,0,.14),
+    0 3px 8px rgba(0,0,0,.08);
+  z-index:-1;
+}
+
+/* 実画像 */
+.p-tab-icon{
+  width:42px !important;
+  height:42px !important;
+  border-radius:50% !important;
+  object-fit:contain !important;
+  display:block;
+  pointer-events:none;
+  flex-shrink:0;
+  background:#fff;
+}
+
+/* 画像ない時のフォールバック */
+.p-tab-fallback{
+  width:42px !important;
+  height:42px !important;
+  border-radius:50% !important;
+  background:#fff !important;
+  color:#1AAF7A !important;
+  font-size:20px !important;
+  font-weight:800 !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+
+/* active時の微アニメ */
+.bnav-btn.center-tab.active .p-tab-icon,
+#nav-featured.center-tab.active .p-tab-icon{
+  transform:scale(1.04);
+}
+
+/* iOSっぽく少し浮かせる */
+.bnav-btn.center-tab,
+#nav-featured.center-tab{
+  transform:translateY(-6px);
+}
+
+
+/* ================================================================ */
+/* ★★★ STEP5 中央Pアイコン クリーン表示版 ★★★ */
+/* 画像自体の丸背景を活かし、CSS側の二重三重円を消す */
+/* ================================================================ */
+
+.bnav-btn.center-tab,
+#nav-featured.center-tab{
+  flex:0 0 auto !important;
+  width:56px !important;
+  height:56px !important;
+  border-radius:50% !important;
+  padding:0 !important;
+  margin:0 !important;
+  background:transparent !important;
+  overflow:visible !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  position:relative !important;
+  z-index:1002 !important;
+  transform:translateY(-5px) !important;
+  box-shadow:none !important;
+}
+
+/* 前回の外側白丸を完全に消す */
+.bnav-btn.center-tab::before,
+#nav-featured.center-tab::before{
+  content:none !important;
+  display:none !important;
+}
+
+/* 画像はそのまま自然に表示 */
+.p-tab-icon{
+  width:50px !important;
+  height:50px !important;
+  border-radius:50% !important;
+  object-fit:contain !important;
+  display:block !important;
+  pointer-events:none !important;
+  flex-shrink:0 !important;
+  background:transparent !important;
+  box-shadow:
+    0 6px 16px rgba(0,0,0,.14),
+    0 2px 5px rgba(0,0,0,.08) !important;
+}
+
+/* 画像がない時だけ白丸Pを表示 */
+.p-tab-fallback{
+  width:50px !important;
+  height:50px !important;
+  border-radius:50% !important;
+  background:#fff !important;
+  color:#1AAF7A !important;
+  font-size:21px !important;
+  font-weight:800 !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  box-shadow:
+    0 6px 16px rgba(0,0,0,.14),
+    0 2px 5px rgba(0,0,0,.08) !important;
+}
+
+.bnav-btn.center-tab:active,
+#nav-featured.center-tab:active{
+  transform:translateY(-5px) scale(.94) !important;
+}
+
+.bnav-btn.center-tab.active .p-tab-icon,
+#nav-featured.center-tab.active .p-tab-icon{
+  transform:none !important;
+}
+
 </style>
 
 
@@ -6201,8 +7559,8 @@ body.is-admin .admin-card-actions.admin-only {
           <span class="app-logo">ProNexa<span>X</span></span>
         </div>
         <div class="app-header-actions">
-          <button class="header-icon-btn" type="button" aria-label="検索" onclick="switchPage('search')"><svg viewBox="0 0 24 24" fill="none" stroke="#3a3a3a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6"/><line x1="15.5" y1="15.5" x2="20" y2="20"/></svg></button>
-          <button class="header-icon-btn" type="button" aria-label="フィルター" onclick="switchPage('search')"><svg viewBox="0 0 24 24" fill="none" stroke="#3a3a3a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg></button>
+          <button class="header-icon-btn" type="button" aria-label="検索"><svg viewBox="0 0 24 24" fill="none" stroke="#3a3a3a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6"/><line x1="15.5" y1="15.5" x2="20" y2="20"/></svg></button>
+          <button class="header-icon-btn" type="button" aria-label="フィルター"><svg viewBox="0 0 24 24" fill="none" stroke="#3a3a3a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg></button>
         </div>
       </div>
     </div>
@@ -6275,44 +7633,34 @@ body.is-admin .admin-card-actions.admin-only {
     </div>
   </div>
 
+  
   <div class="page" id="page-search">
-  <!-- ================================================================ -->
-  <!-- 試合検索ページ（後から統合）                                        -->
-  <!-- ================================================================ -->
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--text-tertiary);font-size:14px;text-align:center;padding:24px;">
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="7.5"/><line x1="18" y1="18" x2="22" y2="22"/></svg>
-    <div style="font-weight:700;font-size:16px;color:var(--text-secondary);">試合検索</div>
-    <div style="font-size:12px;line-height:1.6;">このページは後から統合されます<br><code style="background:var(--green-chip);padding:2px 8px;border-radius:6px;font-size:11px;color:var(--green-dark);">page-search</code></div>
+    <!-- ================================================================ -->
+    <!-- 試合検索モジュール接続済み                                       -->
+    <!-- 本体の下部ナビは維持し、試合検索側の単独下部ナビは embed.html で非表示 -->
+    <!-- ================================================================ -->
+    <iframe
+      id="search-module-frame" data-module="search"
+      class="module-frame module-frame-search"
+      src="pages/search/embed.html?v=step171c"
+      title="試合検索"
+      loading="eager"
+      scrolling="no"></iframe>
   </div>
-</div>
-
-
-  <div class="page" id="page-admin">
-  <!-- ================================================================ -->
-  <!-- CMS/管理ページ（後から統合）                                        -->
-  <!-- ================================================================ -->
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--text-tertiary);font-size:14px;text-align:center;padding:24px;">
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-    <div style="font-weight:700;font-size:16px;color:var(--text-secondary);">CMS / 管理</div>
-    <div style="font-size:12px;line-height:1.6;">このページは後から統合されます<br><code style="background:var(--green-chip);padding:2px 8px;border-radius:6px;font-size:11px;color:var(--green-dark);">page-admin</code></div>
-  </div>
-</div>
-
 
   <div class="page" id="page-finance">
-  <!-- ================================================================ -->
-  <!-- 収支ページ（後から統合）                                            -->
-  <!-- ================================================================ -->
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--text-tertiary);font-size:14px;text-align:center;padding:24px;">
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-    <div style="font-weight:700;font-size:16px;color:var(--text-secondary);">収支</div>
-    <div style="font-size:12px;line-height:1.6;">このページは後から統合されます<br><code style="background:var(--green-chip);padding:2px 8px;border-radius:6px;font-size:11px;color:var(--green-dark);">page-finance</code></div>
-  </div>
-</div>
 
-<!-- ================================================================ -->
-<!-- マイページ（後から統合）                                          -->
-<!-- ================================================================ -->
+    <!-- ================================================================ -->
+    <!-- 収支モジュール接続済み                                           -->
+    <!-- 元レイアウトを壊さないため iframe で安全接続                      -->
+    <!-- ================================================================ -->
+    <iframe
+      id="finance-module-frame" data-module="finance"
+      class="module-frame module-frame-finance" data-src="pages/finance/embed.html?v=step171c"
+      title="収支" loading="lazy"
+      scrolling="no"></iframe>
+  </div>
+
 <div class="page" id="page-mypage">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--text-tertiary);font-size:14px;text-align:center;padding:24px;">
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -6324,269 +7672,24 @@ body.is-admin .admin-card-actions.admin-only {
 <!-- ================================================================ -->
 <!-- 注目/広告ページ（後から統合）                                      -->
 <!-- ================================================================ -->
-<div class="page" id="page-featured">
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--text-tertiary);font-size:14px;text-align:center;padding:24px;">
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
-    <div style="font-weight:700;font-size:16px;color:var(--text-secondary);">注目 / 広告</div>
-    <div style="font-size:12px;line-height:1.6;">このページは後から統合されます<br><code style="background:var(--green-chip);padding:2px 8px;border-radius:6px;font-size:11px;color:var(--green-dark);">page-featured</code></div>
-  </div>
-</div>
 
-<!-- ★ Auth ローディングオーバーレイ（iOS リダイレクト中のちらつき防止） -->
-<div id="auth-loading-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(240,251,246,0.97);flex-direction:column;align-items:center;justify-content:center;gap:20px;">
-  <div style="width:48px;height:48px;border-radius:50%;border:3px solid #E0F5EC;border-top-color:#1AAF7A;animation:authSpin .8s linear infinite;"></div>
-  <p class="auth-loading-text" style="font-size:14px;font-weight:600;color:#3A5C52;letter-spacing:.02em;">読み込み中…</p>
-  <style>@keyframes authSpin{to{transform:rotate(360deg)}}</style>
-</div>
-
-  <!-- ★★★ ハンバーガードロワー ★★★ -->
-  <div class="drawer-overlay" id="drawer-overlay"></div>
-  <aside class="drawer" id="drawer" aria-hidden="true">
-    <div class="drawer-scroll">
-      <div class="drawer-user">
-        <div class="drawer-user-avatar">G</div>
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <div class="drawer-user-name">ユーザー</div>
-            <!-- 管理者バッジ（管理者のみ表示） -->
-            <span class="admin-only" style="
-              font-size:9px;font-weight:700;letter-spacing:.04em;
-              background:#1AAF7A;color:#fff;
-              padding:1px 6px;border-radius:20px;
-              flex-shrink:0;
-            ">ADMIN</span>
-          </div>
-          <div class="drawer-user-sub">ログイン中</div>
-        </div>
-      </div>
-      <div class="drawer-section">
-        <div class="drawer-section-title">表示切替</div>
-        <div class="drawer-item" data-view-mode="day">
-          <span class="drawer-item-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 12"/>
-            </svg>
-          </span>
-          <span class="drawer-item-label">1日</span>
-          <span class="drawer-item-check">✓</span>
-        </div>
-        <div class="drawer-item" data-view-mode="3day">
-          <span class="drawer-item-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="17" rx="3"/><line x1="3" y1="9" x2="21" y2="9"/>
-              <line x1="9" y1="9" x2="9" y2="21"/><line x1="15" y1="9" x2="15" y2="21"/>
-            </svg>
-          </span>
-          <span class="drawer-item-label">3日</span>
-          <span class="drawer-item-check">✓</span>
-        </div>
-        <div class="drawer-item" data-view-mode="week">
-          <span class="drawer-item-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="17" rx="3"/><line x1="3" y1="9" x2="21" y2="9"/>
-              <line x1="7" y1="4" x2="7" y2="9"/><line x1="17" y1="4" x2="17" y2="9"/>
-              <line x1="7" y1="9" x2="7" y2="21"/>
-            </svg>
-          </span>
-          <span class="drawer-item-label">週</span>
-          <span class="drawer-item-check">✓</span>
-        </div>
-        <div class="drawer-item" data-view-mode="month">
-          <span class="drawer-item-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="17" rx="3"/><line x1="3" y1="9" x2="21" y2="9"/>
-              <line x1="7" y1="4" x2="7" y2="9"/><line x1="17" y1="4" x2="17" y2="9"/>
-              <circle cx="8" cy="14" r=".8" fill="currentColor"/><circle cx="12" cy="14" r=".8" fill="currentColor"/><circle cx="16" cy="14" r=".8" fill="currentColor"/>
-              <circle cx="8" cy="18" r=".8" fill="currentColor"/><circle cx="12" cy="18" r=".8" fill="currentColor"/>
-            </svg>
-          </span>
-          <span class="drawer-item-label">月</span>
-          <span class="drawer-item-check">✓</span>
-        </div>
-      </div>
-      <div class="drawer-section">
-        <div class="drawer-section-title">マイカレンダー</div>
-        <!-- 個人予定：常時固定表示 -->
-        <div class="drawer-cat-item drawer-cat-fixed">
-          <span class="drawer-cat-dot" style="background:#6B6ED4"></span>
-          <span class="drawer-cat-label">個人予定</span>
-          <span class="drawer-cat-fixed-badge">固定</span>
-        </div>
-        <!-- 追加済みカテゴリ -->
-        <div id="drawer-cat-list"></div>
-        <!-- カテゴリを追加ボタン -->
-        <div class="drawer-add-cat-btn" id="drawer-add-cat-btn" onclick="openAddCatSheet()">
-          <span class="drawer-add-cat-icon">＋</span>
-          <span class="drawer-add-cat-label">カテゴリを追加</span>
-        </div>
-      </div>
-      <div class="drawer-section">
-        <div class="drawer-section-title">その他</div>
-        <div class="drawer-item" id="drawer-design">
-          <span class="drawer-item-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-            </svg>
-          </span>
-          <span class="drawer-item-label">デザイン設定</span>
-        </div>
-        <div class="drawer-item" id="drawer-settings">
-          <span class="drawer-item-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-          </span>
-          <span class="drawer-item-label">設定</span>
-        </div>
-      </div>
-    </div>
-    <div class="drawer-footer">ProNexaX v1.0
-    <!-- ログアウトボタン -->
-    <button class="drawer-logout-btn" onclick="authLogout()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-      </svg>
-      ログアウト
-    </button>
-</div>
-  </aside>
-
-  <!-- ★★★ エントリー締切：通知設定シート ★★★ -->
-  <div class="notif-settings-overlay" id="notif-settings-overlay" onclick="closeNotifSettings()"></div>
-  <div class="notif-settings-sheet" id="notif-settings-sheet" aria-hidden="true">
-    <div class="notif-settings-grip"></div>
-    <div class="notif-settings-title">🔔 エントリー締切と通知</div>
-    <div class="notif-settings-event" id="notif-settings-event-name"></div>
-    <div class="notif-settings-row">
-      <span class="notif-settings-row-label">締切日</span>
-      <input type="date" class="notif-settings-date" id="ns-deadline">
-    </div>
-    <div class="notif-settings-row notif-settings-toggle">
-      <span class="notif-settings-row-label">エントリー済み</span>
-      <label class="notif-switch">
-        <input type="checkbox" id="ns-entered">
-        <span class="notif-switch-slider"></span>
-      </label>
-    </div>
-    <div class="notif-settings-section-title">通知タイミング</div>
-    <label class="notif-check-row">
-      <input type="checkbox" id="ns-d3">
-      <span class="notif-check-mark"></span>
-      <span class="notif-check-text">3日前 <span class="notif-check-sub">朝9時</span></span>
-    </label>
-    <label class="notif-check-row">
-      <input type="checkbox" id="ns-d1">
-      <span class="notif-check-mark"></span>
-      <span class="notif-check-text">前日 <span class="notif-check-sub">朝9時 ・推奨</span></span>
-    </label>
-    <label class="notif-check-row">
-      <input type="checkbox" id="ns-d0">
-      <span class="notif-check-mark"></span>
-      <span class="notif-check-text">当日 <span class="notif-check-sub">朝9時 ・推奨</span></span>
-    </label>
-    <label class="notif-check-row">
-      <input type="checkbox" id="ns-h1">
-      <span class="notif-check-mark"></span>
-      <span class="notif-check-text">1時間前</span>
-    </label>
-    <div class="notif-settings-actions">
-      <button class="notif-btn notif-btn-cancel" onclick="closeNotifSettings()">キャンセル</button>
-      <button class="notif-btn notif-btn-primary" onclick="saveNotifSettings()">保存</button>
-    </div>
+  <div class="page" id="page-featured">
+    <!-- ================================================================ -->
+    <!-- 注目/広告 featuredモジュール接続済み                              -->
+    <!-- 中央Pアイコンから表示。単独版の下部ナビは embed.html 側で非表示    -->
+    <!-- ================================================================ -->
+    <iframe
+      id="featured-module-frame" data-module="featured"
+      class="module-frame module-frame-featured"
+      src="pages/featured/embed.html"
+      title="注目・広告"
+      loading="eager"></iframe>
   </div>
 
-  <!-- ★★★ デザイン設定パネル ★★★ -->
-  <div class="settings-overlay" id="settings-overlay"></div>
-  <div class="settings-panel" id="settings-panel" aria-hidden="true">
-    <div class="settings-grip"></div>
-    <div class="settings-header">
-      <span class="settings-title">🎨 デザイン設定</span>
-      <button class="settings-close" id="settings-close" aria-label="閉じる">×</button>
-    </div>
-    <div class="settings-scroll">
-      <!-- ② カラーテーマ -->
-      <div class="settings-section">
-        <div class="settings-section-title">カラーテーマ</div>
-        <div class="color-row" id="color-theme-row">
-          <!-- JSが is-active を切り替え -->
-          <div class="color-card" data-color="green">
-            <div class="color-swatch swatch-green"></div>
-            <div class="color-card-label">グリーン</div>
-          </div>
-          <div class="color-card" data-color="blue">
-            <div class="color-swatch swatch-blue"></div>
-            <div class="color-card-label">ブルー</div>
-          </div>
-          <div class="color-card" data-color="black">
-            <div class="color-swatch swatch-black"></div>
-            <div class="color-card-label">ブラック</div>
-          </div>
-          <div class="color-card" data-color="gold">
-            <div class="color-swatch swatch-gold"></div>
-            <div class="color-card-label">ゴールド</div>
-          </div>
-          <div class="color-card" data-color="mono">
-            <div class="color-swatch swatch-mono"></div>
-            <div class="color-card-label">シンプル</div>
-          </div>
-          <!-- ★★★ パステル系（女性ユーザー向け） ★★★ -->
-          <div class="color-card" data-color="sakura">
-            <div class="color-swatch swatch-sakura"></div>
-            <div class="color-card-label">Sakura</div>
-          </div>
-          <div class="color-card" data-color="lavender">
-            <div class="color-swatch swatch-lavender"></div>
-            <div class="color-card-label">Lavender</div>
-          </div>
-          <div class="color-card" data-color="mint">
-            <div class="color-swatch swatch-mint"></div>
-            <div class="color-card-label">Mint</div>
-          </div>
-          <div class="color-card" data-color="peach">
-            <div class="color-swatch swatch-peach"></div>
-            <div class="color-card-label">Peach</div>
-          </div>
-        </div>
-      </div>
-      <!-- ③ カテゴリカラー -->
-      <div class="settings-section">
-        <div class="settings-section-title">カテゴリカラー</div>
-        <div class="cat-color-list" id="cat-color-list"></div>
-      </div>
-      <!-- 最近使った色 -->
-      <div class="settings-section">
-        <div class="settings-section-title">最近使った色</div>
-        <div class="recent-colors" id="recent-colors"></div>
-      </div>
-      <!-- ④ 表示スタイル -->
-      <div class="settings-section">
-        <div class="settings-section-title">表示スタイル</div>
-        <div class="style-row">
-          <div class="style-card" data-style="card">
-            <div class="style-card-label">カード（影あり）</div>
-            <div class="style-preview is-card">
-              <div class="style-preview-bar"></div>
-              <div class="style-preview-text"></div>
-            </div>
-          </div>
-          <div class="style-card" data-style="flat">
-            <div class="style-card-label">フラット（影なし）</div>
-            <div class="style-preview">
-              <div class="style-preview-bar"></div>
-              <div class="style-preview-text"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- リセット -->
-      <button class="settings-reset" id="settings-reset">↺ デフォルトに戻す</button>
-    </div>
-  </div>
+
 
   <div class="bottom-nav">
-    <button class="bnav-btn active" id="nav-calendar" onclick="switchPage('calendar')">
+    <button class="bnav-btn active" id="nav-calendar">
       <svg id="icon-calendar" width="20" height="20" viewBox="0 0 22 22" fill="none">
         <rect x="3" y="4" width="16" height="15" rx="2.5" stroke="#1AAF7A" stroke-width="1.7"/>
         <line x1="7" y1="2" x2="7" y2="6" stroke="#1AAF7A" stroke-width="1.7" stroke-linecap="round"/>
@@ -6595,7 +7698,7 @@ body.is-admin .admin-card-actions.admin-only {
       </svg>
       <span class="bnav-label" style="color:#1AAF7A;font-weight:600;">カレンダー</span>
     </button>
-    <button class="bnav-btn" id="nav-search" onclick="switchPage('search')">
+    <button class="bnav-btn" id="nav-search">
       <svg id="icon-search" width="20" height="20" viewBox="0 0 22 22" fill="none">
         <circle cx="10" cy="10" r="6" stroke="#9BB8AE" stroke-width="1.7"/>
         <line x1="14.5" y1="14.5" x2="19" y2="19" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>
@@ -6603,13 +7706,16 @@ body.is-admin .admin-card-actions.admin-only {
       <span class="bnav-label">試合検索</span>
     </button>
     <!-- ★★★ 中央Pロゴタブ（ProNexaX ブランドタブ） ★★★ -->
-    <!-- 画像差し替え：images/p-tab-icon.png を置くだけでOK -->
-    <button class="bnav-btn center-tab" id="nav-center" onclick="switchPage('featured')" aria-label="ProNexaX">
-      <img class="p-tab-icon" src="images/p-tab-icon.png" alt="P"
-        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <span class="p-tab-fallback" style="display:none;">P</span>
-    </button>
-    <button class="bnav-btn" id="nav-finance" onclick="switchPage('finance')">
+    <!-- 画像差し替え：assets/images/p-tab-icon.png を置くだけでOK -->
+    <button class="bnav-btn center-tab" id="nav-center" aria-label="ProNexaX">
+      <img
+        class="p-tab-icon"
+        src="assets/images/p-tab-icon.png"
+        alt="ProNexaX"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <span class="p-tab-fallback" aria-hidden="true" style="display:none;">P</span>
+</button>
+    <button class="bnav-btn" id="nav-finance">
       <svg id="icon-finance" width="20" height="20" viewBox="0 0 22 22" fill="none">
         <rect x="3" y="5" width="16" height="12" rx="2" stroke="#9BB8AE" stroke-width="1.7"/>
         <line x1="7" y1="11" x2="15" y2="11" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>
@@ -6617,7 +7723,7 @@ body.is-admin .admin-card-actions.admin-only {
       </svg>
       <span class="bnav-label">収支</span>
     </button>
-    <button class="bnav-btn" id="nav-mypage" onclick="switchPage('mypage')">
+    <button class="bnav-btn" id="nav-mypage">
       <svg id="icon-mypage" width="20" height="20" viewBox="0 0 22 22" fill="none">
         <circle cx="11" cy="8" r="3.5" stroke="#9BB8AE" stroke-width="1.7"/>
         <path d="M4 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#9BB8AE" stroke-width="1.7" stroke-linecap="round"/>
@@ -6625,7 +7731,7 @@ body.is-admin .admin-card-actions.admin-only {
       <span class="bnav-label">マイページ</span>
     </button>
     <!-- ★ 管理タブ：管理者のみ表示（body.is-admin が付いた時に display:flex） -->
-    <button class="bnav-btn admin-nav-btn" id="nav-admin" onclick="switchPage('admin')">
+    <button class="bnav-btn admin-nav-btn" id="nav-admin">
       <svg id="icon-admin" width="20" height="20" viewBox="0 0 22 22" fill="none">
         <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#9BB8AE" stroke-width="1.7"/>
         <rect x="12" y="3" width="7" height="7" rx="1.5" stroke="#9BB8AE" stroke-width="1.7"/>
@@ -7938,15 +9044,47 @@ window.cupertinoApply = function(){
 <script>
 // ================================================================
 // PWA SERVICE WORKER 登録
+// STEP104: ローカル開発ではService Workerを登録しない
 // ================================================================
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then(reg => {
-      console.log('[PWA] SW registered:', reg.scope);
-    }).catch(err => console.warn('[PWA] SW failed:', err));
-  });
-}
+(function(){
+  const isLocalDev = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
 
+  if (!('serviceWorker' in navigator)) return;
+
+  window.addEventListener('load', () => {
+    if (isLocalDev) {
+      // ローカル開発中は古いsw/cacheが残ると、index.htmlやiframeが古い状態で読まれて
+      // 画面がパチパチする原因になるため登録しない。
+      try {
+        navigator.serviceWorker.getRegistrations()
+          .then(regs => regs.forEach(reg => reg.unregister()))
+          .catch(() => {});
+      } catch(e) {}
+
+      try {
+        if (window.caches && caches.keys) {
+          caches.keys()
+            .then(keys => keys.forEach(key => caches.delete(key)))
+            .catch(() => {});
+        }
+      } catch(e) {}
+
+      console.log('[PWA] SW skipped in local dev');
+      return;
+    }
+
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => {
+        console.log('[PWA] SW registered:', reg.scope);
+      })
+      .catch(err => {
+        console.warn('[PWA] SW failed:', err);
+      });
+  });
+})();
+</script>
+
+<script>
 // ================================================================
 // Firebase Authentication
 // ================================================================
@@ -9176,12 +10314,19 @@ function switchPage(page){
   // ── ナビゲーションボタン状態更新 ──
   ['calendar','search','finance','mypage','admin','featured'].forEach(key=>{
     const btn=document.getElementById('nav-'+key),icon=document.getElementById('icon-'+key);
-    const lbl=btn.querySelector('.bnav-label');btn.classList.remove('active');
-    lbl.style.color='';lbl.style.fontWeight='';
+    if(!btn) return;
+    const lbl=btn.querySelector('.bnav-label');
+    btn.classList.remove('active');
+    if(lbl){ lbl.style.color=''; lbl.style.fontWeight=''; }
     if(icon&&NAV_ICONS[key])icon.innerHTML=NAV_ICONS[key].inactive;
   });
   const activeBtn=document.getElementById('nav-'+page),activeIcon=document.getElementById('icon-'+page);
-  if(activeBtn){activeBtn.classList.add('active');const lbl=activeBtn.querySelector('.bnav-label');lbl.style.color='#1AAF7A';lbl.style.fontWeight='600';if(activeIcon&&NAV_ICONS[page])activeIcon.innerHTML=NAV_ICONS[page].active;}
+  if(activeBtn){
+    activeBtn.classList.add('active');
+    const lbl=activeBtn.querySelector('.bnav-label');
+    if(lbl){ lbl.style.color='#1AAF7A'; lbl.style.fontWeight='600'; }
+    if(activeIcon&&NAV_ICONS[page])activeIcon.innerHTML=NAV_ICONS[page].active;
+  }
 
   // ── ページ別処理 ──
   // ================================================================
@@ -9216,6 +10361,18 @@ function switchPage(page){
   }
   ----- 旧検索ページ呼び出し ここまで ----- */
 
+  if(page==='search'){
+    const frame = document.getElementById('search-module-frame');
+    if(frame && !frame.dataset.pnxReady){ frame.dataset.pnxReady = '1'; }
+  }
+  if(page==='finance'){
+    const finance = document.getElementById('finance-module-frame');
+    if(finance && !finance.dataset.pnxReady){ finance.dataset.pnxReady = '1'; }
+  }
+  if(page==='featured'){
+    const featured = document.getElementById('featured-module-frame');
+    if(featured && !featured.dataset.pnxReady){ featured.dataset.pnxReady = '1'; }
+  }
   if(page==='calendar'){
     // カレンダーに戻った時: visibility を確実に解除してから再描画
     renderAllPanels();renderCalList();
@@ -11933,6 +13090,13 @@ function _buildFilterKey(){
 }
 
 function applySearchFilters(){
+  // STEP100: 旧検索UIは現在 iframe 試合検索へ移行済み。
+  // filter-grid/result-meta/search-list が存在しない本体画面では何もしない。
+  const __legacyFilterGrid=document.getElementById('filter-grid');
+  const __legacyResultMeta=document.getElementById('result-meta');
+  const __legacySearchList=document.getElementById('search-list');
+  if(!__legacyFilterGrid || !__legacyResultMeta || !__legacySearchList) return;
+
   _updateFbsOpenBtn();
   _sqRenderTokens();
   // モードタブ反映（お気に入り/すべて）
@@ -11946,6 +13110,7 @@ function applySearchFilters(){
   const filterGrid=document.getElementById('filter-grid');
   const resultMeta=document.getElementById('result-meta');
   const list=document.getElementById('search-list');
+  if(!filterGrid || !resultMeta || !list) return;
 
   // ★★★ お気に入りタブ ★★★
   if(searchMode==='fav'){
@@ -13027,12 +14192,12 @@ function initSplitHandle(){
     }
   };
 
-  handle.addEventListener('touchstart',onStart,{passive:false});
-  handle.addEventListener('touchmove',onMove,{passive:false});
-  handle.addEventListener('touchend',onEnd,{passive:true});
-  handle.addEventListener('touchcancel',onEnd,{passive:true});
+  if(handle) handle.addEventListener('touchstart',onStart,{passive:false});
+  if(handle) handle.addEventListener('touchmove',onMove,{passive:false});
+  if(handle) handle.addEventListener('touchend',onEnd,{passive:true});
+  if(handle) handle.addEventListener('touchcancel',onEnd,{passive:true});
   // マウスでも動作
-  handle.addEventListener('mousedown',(e)=>{
+  if(handle) handle.addEventListener('mousedown',(e)=>{
     onStart(e);
     const mv=(ev)=>onMove(ev);
     const up=()=>{onEnd();document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};
@@ -13041,7 +14206,7 @@ function initSplitHandle(){
   });
   // ダブルタップでカレンダー優先 / バランス / リスト優先 をローテーション
   let lastTap=0;
-  handle.addEventListener('click',(e)=>{
+  if(handle) handle.addEventListener('click',(e)=>{
     // ドラッグ移動後のclickは無視
     if(SPLIT.moved){SPLIT.moved=false;return;}
     const now=Date.now();
@@ -13069,28 +14234,32 @@ const drawer={
 };
 
 function openDrawer(){
+  if(!drawer || !drawer.el) return;
   drawer.open=true;
   drawer.el.classList.add('show');
-  drawer.overlay.classList.add('show');
+  if(drawer.overlay) drawer.overlay.classList.add('show');
   drawer.el.setAttribute('aria-hidden','false');
   // 開く時に表示モード/カテゴリを最新状態で再描画
   syncDrawerState();
 }
 function closeDrawer(){
+  if(!drawer || !drawer.el) return;
   drawer.open=false;
   drawer.el.classList.remove('show');
-  drawer.overlay.classList.remove('show');
+  if(drawer.overlay) drawer.overlay.classList.remove('show');
   drawer.el.setAttribute('aria-hidden','true');
   drawer.el.style.transform='';
 }
 
 function syncDrawerState(){
+  if(!drawer || !drawer.el) return;
   // 表示モードのアクティブ表示
   drawer.el.querySelectorAll('[data-view-mode]').forEach(el=>{
     el.classList.toggle('is-active',el.dataset.viewMode===viewMode);
   });
   // ★ オプトイン型：追加済みカテゴリのみ一覧表示（personalは除く）
   const list=document.getElementById('drawer-cat-list');
+  if(!list) return;
   const enabledCats=CATEGORIES.filter(c=>c.key!=='personal'&&userEnabledCategories.includes(c.key));
   if(enabledCats.length===0){
     list.innerHTML='<div style="padding:8px 18px 4px;font-size:11px;color:var(--text-tertiary);">まだカテゴリが追加されていません</div>';
@@ -13161,9 +14330,9 @@ function initDrawer(){
     if(b)b.addEventListener('click',openDrawer);
   });
   // オーバーレイタップで閉じる
-  drawer.overlay.addEventListener('click',closeDrawer);
+  if(drawer.overlay) drawer.overlay.addEventListener('click',closeDrawer);
   // ドロワー内クリック（イベント委譲）
-  drawer.el.addEventListener('click',e=>{
+  if(drawer.el) drawer.el.addEventListener('click',e=>{
     const vm=e.target.closest('[data-view-mode]');
     if(vm){setViewMode(vm.dataset.viewMode);closeDrawer();return;}
     // drawer-add-cat-btn はHTML側でonclickを持つのでここでは不要
@@ -13180,13 +14349,13 @@ function initDrawer(){
     }
   });
   // 右スワイプで閉じる
-  drawer.el.addEventListener('touchstart',e=>{
+  if(drawer.el) drawer.el.addEventListener('touchstart',e=>{
     if(!drawer.open)return;
     const t=e.touches[0];
     drawer.startX=t.clientX;drawer.startY=t.clientY;
     drawer.curX=0;drawer.dragging=true;drawer.horizLocked=false;
   },{passive:true});
-  drawer.el.addEventListener('touchmove',e=>{
+  if(drawer.el) drawer.el.addEventListener('touchmove',e=>{
     if(!drawer.dragging)return;
     const t=e.touches[0];
     const dx=t.clientX-drawer.startX,dy=t.clientY-drawer.startY;
@@ -13202,14 +14371,14 @@ function initDrawer(){
       // オーバーレイ透明度も連動
       const w=drawer.el.getBoundingClientRect().width;
       const ratio=Math.max(0,1-drawer.curX/w);
-      drawer.overlay.style.opacity=String(0.42*ratio);
+      if(drawer.overlay) drawer.overlay.style.opacity=String(0.42*ratio);
     }
   },{passive:true});
-  drawer.el.addEventListener('touchend',()=>{
+  if(drawer.el) drawer.el.addEventListener('touchend',()=>{
     if(!drawer.dragging){drawer.el.classList.remove('dragging');return;}
     drawer.dragging=false;
     drawer.el.classList.remove('dragging');
-    drawer.overlay.style.opacity='';
+    if(drawer.overlay) drawer.overlay.style.opacity='';
     const w=drawer.el.getBoundingClientRect().width;
     if(drawer.curX>w*0.32){
       // しきい値超え → 閉じる
@@ -13922,14 +15091,18 @@ function syncSettingsUI(){
 function openDesignSettings(){
   applyDesign(); // 念のため
   syncSettingsUI();
-  document.getElementById('settings-overlay').classList.add('show');
+  const ov=document.getElementById('settings-overlay');
+  if(ov) ov.classList.add('show');
   const p=document.getElementById('settings-panel');
+  if(!p) return;
   p.classList.add('show');
   p.setAttribute('aria-hidden','false');
 }
 function closeDesignSettings(){
-  document.getElementById('settings-overlay').classList.remove('show');
+  const ov=document.getElementById('settings-overlay');
+  if(ov) ov.classList.remove('show');
   const p=document.getElementById('settings-panel');
+  if(!p) return;
   p.classList.remove('show');
   p.setAttribute('aria-hidden','true');
 }
@@ -13941,8 +15114,8 @@ function initDesignSettings(){
   // ※ ドロワーから開く処理は initDrawer 内のイベント委譲で対応済み（#drawer-design / #drawer-settings）
 
   // パネル閉じる
-  document.getElementById('settings-overlay').addEventListener('click',closeDesignSettings);
-  document.getElementById('settings-close').addEventListener('click',closeDesignSettings);
+  const _settingsOverlay=document.getElementById('settings-overlay'); if(_settingsOverlay) _settingsOverlay.addEventListener('click',closeDesignSettings);
+  const _settingsClose=document.getElementById('settings-close'); if(_settingsClose) _settingsClose.addEventListener('click',closeDesignSettings);
 
   // テーマ
   document.querySelectorAll('.theme-card').forEach(el=>{
@@ -14018,7 +15191,7 @@ function initDesignSettings(){
     });
   }
   // リセット
-  document.getElementById('settings-reset').addEventListener('click',()=>{
+  const _settingsReset=document.getElementById('settings-reset'); if(_settingsReset) _settingsReset.addEventListener('click',()=>{
     if(!confirm('デザイン設定を初期状態に戻しますか？'))return;
     const recent=designConfig.recentColors; // 履歴は保持
     designConfig=JSON.parse(JSON.stringify(DESIGN_DEFAULTS));
@@ -14030,15 +15203,17 @@ function initDesignSettings(){
   // パネルの下スワイプで閉じる
   let dragY=0,dragStartY=0,dragging=false;
   const panel=document.getElementById('settings-panel');
-  panel.addEventListener('touchstart',e=>{
+  if(panel) panel.addEventListener('touchstart',e=>{
     if(e.touches.length!==1)return;
     // ヘッダー/グリップエリアからのスワイプのみ
     const grip=panel.querySelector('.settings-grip');
     const header=panel.querySelector('.settings-header');
-    if(!grip.contains(e.target)&&!header.contains(e.target))return;
+    const inGrip=grip&&grip.contains(e.target);
+    const inHeader=header&&header.contains(e.target);
+    if(!inGrip&&!inHeader)return;
     dragStartY=e.touches[0].clientY;dragging=true;dragY=0;
   },{passive:true});
-  panel.addEventListener('touchmove',e=>{
+  if(panel) panel.addEventListener('touchmove',e=>{
     if(!dragging)return;
     const dy=e.touches[0].clientY-dragStartY;
     if(dy>0){
@@ -14047,7 +15222,7 @@ function initDesignSettings(){
       panel.style.transform=`translateY(${dy}px)`;
     }
   },{passive:true});
-  panel.addEventListener('touchend',()=>{
+  if(panel) panel.addEventListener('touchend',()=>{
     if(!dragging)return;
     dragging=false;
     panel.style.transition='';
@@ -14530,6 +15705,14 @@ initDesignSettings(); // ★★★ デザイン設定 UI を初期化
 startNotificationLoop(); // ★★★ 通知エンジンを起動
 // ★★★ 検索画面：モードタブの結線 + 初回描画 ★★★
 (function initSearchUI(){
+  // STEP100: 旧検索UIは iframe 化済み。旧DOMがない時は初期化しない。
+  const legacyReady =
+    document.getElementById('filter-grid') &&
+    document.getElementById('result-meta') &&
+    document.getElementById('search-list');
+
+  if(!legacyReady) return;
+
   const tabs=document.getElementById('search-mode-tabs');
   if(tabs){
     tabs.addEventListener('click',e=>{
@@ -16474,6 +17657,29 @@ function generateCalendarEvents() {
   // ① 手動追加イベントを保持
   const manualEvents = EVENTS.filter(e => !e._fromDB);
 
+  // STEP130: 検索/CMSから追加した予定をfallback保存から復元。
+  // これにより、画面切替や再描画後もカレンダーに反映される。
+  try {
+    const rawForced = JSON.parse(localStorage.getItem('PNX_FORCE_CALENDAR_EVENTS') || '[]');
+    if (Array.isArray(rawForced)) {
+      rawForced.forEach(item => {
+        if (!item) return;
+        const ev = (typeof window.PNXStep130NormalizeCalendarEvent === 'function')
+          ? window.PNXStep130NormalizeCalendarEvent(item)
+          : item;
+
+        if (!ev || !ev.date) return;
+        const exists = manualEvents.some(e =>
+          e.id === ev.id ||
+          e._tournamentId === ev._tournamentId ||
+          e.tournamentId === ev.tournamentId ||
+          (e.name === ev.name && e.date === ev.date)
+        );
+        if (!exists) manualEvents.push(ev);
+      });
+    }
+  } catch(e) {}
+
   // ② addedIds に含まれる大会 → EVENTS 互換変換
   const dbEvents = [];
   if (typeof addedIds !== 'undefined') {
@@ -17373,45 +18579,14 @@ window.authLogout = function() {
 
 // ================================================================
 // ⑧ auth ちらつき防止の最終調整
+// STEP114: 旧antiFlickerは起動時にapp-frameをopacity:0へ落として黒画面化するため無効化
 // ================================================================
-(function _antiFlicker() {
-  // onAuthStateChanged が解決するまで app-frame を透明に保つ
-  // （すでに auth-screen は display:none で始まっているため、
-  //   onAuthStateChanged が来るまで白画面になる可能性を防ぐ）
-  // app-frame は class="app-frame" で定義
-  const appFrame = document.querySelector('.app-frame') ||
-                   document.getElementById('app-frame');
+(function _antiFlicker_DISABLED_STEP114() {
+  const appFrame = document.querySelector('.app-frame') || document.getElementById('app-frame');
   if (appFrame) {
-    appFrame.style.opacity = '0';
-    appFrame.style.transition = 'opacity .25s ease';
+    appFrame.style.opacity = '1';
+    appFrame.style.transition = 'none';
   }
-
-  // onAuthStateChanged が来たら表示（最大 3 秒でフォールバック）
-  let revealed = false;
-  function _revealApp() {
-    if (revealed) return;
-    revealed = true;
-    if (appFrame) {
-      appFrame.style.opacity = '1';
-    }
-  }
-
-  // Firebase SDK ロード後に onAuthStateChanged が来る（最大 3 秒待つ）
-  const _fallbackReveal = setTimeout(_revealApp, 3000);
-
-  // _showApp / _showAuthScreen が呼ばれたら reveal
-  const _origShowAppGlobal = window._showApp;
-  window._showApp = function(user) {
-    clearTimeout(_fallbackReveal);
-    _revealApp();
-    if (typeof _origShowAppGlobal === 'function') _origShowAppGlobal(user);
-  };
-  const _origShowAuth = window._showAuthScreen;
-  window._showAuthScreen = function() {
-    clearTimeout(_fallbackReveal);
-    _revealApp();
-    if (typeof _origShowAuth === 'function') _origShowAuth();
-  };
 })();
 
 // ================================================================
@@ -19254,7 +20429,3198 @@ console.info('%c[catsel]%c カテゴリ選択モーダル 初期化完了',
   'color:#4a4da0;font-weight:600;');
 })();
 </script>
+<script id="pnx-step17-tournament-finance-bridge">
+/* STEP17: 大会 → 収支連携準備 */
+(function(){
+  if (window.__PNX_STEP17_TOURNAMENT_FINANCE__) return;
+  window.__PNX_STEP17_TOURNAMENT_FINANCE__ = true;
 
+  const TOURNAMENT_KEY = "PNX_CMS_TOURNAMENTS";
+  const TX_KEY = "PNX_FINANCE_TRANSACTIONS";
+
+  function read(key, fallback){
+    try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+    catch(e){ return fallback; }
+  }
+
+  function write(key, value){
+    localStorage.setItem(key, JSON.stringify(value));
+    return value;
+  }
+
+  window.PNXGetTournamentsForFinance = function(){
+    return read(TOURNAMENT_KEY, []);
+  };
+
+  window.PNXCreateTournamentFinanceTransaction = function(input){
+    const txs = read(TX_KEY, []);
+    const tx = Object.assign({
+      id: "tx_" + Date.now(),
+      tournamentId: input && input.tournamentId || null,
+      tournamentTitle: input && input.tournamentTitle || "",
+      type: input && input.type || "expense",
+      category: input && input.category || "entryFee",
+      amount: input && Number(input.amount || 0) || 0,
+      date: input && input.date || new Date().toISOString().slice(0,10),
+      memo: input && input.memo || "",
+      source: "tournament",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }, input || {});
+    txs.push(tx);
+    write(TX_KEY, txs);
+    window.dispatchEvent(new CustomEvent("pnx:finance:transactions-updated", { detail: { transactions: txs, item: tx } }));
+    return tx;
+  };
+
+  window.PNXNotifyFinanceTournamentUpdate = function(){
+    const frame = document.getElementById("finance-module-frame");
+    if (!frame || !frame.contentWindow) return false;
+    try {
+      frame.contentWindow.postMessage({
+        type: "PNX_TOURNAMENTS_FOR_FINANCE_UPDATED",
+        payload: window.PNXGetTournamentsForFinance()
+      }, "*");
+      return true;
+    } catch(e) {
+      return false;
+    }
+  };
+
+  window.addEventListener("storage", function(e){
+    if (e.key === TOURNAMENT_KEY || e.key === TX_KEY) {
+      window.PNXNotifyFinanceTournamentUpdate();
+    }
+  });
+
+  window.addEventListener("message", function(event){
+    const data = event.data || {};
+    if (data.type === "PNX_REQUEST_TOURNAMENTS_FOR_FINANCE") {
+      window.PNXNotifyFinanceTournamentUpdate();
+    }
+    if (data.type === "PNX_CREATE_TOURNAMENT_FINANCE_TRANSACTION") {
+      const tx = window.PNXCreateTournamentFinanceTransaction(data.payload || {});
+      try {
+        event.source && event.source.postMessage({ type:"PNX_FINANCE_TRANSACTION_CREATED", payload: tx }, "*");
+        const f=document.getElementById("finance-module-frame"); if(f&&f.contentWindow){ f.contentWindow.postMessage({type:"PNX_FINANCE_TRANSACTION_CREATED", payload:tx, marker:"PNX_STEP19_NOTIFY_FINANCE_TX"},"*"); }
+      } catch(e) {}
+    }
+  });
+})();
+</script>
+
+
+<!-- STEP30 Firebase Diagnostics Panel -->
+<section id="pnx-firebase-diagnostics-panel" class="pnx-fb-diag-panel">
+  <div class="pnx-fb-diag-head">
+    <div>
+      <p class="pnx-fb-kicker">Firebase Diagnostics</p>
+      <h2>Firebase接続チェック</h2>
+      <p>Firebase設定・Auth・Firestore・Storageの接続状態を確認します。</p>
+    </div>
+</div>
+  <div id="pnx-firebase-diagnostics-result" class="pnx-fb-diag-result">
+    診断前
+  </div>
+</section>
+<!-- STEP31 Firebase Setup Checklist -->
+<section id="pnx-firebase-setup-guide-panel" class="pnx-fb-diag-panel">
+  <div class="pnx-fb-diag-head">
+    <div>
+      <p class="pnx-fb-kicker">Firebase Setup</p>
+      <h2>Firebase設定手順</h2>
+      <p>実プロジェクト接続前に、この順番で確認してください。</p>
+    </div>
+  </div>
+  <div class="pnx-fb-diag-result">
+    <div class="pnx-fb-diag-card">
+      <div class="pnx-fb-diag-row"><span>1. Firebase Webアプリ作成</span><strong>未確認</strong></div>
+      <div class="pnx-fb-diag-row"><span>2. firestore-config.js に設定値入力</span><strong>未確認</strong></div>
+      <div class="pnx-fb-diag-row"><span>3. Auth / Firestore / Storage 有効化</span><strong>未確認</strong></div>
+      <div class="pnx-fb-diag-row"><span>4. Firestore Rules確認</span><strong>未確認</strong></div>
+      <div class="pnx-fb-diag-row"><span>5. 診断パネルでOK確認</span><strong>未確認</strong></div>
+    </div>
+    <div class="pnx-fb-diag-note">
+      詳細は docs/firebase/firebase-setup-guide.md を確認してください。
+    </div>
+  </div>
+</section>
+
+
+<!-- STEP32 Security Rules Panel -->
+<section id="pnx-security-rules-panel" class="pnx-fb-diag-panel">
+  <div class="pnx-fb-diag-head">
+    <div>
+      <p class="pnx-fb-kicker">Security Rules</p>
+      <h2>Firestore / Storage セキュリティ設計</h2>
+      <p>本番接続前に、公開データ・個人データ・CMS権限を分けるRulesを用意しました。</p>
+    </div>
+  </div>
+  <div class="pnx-fb-diag-result">
+    <div class="pnx-fb-diag-card">
+      <div class="pnx-fb-diag-row"><span>大会/注目コンテンツ</span><strong>読取公開・編集admin</strong></div>
+      <div class="pnx-fb-diag-row"><span>収支/カレンダー/領収書</span><strong>本人のみ</strong></div>
+      <div class="pnx-fb-diag-row"><span>CMS下書き/管理ログ</span><strong>adminのみ</strong></div>
+      <div class="pnx-fb-diag-row"><span>Storage領収書</span><strong>本人のみ</strong></div>
+    </div>
+    <div class="pnx-fb-diag-note">
+      Rules本体は docs/firestore/firestore.rules と docs/firestore/storage.rules に入っています。
+    </div>
+  </div>
+</section>
+
+
+<!-- STEP34 User Scoped Data Panel -->
+<section id="pnx-user-scope-panel" class="pnx-auth-panel">
+  <div class="pnx-auth-head">
+    <div>
+      <p class="pnx-auth-kicker">User Data Scope</p>
+      <h2>ユーザー別データ管理</h2>
+      <p>ログインユーザーごとに、収支・カレンダー・領収書データを分離する準備ができています。</p>
+    </div>
+  </div>
+  <div class="pnx-auth-user-card">
+    <div class="pnx-auth-avatar">ID</div>
+    <div>
+      <div id="pnx-user-scope-uid" class="pnx-auth-name">guest</div>
+      <div id="pnx-user-scope-key" class="pnx-auth-email">ユーザー別キー未確認</div>
+    </div>
+  </div>
+  <div class="pnx-auth-actions">
+    <button type="button" id="pnx-user-scope-check" class="pnx-auth-sub-btn">保存先を確認</button>
+    <button type="button" id="pnx-user-scope-migrate" class="pnx-auth-ghost-btn">既存データを移行</button>
+  </div>
+  <div id="pnx-user-scope-status" class="pnx-auth-status">未確認</div>
+</section>
+
+<script id="pnx-step34-user-scope-ui">
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function render(){
+    if (!window.PNXUserScopedStore) return;
+    const uid = window.PNXUserScopedStore.uid();
+    const key = window.PNXUserScopedStore.key("PNX_FINANCE_TRANSACTIONS");
+    if ($("pnx-user-scope-uid")) $("pnx-user-scope-uid").textContent = uid;
+    if ($("pnx-user-scope-key")) $("pnx-user-scope-key").textContent = key;
+    if ($("pnx-user-scope-status")) $("pnx-user-scope-status").textContent = "ユーザー別保存キーを確認しました";
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    const check = $("pnx-user-scope-check");
+    const migrate = $("pnx-user-scope-migrate");
+    if (check) check.addEventListener("click", render);
+    if (migrate) migrate.addEventListener("click", function(){
+      const r = window.PNXUserScopedStore ? window.PNXUserScopedStore.migrateKnownGlobals() : null;
+      if ($("pnx-user-scope-status")) $("pnx-user-scope-status").textContent = "移行チェック完了: " + JSON.stringify(r);
+      render();
+    });
+    setTimeout(render, 1000);
+  });
+
+  window.addEventListener("pnx:auth:changed", function(){ setTimeout(render, 100); });
+})();
+</script>
+
+
+<!-- STEP35 Favorites Panel -->
+<section id="pnx-favorites-panel" class="pnx-auth-panel">
+  <div class="pnx-auth-head">
+    <div>
+      <p class="pnx-auth-kicker">Favorites</p>
+      <h2>お気に入り大会</h2>
+      <p>試合検索で保存したお気に入り大会をユーザー別に管理します。</p>
+    </div>
+  </div>
+  <div id="pnx-favorites-list" class="pnx-auth-status">まだお気に入りはありません</div>
+  <div class="pnx-auth-actions">
+    <button type="button" id="pnx-refresh-favorites" class="pnx-auth-sub-btn">お気に入り確認</button>
+  </div>
+</section>
+<script id="pnx-step35-favorites-ui">
+(function(){
+  function render(){
+    const box = document.getElementById("pnx-favorites-list");
+    if (!box || !window.PNXFavoritesBridge) return;
+    const list = window.PNXFavoritesBridge.getAll();
+    if (!list.length) {
+      box.textContent = "まだお気に入りはありません";
+      return;
+    }
+    box.innerHTML = list.map(f => "★ " + (f.title || "大会") + (f.startDate ? " / " + f.startDate : "")).join("<br>");
+  }
+  document.addEventListener("DOMContentLoaded", function(){
+    const btn = document.getElementById("pnx-refresh-favorites");
+    if (btn) btn.addEventListener("click", render);
+    setTimeout(render, 1000);
+  });
+  window.addEventListener("pnx:favorites:updated", render);
+})();
+</script>
+
+
+<!-- STEP36 User Calendar Sync Panel -->
+<section id="pnx-calendar-sync-panel" class="pnx-auth-panel">
+  <div class="pnx-auth-head">
+    <div>
+      <p class="pnx-auth-kicker">Calendar Sync</p>
+      <h2>ユーザー別カレンダー同期</h2>
+      <p>大会予定をログインユーザーごとに保存し、後でFirestore同期できる状態にします。</p>
+    </div>
+  </div>
+  <div id="pnx-calendar-sync-status" class="pnx-auth-status">未確認</div>
+  <div class="pnx-auth-actions">
+    <button type="button" id="pnx-calendar-sync-check" class="pnx-auth-sub-btn">保存済み予定を確認</button>
+    <button type="button" id="pnx-calendar-sync-load" class="pnx-auth-ghost-btn">予定を再読込</button>
+  </div>
+</section>
+<script id="pnx-step36-calendar-sync-ui">
+(function(){
+  function render(){
+    const el = document.getElementById("pnx-calendar-sync-status");
+    if (!el || !window.PNXCalendarSyncBridge) return;
+    const list = window.PNXCalendarSyncBridge.getAll();
+    el.textContent = "ユーザー別保存済み予定: " + list.length + "件";
+  }
+  document.addEventListener("DOMContentLoaded", function(){
+    const check = document.getElementById("pnx-calendar-sync-check");
+    const load = document.getElementById("pnx-calendar-sync-load");
+    if (check) check.addEventListener("click", render);
+    if (load) load.addEventListener("click", function(){
+      if (window.PNXCalendarSyncBridge) window.PNXCalendarSyncBridge.loadIntoGlobalEvents();
+      render();
+    });
+    setTimeout(render, 1000);
+  });
+  window.addEventListener("pnx:calendar:events-updated", render);
+})();
+</script>
+
+
+<!-- STEP37 Reminder Panel -->
+<section id="pnx-reminder-panel" class="pnx-auth-panel">
+  <div class="pnx-auth-head">
+    <div>
+      <p class="pnx-auth-kicker">Reminders</p>
+      <h2>通知・リマインダー基盤</h2>
+      <p>大会前日・当日朝・エントリー締切前の通知予定を保存します。</p>
+    </div>
+  </div>
+  <div id="pnx-reminder-list" class="pnx-auth-status">まだリマインダーはありません</div>
+  <div class="pnx-auth-actions">
+    <button type="button" id="pnx-reminder-refresh" class="pnx-auth-sub-btn">リマインダー確認</button>
+  </div>
+</section>
+<script id="pnx-step37-reminder-ui">
+(function(){
+  function render(){
+    const box = document.getElementById("pnx-reminder-list");
+    if (!box || !window.PNXReminderBridge) return;
+    const list = window.PNXReminderBridge.upcoming();
+    if (!list.length) {
+      box.textContent = "まだリマインダーはありません";
+      return;
+    }
+    box.innerHTML = list.slice(0, 8).map(r => {
+      const date = r.remindAt ? new Date(r.remindAt).toLocaleString("ja-JP") : "";
+      return "🔔 " + r.label + " / " + r.title + " / " + date;
+    }).join("<br>");
+  }
+  document.addEventListener("DOMContentLoaded", function(){
+    const btn = document.getElementById("pnx-reminder-refresh");
+    if (btn) btn.addEventListener("click", render);
+    setTimeout(render, 1000);
+  });
+  window.addEventListener("pnx:reminders:updated", render);
+})();
+</script>
+
+
+<!-- STEP38 Notification Settings Panel -->
+<section id="pnx-notification-settings-panel" class="pnx-auth-panel">
+  <div class="pnx-auth-head">
+    <div>
+      <p class="pnx-auth-kicker">Notification Settings</p>
+      <h2>通知設定</h2>
+      <p>大会リマインダーのON/OFFと通知タイミングを設定します。</p>
+    </div>
+  </div>
+
+  <div class="pnx-auth-status" style="display:grid;gap:10px;">
+    <label><input id="pnx-notify-enabled" type="checkbox"> 通知を有効にする</label>
+    <label><input id="pnx-notify-deadline" type="checkbox"> エントリー締切3日前</label>
+    <label><input id="pnx-notify-before" type="checkbox"> 大会前日</label>
+    <label><input id="pnx-notify-morning" type="checkbox"> 大会当日朝</label>
+  </div>
+
+  <div class="pnx-auth-actions">
+    <button type="button" id="pnx-save-notification-settings" class="pnx-auth-sub-btn">通知設定を保存</button>
+    <button type="button" id="pnx-reset-notification-settings" class="pnx-auth-ghost-btn">初期設定へ戻す</button>
+  </div>
+
+  <div id="pnx-notification-settings-status" class="pnx-auth-status">未保存</div>
+</section>
+<script id="pnx-step38-notification-settings-ui">
+(function(){
+  function $(id){ return document.getElementById(id); }
+
+  function load(){
+    if (!window.PNXNotificationSettingsBridge) return;
+    const s = window.PNXNotificationSettingsBridge.get();
+    if ($("pnx-notify-enabled")) $("pnx-notify-enabled").checked = s.enabled !== false;
+    if ($("pnx-notify-deadline")) $("pnx-notify-deadline").checked = s.beforeDeadline3Days !== false;
+    if ($("pnx-notify-before")) $("pnx-notify-before").checked = s.beforeEvent1Day !== false;
+    if ($("pnx-notify-morning")) $("pnx-notify-morning").checked = s.eventDayMorning !== false;
+  }
+
+  function save(){
+    if (!window.PNXNotificationSettingsBridge) return;
+    const settings = window.PNXNotificationSettingsBridge.save({
+      enabled: !!($("pnx-notify-enabled") && $("pnx-notify-enabled").checked),
+      beforeDeadline3Days: !!($("pnx-notify-deadline") && $("pnx-notify-deadline").checked),
+      beforeEvent1Day: !!($("pnx-notify-before") && $("pnx-notify-before").checked),
+      eventDayMorning: !!($("pnx-notify-morning") && $("pnx-notify-morning").checked)
+    });
+    const st = $("pnx-notification-settings-status");
+    if (st) st.textContent = "保存しました: " + JSON.stringify(settings);
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    const saveBtn = $("pnx-save-notification-settings");
+    const resetBtn = $("pnx-reset-notification-settings");
+    if (saveBtn) saveBtn.addEventListener("click", save);
+    if (resetBtn) resetBtn.addEventListener("click", function(){
+      if (window.PNXNotificationSettingsBridge) window.PNXNotificationSettingsBridge.reset();
+      load();
+      const st = $("pnx-notification-settings-status");
+      if (st) st.textContent = "初期設定に戻しました";
+    });
+    setTimeout(load, 800);
+  });
+})();
+</script>
+
+
+<!-- STEP39 Notification Center -->
+<section id="pnx-notification-center-panel" class="pnx-auth-panel">
+  <div class="pnx-auth-head">
+    <div>
+      <p class="pnx-auth-kicker">Notification Center</p>
+      <h2>通知センター</h2>
+      <p>大会・締切・リマインダー通知を一覧で確認できます。</p>
+    </div>
+  </div>
+
+  <div class="pnx-auth-actions">
+    <button type="button" id="pnx-notification-refresh" class="pnx-auth-sub-btn">通知更新</button>
+    <button type="button" id="pnx-notification-read-all" class="pnx-auth-ghost-btn">すべて既読</button>
+  </div>
+
+  <div id="pnx-notification-summary" class="pnx-auth-status">通知0件</div>
+
+  <div id="pnx-notification-list" style="display:grid;gap:10px;margin-top:12px;">
+    <div class="pnx-auth-status">通知はまだありません</div>
+  </div>
+</section>
+
+<script id="pnx-step39-notification-center-ui">
+(function(){
+  function render(){
+    const listEl = document.getElementById("pnx-notification-list");
+    const summary = document.getElementById("pnx-notification-summary");
+    if (!listEl || !window.PNXNotificationCenter) return;
+
+    const items = window.PNXNotificationCenter.getAll();
+    const unread = window.PNXNotificationCenter.unread().length;
+
+    if (summary) {
+      summary.textContent = "通知 " + items.length + "件 / 未読 " + unread + "件";
+    }
+
+    if (!items.length) {
+      listEl.innerHTML = '<div class="pnx-auth-status">通知はまだありません</div>';
+      return;
+    }
+
+    listEl.innerHTML = items.slice(0,12).map(item => {
+      const date = item.createdAt ? new Date(item.createdAt).toLocaleString("ja-JP") : "";
+      const priority = item.priority === "high" ? "🔴" : "🔵";
+      return `
+        <button
+          type="button"
+          data-notification-id="${item.id}"
+          class="pnx-notification-item"
+          style="text-align:left;border:1px solid #eef2f6;background:${item.read ? '#f9fafb' : '#eef4ff'};border-radius:18px;padding:14px;cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;gap:10px;">
+            <strong style="color:#101828;">${priority} ${item.title}</strong>
+            <span style="font-size:11px;color:#667085;">${item.read ? '既読' : '未読'}</span>
+          </div>
+          <div style="margin-top:6px;font-size:13px;color:#475467;line-height:1.6;">
+            ${item.body || ""}
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:#98a2b3;">
+            ${item.type} / ${date}
+          </div>
+        </button>
+      `;
+    }).join("");
+  }
+
+  document.addEventListener("click", function(e){
+    const btn = e.target.closest && e.target.closest("[data-notification-id]");
+    if (!btn || !window.PNXNotificationCenter) return;
+    const id = btn.getAttribute("data-notification-id");
+    window.PNXNotificationCenter.markRead(id);
+    render();
+  });
+
+  document.addEventListener("DOMContentLoaded", function(){
+    const refresh = document.getElementById("pnx-notification-refresh");
+    const readAll = document.getElementById("pnx-notification-read-all");
+
+    if (refresh) refresh.addEventListener("click", render);
+
+    if (readAll) {
+      readAll.addEventListener("click", function(){
+        if (window.PNXNotificationCenter) {
+          window.PNXNotificationCenter.markAllRead();
+          render();
+        }
+      });
+    }
+
+    setTimeout(render, 1000);
+  });
+
+  window.addEventListener("pnx:notifications:updated", render);
+})();
+</script>
+
+
+<!-- STEP40 Notification Event Link Panel -->
+<section id="pnx-notification-link-panel" class="pnx-auth-panel">
+  <div class="pnx-auth-head">
+    <div>
+      <p class="pnx-auth-kicker">Notification Link</p>
+      <h2>大会・カレンダー通知連携</h2>
+      <p>大会更新、カレンダー追加、お気に入り更新を通知センターへ連携します。</p>
+    </div>
+  </div>
+  <div id="pnx-notification-link-status" class="pnx-auth-status">連携待機中</div>
+  <div class="pnx-auth-actions">
+    <button type="button" id="pnx-test-tournament-update-notification" class="pnx-auth-sub-btn">大会更新通知テスト</button>
+    <button type="button" id="pnx-test-deadline-notification" class="pnx-auth-ghost-btn">締切変更通知テスト</button>
+  </div>
+</section>
+<script id="pnx-step40-notification-link-ui">
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function setStatus(msg){
+    const el = $("pnx-notification-link-status");
+    if (el) el.textContent = msg;
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    const t = $("pnx-test-tournament-update-notification");
+    const d = $("pnx-test-deadline-notification");
+
+    if (t) t.addEventListener("click", function(){
+      if (window.PNXNotificationEventLink) {
+        window.PNXNotificationEventLink.notifyTournamentSaved({
+          id:"test_tournament",
+          title:"テスト大会"
+        });
+        setStatus("大会更新通知を作成しました");
+      }
+    });
+
+    if (d) d.addEventListener("click", function(){
+      if (window.PNXNotificationEventLink) {
+        window.PNXNotificationEventLink.notifyDeadlineChanged({
+          id:"test_tournament",
+          title:"テスト大会"
+        });
+        setStatus("締切変更通知を作成しました");
+      }
+    });
+  });
+})();
+</script>
+
+
+<!-- STEP41 Realtime Sync Panel -->
+<section id="pnx-realtime-panel" class="pnx-auth-panel">
+  <div class="pnx-auth-head">
+    <div>
+      <p class="pnx-auth-kicker">Realtime Sync</p>
+      <h2>Firestoreリアルタイム同期</h2>
+      <p>大会・注目コンテンツ・アプリ設定をFirestoreからリアルタイム同期する準備です。</p>
+    </div>
+  </div>
+  <div id="pnx-realtime-status" class="pnx-auth-status">未開始</div>
+  <div class="pnx-auth-actions">
+    <button type="button" id="pnx-realtime-start" class="pnx-auth-sub-btn">同期開始</button>
+    <button type="button" id="pnx-realtime-stop" class="pnx-auth-ghost-btn">同期停止</button>
+    <button type="button" id="pnx-realtime-check" class="pnx-auth-ghost-btn">状態確認</button>
+  </div>
+</section>
+<script id="pnx-step41-realtime-ui">
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function render(){
+    const el = $("pnx-realtime-status");
+    if (!el || !window.PNXRealtimeBridge) return;
+    const s = window.PNXRealtimeBridge.status();
+    el.textContent = "active: " + s.active + " / mode: " + s.firestoreMode + " / tournaments: " + s.tournaments + " / featured: " + s.featured;
+  }
+  document.addEventListener("DOMContentLoaded", function(){
+    const start = $("pnx-realtime-start");
+    const stop = $("pnx-realtime-stop");
+    const check = $("pnx-realtime-check");
+
+    if (start) start.addEventListener("click", async function(){
+      if (window.PNXRealtimeBridge) await window.PNXRealtimeBridge.start();
+      render();
+    });
+    if (stop) stop.addEventListener("click", function(){
+      if (window.PNXRealtimeBridge) window.PNXRealtimeBridge.stop();
+      render();
+    });
+    if (check) check.addEventListener("click", render);
+
+    setTimeout(render, 1000);
+  });
+  window.addEventListener("pnx:realtime:started", render);
+  window.addEventListener("pnx:realtime:stopped", render);
+  window.addEventListener("pnx:realtime:tournaments", render);
+  window.addEventListener("pnx:realtime:featured", render);
+})();
+</script>
+
+
+
+
+
+<script id="pnx-step43-main-mobile-router-disabled">
+/* STEP44: STEP43 router disabled.
+   理由: 既存カレンダーDOMまで非表示化し、画面が空になるため。
+   本体の元switchPage/render処理を優先する。
+*/
+</script>
+<!-- STEP46 Calendar Backend Safe Link Panel -->
+<section id="pnx-calendar-backend-safe-link-panel" class="pnx-auth-panel">
+  <div class="pnx-auth-head">
+    <div>
+      <p class="pnx-auth-kicker">Calendar Backend Link</p>
+      <h2>カレンダー裏側接続</h2>
+      <p>元のカレンダーUIを触らず、保存・通知・同期だけ裏側で接続します。</p>
+    </div>
+  </div>
+  <div id="pnx-calendar-backend-safe-link-status" class="pnx-auth-status">待機中</div>
+  <div class="pnx-auth-actions">
+    <button type="button" id="pnx-calendar-backend-check" class="pnx-auth-sub-btn">接続状態確認</button>
+    <button type="button" id="pnx-calendar-backend-sync-existing" class="pnx-auth-ghost-btn">既存予定を同期</button>
+  </div>
+</section>
+<script id="pnx-step46-calendar-backend-ui">
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function set(msg){ const el=$("pnx-calendar-backend-safe-link-status"); if(el) el.textContent=msg; }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    const check=$("pnx-calendar-backend-check");
+    const sync=$("pnx-calendar-backend-sync-existing");
+
+    if(check) check.addEventListener("click", function(){
+      const count = window.__PNX_STEP46_EXISTING_EVENTS_COUNT__ || 0;
+      set("Bridge: " + (!!window.PNXCalendarBackendSafeLink) + " / 既存予定: " + count + "件");
+    });
+
+    if(sync) sync.addEventListener("click", async function(){
+      if(!window.PNXCalendarBackendSafeLink) return set("Bridge未読込");
+      const n = await window.PNXCalendarBackendSafeLink.syncExisting();
+      set("既存予定を裏側同期しました: " + n + "件");
+    });
+  });
+
+  window.addEventListener("pnx:calendar:backend-linked", function(e){
+    const ev = e.detail && e.detail.event;
+    if(ev) set("裏側接続完了: " + ev.title);
+  });
+})();
+</script>
+<script src="scripts/qa/pnx-navigation-smoke-check.js"></script>
+<script src="scripts/qa/pnx-step79-app-e2e-check.js"></script>
+<script id="pnx-step100-root-legacy-search-guard">
+(function(){
+  if (window.__PNX_STEP100_ROOT_LEGACY_SEARCH_GUARD__) return;
+  window.__PNX_STEP100_ROOT_LEGACY_SEARCH_GUARD__ = true;
+
+  function hasLegacySearchDom(){
+    return !!(
+      document.getElementById("filter-grid") &&
+      document.getElementById("result-meta") &&
+      document.getElementById("search-list")
+    );
+  }
+
+  function wrapLegacySearch(){
+    if (typeof window.applySearchFilters === "function" && !window.applySearchFilters.__pnxStep100Wrapped) {
+      const originalApply = window.applySearchFilters;
+      window.applySearchFilters = function(){
+        if (!hasLegacySearchDom()) return false;
+        try { return originalApply.apply(this, arguments); }
+        catch(e) {
+          console.warn("[STEP100] legacy applySearchFilters skipped:", e);
+          return false;
+        }
+      };
+      window.applySearchFilters.__pnxStep100Wrapped = true;
+    }
+
+    if (typeof window.renderSearchFilters === "function" && !window.renderSearchFilters.__pnxStep100Wrapped) {
+      const originalRender = window.renderSearchFilters;
+      window.renderSearchFilters = function(){
+        if (!hasLegacySearchDom()) return false;
+        try { return originalRender.apply(this, arguments); }
+        catch(e) {
+          console.warn("[STEP100] legacy renderSearchFilters skipped:", e);
+          return false;
+        }
+      };
+      window.renderSearchFilters.__pnxStep100Wrapped = true;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    wrapLegacySearch();
+    setTimeout(wrapLegacySearch, 500);
+    setTimeout(wrapLegacySearch, 1500);
+  });
+
+  window.addEventListener("error", function(event){
+    const msg = String(event && event.message || "");
+    const stack = String(event && event.error && event.error.stack || "");
+    if (
+      msg.includes("classList") && stack.includes("applySearchFilters") ||
+      stack.includes("initSearchUI")
+    ) {
+      console.warn("[STEP100] prevented legacy search UI error:", msg);
+      event.preventDefault();
+      return true;
+    }
+  });
+})();
+</script>
+
+<script id="pnx-step116-pure-router-active-guard">
+(function(){
+  if (window.__PNX_STEP116_PURE_ROUTER_ACTIVE_GUARD__) return;
+  window.__PNX_STEP116_PURE_ROUTER_ACTIVE_GUARD__ = true;
+
+  const SEARCH_SRC = "pages/search/embed.html?v=step171cccced";
+  const FINANCE_SRC = "pages/finance/embed.html?v=step171cccced";
+  const FORCE_KEY = "PNX_FORCE_CALENDAR_EVENTS";
+  const MAP_KEY = "PNX_TOURNAMENT_CALENDAR_EVENT_MAP";
+
+  let intendedPage = "";
+  let lastUserCalendarClickAt = 0;
+  let lastNonCalendarEnterAt = 0;
+  let routeLock = false;
+  let searchSyncedOnce = false;
+  let financeTimer = null;
+  let financeLastSignature = "";
+  let financeLastNotifyAt = 0;
+
+  function now(){ return Date.now(); }
+  function text(v){ return String(v == null ? "" : v).trim(); }
+  function pad(n){ return String(n).padStart(2, "0"); }
+  function todayISO(){
+    const d = new Date();
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+
+  function readJson(key, fallback){
+    try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+    catch(e){ return fallback; }
+  }
+
+  function writeJson(key, value){
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
+  }
+
+  function forceAppVisible(){
+    const appFrame = document.querySelector(".app-frame") || document.getElementById("app-frame");
+    if (appFrame) {
+      appFrame.style.opacity = "1";
+      appFrame.style.visibility = "visible";
+      appFrame.style.transition = "none";
+    }
+  }
+
+  function hideAuth(){
+    const auth = document.getElementById("auth-screen");
+    if (auth) {
+      auth.classList.add("hidden");
+      auth.style.display = "none";
+    }
+    const loading = document.getElementById("auth-loading");
+    if (loading) {
+      loading.classList.add("hidden");
+      loading.style.display = "none";
+    }
+    document.body.classList.remove("auth-guest");
+  }
+
+  function getSearchFrame(){
+    return document.getElementById("search-module-frame");
+  }
+
+  function getFinanceFrame(){
+    return document.getElementById("finance-module-frame");
+  }
+
+  function ensureSearchFrame(){
+    const frame = getSearchFrame();
+    if (!frame) return null;
+
+    const src = frame.getAttribute("src") || "";
+    if (!src) {
+      frame.setAttribute("src", frame.dataset.src || SEARCH_SRC);
+      searchSyncedOnce = false;
+    }
+    return frame;
+  }
+
+  function ensureFinanceFrame(){
+    const frame = getFinanceFrame();
+    if (!frame) return null;
+
+    const src = frame.getAttribute("src") || "";
+    if (!src) frame.setAttribute("src", frame.dataset.src || FINANCE_SRC);
+    return frame;
+  }
+
+  function keepFinanceLazy(){
+    const frame = getFinanceFrame();
+    if (!frame) return;
+
+    if ((frame.getAttribute("src") || "") && intendedPage !== "finance") {
+      frame.dataset.src = frame.dataset.src || frame.getAttribute("src") || FINANCE_SRC;
+      frame.removeAttribute("src");
+    }
+  }
+
+  function updateNav(page){
+    ["calendar","search","featured","finance","admin","mypage","manage"].forEach(key => {
+      const btn = document.getElementById("nav-" + key);
+      if (!btn) return;
+
+      const active = key === page || (page === "admin" && key === "manage");
+      btn.classList.toggle("active", active);
+      btn.setAttribute("aria-current", active ? "page" : "false");
+
+      const label = btn.querySelector(".bnav-label");
+      if (label) {
+        label.style.color = active ? "#1AAF7A" : "";
+        label.style.fontWeight = active ? "600" : "";
+      }
+
+      try {
+        const icon = document.getElementById("icon-" + key);
+        if (icon && window.NAV_ICONS && window.NAV_ICONS[key]) {
+          icon.innerHTML = active ? window.NAV_ICONS[key].active : window.NAV_ICONS[key].inactive;
+        }
+      } catch(e) {}
+    });
+  }
+
+  function safeRenderCalendar(){
+    try { if (typeof window.generateCalendarEvents === "function") window.generateCalendarEvents(); } catch(e) {}
+    try { if (typeof window.renderAllPanels === "function") window.renderAllPanels(); } catch(e) {}
+    try { if (typeof window.renderCalList === "function") window.renderCalList(); } catch(e) {}
+    try { if (typeof window.renderCalendar === "function") window.renderCalendar(); } catch(e) {}
+  }
+
+  function setActivePage(page){
+    const pageKey = page || "calendar";
+    routeLock = true;
+
+    document.querySelectorAll(".page").forEach(el => {
+      const active = el.id === "page-" + pageKey;
+      el.classList.toggle("active", active);
+
+      // Explicit visibility prevents legacy CSS/inline states from leaking through.
+      if (active) {
+        el.hidden = false;
+        el.style.visibility = "";
+        el.style.pointerEvents = "";
+      } else if (el.id === "page-calendar") {
+        el.hidden = false;
+        el.style.visibility = "hidden";
+        el.style.pointerEvents = "none";
+      }
+    });
+
+    intendedPage = pageKey;
+    document.body.dataset.currentPage = pageKey;
+    updateNav(pageKey);
+
+    if (pageKey !== "calendar") lastNonCalendarEnterAt = now();
+
+    setTimeout(function(){ routeLock = false; }, 80);
+  }
+
+  function notifySearchOnce(){
+    if (searchSyncedOnce) return true;
+
+    const frame = ensureSearchFrame();
+    if (!frame || !frame.contentWindow) return false;
+
+    try {
+      frame.contentWindow.postMessage({ type:"PNX_STEP116_STABLE_SEARCH_SYNC" }, "*");
+      if (typeof frame.contentWindow.PNXStep112StableCardsOnce === "function") {
+        frame.contentWindow.PNXStep112StableCardsOnce(false);
+      } else if (typeof frame.contentWindow.PNXStep106StableCardsOnce === "function") {
+        frame.contentWindow.PNXStep106StableCardsOnce(false);
+      }
+      searchSyncedOnce = true;
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  function route(page, source){
+    const pageKey = page || "calendar";
+
+    if (pageKey === "admin" && !window._isAdmin && !document.body.classList.contains("is-admin")) {
+      try { if (typeof window.showToast === "function") window.showToast("管理者のみアクセスできます"); } catch(e) {}
+      return false;
+    }
+
+    if (pageKey === "calendar" && source !== "user") {
+      const protectedWindow = intendedPage && intendedPage !== "calendar" && now() - lastNonCalendarEnterAt < 10000;
+      if (protectedWindow && now() - lastUserCalendarClickAt > 1200) {
+        console.warn("[STEP116] blocked non-user calendar route while on", intendedPage);
+        restoreIntendedPage();
+        return false;
+      }
+    }
+
+    setActivePage(pageKey);
+
+    if (pageKey === "calendar") {
+      safeRenderCalendar();
+    } else if (pageKey === "search") {
+      ensureSearchFrame();
+      notifySearchOnce();
+    } else if (pageKey === "finance") {
+      ensureFinanceFrame();
+      scheduleFinanceNotify(true);
+    } else {
+      keepFinanceLazy();
+    }
+
+    hideAuth();
+    forceAppVisible();
+    return true;
+  }
+
+  function restoreIntendedPage(){
+    if (!intendedPage || intendedPage === "calendar") return false;
+
+    const target = document.getElementById("page-" + intendedPage);
+    if (!target) return false;
+
+    setActivePage(intendedPage);
+
+    if (intendedPage === "search") {
+      ensureSearchFrame();
+      notifySearchOnce();
+    }
+    if (intendedPage === "finance") {
+      ensureFinanceFrame();
+    }
+
+    return true;
+  }
+
+  function installPureSwitchPage(){
+    window.switchPage = function(page){
+      return route(page || "calendar", "program");
+    };
+    window.PNXStep116SwitchPage = window.switchPage;
+  }
+
+  function bindNav(){
+    const map = {
+      "nav-calendar":"calendar",
+      "nav-search":"search",
+      "nav-featured":"featured",
+      "nav-finance":"finance",
+      "nav-admin":"admin",
+      "nav-manage":"admin",
+      "nav-mypage":"mypage",
+      "nav-center":"featured"
+    };
+
+    Object.entries(map).forEach(([id,page]) => {
+      const btn = document.getElementById(id);
+      if (!btn || btn.__pnxStep116Bound) return;
+      btn.__pnxStep116Bound = true;
+
+      btn.addEventListener("click", function(e){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        if (page === "calendar") lastUserCalendarClickAt = now();
+
+        route(page, "user");
+      }, true);
+    });
+  }
+
+  function installActiveMutationGuard(){
+    if (window.__PNX_STEP116_MUTATION_GUARD__) return;
+    window.__PNX_STEP116_MUTATION_GUARD__ = true;
+
+    const pages = Array.from(document.querySelectorAll(".page"));
+    if (!pages.length) return;
+
+    const obs = new MutationObserver(function(){
+      if (routeLock) return;
+      if (!intendedPage || intendedPage === "calendar") return;
+
+      const cal = document.getElementById("page-calendar");
+      const target = document.getElementById("page-" + intendedPage);
+
+      if (!target) return;
+
+      const calendarWronglyActive = cal && cal.classList.contains("active") && now() - lastUserCalendarClickAt > 1200;
+      const targetInactive = !target.classList.contains("active");
+
+      if (calendarWronglyActive || targetInactive) {
+        console.warn("[STEP116] restored intended page after legacy DOM mutation:", intendedPage);
+        restoreIntendedPage();
+      }
+    });
+
+    pages.forEach(p => obs.observe(p, { attributes:true, attributeFilter:["class","style","hidden"] }));
+    window.__PNX_STEP116_PAGE_OBSERVER__ = obs;
+  }
+
+  function installAuthGuard(){
+    if (window.__PNX_STEP116_AUTH_GUARD__) return;
+    window.__PNX_STEP116_AUTH_GUARD__ = true;
+
+    const origShowApp = window._showApp;
+    if (typeof origShowApp === "function") {
+      window._showApp = function(user){
+        window.__PNX_STEP116_APP_SHOWN__ = true;
+        hideAuth();
+        forceAppVisible();
+        return origShowApp.apply(this, arguments);
+      };
+    }
+
+    const origShowAuth = window._showAuthScreen;
+    if (typeof origShowAuth === "function") {
+      window._showAuthScreen = function(){
+        const suppress =
+          window.__PNX_STEP116_APP_SHOWN__ ||
+          window._currentUser ||
+          document.body.classList.contains("is-admin") ||
+          document.body.dataset.currentPage;
+
+        if (suppress) {
+          hideAuth();
+          forceAppVisible();
+          return false;
+        }
+
+        forceAppVisible();
+        return origShowAuth.apply(this, arguments);
+      };
+    }
+  }
+
+  function eventIdFor(tournamentId){
+    const map = readJson(MAP_KEY, {});
+    if (map[tournamentId]) return map[tournamentId];
+
+    const id = Date.now() + Math.floor(Math.random() * 1000);
+    map[tournamentId] = id;
+    writeJson(MAP_KEY, map);
+    return id;
+  }
+
+  function normalizeTournament(raw){
+    raw = raw || {};
+    const originalName = text(raw.name || raw.title || raw.tournamentTitle) || "大会予定";
+    const name = typeof window.PNXStep132CleanCalendarTitle === "function"
+      ? window.PNXStep132CleanCalendarTitle(originalName)
+      : originalName;
+    const date = text(raw.date || raw.start || raw.startDate) || todayISO();
+    const end = text(raw.end || raw.endDate || raw.start || raw.startDate) || date;
+    const tournamentId = text(raw.tournamentId || raw.id || raw.tid) ||
+      ("tour_" + name.replace(/\s+/g, "_").replace(/[^\w一-龠ぁ-んァ-ヶー]/g, "").slice(0, 40) + "_" + date.replace(/-/g, ""));
+    const venue = text(raw.place || raw.venue || raw.course || raw.location);
+    const rawCat = text(raw.cat || raw.category) || "tournament";
+    const cat = typeof window.PNXStep130NormalizeCalendarCategory === "function"
+      ? window.PNXStep130NormalizeCalendarCategory(rawCat)
+      : rawCat;
+
+    return {
+      id:eventIdFor(tournamentId),
+      name,
+      title:name,
+      calendarTitle:name,
+      originalTitle:(typeof originalName !== "undefined" ? originalName : (typeof window.PNXStep137bSafeOriginalName === "function" ? window.PNXStep137bSafeOriginalName(raw, name) : ((raw && (raw.originalTitle || raw.tournamentTitle || raw.title || raw.name)) || name || "大会予定"))),
+      tournamentTitle:(typeof originalName !== "undefined" ? originalName : (typeof window.PNXStep137bSafeOriginalName === "function" ? window.PNXStep137bSafeOriginalName(raw, name) : ((raw && (raw.originalTitle || raw.tournamentTitle || raw.title || raw.name)) || name || "大会予定"))),
+      date,
+      end,
+      startDate:date,
+      endDate:end,
+      allDay:true,
+      place:venue,
+      venue,
+      course:venue,
+      cat,
+      category:cat,
+      memo:[
+        venue ? "会場：" + venue : "",
+        raw.entryDeadline ? "締切：" + raw.entryDeadline : "",
+        raw.entryFee ? "参加費：" + raw.entryFee : "",
+        raw.prize ? "賞金：" + raw.prize : ""
+      ].filter(Boolean).join("\n"),
+      entryDeadline: raw.entryDeadline || null,
+      entryStatus:"open",
+      _fromDB:false,
+      _tournamentId:tournamentId,
+      tournamentId,
+      source:"search-cms"
+    };
+  }
+
+  function eventsArray(){
+    if (typeof EVENTS !== "undefined" && Array.isArray(EVENTS)) return EVENTS;
+    window.EVENTS = window.EVENTS || [];
+    return window.EVENTS;
+  }
+
+  function same(a, b){
+    if (!a || !b) return false;
+    return (
+      a.id === b.id ||
+      a._tournamentId === b._tournamentId ||
+      a.tournamentId === b._tournamentId ||
+      a._tournamentId === b.tournamentId ||
+      a.tournamentId === b.tournamentId ||
+      (a.name === b.name && a.date === b.date)
+    );
+  }
+
+  function saveForce(ev){
+    const list = readJson(FORCE_KEY, []);
+    if (!list.some(item => same(item, ev))) list.push(ev);
+    writeJson(FORCE_KEY, list);
+  }
+
+  function addTournamentSilently(raw){
+    let ev = normalizeTournament(raw);
+
+    // STEP133: カレンダー側で見える形式へ補正。ただし表示カテゴリ/正式名は保持。
+    if (typeof window.PNXStep131NormalizeCalendarEvent === "function") {
+      ev = window.PNXStep131NormalizeCalendarEvent(ev);
+    } else if (typeof window.PNXStep130NormalizeCalendarEvent === "function") {
+      ev = window.PNXStep130NormalizeCalendarEvent(ev);
+    }
+
+    const arr = eventsArray();
+    const idx = arr.findIndex(item => same(item, ev));
+    const existed = idx >= 0;
+
+    if (existed) {
+      // 2回目タップはキャンセル扱い。EVENTSから削除し、fallback保存からも削除する。
+      const removed = arr.splice(idx, 1)[0];
+
+      try {
+        if (typeof window.PNXStep133RemoveForcedCalendarEvent === "function") {
+          window.PNXStep133RemoveForcedCalendarEvent(ev);
+        }
+      } catch(e) {}
+
+      try {
+        if (window.PNXCalendarSyncBridge && typeof window.PNXCalendarSyncBridge.deleteEvent === "function") {
+          window.PNXCalendarSyncBridge.deleteEvent(removed || ev);
+        }
+      } catch(e) {}
+
+      try {
+        if (window.PNXReminderBridge && typeof window.PNXReminderBridge.removeForEvent === "function") {
+          window.PNXReminderBridge.removeForEvent(removed || ev);
+        }
+      } catch(e) {}
+
+      try { if (typeof window._saveUserEvents === "function") window._saveUserEvents(); } catch(e) {}
+      try { if (typeof window.saveEvents === "function") window.saveEvents(); } catch(e) {}
+
+      if (intendedPage === "calendar") safeRenderCalendar();
+
+      window.__PNX_STEP133_LAST_CALENDAR_TOGGLE__ = {
+        action:"removed",
+        event: removed || ev,
+        at: new Date().toISOString()
+      };
+      window.__PNX_STEP116_LAST_SILENT_EVENT__ = null;
+
+      try {
+        if (typeof window.PNXStep137BroadcastCalendarState === "function") {
+          window.PNXStep137BroadcastCalendarState("toggle-removed");
+        }
+      } catch(e) {}
+      return { ok:true, action:"removed", removed:true, event: removed || ev };
+    }
+
+    arr.push(ev);
+
+    try {
+      const rawCategory = ev.rawCategory || ev.displayCategory || ev.category || ev.cat;
+      if (typeof window.PNXStep131EnsureCalendarCategory === "function") {
+        window.PNXStep131EnsureCalendarCategory(rawCategory);
+      } else if (typeof window.PNXStep130EnsureCalendarCategory === "function") {
+        window.PNXStep130EnsureCalendarCategory(rawCategory || ev.cat);
+      }
+
+      if (typeof window.PNXStep131FocusAddedDate === "function") {
+        window.PNXStep131FocusAddedDate(ev.date);
+      } else if (typeof window.PNXStep130FocusAddedDate === "function") {
+        window.PNXStep130FocusAddedDate(ev.date);
+      }
+    } catch(e) {}
+
+    saveForce(ev);
+
+    try { if (typeof window._saveUserEvents === "function") window._saveUserEvents(); } catch(e) {}
+    try { if (typeof window.saveEvents === "function") window.saveEvents(); } catch(e) {}
+    try { if (window.PNXCalendarSyncBridge) window.PNXCalendarSyncBridge.saveEvent(ev); } catch(e) {}
+    try { if (window.PNXReminderBridge) window.PNXReminderBridge.createForEvent(ev); } catch(e) {}
+
+    if (intendedPage === "calendar") safeRenderCalendar();
+
+    window.__PNX_STEP133_LAST_CALENDAR_TOGGLE__ = {
+      action:"added",
+      event:ev,
+      at: new Date().toISOString()
+    };
+    window.__PNX_STEP116_LAST_SILENT_EVENT__ = ev;
+    try {
+      if (typeof window.PNXStep137BroadcastCalendarState === "function") {
+        window.PNXStep137BroadcastCalendarState("toggle-added");
+      }
+    } catch(e) {}
+    return { ok:true, action:"added", added:true, event:ev };
+  }
+
+  function reply(source, type, requestId, payload){
+    try {
+      source && source.postMessage({ type, requestId:requestId || null, payload:payload || {} }, "*");
+    } catch(e) {}
+  }
+
+  function collectFinanceTournaments(){
+    const list = [];
+    function push(t){
+      if (!t) return;
+      const id = t.id || t.tournamentId || t._tournamentId;
+      const title = t.title || t.name || t.tournamentTitle;
+      if (!id && !title) return;
+      list.push({
+        id:String(id || title),
+        tournamentId:String(id || title),
+        title:title || "大会",
+        name:title || "大会",
+        startDate:t.startDate || t.start || t.date || "",
+        endDate:t.endDate || t.end || t.startDate || t.start || t.date || "",
+        venue:t.venue || t.course || t.place || t.location || "",
+        category:t.category || t.cat || "tournament",
+        entryFee:t.entryFee || t.fee || "",
+        entryDeadline:t.entryDeadline || t.deadline || "",
+        source:t.source || "root"
+      });
+    }
+
+    try {
+      if (Array.isArray(window.EVENTS)) {
+        window.EVENTS.forEach(ev => {
+          if (!ev) return;
+          if (ev.tournamentId || ev._tournamentId || ev.source === "tournament" || ev.source === "search-cms") push(ev);
+        });
+      }
+    } catch(e) {}
+
+    readJson("PNX_CMS_TOURNAMENTS", []).forEach(push);
+    readJson("PNX_CMS_PUBLIC_TOURNAMENTS_FOR_SEARCH", []).forEach(push);
+    readJson(FORCE_KEY, []).forEach(push);
+
+    const map = new Map();
+    list.forEach(t => {
+      const key = String(t.id || t.tournamentId || t.title);
+      if (!map.has(key)) map.set(key, t);
+    });
+
+    return Array.from(map.values()).sort((a,b) => String(a.startDate || "").localeCompare(String(b.startDate || "")));
+  }
+
+  function signature(list){
+    return (Array.isArray(list) ? list : []).map(t => [
+      t.id || t.tournamentId || "",
+      t.title || t.name || "",
+      t.startDate || t.start || t.date || "",
+      t.venue || t.course || ""
+    ].join(":")).join("|");
+  }
+
+  function notifyFinanceOnce(force){
+    if (intendedPage !== "finance" && !force) return false;
+    const frame = getFinanceFrame();
+    if (!frame || !frame.contentWindow) return false;
+
+    const payload = collectFinanceTournaments();
+    const sig = signature(payload);
+    const n = now();
+
+    if (!force && sig === financeLastSignature && n - financeLastNotifyAt < 10000) return false;
+
+    financeLastSignature = sig;
+    financeLastNotifyAt = n;
+
+    try {
+      frame.contentWindow.postMessage({
+        type:"PNX_TOURNAMENTS_FOR_FINANCE_UPDATED",
+        payload,
+        source:"step116-pure-router"
+      }, "*");
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  function scheduleFinanceNotify(force){
+    clearTimeout(financeTimer);
+    financeTimer = setTimeout(function(){ notifyFinanceOnce(!!force); }, 350);
+  }
+
+  window.addEventListener("message", function(event){
+    const data = event.data || {};
+
+    if (
+      data.type === "PNX_SEARCH_TOGGLE_TOURNAMENT_CALENDAR_STEP136" ||
+      data.type === "PNX_SEARCH_ADD_TOURNAMENT_TO_CALENDAR_STEP116" ||
+      data.type === "PNX_SEARCH_ADD_TOURNAMENT_TO_CALENDAR_STEP112" ||
+      data.type === "PNX_SEARCH_ADD_TOURNAMENT_TO_CALENDAR_STEP111" ||
+      data.type === "PNX_SEARCH_ADD_TOURNAMENT_TO_CALENDAR_STEP110" ||
+      data.type === "PNX_SEARCH_ADD_TOURNAMENT_TO_CALENDAR_STEP109" ||
+      data.type === "PNX_TOGGLE_TOURNAMENT_CALENDAR" ||
+      data.type === "PNX_ADD_TOURNAMENT_TO_CALENDAR"
+    ) {
+      event.stopImmediatePropagation();
+      try {
+        const result = addTournamentSilently(data.payload || {});
+        reply(event.source, "PNX_SEARCH_CALENDAR_TOGGLE_RESULT_STEP136", data.requestId, result);
+        reply(event.source, "PNX_SEARCH_CALENDAR_ADD_RESULT_STEP116", data.requestId, result);
+        reply(event.source, "PNX_SEARCH_CALENDAR_ADD_RESULT_STEP112", data.requestId, result);
+      } catch(e) {
+        const err = { ok:false, error:e && e.message ? e.message : String(e) };
+        reply(event.source, "PNX_SEARCH_CALENDAR_TOGGLE_RESULT_STEP136", data.requestId, err);
+        reply(event.source, "PNX_SEARCH_CALENDAR_ADD_RESULT_STEP116", data.requestId, err);
+        reply(event.source, "PNX_SEARCH_CALENDAR_ADD_RESULT_STEP112", data.requestId, err);
+      }
+      return;
+    }
+
+    if (data.type === "PNX_REQUEST_TOURNAMENTS_FOR_FINANCE") {
+      if (intendedPage === "finance") scheduleFinanceNotify(true);
+      event.stopImmediatePropagation();
+      return;
+    }
+
+    if (
+      data.type === "PNX_SEARCH_IFRAME_READY_STEP116" ||
+      data.type === "PNX_SEARCH_IFRAME_READY_STEP112" ||
+      data.type === "PNX_SEARCH_IFRAME_READY_STEP106" ||
+      data.type === "PNX_SEARCH_IFRAME_READY_STEP103"
+    ) {
+      if (intendedPage === "search") notifySearchOnce();
+    }
+  }, true);
+
+  function installLegacyGuards(){
+    window.PNXAddTournamentToMainCalendar = function(raw){
+      return addTournamentSilently(raw);
+    };
+
+    window.PNXRestoreCalendarView = function(){
+      if (intendedPage && intendedPage !== "calendar") {
+        console.warn("[STEP116] blocked PNXRestoreCalendarView outside calendar");
+        restoreIntendedPage();
+        return false;
+      }
+      safeRenderCalendar();
+      return true;
+    };
+
+    window.PNXNotifyFinanceTournamentUpdate = function(force){
+      if (!force && intendedPage !== "finance") return false;
+      return notifyFinanceOnce(!!force);
+    };
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    forceAppVisible();
+    hideAuth();
+    installAuthGuard();
+    installLegacyGuards();
+    installPureSwitchPage();
+    bindNav();
+
+    const active = document.querySelector(".page.active");
+    if (active && active.id) {
+      intendedPage = active.id.replace("page-", "");
+      document.body.dataset.currentPage = intendedPage;
+    } else {
+      intendedPage = "calendar";
+      setActivePage("calendar");
+    }
+
+    updateNav(intendedPage);
+    keepFinanceLazy();
+    ensureSearchFrame();
+    installActiveMutationGuard();
+  });
+
+  queueMicrotask(function(){
+    forceAppVisible();
+    hideAuth();
+    installAuthGuard();
+    installLegacyGuards();
+    installPureSwitchPage();
+  });
+
+  window.PNXStep116Route = route;
+  window.PNXStep116RestoreIntendedPage = restoreIntendedPage;
+  window.PNXStep116AddTournamentSilently = addTournamentSilently;
+})();
+</script>
+<script id="pnx-step118-stable-base-lock">
+(function(){
+  if (window.__PNX_STEP118_STABLE_BASE_LOCK__) return;
+  window.__PNX_STEP118_STABLE_BASE_LOCK__ = true;
+
+  /*
+    ProNexaX STEP118 Stable Base Rules
+
+    ここから先の機能追加で絶対に直接変更しないもの:
+    - switchPage の再ラップ
+    - body[data-current-page] の別ルール化
+    - iframe src の再代入
+    - page-calendar.classList.add("active") の直接実行
+    - PNXRestoreCalendarView の強制実行
+    - PNXAddTournamentToMainCalendar の直接呼び出し
+    - setTimeout でのカレンダー復旧
+
+    新機能は対象モジュール内のUI/データ処理だけで完結させる。
+    大会のカレンダー追加は、STEP116/117の silent add ルートを使う。
+  */
+
+  window.PNX_STABLE_BASE_STEP = 118;
+  window.PNX_STABLE_BASE_RULES = Object.freeze({
+    router: "STEP116 pure router",
+    routeLock: "STEP117 body[data-current-page] CSS lock",
+    calendarAdd: "silent add only",
+    finance: "lazy iframe only",
+    doNotTouch: [
+      "switchPage wrapper",
+      "body[data-current-page]",
+      "iframe.src",
+      "page.active direct mutations",
+      "PNXRestoreCalendarView",
+      "PNXAddTournamentToMainCalendar",
+      "calendar recovery setTimeout"
+    ]
+  });
+
+  window.PNXStableBaseCheck = function(){
+    return {
+      step: 118,
+      checkedAt: new Date().toISOString(),
+      pureRouter: !!window.__PNX_STEP116_PURE_ROUTER_ACTIVE_GUARD__,
+      routeCssLock: !!window.__PNX_STEP117_ROUTE_CSS_LOCK_GUARD__,
+      currentPage: document.body.dataset.currentPage || "",
+      searchFrame: !!document.getElementById("search-module-frame"),
+      financeFrameLazy: (function(){
+        const f = document.getElementById("finance-module-frame");
+        return !f || !f.getAttribute("src") || document.body.dataset.currentPage === "finance";
+      })()
+    };
+  };
+})();
+</script>
+
+<script id="pnx-step122-no-observer-responsive-guard">
+(function(){
+  if (window.__PNX_STEP122_NO_OBSERVER_RESPONSIVE_GUARD__) return;
+  window.__PNX_STEP122_NO_OBSERVER_RESPONSIVE_GUARD__ = true;
+
+  const NAV_TO_PAGE = {
+    "nav-calendar":"calendar",
+    "nav-search":"search",
+    "nav-featured":"featured",
+    "nav-center":"featured",
+    "nav-finance":"finance",
+    "nav-admin":"admin",
+    "nav-manage":"admin",
+    "nav-mypage":"mypage"
+  };
+
+  function pageFromEvent(e){
+    const target = e && e.target;
+    if (!target || !target.closest) return "";
+    const nav = target.closest("#nav-calendar,#nav-search,#nav-featured,#nav-center,#nav-finance,#nav-admin,#nav-manage,#nav-mypage");
+    return nav ? NAV_TO_PAGE[nav.id] : "";
+  }
+
+  function ensureFrame(page){
+    if (page === "search") {
+      const f = document.getElementById("search-module-frame");
+      if (f && !f.getAttribute("src")) {
+        f.setAttribute("src", f.dataset.src || "pages/search/embed.html?v=step171cccced");
+      }
+    }
+
+    if (page === "finance") {
+      const f = document.getElementById("finance-module-frame");
+      if (f && !f.getAttribute("src")) {
+        f.setAttribute("src", f.dataset.src || "pages/finance/embed.html?v=step171cccced");
+      }
+    }
+  }
+
+  function markPage(page){
+    if (!page) return;
+    document.body.dataset.currentPage = page;
+    ensureFrame(page);
+
+    const auth = document.getElementById("auth-screen");
+    if (auth) {
+      auth.classList.add("hidden");
+      auth.style.display = "none";
+      document.body.classList.remove("auth-guest");
+    }
+  }
+
+  function installClickMark(){
+    if (window.__PNX_STEP122_CLICK_MARK__) return;
+    window.__PNX_STEP122_CLICK_MARK__ = true;
+
+    document.addEventListener("click", function(e){
+      const page = pageFromEvent(e);
+      if (page) markPage(page);
+    }, true);
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    installClickMark();
+
+    const active = document.querySelector(".page.active");
+    if (active && active.id && !document.body.dataset.currentPage) {
+      document.body.dataset.currentPage = active.id.replace("page-", "");
+    }
+  });
+
+  installClickMark();
+
+  window.PNXStep122MarkPage = markPage;
+})();
+</script>
+
+
+<script id="pnx-step123-admin-mode-flash-fix">
+(function(){
+  if (window.__PNX_STEP123_ADMIN_MODE_FLASH_FIX__) return;
+  window.__PNX_STEP123_ADMIN_MODE_FLASH_FIX__ = true;
+
+  const ADMIN_EMAILS = (window.ADMIN_EMAILS || []).map(e => String(e || "").toLowerCase().trim());
+  const KNOWN_ADMIN_EMAILS = new Set([
+    "pronexax0929@gmail.com"
+  ].concat(ADMIN_EMAILS));
+
+  let adminLocked = false;
+  let logoutIntent = false;
+
+  function safeEmail(user){
+    return String((user && user.email) || window._currentUser?.email || "").toLowerCase().trim();
+  }
+
+  function readAdminMemory(){
+    try {
+      if (localStorage.getItem("PNX_FORCE_ADMIN_MODE") === "1") return true;
+      if (localStorage.getItem("PNX_LAST_ADMIN_MODE") === "1") return true;
+      if (localStorage.getItem("pronexax.lastAdminMode") === "1") return true;
+      if (localStorage.getItem("PNX_IS_ADMIN") === "true") return true;
+      if (localStorage.getItem("isAdmin") === "true") return true;
+
+      const lastEmail = String(localStorage.getItem("PNX_LAST_LOGIN_EMAIL") || "").toLowerCase().trim();
+      if (lastEmail && KNOWN_ADMIN_EMAILS.has(lastEmail)) return true;
+    } catch(e) {}
+
+    return false;
+  }
+
+  function rememberAdmin(user){
+    try {
+      localStorage.setItem("PNX_LAST_ADMIN_MODE", "1");
+      localStorage.setItem("pronexax.lastAdminMode", "1");
+      localStorage.setItem("PNX_IS_ADMIN", "true");
+      localStorage.setItem("isAdmin", "true");
+
+      const email = safeEmail(user);
+      if (email) localStorage.setItem("PNX_LAST_LOGIN_EMAIL", email);
+    } catch(e) {}
+  }
+
+  function forgetAdmin(){
+    try {
+      localStorage.removeItem("PNX_LAST_ADMIN_MODE");
+      localStorage.removeItem("pronexax.lastAdminMode");
+      localStorage.removeItem("PNX_IS_ADMIN");
+      localStorage.removeItem("isAdmin");
+      localStorage.removeItem("PNX_FORCE_ADMIN_MODE");
+    } catch(e) {}
+  }
+
+  function applyAdmin(user, reason){
+    adminLocked = true;
+    window._isAdmin = true;
+    window.IS_ADMIN = true;
+    window.PNX_IS_ADMIN = true;
+
+    rememberAdmin(user);
+
+    document.documentElement.classList.add("pnx-admin-preboot");
+    document.body.classList.add("is-admin");
+    document.body.classList.add("pnx-admin-locked");
+    document.body.classList.remove("auth-guest");
+    document.body.classList.remove("is-guest");
+    document.body.dataset.adminMode = "1";
+    document.body.dataset.authMode = "admin";
+
+    const auth = document.getElementById("auth-screen");
+    if (auth) {
+      auth.classList.add("hidden");
+      auth.style.display = "none";
+    }
+
+    const avatar = document.querySelector(".user-avatar, .profile-avatar, #user-avatar");
+    if (avatar && !avatar.textContent.trim()) avatar.textContent = "運";
+
+    try {
+      if (typeof window.renderAdminList === "function") {
+        setTimeout(window.renderAdminList, 0);
+      }
+    } catch(e) {}
+
+    window.__PNX_STEP123_LAST_ADMIN_APPLY__ = {
+      reason: reason || "unknown",
+      at: new Date().toISOString(),
+      email: safeEmail(user)
+    };
+  }
+
+  function isAdminUser(user){
+    const email = safeEmail(user);
+    if (email && KNOWN_ADMIN_EMAILS.has(email)) return true;
+    if (window._isAdmin === true || window.IS_ADMIN === true || window.PNX_IS_ADMIN === true) return true;
+    return readAdminMemory();
+  }
+
+  function installBodyClassGuard(){
+    if (window.__PNX_STEP123_BODY_CLASS_GUARD__) return;
+    window.__PNX_STEP123_BODY_CLASS_GUARD__ = true;
+
+    const remove = DOMTokenList.prototype.remove;
+    DOMTokenList.prototype.remove = function(){
+      try {
+        const args = Array.from(arguments);
+        if (this === document.body.classList && args.includes("is-admin") && adminLocked && !logoutIntent) {
+          console.warn("[STEP123] blocked temporary is-admin removal");
+          return;
+        }
+      } catch(e) {}
+
+      return remove.apply(this, arguments);
+    };
+  }
+
+  function patchAuthFunctions(){
+    if (window.__PNX_STEP123_AUTH_PATCHED__) return;
+    if (typeof window._showApp !== "function" && typeof window._showAuthScreen !== "function") return;
+    window.__PNX_STEP123_AUTH_PATCHED__ = true;
+
+    const origShowApp = window._showApp;
+    if (typeof origShowApp === "function") {
+      window._showApp = function(user){
+        const result = origShowApp.apply(this, arguments);
+
+        if (isAdminUser(user)) {
+          applyAdmin(user, "_showApp");
+        }
+
+        return result;
+      };
+    }
+
+    const origShowAuth = window._showAuthScreen;
+    if (typeof origShowAuth === "function") {
+      window._showAuthScreen = function(){
+        if (adminLocked || readAdminMemory() || document.body.classList.contains("is-admin")) {
+          applyAdmin(window._currentUser || null, "_showAuthScreen_suppressed");
+          return false;
+        }
+
+        return origShowAuth.apply(this, arguments);
+      };
+    }
+  }
+
+  function patchLogout(){
+    if (window.__PNX_STEP123_LOGOUT_PATCHED__) return;
+    window.__PNX_STEP123_LOGOUT_PATCHED__ = true;
+
+    const candidates = ["logout", "authLogout", "_logout", "signOut", "handleLogout"];
+    candidates.forEach(name => {
+      const fn = window[name];
+      if (typeof fn !== "function" || fn.__pnxStep123Wrapped) return;
+
+      const wrapped = function(){
+        logoutIntent = true;
+        adminLocked = false;
+        forgetAdmin();
+        document.body.classList.remove("pnx-admin-locked");
+        document.body.dataset.adminMode = "0";
+        return fn.apply(this, arguments);
+      };
+      wrapped.__pnxStep123Wrapped = true;
+      window[name] = wrapped;
+    });
+  }
+
+  function installAdminStabilizer(){
+    if (readAdminMemory() || document.body.classList.contains("is-admin") || isAdminUser(window._currentUser)) {
+      applyAdmin(window._currentUser || null, "stabilizer");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    installBodyClassGuard();
+    patchAuthFunctions();
+    patchLogout();
+    installAdminStabilizer();
+  });
+
+  // Auth functions are sometimes defined later in the file.
+  setTimeout(function(){
+    installBodyClassGuard();
+    patchAuthFunctions();
+    patchLogout();
+    installAdminStabilizer();
+  }, 300);
+
+  setTimeout(function(){
+    patchAuthFunctions();
+    patchLogout();
+    installAdminStabilizer();
+  }, 1000);
+
+  window.PNXStep123ApplyAdmin = applyAdmin;
+  window.PNXStep123ForgetAdmin = function(){
+    logoutIntent = true;
+    adminLocked = false;
+    forgetAdmin();
+    document.body.classList.remove("is-admin", "pnx-admin-locked");
+    document.body.dataset.adminMode = "0";
+  };
+  window.PNXStep123AdminStatus = function(){
+    return {
+      adminLocked,
+      bodyIsAdmin: document.body.classList.contains("is-admin"),
+      memoryAdmin: readAdminMemory(),
+      currentEmail: safeEmail(window._currentUser),
+      lastApply: window.__PNX_STEP123_LAST_ADMIN_APPLY__ || null
+    };
+  };
+})();
+</script>
+
+
+<script id="pnx-step124-stable-base-freeze">
+(function(){
+  if (window.__PNX_STEP124_STABLE_BASE_FREEZE__) return;
+  window.__PNX_STEP124_STABLE_BASE_FREEZE__ = true;
+
+  /*
+    ProNexaX STEP124 Stable Base Freeze
+
+    このSTEPは新機能追加ではなく、STEP123安定状態の固定です。
+
+    維持するもの:
+    - STEP123 管理者モード固定 / 一般UIちらつき防止
+    - STEP122 no-observer route guard
+    - STEP116 pure router
+    - body[data-current-page] CSS route lock
+    - search / finance iframe version管理
+    - silent calendar add
+
+    禁止:
+    - switchPage を新たにwrapしない
+    - MutationObserver / setInterval でページ復元を作らない
+    - setTimeout でカレンダー復旧を作らない
+    - classList / setAttribute / setTimeout / setInterval をmonkeypatchしない
+    - PNXRestoreCalendarView を新機能から呼ばない
+    - PNXAddTournamentToMainCalendar を新機能から直接呼ばない
+    - body[data-current-page] の意味を変えない
+    - iframe.src をページ切替のたびに再代入しない
+  */
+
+  window.PNX_STABLE_BASE_STEP = 124;
+
+  window.PNX_STABLE_BASE_RULES = Object.freeze({
+    baseStep: 124,
+    adminMode: "STEP123 admin mode flash fix",
+    route: "STEP116 pure router + STEP122 no-observer guard",
+    display: "body[data-current-page] CSS lock",
+    calendarAdd: "silent add route only",
+    iframe: "search loaded once / finance lazy",
+    forbidden: [
+      "new switchPage wrapper",
+      "MutationObserver route restore",
+      "setInterval route restore",
+      "setTimeout calendar restore",
+      "classList monkeypatch",
+      "setAttribute monkeypatch",
+      "PNXRestoreCalendarView direct call",
+      "PNXAddTournamentToMainCalendar direct call",
+      "iframe.src reassignment on every page switch",
+      "changing body[data-current-page] semantics"
+    ]
+  });
+
+  window.PNXStableBaseCheck = function(){
+    const searchFrame = document.getElementById("search-module-frame");
+    const financeFrame = document.getElementById("finance-module-frame");
+
+    return {
+      stableBaseStep: 124,
+      checkedAt: new Date().toISOString(),
+      currentPage: document.body.dataset.currentPage || "",
+      admin: {
+        bodyIsAdmin: document.body.classList.contains("is-admin"),
+        adminMode: document.body.dataset.adminMode || "",
+        step123Available: typeof window.PNXStep123AdminStatus === "function",
+        step123Status: typeof window.PNXStep123AdminStatus === "function" ? window.PNXStep123AdminStatus() : null
+      },
+      route: {
+        step116: !!window.__PNX_STEP116_PURE_ROUTER_ACTIVE_GUARD__,
+        step122: !!window.__PNX_STEP122_NO_OBSERVER_RESPONSIVE_GUARD__,
+        noStep121ObserverLoop: !window.__PNX_STEP121_OBSERVER__,
+        noStep120TimerPatch: !window.__PNX_STEP120_TIMER_PATCHED__
+      },
+      iframe: {
+        searchFrameExists: !!searchFrame,
+        searchSrc: searchFrame ? searchFrame.getAttribute("src") : null,
+        financeFrameExists: !!financeFrame,
+        financeSrc: financeFrame ? financeFrame.getAttribute("src") : null
+      },
+      rules: window.PNX_STABLE_BASE_RULES
+    };
+  };
+
+  window.PNXNextFeatureSafetyCheck = function(){
+    return [
+      "STEP124を安定ベースとして扱う",
+      "Auth / 管理者判定 / is-admin / _showAuthScreen は触らない",
+      "switchPage / page.active / body[data-current-page] は触らない",
+      "iframe src は再代入しない",
+      "新機能は対象モジュール内のUI/データ処理だけに限定する",
+      "大会のカレンダー追加はsilent addルートだけ使う"
+    ];
+  };
+})();
+</script>
+
+
+<script id="pnx-step125-admin-canonical-fix">
+(function(){
+  if (window.__PNX_STEP125_ADMIN_CANONICAL_FIX__) return;
+  window.__PNX_STEP125_ADMIN_CANONICAL_FIX__ = true;
+
+  const KNOWN_ADMIN_EMAILS = new Set([
+    "pronexax0929@gmail.com"
+  ].concat((window.ADMIN_EMAILS || []).map(e => String(e || "").toLowerCase().trim())));
+
+  function emailOf(user){
+    return String((user && user.email) || window._currentUser?.email || localStorage.getItem("PNX_LAST_LOGIN_EMAIL") || "").toLowerCase().trim();
+  }
+
+  function readAdminMemory(){
+    try {
+      if (localStorage.getItem("PNX_FORCE_ADMIN_MODE") === "1") return true;
+      if (localStorage.getItem("PNX_LAST_ADMIN_MODE") === "1") return true;
+      if (localStorage.getItem("pronexax.lastAdminMode") === "1") return true;
+      if (localStorage.getItem("PNX_IS_ADMIN") === "true") return true;
+      if (localStorage.getItem("isAdmin") === "true") return true;
+
+      const lastEmail = String(localStorage.getItem("PNX_LAST_LOGIN_EMAIL") || "").toLowerCase().trim();
+      return !!lastEmail && KNOWN_ADMIN_EMAILS.has(lastEmail);
+    } catch(e) {
+      return false;
+    }
+  }
+
+  function rememberAdmin(user){
+    try {
+      localStorage.setItem("PNX_LAST_ADMIN_MODE", "1");
+      localStorage.setItem("pronexax.lastAdminMode", "1");
+      localStorage.setItem("PNX_IS_ADMIN", "true");
+      localStorage.setItem("isAdmin", "true");
+
+      const email = emailOf(user);
+      if (email) localStorage.setItem("PNX_LAST_LOGIN_EMAIL", email);
+    } catch(e) {}
+  }
+
+  function isCanonicalAdmin(userOrEmail){
+    const email = typeof userOrEmail === "string"
+      ? userOrEmail.toLowerCase().trim()
+      : emailOf(userOrEmail);
+
+    if (email && KNOWN_ADMIN_EMAILS.has(email)) return true;
+    if (window._isAdmin === true || window.IS_ADMIN === true || window.PNX_IS_ADMIN === true) return true;
+    return readAdminMemory();
+  }
+
+  function applyAdminUI(user, reason){
+    if (!isCanonicalAdmin(user)) return false;
+
+    rememberAdmin(user);
+
+    window._isAdmin = true;
+    window.IS_ADMIN = true;
+    window.PNX_IS_ADMIN = true;
+
+    document.documentElement.classList.add("pnx-admin-preboot");
+    document.documentElement.dataset.pnxAdminPreboot = "1";
+
+    document.body.classList.add("is-admin");
+    document.body.classList.add("pnx-admin-locked");
+    document.body.classList.remove("auth-guest");
+    document.body.classList.remove("is-guest");
+    document.body.dataset.adminMode = "1";
+    document.body.dataset.authMode = "admin";
+
+    const navAdmin = document.getElementById("nav-admin");
+    if (navAdmin) navAdmin.style.display = "flex";
+
+    const navMypage = document.getElementById("nav-mypage");
+    if (navMypage) navMypage.style.display = "none";
+
+    const auth = document.getElementById("auth-screen");
+    if (auth) {
+      auth.classList.add("hidden");
+      auth.style.display = "none";
+    }
+
+    window.__PNX_STEP125_LAST_ADMIN_APPLY__ = {
+      reason: reason || "unknown",
+      at: new Date().toISOString(),
+      email: emailOf(user)
+    };
+
+    return true;
+  }
+
+  function patchIsAdminEmail(){
+    if (window.__PNX_STEP125_IS_ADMIN_EMAIL_PATCHED__) return;
+
+    let original = null;
+    try {
+      if (typeof _isAdminEmail === "function") original = _isAdminEmail;
+    } catch(e) {}
+
+    try {
+      _isAdminEmail = function(email){
+        const e = String(email || "").toLowerCase().trim();
+        if (e && KNOWN_ADMIN_EMAILS.has(e)) return true;
+        if (readAdminMemory()) return true;
+        return original ? !!original(email) : false;
+      };
+      window._isAdminEmail = _isAdminEmail;
+      window.__PNX_STEP125_IS_ADMIN_EMAIL_PATCHED__ = true;
+    } catch(e) {
+      try {
+        window._isAdminEmail = function(email){
+          const e = String(email || "").toLowerCase().trim();
+          if (e && KNOWN_ADMIN_EMAILS.has(e)) return true;
+          if (readAdminMemory()) return true;
+          return original ? !!original(email) : false;
+        };
+        window.__PNX_STEP125_IS_ADMIN_EMAIL_PATCHED__ = true;
+      } catch(err) {}
+    }
+  }
+
+  function patchAuthFunctions(){
+    if (window.__PNX_STEP125_AUTH_PATCHED__) return;
+    if (typeof window._showApp !== "function" && typeof window._showAuthScreen !== "function") return;
+
+    window.__PNX_STEP125_AUTH_PATCHED__ = true;
+
+    const originalShowApp = window._showApp;
+    if (typeof originalShowApp === "function") {
+      const wrappedShowApp = function(user){
+        patchIsAdminEmail();
+
+        const admin = isCanonicalAdmin(user);
+        if (admin) applyAdminUI(user, "before_original_showApp");
+
+        const result = originalShowApp.apply(this, arguments);
+
+        if (admin || isCanonicalAdmin(user)) {
+          applyAdminUI(user, "after_original_showApp");
+        }
+
+        return result;
+      };
+      wrappedShowApp.__pnxStep125Wrapped = true;
+      window._showApp = wrappedShowApp;
+      try { _showApp = wrappedShowApp; } catch(e) {}
+    }
+
+    const originalShowAuth = window._showAuthScreen;
+    if (typeof originalShowAuth === "function") {
+      const wrappedShowAuth = function(){
+        if (isCanonicalAdmin(window._currentUser || null) || document.body.classList.contains("is-admin")) {
+          applyAdminUI(window._currentUser || null, "showAuth_suppressed");
+          return false;
+        }
+        return originalShowAuth.apply(this, arguments);
+      };
+      wrappedShowAuth.__pnxStep125Wrapped = true;
+      window._showAuthScreen = wrappedShowAuth;
+      try { _showAuthScreen = wrappedShowAuth; } catch(e) {}
+    }
+  }
+
+  function patchAdminRemoval(){
+    if (window.__PNX_STEP125_ADMIN_REMOVAL_PATCHED__) return;
+    window.__PNX_STEP125_ADMIN_REMOVAL_PATCHED__ = true;
+
+    const remove = DOMTokenList.prototype.remove;
+    DOMTokenList.prototype.remove = function(){
+      try {
+        const args = Array.from(arguments);
+        if (this === document.body.classList && args.includes("is-admin") && readAdminMemory()) {
+          // 元の_showAppが一般判定で一瞬is-adminを外すのを防ぐ。
+          return;
+        }
+      } catch(e) {}
+      return remove.apply(this, arguments);
+    };
+  }
+
+  function install(){
+    patchIsAdminEmail();
+    patchAdminRemoval();
+    patchAuthFunctions();
+
+    if (readAdminMemory() || document.body.classList.contains("is-admin") || isCanonicalAdmin(window._currentUser || null)) {
+      applyAdminUI(window._currentUser || null, "install");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", install);
+
+  // Auth functions are defined before DOMContentLoaded, but run this immediately too.
+  install();
+  setTimeout(install, 50);
+  setTimeout(install, 300);
+  setTimeout(install, 1000);
+
+  window.PNXStep125AdminCanonicalStatus = function(){
+    return {
+      canonicalAdmin: isCanonicalAdmin(window._currentUser || null),
+      bodyIsAdmin: document.body.classList.contains("is-admin"),
+      htmlPreboot: document.documentElement.classList.contains("pnx-admin-preboot"),
+      adminMemory: readAdminMemory(),
+      currentEmail: emailOf(window._currentUser || null),
+      lastApply: window.__PNX_STEP125_LAST_ADMIN_APPLY__ || null,
+      isAdminEmailPatched: !!window.__PNX_STEP125_IS_ADMIN_EMAIL_PATCHED__,
+      authPatched: !!window.__PNX_STEP125_AUTH_PATCHED__
+    };
+  };
+})();
+</script>
+
+
+<script id="pnx-step132-calendar-title-cleanup">
+(function(){
+  if (window.__PNX_STEP132_CALENDAR_TITLE_CLEANUP__) return;
+  window.__PNX_STEP132_CALENDAR_TITLE_CLEANUP__ = true;
+
+  function normalizeDigits(str){
+    return String(str || "").replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+  }
+
+  window.PNXStep132CleanCalendarTitle = function(title){
+    let s = String(title == null ? "" : title).trim();
+    if (!s) return s;
+
+    // 全角数字も判定できるようにしつつ、最終表示は元の文字をベースに処理する。
+    const normalized = normalizeDigits(s);
+
+    // 例:
+    // 2026年第5回ナガタカップ
+    // 2026年第５回ナガタカップ
+    // 2026年 第5回 ナガタカップ
+    // 2026 第5回 ナガタカップ
+    const prefixPattern = /^(?:20\d{2})\s*年?\s*第\s*[0-9一二三四五六七八九十百]+回\s*/;
+    if (prefixPattern.test(normalized)) {
+      // normalizedでの長さと元文字列の長さは全角数字→半角数字以外ほぼ同じなので、
+      // 元文字列にも同等パターンを直接適用する。
+      s = s.replace(/^(?:20\d{2})\s*年?\s*第\s*[0-9０-９一二三四五六七八九十百]+回\s*/, "");
+    }
+
+    // 念のため、先頭に残った区切りだけ除去
+    s = s.replace(/^[\s\-–—・:：]+/, "").trim();
+
+    return s || String(title || "").trim();
+  };
+
+  window.PNXStep132CalendarTitleStatus = function(sample){
+    const input = sample || "2026年第５回ナガタカップ";
+    return {
+      step: 132,
+      input,
+      output: window.PNXStep132CleanCalendarTitle(input),
+      note: "試合検索カードの表示名は変更せず、カレンダー予定名だけ短縮します。"
+    };
+  };
+})();
+</script>
+
+<script id="pnx-step131-dual-category-calendar-support">
+(function(){
+  if (window.__PNX_STEP131_DUAL_CATEGORY_CALENDAR_SUPPORT__) return;
+  window.__PNX_STEP131_DUAL_CATEGORY_CALENDAR_SUPPORT__ = true;
+
+  function text(v){ return String(v == null ? "" : v).trim(); }
+  function pad(n){ return String(n).padStart(2, "0"); }
+
+  const CATEGORY_ALIASES = {
+    mini: ["mini", "ミニツアー", "ミニ", "FJ TOUR", "FJ-TOUR", "Future Tour", "ATP", "P&A", "DOUCUS", "カートルズ", "The Golf Memo", "スピーダー"],
+    open: ["open", "オープン大会", "オープン", "県オープン", "地方オープン", "チャレンジ", "カップ"],
+    jgto: ["jgto", "JGTO", "国内男子", "日本男子"],
+    jlpga: ["jlpga", "JLPGA", "国内女子", "日本女子", "ステップ・アップ", "ステップアップ"],
+    pga: ["pga", "PGA", "PGA TOUR", "Korn Ferry", "DP World", "Asian Tour", "LIV", "海外", "米国", "欧州", "アジアン"],
+    qualifier: ["qualifier", "QT", "予選会", "予選", "qualifier", "qualification"],
+    personal: ["personal", "個人", "予定", "その他"]
+  };
+
+  window.PNXStep131CategoryAliases = CATEGORY_ALIASES;
+
+  window.PNXStep131CategoryKey = function(value){
+    const s = text(value).toLowerCase();
+    if (!s) return "personal";
+
+    for (const [key, list] of Object.entries(CATEGORY_ALIASES)) {
+      if (list.some(label => {
+        const target = String(label).toLowerCase();
+        return s === target || s.includes(target);
+      })) {
+        return key;
+      }
+    }
+
+    return "personal";
+  };
+
+  window.PNXStep131CategoryVariants = function(value){
+    const raw = text(value);
+    const key = window.PNXStep131CategoryKey(raw);
+    const set = new Set([raw, key].filter(Boolean));
+
+    (CATEGORY_ALIASES[key] || []).forEach(v => set.add(v));
+    return Array.from(set).filter(Boolean);
+  };
+
+  window.PNXStep131CategoriesMatch = function(a, b){
+    const ka = window.PNXStep131CategoryKey(a);
+    const kb = window.PNXStep131CategoryKey(b);
+    if (ka === kb) return true;
+
+    const sa = text(a).toLowerCase();
+    const sb = text(b).toLowerCase();
+    return !!sa && !!sb && sa === sb;
+  };
+
+  window.PNXStep131IsCategoryEnabled = function(value){
+    const variants = window.PNXStep131CategoryVariants(value).map(v => String(v).toLowerCase());
+    try {
+      if (Array.isArray(userEnabledCategories)) {
+        return userEnabledCategories.some(v => variants.includes(String(v).toLowerCase()));
+      }
+    } catch(e) {}
+    return true;
+  };
+
+  window.PNXStep131EnsureCalendarCategory = function(value){
+    const raw = text(value);
+    const key = window.PNXStep131CategoryKey(raw);
+    const variantsToEnable = [raw, key].filter(Boolean);
+
+    try {
+      if (Array.isArray(userEnabledCategories)) {
+        variantsToEnable.forEach(v => {
+          if (!userEnabledCategories.some(x => String(x).toLowerCase() === String(v).toLowerCase())) {
+            userEnabledCategories.push(v);
+          }
+        });
+        if (typeof saveEnabledCategories === "function") saveEnabledCategories();
+      }
+    } catch(e) {}
+
+    return key;
+  };
+
+  window.PNXStep131FocusAddedDate = function(dateText){
+    const ds = text(dateText);
+    const m = ds.match(/^(20\d{2})-(\d{2})-(\d{2})$/);
+    if (!m) return false;
+
+    try {
+      year = Number(m[1]);
+      month = Number(m[2]) - 1;
+      selectedDate = ds;
+      newlyAddedDate = ds;
+      if (typeof updateMonthLabel === "function") updateMonthLabel();
+      return true;
+    } catch(e) {
+      return false;
+    }
+  };
+
+  window.PNXStep131NormalizeCalendarEvent = function(raw){
+    raw = raw || {};
+    const name = text(raw.name || raw.title || raw.tournamentTitle) || "大会予定";
+    const date = text(raw.date || raw.startDate || raw.start) || "";
+    const end = text(raw.end || raw.endDate || raw.startDate || raw.start || raw.date) || date;
+    const tournamentId = text(raw._tournamentId || raw.tournamentId || raw.id) ||
+      ("tour_" + name.replace(/\s+/g, "_").replace(/[^\w一-龠ぁ-んァ-ヶー]/g, "").slice(0, 40) + "_" + date.replace(/-/g, ""));
+
+    const rawCategory = text(raw.rawCategory || raw.displayCategory || raw.originalCategory || raw.category || raw.cat) || "その他";
+    const calendarCat = window.PNXStep131CategoryKey(rawCategory);
+    const venue = text(raw.place || raw.venue || raw.course || raw.location);
+
+    return Object.assign({}, raw, {
+      id: Number(raw.id) || Date.now() + Math.floor(Math.random() * 1000),
+      name,
+      title: name,
+      calendarTitle: name,
+      originalTitle: (typeof originalName !== "undefined" ? originalName : (typeof window.PNXStep137bSafeOriginalName === "function" ? window.PNXStep137bSafeOriginalName(raw, name) : ((raw && (raw.originalTitle || raw.tournamentTitle || raw.title || raw.name)) || name || "大会予定"))),
+      tournamentTitle: (typeof originalName !== "undefined" ? originalName : (typeof window.PNXStep137bSafeOriginalName === "function" ? window.PNXStep137bSafeOriginalName(raw, name) : ((raw && (raw.originalTitle || raw.tournamentTitle || raw.title || raw.name)) || name || "大会予定"))),
+      date,
+      startDate: date,
+      end,
+      endDate: end,
+      allDay: raw.allDay !== false,
+      place: venue,
+      venue,
+      course: venue,
+
+      // 表示用カテゴリは日本語ラベルを維持
+      cat: rawCategory,
+      category: rawCategory,
+      rawCategory,
+      displayCategory: rawCategory,
+
+      // カレンダー内部判定用だけ別キーで保持
+      calendarCat,
+      categoryKey: calendarCat,
+
+      _fromDB: false,
+      _tournamentId: tournamentId,
+      tournamentId,
+      source: raw.source || "search-cms-calendar",
+      entryStatus: raw.entryStatus || "open"
+    });
+  };
+
+  window.PNXStep131MergeForcedCalendarEvents = function(){
+    let added = 0;
+
+    try {
+      const list = JSON.parse(localStorage.getItem("PNX_FORCE_CALENDAR_EVENTS") || "[]");
+      if (!Array.isArray(list)) return { ok:false, added:0, reason:"not-array" };
+      if (typeof EVENTS === "undefined" || !Array.isArray(EVENTS)) return { ok:false, added:0, reason:"EVENTS-missing" };
+
+      list.forEach(item => {
+        const ev = window.PNXStep131NormalizeCalendarEvent(item);
+        if (!ev.date) return;
+
+        window.PNXStep131EnsureCalendarCategory(ev.rawCategory || ev.category || ev.cat);
+
+        const idx = EVENTS.findIndex(e =>
+          e.id === ev.id ||
+          e._tournamentId === ev._tournamentId ||
+          e.tournamentId === ev.tournamentId ||
+          (e.name === ev.name && e.date === ev.date)
+        );
+
+        if (idx >= 0) {
+          EVENTS[idx] = Object.assign({}, EVENTS[idx], ev);
+        } else {
+          EVENTS.push(ev);
+          added++;
+        }
+      });
+
+      return { ok:true, added, total:EVENTS.length };
+    } catch(e) {
+      return { ok:false, added, error:e.message || String(e) };
+    }
+  };
+
+  window.PNXStep131CalendarAddStatus = function(){
+    let force = [];
+    try { force = JSON.parse(localStorage.getItem("PNX_FORCE_CALENDAR_EVENTS") || "[]"); } catch(e) {}
+
+    return {
+      step: 131,
+      forceCount: Array.isArray(force) ? force.length : 0,
+      eventsCount: (typeof EVENTS !== "undefined" && Array.isArray(EVENTS)) ? EVENTS.length : null,
+      enabledCategories: (typeof userEnabledCategories !== "undefined" && Array.isArray(userEnabledCategories)) ? userEnabledCategories.slice() : null,
+      aliases: CATEGORY_ALIASES,
+      lastSilentEvent: window.__PNX_STEP116_LAST_SILENT_EVENT__ || null,
+      currentMonth: (typeof year !== "undefined" && typeof month !== "undefined") ? `${year}-${pad(month + 1)}` : null,
+      selectedDate: (typeof selectedDate !== "undefined") ? selectedDate : null
+    };
+  };
+
+  // STEP130互換エイリアス。既存の追加処理から呼ばれても表示名を変換しない。
+  window.PNXStep130NormalizeCalendarCategory = window.PNXStep131CategoryKey;
+  window.PNXStep130EnsureCalendarCategory = window.PNXStep131EnsureCalendarCategory;
+  window.PNXStep130FocusAddedDate = window.PNXStep131FocusAddedDate;
+  window.PNXStep130NormalizeCalendarEvent = window.PNXStep131NormalizeCalendarEvent;
+  window.PNXStep130MergeForcedCalendarEvents = window.PNXStep131MergeForcedCalendarEvents;
+  window.PNXStep130CalendarAddStatus = window.PNXStep131CalendarAddStatus;
+
+  document.addEventListener("DOMContentLoaded", function(){
+    try { window.PNXStep131MergeForcedCalendarEvents(); } catch(e) {}
+  });
+})();
+</script>
+
+
+<script id="pnx-step133-calendar-add-cancel-toggle">
+(function(){
+  if (window.__PNX_STEP133_CALENDAR_ADD_CANCEL_TOGGLE__) return;
+  window.__PNX_STEP133_CALENDAR_ADD_CANCEL_TOGGLE__ = true;
+
+  function text(v){ return String(v == null ? "" : v).trim(); }
+
+  function readJson(key, fallback){
+    try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+    catch(e){ return fallback; }
+  }
+
+  function writeJson(key, value){
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
+  }
+
+  function sameTournament(a, b){
+    if (!a || !b) return false;
+
+    const aId = text(a._tournamentId || a.tournamentId || a.id);
+    const bId = text(b._tournamentId || b.tournamentId || b.id);
+    if (aId && bId && aId === bId) return true;
+
+    const aName = text(a.originalTitle || a.tournamentTitle || a.name || a.title);
+    const bName = text(b.originalTitle || b.tournamentTitle || b.name || b.title);
+    const aCalendar = text(a.calendarTitle || a.name || a.title);
+    const bCalendar = text(b.calendarTitle || b.name || b.title);
+    const aDate = text(a.date || a.startDate || a.start);
+    const bDate = text(b.date || b.startDate || b.start);
+
+    if (aDate && bDate && aDate === bDate) {
+      if (aName && bName && aName === bName) return true;
+      if (aCalendar && bCalendar && aCalendar === bCalendar) return true;
+    }
+
+    return false;
+  }
+
+  window.PNXStep133RemoveForcedCalendarEvent = function(eventLike){
+    const list = readJson("PNX_FORCE_CALENDAR_EVENTS", []);
+    if (!Array.isArray(list)) return { ok:false, removed:0 };
+
+    const next = list.filter(item => !sameTournament(item, eventLike));
+    const removed = list.length - next.length;
+    writeJson("PNX_FORCE_CALENDAR_EVENTS", next);
+
+    return { ok:true, removed, remaining:next.length };
+  };
+
+  window.PNXStep133IsTournamentInCalendar = function(eventLike){
+    try {
+      const ev = typeof window.PNXStep131NormalizeCalendarEvent === "function"
+        ? window.PNXStep131NormalizeCalendarEvent(eventLike)
+        : eventLike;
+
+      if (typeof EVENTS !== "undefined" && Array.isArray(EVENTS)) {
+        if (EVENTS.some(item => sameTournament(item, ev))) return true;
+      }
+
+      const forced = readJson("PNX_FORCE_CALENDAR_EVENTS", []);
+      return Array.isArray(forced) && forced.some(item => sameTournament(item, ev));
+    } catch(e) {
+      return false;
+    }
+  };
+
+  window.PNXStep133CalendarToggleStatus = function(){
+    let forced = [];
+    try { forced = JSON.parse(localStorage.getItem("PNX_FORCE_CALENDAR_EVENTS") || "[]"); } catch(e) {}
+
+    return {
+      step:133,
+      forcedCount:Array.isArray(forced) ? forced.length : 0,
+      eventsCount:(typeof EVENTS !== "undefined" && Array.isArray(EVENTS)) ? EVENTS.length : null,
+      lastToggle:window.__PNX_STEP133_LAST_CALENDAR_TOGGLE__ || null,
+      lastSilent:window.__PNX_STEP116_LAST_SILENT_EVENT__ || null,
+      note:"同じ大会をもう一度押すとカレンダーから取り消します。"
+    };
+  };
+})();
+</script>
+
+
+<script id="pnx-step136-calendar-cancel-send-fix-root">
+(function(){
+  if (window.__PNX_STEP136_CALENDAR_CANCEL_SEND_FIX_ROOT__) return;
+  window.__PNX_STEP136_CALENDAR_CANCEL_SEND_FIX_ROOT__ = true;
+
+  window.PNXStep136RootCalendarToggleStatus = function(){
+    let forced = [];
+    try { forced = JSON.parse(localStorage.getItem("PNX_FORCE_CALENDAR_EVENTS") || "[]"); } catch(e) {}
+
+    return {
+      step:136,
+      rootReady:true,
+      forcedCount:Array.isArray(forced) ? forced.length : 0,
+      eventsCount:(typeof EVENTS !== "undefined" && Array.isArray(EVENTS)) ? EVENTS.length : null,
+      lastToggle:window.__PNX_STEP133_LAST_CALENDAR_TOGGLE__ || null,
+      note:"検索側からSTEP136トグル命令を受け、追加済みなら削除します。"
+    };
+  };
+})();
+</script>
+
+
+<script id="pnx-step137-calendar-state-full-sync-root">
+(function(){
+  if (window.__PNX_STEP137_CALENDAR_STATE_FULL_SYNC_ROOT__) return;
+  window.__PNX_STEP137_CALENDAR_STATE_FULL_SYNC_ROOT__ = true;
+
+  const FORCE_KEY = "PNX_FORCE_CALENDAR_EVENTS";
+  const SYNC_KEY = "PNX_CALENDAR_ADDED_STATE_STEP137";
+
+  function text(v){ return String(v == null ? "" : v).trim(); }
+
+  function readJson(key, fallback){
+    try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+    catch(e){ return fallback; }
+  }
+
+  function writeJson(key, value){
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
+  }
+
+  function stableId(ev){
+    return text(ev && (ev._tournamentId || ev.tournamentId || ev.tournamentID || ev.sourceTournamentId || ev.id));
+  }
+
+  function eventTitle(ev){
+    return text(ev && (ev.originalTitle || ev.tournamentTitle || ev.title || ev.name));
+  }
+
+  function eventDate(ev){
+    return text(ev && (ev.date || ev.startDate || ev.start));
+  }
+
+  function cleanKeyPart(v){
+    return text(v).toLowerCase().replace(/\s+/g, "").replace(/[‐‑‒–—ー－\-・･.。]/g, "");
+  }
+
+  function eventKey(ev){
+    const id = stableId(ev);
+    if (id) return "id:" + id;
+
+    const title = cleanKeyPart(eventTitle(ev));
+    const date = eventDate(ev);
+    if (title && date) return "td:" + title + "@" + date;
+
+    return "";
+  }
+
+  function sameEvent(a, b){
+    if (!a || !b) return false;
+
+    const aId = stableId(a);
+    const bId = stableId(b);
+    if (aId && bId && aId === bId) return true;
+
+    const aTitle = cleanKeyPart(eventTitle(a));
+    const bTitle = cleanKeyPart(eventTitle(b));
+    const aDate = eventDate(a);
+    const bDate = eventDate(b);
+
+    return !!(aTitle && bTitle && aTitle === bTitle && aDate && bDate && aDate === bDate);
+  }
+
+  function normalizeEventForSync(ev){
+    const id = stableId(ev);
+    const title = eventTitle(ev);
+    const date = eventDate(ev);
+    const key = eventKey(ev);
+
+    return {
+      id,
+      tournamentId: text(ev && (ev.tournamentId || ev._tournamentId || ev.id)),
+      key,
+      title,
+      name: text(ev && (ev.name || ev.title || title)),
+      originalTitle: text(ev && (ev.originalTitle || ev.tournamentTitle || title)),
+      calendarTitle: text(ev && (ev.calendarTitle || ev.name || title)),
+      date,
+      startDate: date,
+      endDate: text(ev && (ev.endDate || ev.end || date)),
+      venue: text(ev && (ev.venue || ev.course || ev.place || ev.location)),
+      category: text(ev && (ev.category || ev.cat || ev.rawCategory || ev.displayCategory)),
+      source: text(ev && ev.source)
+    };
+  }
+
+  function calendarEvents(){
+    const list = [];
+
+    try {
+      if (typeof EVENTS !== "undefined" && Array.isArray(EVENTS)) {
+        EVENTS.forEach(ev => {
+          if (!ev) return;
+          if (ev.source === "search-cms-calendar" || ev.source === "search-cms-step136" || ev._tournamentId || ev.tournamentId) {
+            list.push(ev);
+          }
+        });
+      }
+    } catch(e) {}
+
+    try {
+      const forced = readJson(FORCE_KEY, []);
+      if (Array.isArray(forced)) forced.forEach(ev => list.push(ev));
+    } catch(e) {}
+
+    // de-dupe
+    const out = [];
+    list.forEach(ev => {
+      const norm = normalizeEventForSync(ev);
+      if (!norm.key && !norm.id && !(norm.title && norm.date)) return;
+      if (!out.some(x => sameEvent(x, norm))) out.push(norm);
+    });
+
+    return out;
+  }
+
+  function buildState(reason){
+    const items = calendarEvents();
+    const ids = [];
+    const keys = [];
+
+    items.forEach(item => {
+      if (item.id) ids.push(String(item.id));
+      if (item.tournamentId) ids.push(String(item.tournamentId));
+      if (item.key) keys.push(String(item.key));
+      if (item.title && item.date) keys.push("td:" + cleanKeyPart(item.title) + "@" + item.date);
+      if (item.originalTitle && item.date) keys.push("td:" + cleanKeyPart(item.originalTitle) + "@" + item.date);
+      if (item.calendarTitle && item.date) keys.push("td:" + cleanKeyPart(item.calendarTitle) + "@" + item.date);
+    });
+
+    const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+    const uniqueKeys = Array.from(new Set(keys.filter(Boolean)));
+
+    return {
+      step: 137,
+      reason: reason || "sync",
+      updatedAt: new Date().toISOString(),
+      count: items.length,
+      ids: uniqueIds,
+      keys: uniqueKeys,
+      items
+    };
+  }
+
+  function getSearchFrame(){
+    return document.getElementById("search-module-frame");
+  }
+
+  window.PNXStep137BroadcastCalendarState = function(reason){
+    const payload = buildState(reason || "broadcast");
+    writeJson(SYNC_KEY, payload);
+
+    try {
+      const frame = getSearchFrame();
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage({
+          type: "PNX_CALENDAR_SYNC_STATE_STEP137",
+          payload
+        }, "*");
+      }
+    } catch(e) {}
+
+    try {
+      window.dispatchEvent(new CustomEvent("PNX_CALENDAR_SYNC_STATE_STEP137_LOCAL", { detail: payload }));
+    } catch(e) {}
+
+    window.__PNX_STEP137_LAST_BROADCAST__ = payload;
+    return payload;
+  };
+
+  window.PNXStep137RemoveCalendarEventLike = function(eventLike, reason){
+    const before = readJson(FORCE_KEY, []);
+    const next = Array.isArray(before) ? before.filter(item => !sameEvent(item, eventLike)) : [];
+    writeJson(FORCE_KEY, next);
+
+    return window.PNXStep137BroadcastCalendarState(reason || "remove-event-like");
+  };
+
+  function wrapDeleteFunctions(){
+    if (typeof window.deleteEvent === "function" && !window.deleteEvent.__pnxStep137Wrapped) {
+      const originalDeleteEvent = window.deleteEvent;
+      const wrappedDeleteEvent = function(id){
+        let ev = null;
+        try {
+          if (typeof EVENTS !== "undefined" && Array.isArray(EVENTS)) {
+            ev = EVENTS.find(e => e && String(e.id) === String(id)) || null;
+          }
+        } catch(e) {}
+
+        const result = originalDeleteEvent.apply(this, arguments);
+
+        try {
+          if (ev) window.PNXStep137RemoveCalendarEventLike(ev, "calendar-delete");
+          else window.PNXStep137BroadcastCalendarState("calendar-delete-unknown");
+        } catch(e) {}
+
+        return result;
+      };
+      wrappedDeleteEvent.__pnxStep137Wrapped = true;
+      window.deleteEvent = wrappedDeleteEvent;
+    }
+
+    if (typeof window.deleteEventFromModal === "function" && !window.deleteEventFromModal.__pnxStep137Wrapped) {
+      const originalDeleteEventFromModal = window.deleteEventFromModal;
+      const wrappedDeleteEventFromModal = function(id, ds){
+        let ev = null;
+        try {
+          if (typeof EVENTS !== "undefined" && Array.isArray(EVENTS)) {
+            ev = EVENTS.find(e => e && String(e.id) === String(id)) || null;
+          }
+        } catch(e) {}
+
+        const result = originalDeleteEventFromModal.apply(this, arguments);
+
+        try {
+          if (ev) window.PNXStep137RemoveCalendarEventLike(ev, "day-modal-delete");
+          else window.PNXStep137BroadcastCalendarState("day-modal-delete-unknown");
+        } catch(e) {}
+
+        return result;
+      };
+      wrappedDeleteEventFromModal.__pnxStep137Wrapped = true;
+      window.deleteEventFromModal = wrappedDeleteEventFromModal;
+    }
+  }
+
+  window.addEventListener("message", function(event){
+    const data = event.data || {};
+    if (data.type === "PNX_SEARCH_REQUEST_CALENDAR_SYNC_STEP137") {
+      window.PNXStep137BroadcastCalendarState("search-request");
+    }
+  }, true);
+
+  document.addEventListener("DOMContentLoaded", function(){
+    wrapDeleteFunctions();
+    setTimeout(wrapDeleteFunctions, 500);
+    setTimeout(function(){ window.PNXStep137BroadcastCalendarState("dom-ready"); }, 600);
+    setTimeout(function(){ window.PNXStep137BroadcastCalendarState("late-ready"); }, 1600);
+  });
+
+  window.PNXStep137RootSyncStatus = function(){
+    return {
+      step: 137,
+      current: buildState("status"),
+      lastBroadcast: window.__PNX_STEP137_LAST_BROADCAST__ || null,
+      forceCount: Array.isArray(readJson(FORCE_KEY, [])) ? readJson(FORCE_KEY, []).length : 0,
+      eventsCount: (typeof EVENTS !== "undefined" && Array.isArray(EVENTS)) ? EVENTS.length : null,
+      deleteWrapped: !!(window.deleteEvent && window.deleteEvent.__pnxStep137Wrapped),
+      modalDeleteWrapped: !!(window.deleteEventFromModal && window.deleteEventFromModal.__pnxStep137Wrapped)
+    };
+  };
+})();
+</script>
+
+
+<script id="pnx-step137b-calendar-originalname-fix">
+(function(){
+  if (window.__PNX_STEP137B_CALENDAR_ORIGINALNAME_FIX__) return;
+  window.__PNX_STEP137B_CALENDAR_ORIGINALNAME_FIX__ = true;
+
+  function text(v){ return String(v == null ? "" : v).trim(); }
+
+  window.PNXStep137bSafeOriginalName = function(raw, fallbackName){
+    return text(
+      raw && (
+        raw.originalTitle ||
+        raw.tournamentTitle ||
+        raw.title ||
+        raw.name ||
+        raw.calendarTitle
+      )
+    ) || text(fallbackName) || "大会予定";
+  };
+
+  window.PNXStep137bCalendarAddFixStatus = function(){
+    return {
+      step:"137b",
+      fixed:true,
+      note:"calendar add時の originalName 未定義参照を安全化しています。"
+    };
+  };
+})();
+</script>
+
+
+<script id="pnx-step138-finance-tournament-link-root">
+(function(){
+  if (window.__PNX_STEP138_FINANCE_TOURNAMENT_LINK_ROOT__) return;
+  window.__PNX_STEP138_FINANCE_TOURNAMENT_LINK_ROOT__ = true;
+
+  const KEYS = {
+    cmsAll: "PNX_CMS_TOURNAMENTS",
+    cmsPublic: "PNX_CMS_PUBLIC_TOURNAMENTS_FOR_SEARCH",
+    forcedCalendar: "PNX_FORCE_CALENDAR_EVENTS",
+    calendarSync: "PNX_CALENDAR_ADDED_STATE_STEP137"
+  };
+
+  function text(v){ return String(v == null ? "" : v).trim(); }
+
+  function readJson(key, fallback){
+    try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+    catch(e){ return fallback; }
+  }
+
+  function parseYen(value){
+    if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+    const s = text(value);
+    if (!s) return 0;
+
+    // 700万 / 3,000万円 / 30000円 のような表記に対応
+    const normalized = s.replace(/,/g, "").replace(/\s+/g, "");
+    const n = Number((normalized.match(/-?\d+(?:\.\d+)?/) || [0])[0]);
+    if (!Number.isFinite(n)) return 0;
+
+    if (/億/.test(normalized)) return Math.round(n * 100000000);
+    if (/万/.test(normalized)) return Math.round(n * 10000);
+    return Math.round(n);
+  }
+
+  function cleanKeyPart(v){
+    return text(v).toLowerCase().replace(/\s+/g, "").replace(/[‐‑‒–—ー－\-・･.。]/g, "");
+  }
+
+  function sourceId(t){
+    return text(t && (t.id || t.tournamentId || t._tournamentId || t.cmsId || t.uid));
+  }
+
+  function titleOf(t){
+    return text(t && (t.title || t.name || t.tournamentTitle || t.originalTitle || t.calendarTitle));
+  }
+
+  function dateOf(t){
+    return text(t && (t.startDate || t.date || t.start || t.eventDate || t開催日));
+  }
+
+  function venueOf(t){
+    return text(t && (t.venue || t.course || t.place || t.location || t.golfCourse || t会場));
+  }
+
+  function normalizeCategory(t){
+    return text(t && (t.category || t.cat || t.rawCategory || t.displayCategory || t.tourCategory)) || "その他";
+  }
+
+  function stableId(t){
+    const id = sourceId(t);
+    if (id) return id;
+
+    const title = cleanKeyPart(titleOf(t));
+    const date = dateOf(t);
+    if (title && date) return "tour_" + title.slice(0, 40) + "_" + date.replace(/-/g, "");
+    return "tour_" + Math.random().toString(16).slice(2);
+  }
+
+  function isPublicLike(t){
+    if (!t) return false;
+    if (t.published === false || t.isPublished === false || t.visible === false) return false;
+    const status = text(t.status || t.rawStatus).toLowerCase();
+    if (/draft|下書き/.test(status)) return false;
+    return true;
+  }
+
+  function normalizeTournamentForFinance(raw, source, extra){
+    raw = raw || {};
+    const title = titleOf(raw) || "大会";
+    const startDate = dateOf(raw);
+    const endDate = text(raw.endDate || raw.end || startDate) || startDate;
+    const venue = venueOf(raw);
+    const id = stableId(raw);
+    const entryFeeRaw = text(raw.entryFee || raw.fee || raw.participationFee || raw.entry || raw.参加費);
+    const prizeRaw = text(raw.prize || raw.totalPrize || raw.prizeTotal || raw.賞金総額);
+
+    return Object.assign({}, raw, {
+      id,
+      tournamentId: id,
+      title,
+      name: title,
+      startDate,
+      date: startDate,
+      endDate,
+      venue,
+      course: venue,
+      place: venue,
+      category: normalizeCategory(raw),
+      cat: normalizeCategory(raw),
+      entryFee: entryFeeRaw || text(raw.entryFeeText || ""),
+      entryFeeNumber: parseYen(entryFeeRaw || raw.entryFeeNumber || raw.entryFeeAmount),
+      totalPrize: prizeRaw || text(raw.totalPrizeText || ""),
+      totalPrizeNumber: parseYen(prizeRaw || raw.totalPrizeNumber || raw.prizeAmount),
+      organizer: text(raw.organizer || raw.host || raw.promoter),
+      source: source || raw.source || "unknown",
+      calendarAdded: !!(extra && extra.calendarAdded),
+      financeReady: true,
+      financeLabel: title + (startDate ? "（" + startDate + "）" : "")
+    });
+  }
+
+  function pushNormalized(list, raw, source, extra){
+    if (!raw) return;
+    const title = titleOf(raw);
+    const date = dateOf(raw);
+    const venue = venueOf(raw);
+
+    if (!title && !date && !venue) return;
+
+    list.push(normalizeTournamentForFinance(raw, source, extra));
+  }
+
+  function collect(){
+    const list = [];
+
+    // カレンダー追加済み・強制保存予定
+    readJson(KEYS.forcedCalendar, []).forEach(t => pushNormalized(list, t, "calendar-added", { calendarAdded:true }));
+
+    // STEP137同期状態
+    const sync = readJson(KEYS.calendarSync, null);
+    if (sync && Array.isArray(sync.items)) {
+      sync.items.forEach(t => pushNormalized(list, t, "calendar-sync", { calendarAdded:true }));
+    }
+
+    // 本体EVENTSから大会系だけ
+    try {
+      if (Array.isArray(window.EVENTS)) {
+        window.EVENTS.forEach(ev => {
+          if (!ev) return;
+          if (ev.tournamentId || ev._tournamentId || ev.source === "search-cms-calendar" || ev.source === "search-cms-step136" || ev.source === "tournament") {
+            pushNormalized(list, ev, "calendar-events", { calendarAdded:true });
+          }
+        });
+      }
+    } catch(e) {}
+
+    // CMS公開大会
+    readJson(KEYS.cmsPublic, []).forEach(t => {
+      if (isPublicLike(t)) pushNormalized(list, t, "cms-public", { calendarAdded:false });
+    });
+
+    // CMS全大会から公開可能なものだけ補助的に追加
+    readJson(KEYS.cmsAll, []).forEach(t => {
+      if (isPublicLike(t)) pushNormalized(list, t, "cms", { calendarAdded:false });
+    });
+
+    // 重複排除。カレンダー追加済みを優先。
+    const map = new Map();
+    list.forEach(t => {
+      const idKey = t.tournamentId || t.id;
+      const titleDateKey = "td:" + cleanKeyPart(t.title) + "@" + (t.startDate || "");
+      const key = idKey || titleDateKey;
+
+      if (!key) return;
+
+      if (!map.has(key)) {
+        map.set(key, t);
+        return;
+      }
+
+      const prev = map.get(key);
+      map.set(key, Object.assign({}, prev, t, {
+        calendarAdded: !!(prev.calendarAdded || t.calendarAdded),
+        source: prev.source === t.source ? prev.source : [prev.source, t.source].filter(Boolean).join("+")
+      }));
+    });
+
+    return Array.from(map.values()).sort((a,b) => {
+      if (a.calendarAdded !== b.calendarAdded) return a.calendarAdded ? -1 : 1;
+      return String(a.startDate || "9999-99-99").localeCompare(String(b.startDate || "9999-99-99"));
+    });
+  }
+
+  function getFinanceFrame(){
+    return document.getElementById("finance-module-frame");
+  }
+
+  window.PNXStep138CollectFinanceTournaments = collect;
+
+  // 既存APIを上書きして、収支側はこの正規化データを受け取る。
+  window.PNXGetTournamentsForFinance = function(){
+    return collect();
+  };
+
+  window.PNXStep138NotifyFinanceTournamentUpdate = function(force){
+    const frame = getFinanceFrame();
+    if (!frame || !frame.contentWindow) return false;
+
+    const payload = collect();
+    try {
+      frame.contentWindow.postMessage({
+        type:"PNX_TOURNAMENTS_FOR_FINANCE_UPDATED",
+        payload,
+        source:"step138-finance-link",
+        force:!!force,
+        meta:{
+          step:138,
+          count:payload.length,
+          calendarAddedCount:payload.filter(t => t.calendarAdded).length,
+          sentAt:new Date().toISOString()
+        }
+      }, "*");
+      window.__PNX_STEP138_LAST_FINANCE_NOTIFY__ = {
+        at:new Date().toISOString(),
+        count:payload.length,
+        calendarAddedCount:payload.filter(t => t.calendarAdded).length
+      };
+      return true;
+    } catch(e) {
+      return false;
+    }
+  };
+
+  const previousNotify = window.PNXNotifyFinanceTournamentUpdate;
+  window.PNXNotifyFinanceTournamentUpdate = function(force){
+    const ok = window.PNXStep138NotifyFinanceTournamentUpdate(!!force);
+    if (ok) return true;
+    try {
+      return typeof previousNotify === "function" ? previousNotify.apply(this, arguments) : false;
+    } catch(e) {
+      return false;
+    }
+  };
+
+  window.addEventListener("message", function(event){
+    const data = event.data || {};
+    if (data.type === "PNX_REQUEST_TOURNAMENTS_FOR_FINANCE") {
+      window.PNXStep138NotifyFinanceTournamentUpdate(true);
+    }
+  }, true);
+
+  window.addEventListener("storage", function(e){
+    if ([KEYS.cmsAll, KEYS.cmsPublic, KEYS.forcedCalendar, KEYS.calendarSync].includes(e.key)) {
+      setTimeout(function(){ window.PNXStep138NotifyFinanceTournamentUpdate(false); }, 120);
+    }
+  });
+
+  window.addEventListener("PNX_CALENDAR_SYNC_STATE_STEP137_LOCAL", function(){
+    setTimeout(function(){ window.PNXStep138NotifyFinanceTournamentUpdate(false); }, 120);
+  });
+
+  document.addEventListener("DOMContentLoaded", function(){
+    setTimeout(function(){ window.PNXStep138NotifyFinanceTournamentUpdate(false); }, 1200);
+  });
+
+  window.PNXStep138FinanceLinkStatus = function(){
+    const payload = collect();
+    return {
+      step:138,
+      count:payload.length,
+      calendarAddedCount:payload.filter(t => t.calendarAdded).length,
+      lastNotify:window.__PNX_STEP138_LAST_FINANCE_NOTIFY__ || null,
+      sample:payload.slice(0, 10).map(t => ({
+        id:t.id,
+        title:t.title,
+        date:t.startDate,
+        venue:t.venue,
+        entryFee:t.entryFee,
+        entryFeeNumber:t.entryFeeNumber,
+        calendarAdded:t.calendarAdded,
+        source:t.source
+      }))
+    };
+  };
+})();
+</script>
+
+
+<script id="pnx-step138h-finance-transaction-edit-root">
+(function(){
+  if (window.__PNX_STEP138H_FINANCE_TRANSACTION_EDIT_ROOT__) return;
+  window.__PNX_STEP138H_FINANCE_TRANSACTION_EDIT_ROOT__ = true;
+
+  const TX_KEY = "PNX_FINANCE_TRANSACTIONS";
+
+  function read(key, fallback){
+    try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+    catch(e){ return fallback; }
+  }
+
+  function write(key, value){
+    localStorage.setItem(key, JSON.stringify(value));
+    return value;
+  }
+
+  function notifyFinance(type, payload){
+    try {
+      const f = document.getElementById("finance-module-frame");
+      if (f && f.contentWindow) {
+        f.contentWindow.postMessage({ type, payload, source:"step138h-root" }, "*");
+      }
+    } catch(e) {}
+  }
+
+  window.PNXStep138hUpdateFinanceTransaction = function(input){
+    const txs = read(TX_KEY, []);
+    const id = input && input.id;
+    if (!id) return null;
+
+    let updated = null;
+    const next = txs.map(tx => {
+      if (String(tx.id) !== String(id)) return tx;
+      updated = Object.assign({}, tx, input, {
+        id: tx.id,
+        updatedAt: new Date().toISOString()
+      });
+      return updated;
+    });
+
+    if (!updated) return null;
+
+    write(TX_KEY, next);
+    try {
+      window.dispatchEvent(new CustomEvent("pnx:finance:transactions-updated", {
+        detail:{ transactions:next, item:updated, action:"updated" }
+      }));
+    } catch(e) {}
+
+    notifyFinance("PNX_FINANCE_TRANSACTION_UPDATED", updated);
+    return updated;
+  };
+
+  window.PNXStep138hDeleteFinanceTransaction = function(id){
+    const txs = read(TX_KEY, []);
+    const target = txs.find(tx => String(tx.id) === String(id)) || null;
+    const next = txs.filter(tx => String(tx.id) !== String(id));
+    write(TX_KEY, next);
+
+    try {
+      window.dispatchEvent(new CustomEvent("pnx:finance:transactions-updated", {
+        detail:{ transactions:next, item:target, action:"deleted" }
+      }));
+    } catch(e) {}
+
+    notifyFinance("PNX_FINANCE_TRANSACTION_DELETED", { id, item:target });
+    return target;
+  };
+
+  window.addEventListener("message", function(event){
+    const data = event.data || {};
+    if (data.type === "PNX_UPDATE_TOURNAMENT_FINANCE_TRANSACTION") {
+      const updated = window.PNXStep138hUpdateFinanceTransaction(data.payload || {});
+      try {
+        event.source && event.source.postMessage({ type:"PNX_FINANCE_TRANSACTION_UPDATED", payload:updated }, "*");
+      } catch(e) {}
+    }
+    if (data.type === "PNX_DELETE_TOURNAMENT_FINANCE_TRANSACTION") {
+      const deleted = window.PNXStep138hDeleteFinanceTransaction(data.id || (data.payload && data.payload.id));
+      try {
+        event.source && event.source.postMessage({ type:"PNX_FINANCE_TRANSACTION_DELETED", payload:deleted }, "*");
+      } catch(e) {}
+    }
+  }, true);
+
+  window.PNXStep138hFinanceTransactionEditRootStatus = function(){
+    const txs = read(TX_KEY, []);
+    return {
+      step:"138h",
+      savedCount:Array.isArray(txs) ? txs.length : 0,
+      tournamentCount:Array.isArray(txs) ? txs.filter(tx => tx && tx.source === "tournament").length : 0,
+      sample:Array.isArray(txs) ? txs.slice(-8).map(tx => ({
+        id:tx.id,
+        title:tx.tournamentTitle,
+        amount:tx.amount,
+        date:tx.date,
+        category:tx.category,
+        source:tx.source
+      })) : []
+    };
+  };
+})();
+</script>
+
+
+<script id="pnx-step139-finance-transaction-stability-root">
+(function(){
+  if (window.__PNX_STEP139_FINANCE_TRANSACTION_STABILITY_ROOT__) return;
+  window.__PNX_STEP139_FINANCE_TRANSACTION_STABILITY_ROOT__ = true;
+
+  const TX_KEY = "PNX_FINANCE_TRANSACTIONS";
+
+  function read(key, fallback){
+    try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+    catch(e){ return fallback; }
+  }
+
+  function write(key, value){
+    localStorage.setItem(key, JSON.stringify(value));
+    return value;
+  }
+
+  function notifyFinance(type, payload){
+    try {
+      const f = document.getElementById("finance-module-frame");
+      if (f && f.contentWindow) {
+        f.contentWindow.postMessage({ type, payload, source:"step139-root" }, "*");
+      }
+    } catch(e) {}
+  }
+
+  window.PNXStep139UpsertFinanceTransaction = function(input){
+    const txs = read(TX_KEY, []);
+    const incoming = Object.assign({}, input || {});
+    const id = incoming.id || ("tx_" + Date.now() + "_" + Math.random().toString(16).slice(2,7));
+    const now = new Date().toISOString();
+
+    const normalized = Object.assign({
+      id,
+      type:"expense",
+      category:"その他",
+      amount:0,
+      date:new Date().toISOString().slice(0,10),
+      memo:"",
+      source:"manual",
+      createdAt:now,
+      updatedAt:now
+    }, incoming, {
+      id,
+      amount:Number(incoming.amount || 0),
+      updatedAt:now
+    });
+
+    const idx = txs.findIndex(tx => String(tx.id) === String(id));
+    if (idx >= 0) {
+      normalized.createdAt = txs[idx].createdAt || normalized.createdAt;
+      txs[idx] = Object.assign({}, txs[idx], normalized);
+    } else {
+      txs.push(normalized);
+    }
+
+    write(TX_KEY, txs);
+
+    try {
+      window.dispatchEvent(new CustomEvent("pnx:finance:transactions-updated", {
+        detail:{ transactions:txs, item:normalized, action:idx >= 0 ? "updated" : "created" }
+      }));
+    } catch(e) {}
+
+    notifyFinance(idx >= 0 ? "PNX_FINANCE_TRANSACTION_UPDATED" : "PNX_FINANCE_TRANSACTION_CREATED", normalized);
+    return normalized;
+  };
+
+  window.PNXStep139DeleteFinanceTransaction = function(id){
+    const txs = read(TX_KEY, []);
+    const target = txs.find(tx => String(tx.id) === String(id)) || null;
+    const next = txs.filter(tx => String(tx.id) !== String(id));
+    write(TX_KEY, next);
+
+    try {
+      window.dispatchEvent(new CustomEvent("pnx:finance:transactions-updated", {
+        detail:{ transactions:next, item:target, action:"deleted" }
+      }));
+    } catch(e) {}
+
+    notifyFinance("PNX_FINANCE_TRANSACTION_DELETED", { id, item:target });
+    return target;
+  };
+
+  window.addEventListener("message", function(event){
+    const data = event.data || {};
+    if (data.type === "PNX_UPSERT_FINANCE_TRANSACTION_STEP139") {
+      const saved = window.PNXStep139UpsertFinanceTransaction(data.payload || {});
+      try { event.source && event.source.postMessage({ type:"PNX_FINANCE_TRANSACTION_UPSERTED_STEP139", payload:saved }, "*"); } catch(e) {}
+    }
+    if (data.type === "PNX_DELETE_FINANCE_TRANSACTION_STEP139") {
+      const deleted = window.PNXStep139DeleteFinanceTransaction(data.id || (data.payload && data.payload.id));
+      try { event.source && event.source.postMessage({ type:"PNX_FINANCE_TRANSACTION_DELETED", payload:deleted }, "*"); } catch(e) {}
+    }
+  }, true);
+
+  window.PNXStep139FinanceTransactionStabilityRootStatus = function(){
+    const txs = read(TX_KEY, []);
+    return {
+      step:139,
+      savedCount:Array.isArray(txs) ? txs.length : 0,
+      manualCount:Array.isArray(txs) ? txs.filter(tx => tx && tx.source === "manual").length : 0,
+      tournamentCount:Array.isArray(txs) ? txs.filter(tx => tx && tx.source === "tournament").length : 0,
+      sample:Array.isArray(txs) ? txs.slice(-10).map(tx => ({
+        id:tx.id,
+        type:tx.type,
+        category:tx.category,
+        amount:tx.amount,
+        date:tx.date,
+        source:tx.source,
+        tournamentTitle:tx.tournamentTitle
+      })) : []
+    };
+  };
+})();
+</script>
 
 </body>
 </html>
