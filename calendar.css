@@ -1,0 +1,956 @@
+/* =========================================================
+   ProNexaX Calendar v2 Precision
+   - Apple Calendar-like lightness
+   - Scoped under .pnx-calendar-v2
+   - Safe for later integration into existing ProNexaX body
+   ========================================================= */
+
+.pnx-calendar-v2 {
+  --pnx-blue: #0a74ff;
+  --pnx-blue-2: #1366e8;
+  --pnx-navy: #071a4a;
+  --pnx-text: #0f172a;
+  --pnx-subtext: #475569;
+  --pnx-muted: #94a3b8;
+  --pnx-faint: #cbd5e1;
+  --pnx-line: #e2e8f0;
+  --pnx-line-soft: #edf1f6;
+  --pnx-sheet-line: #eef2f7;
+  --pnx-cell-selected: #edf5ff;
+  --pnx-red: #ff3b30;
+  --pnx-green: #34c759;
+  --pnx-purple: #9c42d2;
+  --pnx-orange: #ff8a00;
+
+  width: 100%;
+  max-width: 430px;
+  min-height: 100dvh;
+  height: auto;
+  margin: 0 auto;
+  background: #fff;
+  color: var(--pnx-text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 400;
+  letter-spacing: -0.012em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+  overflow-x: hidden;
+  overflow-y: visible;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+  box-sizing: border-box;
+}
+
+.pnx-calendar-v2 *,
+.pnx-calendar-v2 *::before,
+.pnx-calendar-v2 *::after { box-sizing: border-box; }
+
+.pnx-calendar-v2 button {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- Top header ---------- */
+.pnx-calendar-v2 .pnx-cal-header {
+  height: 53px;
+  padding: 10px 13px 8px 13px;
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,.98);
+  border-bottom: 1px solid rgba(15, 23, 42, .075);
+}
+
+.pnx-calendar-v2 .pnx-cal-header-btn {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 11px;
+}
+
+.pnx-calendar-v2 .pnx-cal-header-btn:active,
+.pnx-calendar-v2 .pnx-cal-month-nav:active,
+.pnx-calendar-v2 .pnx-cal-tool-btn:active,
+.pnx-calendar-v2 .pnx-cal-today-pill:active { background: rgba(15, 23, 42, .045); }
+
+.pnx-calendar-v2 .pnx-cal-header-btn svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: var(--pnx-text);
+  stroke-width: 1.85;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pnx-calendar-v2 .pnx-cal-menu-btn {
+  margin-right: 6px;
+}
+.pnx-calendar-v2 .pnx-cal-menu-btn svg {
+  stroke: var(--pnx-blue-2);
+  stroke-width: 2.15;
+  width: 27px;
+  height: 27px;
+}
+
+.pnx-calendar-v2 .pnx-cal-brand {
+  flex: 0 1 auto;
+  display: inline-flex;
+  align-items: baseline;
+  min-width: 0;
+  transform: skew(-7deg) translateY(-1px);
+  transform-origin: left center;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(24px, 6.1vw, 29px);
+  line-height: .92;
+  letter-spacing: -0.076em;
+  white-space: nowrap;
+  font-weight: 760;
+}
+.pnx-calendar-v2 .pnx-cal-brand-main { color: var(--pnx-navy); }
+.pnx-calendar-v2 .pnx-cal-brand-x {
+  color: #1670f5;
+  margin-left: .03em;
+  font-weight: 790;
+}
+
+.pnx-calendar-v2 .pnx-cal-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 8px;
+}
+
+.pnx-calendar-v2 .pnx-cal-actions .pnx-cal-header-btn {
+  width: 34px;
+  height: 34px;
+}
+.pnx-calendar-v2 .pnx-cal-actions .pnx-cal-header-btn svg {
+  width: 27px;
+  height: 27px;
+  stroke-width: 1.7;
+}
+
+.pnx-calendar-v2 .pnx-cal-bell-btn { position: relative; }
+.pnx-calendar-v2 .pnx-cal-bell-dot {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #0a74ff;
+  box-shadow: 0 0 0 1.7px #fff;
+}
+
+.pnx-calendar-v2 .pnx-cal-add-btn {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  margin-left: 2px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #0b77ff 0%, #075ce6 100%);
+  box-shadow: 0 3px 8px rgba(10, 116, 255, .22);
+}
+.pnx-calendar-v2 .pnx-cal-add-btn svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.0;
+  stroke-linecap: round;
+}
+.pnx-calendar-v2 .pnx-cal-add-btn:active { transform: scale(.965); }
+
+/* ---------- Month controller ---------- */
+.pnx-calendar-v2 .pnx-cal-monthbar {
+  height: 77px;
+  padding: 18px 13px 12px;
+  display: grid;
+  grid-template-columns: 38px 1fr 38px;
+  align-items: center;
+  column-gap: 8px;
+}
+
+.pnx-calendar-v2 .pnx-cal-month-nav {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #dce2eb;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 .5px 1px rgba(15, 23, 42, .03);
+}
+.pnx-calendar-v2 .pnx-cal-month-nav:first-child { justify-self: start; }
+.pnx-calendar-v2 .pnx-cal-month-nav:last-child { justify-self: end; }
+.pnx-calendar-v2 .pnx-cal-month-nav svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: var(--pnx-text);
+  stroke-width: 2.05;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pnx-calendar-v2 .pnx-cal-month-label {
+  min-width: 0;
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 10px;
+  color: #050b1f;
+  font-size: clamp(22px, 5.5vw, 26px);
+  line-height: 1.05;
+  font-weight: 680;
+  letter-spacing: -0.035em;
+}
+.pnx-calendar-v2 .pnx-cal-month-label svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: #111827;
+  stroke-width: 1.95;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform: translateY(1px);
+}
+.pnx-calendar-v2 .pnx-cal-month-label:active { background: rgba(15,23,42,.04); }
+
+/* ---------- Weekdays ---------- */
+.pnx-calendar-v2 .pnx-cal-weekdays {
+  height: 35px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  align-items: center;
+  padding: 0 7px 7px;
+  color: #101827;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 560;
+  letter-spacing: -0.015em;
+}
+.pnx-calendar-v2 .pnx-cal-weekdays > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pnx-calendar-v2 .pnx-cal-weekdays .is-sun { color: #ff1f1f; }
+.pnx-calendar-v2 .pnx-cal-weekdays .is-sat { color: #0a74ff; }
+
+/* ---------- Calendar grid ---------- */
+.pnx-calendar-v2 .pnx-cal-grid {
+  margin: 0 7px;
+  height: clamp(640px, 166vw, 720px);
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: repeat(6, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--pnx-line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.pnx-calendar-v2 .pnx-cal-cell {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: block;
+  text-align: left;
+  padding: 0;
+  border-right: 1px solid var(--pnx-line);
+  border-bottom: 1px solid var(--pnx-line);
+  background: #fff;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.pnx-calendar-v2 .pnx-cal-cell:nth-child(7n) { border-right: 0; }
+.pnx-calendar-v2 .pnx-cal-cell:nth-last-child(-n + 7) { border-bottom: 0; }
+.pnx-calendar-v2 .pnx-cal-cell:active { background: #f8fbff; }
+
+.pnx-calendar-v2 .pnx-cal-daynum {
+  position: absolute;
+  z-index: 3;
+  top: 10px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  color: #111827;
+  font-size: 15px;
+  line-height: 18px;
+  font-weight: 430;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.pnx-calendar-v2 .pnx-cal-cell.is-sun .pnx-cal-daynum { color: #ff1f1f; }
+.pnx-calendar-v2 .pnx-cal-cell.is-sat .pnx-cal-daynum { color: #0a74ff; }
+.pnx-calendar-v2 .pnx-cal-cell.is-other .pnx-cal-daynum { color: #9aa5b5; }
+.pnx-calendar-v2 .pnx-cal-cell.is-other.is-sun .pnx-cal-daynum { color: #ff7f83; opacity: .82; }
+.pnx-calendar-v2 .pnx-cal-cell.is-other.is-sat .pnx-cal-daynum { color: #87b8ff; opacity: .9; }
+
+.pnx-calendar-v2 .pnx-cal-cell.is-selected {
+  background: linear-gradient(180deg, rgba(237,245,255,.98), rgba(242,247,255,.98));
+  box-shadow: inset 0 0 0 1px #b7d7ff;
+  border-radius: 7px;
+  z-index: 1;
+}
+.pnx-calendar-v2 .pnx-cal-cell.is-selected .pnx-cal-daynum {
+  width: 28px;
+  height: 28px;
+  left: 6px;
+  top: 7px;
+  border-radius: 999px;
+  background: #0a74ff;
+  color: #fff !important;
+  font-size: 15px;
+  font-weight: 540;
+  box-shadow: 0 1px 2px rgba(10,116,255,.18);
+}
+
+.pnx-calendar-v2 .pnx-cal-chips {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 38px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.pnx-calendar-v2 .pnx-cal-cell.is-selected .pnx-cal-chips { top: 40px; }
+
+.pnx-calendar-v2 .pnx-cal-chip {
+  position: relative;
+  height: 24px;
+  min-height: 24px;
+  max-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: 3px 2px 3px 6px;
+  border: 1px solid rgba(226, 232, 240, .88);
+  border-radius: 5px;
+  background: rgba(255,255,255,.965);
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .08);
+  font-size: 9.2px;
+  line-height: 1;
+  font-weight: 430;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pnx-calendar-v2 .pnx-cal-chip::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--pnx-chip-color, #0a74ff);
+  border-radius: 5px 0 0 5px;
+}
+.pnx-calendar-v2 .pnx-cal-chip.is-multiline {
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 8.8px;
+  line-height: 1.08;
+}
+.pnx-calendar-v2 .pnx-cal-chip-line {
+  display: block;
+  width: 112%;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: scaleX(.89);
+  transform-origin: left center;
+}
+.pnx-calendar-v2 .pnx-cal-more {
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1;
+  padding-left: 2px;
+}
+
+/* ---------- Bottom sheet ---------- */
+.pnx-calendar-v2 .pnx-cal-sheet {
+  position: relative;
+  z-index: 5;
+  margin: 7px 7px 0;
+  padding: 8px 8px 18px;
+  background: rgba(255,255,255,.99);
+  border: 1px solid var(--pnx-sheet-line);
+  border-bottom: 0;
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -3px 14px rgba(15, 23, 42, .055);
+  min-height: 205px;
+}
+.pnx-calendar-v2 .pnx-cal-sheet-handle {
+  width: 31px;
+  height: 4px;
+  border-radius: 999px;
+  background: #aeb5c2;
+  margin: 0 auto 8px;
+}
+.pnx-calendar-v2 .pnx-cal-sheet-toolbar {
+  min-height: 31px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 2px 8px;
+}
+.pnx-calendar-v2 .pnx-cal-sheet-left,
+.pnx-calendar-v2 .pnx-cal-sheet-tools {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.pnx-calendar-v2 .pnx-cal-sheet-left { gap: 7px; }
+.pnx-calendar-v2 .pnx-cal-sheet-tools { gap: 16px; }
+
+.pnx-calendar-v2 .pnx-cal-date-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 31px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #125fdb 0%, #0644bd 100%);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 680;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+  box-shadow: inset 0 .5px 0 rgba(255,255,255,.18), 0 1px 2px rgba(8, 68, 189, .12);
+}
+.pnx-calendar-v2 .pnx-cal-today-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: #eaf3ff;
+  color: #0a74ff;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 610;
+  white-space: nowrap;
+}
+.pnx-calendar-v2 .pnx-cal-tool-btn {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #192235;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 460;
+  white-space: nowrap;
+  border-radius: 8px;
+  padding: 4px 0;
+}
+.pnx-calendar-v2 .pnx-cal-tool-btn svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #1f2a44;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pnx-calendar-v2 .pnx-cal-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pnx-calendar-v2 .pnx-cal-event-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr) minmax(84px, auto) 20px;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 8px 9px 8px 18px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e9edf3;
+  border-radius: 12px;
+  box-shadow: 0 1px 5px rgba(15, 23, 42, .07);
+}
+.pnx-calendar-v2 .pnx-cal-event-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 0 999px 999px 0;
+  background: var(--pnx-event-color, #34c759);
+}
+.pnx-calendar-v2 .pnx-cal-event-time {
+  color: #0f172a;
+  font-size: 17px;
+  line-height: 1;
+  font-weight: 520;
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
+}
+.pnx-calendar-v2 .pnx-cal-event-main {
+  min-width: 0;
+  padding-left: 11px;
+  border-left: 1px solid #e6ebf1;
+}
+.pnx-calendar-v2 .pnx-cal-event-title {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #111827;
+  font-size: 15px;
+  line-height: 1.15;
+  font-weight: 650;
+  letter-spacing: -.018em;
+}
+.pnx-calendar-v2 .pnx-cal-event-desc {
+  margin-top: 4px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #1f2937;
+  font-size: 11.5px;
+  line-height: 1.15;
+  font-weight: 420;
+  letter-spacing: -.015em;
+}
+.pnx-calendar-v2 .pnx-cal-event-place {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.15;
+  font-weight: 420;
+  white-space: nowrap;
+}
+.pnx-calendar-v2 .pnx-cal-event-place svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #8b95a5;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pnx-calendar-v2 .pnx-cal-event-place span {
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(150px, 34vw);
+}
+.pnx-calendar-v2 .pnx-cal-event-menu {
+  width: 20px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  justify-self: end;
+  color: #0f172a;
+  border-radius: 7px;
+}
+.pnx-calendar-v2 .pnx-cal-event-menu svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.pnx-calendar-v2 .pnx-cal-event-menu:active { background: rgba(15,23,42,.05); }
+.pnx-calendar-v2 .pnx-cal-empty {
+  height: 126px;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 420;
+}
+
+/* ---------- Responsive fine tuning ---------- */
+@media (max-width: 390px) {
+  .pnx-calendar-v2 .pnx-cal-header {
+    padding-left: 11px;
+    padding-right: 10px;
+  }
+  .pnx-calendar-v2 .pnx-cal-brand {
+    font-size: clamp(22px, 6vw, 25px);
+  }
+  .pnx-calendar-v2 .pnx-cal-actions { gap: 5px; padding-left: 4px; }
+  .pnx-calendar-v2 .pnx-cal-actions .pnx-cal-header-btn { width: 31px; height: 31px; }
+  .pnx-calendar-v2 .pnx-cal-add-btn { width: 34px; height: 34px; }
+  .pnx-calendar-v2 .pnx-cal-month-label { font-size: 22px; }
+  .pnx-calendar-v2 .pnx-cal-grid { height: clamp(620px, 166vw, 680px); }
+  .pnx-calendar-v2 .pnx-cal-chip {
+    font-size: 9.2px;
+    padding-left: 6px;
+    padding-right: 2px;
+  }
+  .pnx-calendar-v2 .pnx-cal-chip.is-multiline { font-size: 8.8px; }
+  .pnx-calendar-v2 .pnx-cal-sheet-toolbar {
+    align-items: flex-start;
+  }
+  .pnx-calendar-v2 .pnx-cal-sheet-tools { gap: 10px; }
+  .pnx-calendar-v2 .pnx-cal-tool-btn { font-size: 12px; }
+  .pnx-calendar-v2 .pnx-cal-event-card {
+    grid-template-columns: 56px minmax(0, 1fr) minmax(72px, auto) 18px;
+    gap: 6px;
+    min-height: 56px;
+    padding-left: 16px;
+  }
+  .pnx-calendar-v2 .pnx-cal-event-place span { max-width: min(96px, 25vw); }
+}
+
+@media (max-width: 360px) {
+  .pnx-calendar-v2 .pnx-cal-brand { font-size: 21px; }
+  .pnx-calendar-v2 .pnx-cal-menu-btn { margin-right: 2px; }
+  .pnx-calendar-v2 .pnx-cal-actions { gap: 3px; }
+  .pnx-calendar-v2 .pnx-cal-weekdays { font-size: 14px; }
+  .pnx-calendar-v2 .pnx-cal-daynum { font-size: 14px; }
+  .pnx-calendar-v2 .pnx-cal-grid { height: 610px; margin-inline: 5px; }
+  .pnx-calendar-v2 .pnx-cal-chips { left: 2px; right: 2px; }
+  .pnx-calendar-v2 .pnx-cal-date-pill { font-size: 13px; padding-inline: 10px; }
+  .pnx-calendar-v2 .pnx-cal-today-pill { font-size: 12px; padding-inline: 9px; }
+}
+
+
+/* ---------- Layout hardening v2.1 ---------- */
+.pnx-calendar-v2 .pnx-cal-grid,
+.pnx-calendar-v2 .pnx-cal-sheet {
+  flex: 0 0 auto;
+}
+.pnx-calendar-v2 .pnx-cal-cell {
+  isolation: isolate;
+}
+.pnx-calendar-v2 .pnx-cal-chip {
+  contain: layout paint;
+}
+@media (max-width: 390px) {
+  .pnx-calendar-v2 .pnx-cal-sheet-tools { gap: 10px; }
+  .pnx-calendar-v2 .pnx-cal-tool-btn { gap: 4px; }
+}
+@media (max-width: 340px) {
+  .pnx-calendar-v2 .pnx-cal-actions .pnx-cal-header-btn:nth-child(1) { display: none; }
+  .pnx-calendar-v2 .pnx-cal-brand { font-size: 20px; }
+  .pnx-calendar-v2 .pnx-cal-grid { height: 590px; }
+  .pnx-calendar-v2 .pnx-cal-event-place { display: none; }
+  .pnx-calendar-v2 .pnx-cal-event-card { grid-template-columns: 54px minmax(0, 1fr) 18px; }
+}
+
+
+/* ---------- Chip readability tuning v2.2 ----------
+   - Keep chip/text sizes consistent across phone widths
+   - Thin Apple-like text
+   - Allow about five Japanese characters per horizontal chip line
+   -------------------------------------------------- */
+.pnx-calendar-v2 .pnx-cal-chips {
+  left: 3px;
+  right: 3px;
+}
+.pnx-calendar-v2 .pnx-cal-chip {
+  height: 24px;
+  min-height: 24px;
+  max-height: 24px;
+  padding: 3px 2px 3px 6px;
+  font-size: 9.2px;
+  font-weight: 430;
+  line-height: 1;
+  letter-spacing: -0.055em;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .075);
+}
+.pnx-calendar-v2 .pnx-cal-chip.is-multiline {
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  font-size: 8.8px;
+  line-height: 1.08;
+}
+.pnx-calendar-v2 .pnx-cal-chip-line {
+  width: 112%;
+  transform: scaleX(.89);
+  transform-origin: left center;
+}
+@media (max-width: 360px) {
+  .pnx-calendar-v2 .pnx-cal-chips { left: 2px; right: 2px; }
+  .pnx-calendar-v2 .pnx-cal-chip { font-size: 9.2px; }
+  .pnx-calendar-v2 .pnx-cal-chip.is-multiline { font-size: 8.8px; }
+}
+
+/* ---------- One-line chip fix v2.3 ----------
+   - One event chip must stay on a single line
+   - No wrapping / no 2-line chip
+   - Keep chip size and text size consistent
+   ------------------------------------------- */
+.pnx-calendar-v2 .pnx-cal-chip,
+.pnx-calendar-v2 .pnx-cal-chip.is-multiline {
+  height: 24px;
+  min-height: 24px;
+  max-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: row;
+  padding: 3px 3px 3px 6px;
+  font-size: 9.2px;
+  font-weight: 420;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pnx-calendar-v2 .pnx-cal-chip-line {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform: none;
+}
+
+/* ---------- Fixed bottom main navigation v2.4 ----------
+   - Always visible at the bottom of the screen
+   - Calendar/content scrolls behind/above it
+   - Safe-area aware for iPhone/PWA
+   ------------------------------------------------------ */
+.pnx-calendar-v2 {
+  padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+}
+
+.pnx-calendar-v2 .pnx-cal-sheet {
+  margin-bottom: 10px;
+}
+
+.pnx-calendar-v2 .pnx-cal-bottom-nav {
+  position: fixed;
+  left: 50%;
+  right: auto;
+  bottom: 0;
+  z-index: 9999;
+  width: min(100%, 430px);
+  min-height: calc(78px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 14px calc(8px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  background: rgba(255, 255, 255, .965);
+  border-top: 1px solid rgba(226, 232, 240, .9);
+  box-shadow: 0 -10px 28px rgba(15, 23, 42, .085);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+}
+
+.pnx-calendar-v2 .pnx-cal-nav-item {
+  height: 58px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 16px;
+  color: #111827;
+  font-size: 11.5px;
+  line-height: 1;
+  font-weight: 430;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pnx-calendar-v2 .pnx-cal-nav-item svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.85;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pnx-calendar-v2 .pnx-cal-nav-item span {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pnx-calendar-v2 .pnx-cal-nav-item.is-active {
+  color: var(--pnx-blue);
+  background: linear-gradient(180deg, rgba(235, 244, 255, .98), rgba(242, 247, 255, .98));
+  box-shadow: inset 0 0 0 1px rgba(10, 116, 255, .14);
+  font-weight: 540;
+}
+
+.pnx-calendar-v2 .pnx-cal-nav-item:active {
+  transform: scale(.965);
+  background: rgba(15, 23, 42, .04);
+}
+.pnx-calendar-v2 .pnx-cal-nav-item.is-active:active {
+  background: rgba(235, 244, 255, .98);
+}
+
+@media (max-width: 360px) {
+  .pnx-calendar-v2 .pnx-cal-bottom-nav {
+    padding-left: 8px;
+    padding-right: 8px;
+    gap: 2px;
+  }
+  .pnx-calendar-v2 .pnx-cal-nav-item {
+    height: 56px;
+    border-radius: 14px;
+    font-size: 10.5px;
+  }
+  .pnx-calendar-v2 .pnx-cal-nav-item svg {
+    width: 21px;
+    height: 21px;
+  }
+}
+
+/* ---------- ProNexaX exact image wordmark v2.5 ----------
+   Uses the supplied logo image instead of CSS text so the header mark
+   matches the reference design more accurately.
+   ------------------------------------------------------- */
+.pnx-calendar-v2 .pnx-cal-brand {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  width: 118px;
+  height: 32px;
+  transform: none;
+  margin-left: 1px;
+  line-height: 1;
+}
+
+.pnx-calendar-v2 .pnx-cal-brand-img {
+  display: block;
+  width: 118px;
+  height: auto;
+  max-height: 31px;
+  object-fit: contain;
+  object-position: left center;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.pnx-calendar-v2 .pnx-cal-brand-main,
+.pnx-calendar-v2 .pnx-cal-brand-x {
+  display: none;
+}
+
+@media (max-width: 374px) {
+  .pnx-calendar-v2 .pnx-cal-brand {
+    width: 108px;
+  }
+  .pnx-calendar-v2 .pnx-cal-brand-img {
+    width: 108px;
+  }
+}
+
+/* ---------- ProNexaX wordmark smaller v2.6 ----------
+   Slightly reduces the supplied logo size in the top header.
+   ---------------------------------------------------- */
+.pnx-calendar-v2 .pnx-cal-brand {
+  width: 104px;
+  height: 29px;
+  margin-left: 0;
+}
+
+.pnx-calendar-v2 .pnx-cal-brand-img {
+  width: 104px;
+  max-height: 28px;
+}
+
+@media (max-width: 374px) {
+  .pnx-calendar-v2 .pnx-cal-brand {
+    width: 96px;
+    height: 27px;
+  }
+  .pnx-calendar-v2 .pnx-cal-brand-img {
+    width: 96px;
+    max-height: 26px;
+  }
+}
+
+
+/* ---------- Thin chip height fix v2.6 ----------
+   - 文字サイズは変更しない
+   - チップ上下の余白だけ削減
+   - 1チップ1行固定を維持
+   --------------------------------------------- */
+.pnx-calendar-v2 .pnx-cal-chips {
+  gap: 3px;
+}
+
+.pnx-calendar-v2 .pnx-cal-chip,
+.pnx-calendar-v2 .pnx-cal-chip.is-multiline {
+  height: 18px;
+  min-height: 18px;
+  max-height: 18px;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 6px;
+  padding-right: 3px;
+  border-radius: 4px;
+  font-size: 9.2px; /* 文字サイズは維持 */
+  line-height: 1;
+  align-items: center;
+}
+
+.pnx-calendar-v2 .pnx-cal-chip-line {
+  font-size: 9.2px; /* 文字サイズは維持 */
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
