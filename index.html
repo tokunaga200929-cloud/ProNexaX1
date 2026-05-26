@@ -4,7 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
-  <title>ProNexaX Calendar v2</title>
+  <meta name="application-name" content="ProNexaX">
+  <meta name="apple-mobile-web-app-title" content="ProNexaX">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+  <title>ProNexaX</title>
   <link rel="stylesheet" href="calendar.css?v=real-today-20260525">
   <style>
     /* 単体プレビュー用。本体統合時はこの style と body/html は使わない */
@@ -441,6 +449,27 @@
     </div>
 
 
+
+    <!-- STEP200 INTEGRATION MODULE LAYER START -->
+    <div class="pnx-module-layer" id="pnx-module-layer" aria-hidden="true">
+      <div class="pnx-module-page" id="pnx-module-search" data-pnx-module-page="search" aria-hidden="true">
+        <iframe id="search-module-frame" class="pnx-module-frame" data-src="pages/search/embed.html?v=step203-calendar-link" title="試合検索" loading="lazy"></iframe>
+      </div>
+      <div class="pnx-module-page" id="pnx-module-featured" data-pnx-module-page="featured" aria-hidden="true">
+        <iframe id="featured-module-frame" class="pnx-module-frame" data-src="pages/featured/embed.html?v=step202-search-fit" title="広告・注目" loading="lazy"></iframe>
+      </div>
+      <div class="pnx-module-page" id="pnx-module-finance" data-pnx-module-page="finance" aria-hidden="true">
+        <iframe id="finance-module-frame" class="pnx-module-frame" data-src="pages/finance/embed.html?v=step202-search-fit" title="収支" loading="lazy"></iframe>
+      </div>
+      <div class="pnx-module-page" id="pnx-module-mypage" data-pnx-module-page="mypage" aria-hidden="true">
+        <iframe id="mypage-frame" class="pnx-module-frame" data-src="pages/mypage/embed.html?v=step202-search-fit" title="マイページ" loading="lazy"></iframe>
+      </div>
+      <div class="pnx-module-page" id="pnx-module-profile" data-pnx-module-page="profile" aria-hidden="true">
+        <iframe id="profile-frame" class="pnx-module-frame" data-src="pages/profile/embed.html?v=step202-search-fit" title="プロフィール" loading="lazy"></iframe>
+      </div>
+    </div>
+    <!-- STEP200 INTEGRATION MODULE LAYER END -->
+
     <nav class="pnx-cal-bottom-nav" aria-label="メインナビゲーション">
       <button class="pnx-cal-nav-item is-active" type="button" data-pnx-nav="calendar" aria-current="page">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -484,9 +513,838 @@
   </div>
 </section>
 
-<script src="calendar.js?v=real-today-20260525" charset="UTF-8"></script>
+<script src="calendar.js?v=step203-calendar-link" charset="UTF-8"></script>
 <script>
   if (window.initProNexaCalendarV2) window.initProNexaCalendarV2();
 </script>
+
+<style id="pnx-step200-integration-base">
+/* STEP200: ProNexaX v4.23 integration base */
+:root{
+  --pnx-integrated-width:min(100vw, 430px);
+  --pnx-integrated-bottom-nav:calc(78px + env(safe-area-inset-bottom, 0px));
+}
+
+.pnx-module-layer{
+  position:fixed !important;
+  left:50% !important;
+  top:0 !important;
+  bottom:var(--pnx-integrated-bottom-nav) !important;
+  width:var(--pnx-integrated-width) !important;
+  max-width:430px !important;
+  transform:translateX(-50%) !important;
+  z-index:2147483000 !important;
+  background:#F4F6FA !important;
+  display:none !important;
+  overflow:hidden !important;
+  pointer-events:none !important;
+}
+
+.pnx-module-layer.is-open{
+  display:block !important;
+  pointer-events:auto !important;
+}
+
+.pnx-module-page{
+  position:absolute !important;
+  inset:0 !important;
+  display:none !important;
+  width:100% !important;
+  height:100% !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+  background:#F4F6FA !important;
+}
+
+.pnx-module-page.is-active{
+  display:block !important;
+}
+
+.pnx-module-frame{
+  width:100% !important;
+  height:100% !important;
+  border:0 !important;
+  display:block !important;
+  background:#F4F6FA !important;
+}
+
+.pnx-cal-bottom-nav{
+  z-index:2147483647 !important;
+}
+
+body.pnx-module-active .pnx-cal-add-layer,
+body.pnx-module-active .pnx-cal-detail-layer,
+body.pnx-module-active .pnx-cal-date-range-sheet,
+body.pnx-module-active .pnx-cal-month-popover{
+  pointer-events:none !important;
+}
+
+.pnx-cal-nav-item.is-active{
+  color:var(--pnx-cal-accent, #12B981) !important;
+}
+</style>
+
+
+<script id="pnx-step200-integration-base">
+(function(){
+  if (window.__PNX_STEP200_INTEGRATION_BASE__) return;
+  window.__PNX_STEP200_INTEGRATION_BASE__ = true;
+
+  var MODULE_ROUTES = {
+    calendar: { type:"native", label:"カレンダー" },
+    search: { type:"iframe", pageId:"pnx-module-search", frameId:"search-module-frame", src:"pages/search/embed.html?v=step203-calendar-link", label:"試合検索" },
+    featured: { type:"iframe", pageId:"pnx-module-featured", frameId:"featured-module-frame", src:"pages/featured/embed.html?v=step202-search-fit", label:"広告・注目" },
+    finance: { type:"iframe", pageId:"pnx-module-finance", frameId:"finance-module-frame", src:"pages/finance/embed.html?v=step202-search-fit", label:"収支" },
+    mypage: { type:"iframe", pageId:"pnx-module-mypage", frameId:"mypage-frame", src:"pages/mypage/embed.html?v=step202-search-fit", label:"マイページ" },
+    profile: { type:"iframe", pageId:"pnx-module-profile", frameId:"profile-frame", src:"pages/profile/embed.html?v=step202-search-fit", label:"プロフィール" }
+  };
+
+  function normalizePage(page){
+    if (!page) return "calendar";
+    if (page === "profile-nav") return "mypage";
+    if (page === "profile") return "mypage";
+    if (page === "profile-detail") return "profile";
+    if (page === "ads" || page === "ad") return "featured";
+    if (page === "admin" || page === "cms") return "cms";
+    return page;
+  }
+
+  function getLayer(){ return document.getElementById("pnx-module-layer"); }
+
+  function ensureFrame(route){
+    if (!route || route.type !== "iframe") return null;
+    var frame = document.getElementById(route.frameId);
+    if (!frame) return null;
+    frame.setAttribute("data-src", route.src);
+    if (!frame.getAttribute("src")) frame.setAttribute("src", route.src);
+    return frame;
+  }
+
+  function setNavActive(page){
+    var navPage = (page === "mypage" || page === "profile") ? "profile" : page;
+    document.querySelectorAll("[data-pnx-nav]").forEach(function(item){
+      var itemPage = item.getAttribute("data-pnx-nav");
+      var on = itemPage === navPage;
+      item.classList.toggle("is-active", on);
+      if (on) item.setAttribute("aria-current", "page");
+      else item.removeAttribute("aria-current");
+    });
+  }
+
+  function closeCalendarSheets(){
+    try {
+      document.querySelectorAll("[data-pnx-add-layer],[data-pnx-detail-layer],[data-pnx-date-range-sheet]").forEach(function(el){
+        el.setAttribute("aria-hidden","true");
+        el.classList.remove("is-open","active","show");
+      });
+      var pop = document.querySelector("[data-pnx-month-popover]");
+      if (pop) pop.setAttribute("aria-hidden","true");
+    } catch(e) {}
+  }
+
+  function openCMS(){
+    var url = "cms/index.html";
+    window.__PNX_STEP200_LAST_CMS_OPEN__ = { at:new Date().toISOString(), url:url };
+    window.open(url, "_blank", "noopener,noreferrer");
+    return true;
+  }
+
+  function showPage(rawPage){
+    var page = normalizePage(rawPage);
+
+    if (page === "cms") return openCMS();
+
+    var layer = getLayer();
+
+    if (page === "calendar") {
+      if (layer) {
+        layer.classList.remove("is-open");
+        layer.setAttribute("aria-hidden","true");
+      }
+      document.body.classList.remove("pnx-module-active");
+      document.body.dataset.currentPage = "calendar";
+      document.querySelectorAll(".pnx-module-page").forEach(function(p){
+        p.classList.remove("is-active");
+        p.setAttribute("aria-hidden","true");
+      });
+      setNavActive("calendar");
+
+      try {
+        if (typeof window.renderAllPanels === "function") setTimeout(window.renderAllPanels, 30);
+        if (typeof window.renderCalList === "function") setTimeout(window.renderCalList, 50);
+      } catch(e) {}
+
+      window.__PNX_STEP200_LAST_PAGE__ = { at:new Date().toISOString(), page:"calendar" };
+      return true;
+    }
+
+    var route = MODULE_ROUTES[page];
+    if (!route || route.type !== "iframe") {
+      console.warn("[ProNexaX] Unknown page route:", rawPage, page);
+      return false;
+    }
+
+    if (layer) {
+      layer.classList.add("is-open");
+      layer.setAttribute("aria-hidden","false");
+    }
+    document.body.classList.add("pnx-module-active");
+    document.body.dataset.currentPage = page;
+    closeCalendarSheets();
+
+    document.querySelectorAll(".pnx-module-page").forEach(function(p){
+      var on = p.id === route.pageId;
+      p.classList.toggle("is-active", on);
+      p.setAttribute("aria-hidden", on ? "false" : "true");
+    });
+
+    ensureFrame(route);
+    setNavActive(page);
+
+    window.__PNX_STEP200_LAST_PAGE__ = { at:new Date().toISOString(), page:page, frameId:route.frameId, src:route.src };
+    return true;
+  }
+
+  window.ProNexaXSwitchPage = showPage;
+  window.switchPage = showPage;
+  window.PNXSwitchPage = showPage;
+
+  window.addEventListener("message", function(e){
+    var data = e && e.data || {};
+    if (data.type === "PNX_SET_PAGE" && data.page) {
+      showPage(data.page);
+      return;
+    }
+    if (data.type === "PNX_OPEN_PROFILE" || data.page === "profile-detail") {
+      var route = MODULE_ROUTES.profile;
+      var layer = getLayer();
+      if (layer) {
+        layer.classList.add("is-open");
+        layer.setAttribute("aria-hidden","false");
+      }
+      document.body.classList.add("pnx-module-active");
+      document.body.dataset.currentPage = "profile";
+      document.querySelectorAll(".pnx-module-page").forEach(function(p){
+        var on = p.id === route.pageId;
+        p.classList.toggle("is-active", on);
+        p.setAttribute("aria-hidden", on ? "false" : "true");
+      });
+      ensureFrame(route);
+      setNavActive("mypage");
+      return;
+    }
+    if (data.type === "PNX_PROFILE_BACK_TO_MYPAGE") {
+      showPage("mypage");
+      return;
+    }
+    if (data.type === "PNX_OPEN_CMS") {
+      openCMS();
+      return;
+    }
+  });
+
+  window.PNXIntegrationRoutes = MODULE_ROUTES;
+  window.PNXOpenCMS = openCMS;
+  window.PNXStep200IntegrationStatus = function(){
+    var layer = getLayer();
+    var pages = {};
+    Object.keys(MODULE_ROUTES).forEach(function(key){
+      var route = MODULE_ROUTES[key];
+      pages[key] = route.pageId ? {
+        pageExists:!!document.getElementById(route.pageId),
+        frameExists:!!document.getElementById(route.frameId),
+        frameSrc:document.getElementById(route.frameId)?.getAttribute("src") || null
+      } : { native:true };
+    });
+    return {
+      step:"200",
+      currentPage:document.body.dataset.currentPage || "calendar",
+      moduleLayerExists:!!layer,
+      moduleLayerOpen:!!layer && layer.classList.contains("is-open"),
+      copiedModules:true,
+      routes:pages,
+      lastPage:window.__PNX_STEP200_LAST_PAGE__ || null,
+      lastCMS:window.__PNX_STEP200_LAST_CMS_OPEN__ || null,
+      note:"v4.23カレンダー本体を正にした統合ベース"
+    };
+  };
+})();
+</script>
+
+
+<style id="pnx-step201-nav-stability-final">
+/* STEP201: 下部ナビ切替の安定化
+   v4.23カレンダー本体はそのまま維持し、モジュール層だけを制御する */
+
+.pnx-module-layer{
+  isolation:isolate !important;
+  contain:layout paint style !important;
+}
+
+.pnx-module-layer.is-open{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+.pnx-module-layer:not(.is-open){
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+
+.pnx-module-page.is-active{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+.pnx-module-page:not(.is-active){
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+
+.pnx-module-frame{
+  width:100% !important;
+  height:100% !important;
+  min-height:0 !important;
+  border:0 !important;
+}
+
+/* モジュール表示中でも下部ナビだけは必ず操作できる */
+.pnx-cal-bottom-nav,
+[data-pnx-nav]{
+  pointer-events:auto !important;
+}
+
+body.pnx-step201-module-active .pnx-cal-bottom-nav{
+  z-index:2147483647 !important;
+}
+
+/* カレンダーへ戻った時にモジュールが前面に残らない保険 */
+body:not(.pnx-step201-module-active) .pnx-module-layer{
+  display:none !important;
+  pointer-events:none !important;
+}
+</style>
+
+
+<script id="pnx-step201-nav-stability-guard">
+(function(){
+  if (window.__PNX_STEP201_NAV_STABILITY__) return;
+  window.__PNX_STEP201_NAV_STABILITY__ = true;
+
+  var CACHE = "step203-calendar-link";
+
+  var ROUTES = {
+    calendar: {
+      type:"native",
+      nav:"calendar",
+      label:"カレンダー"
+    },
+    search: {
+      type:"iframe",
+      nav:"search",
+      pageId:"pnx-module-search",
+      frameId:"search-module-frame",
+      src:"pages/search/embed.html?v=" + CACHE,
+      label:"試合検索"
+    },
+    featured: {
+      type:"iframe",
+      nav:"featured",
+      pageId:"pnx-module-featured",
+      frameId:"featured-module-frame",
+      src:"pages/featured/embed.html?v=" + CACHE,
+      label:"広告・注目"
+    },
+    finance: {
+      type:"iframe",
+      nav:"finance",
+      pageId:"pnx-module-finance",
+      frameId:"finance-module-frame",
+      src:"pages/finance/embed.html?v=" + CACHE,
+      label:"収支"
+    },
+    mypage: {
+      type:"iframe",
+      nav:"profile",
+      pageId:"pnx-module-mypage",
+      frameId:"mypage-frame",
+      src:"pages/mypage/embed.html?v=" + CACHE,
+      label:"マイページ"
+    },
+    profileDetail: {
+      type:"iframe",
+      nav:"profile",
+      pageId:"pnx-module-profile",
+      frameId:"profile-frame",
+      src:"pages/profile/embed.html?v=" + CACHE,
+      label:"プロフィール詳細"
+    }
+  };
+
+  function normalizePage(page){
+    if (!page) return "calendar";
+    if (page === "profile" || page === "mypage" || page === "profile-nav") return "mypage";
+    if (page === "profile-detail" || page === "profileDetail") return "profileDetail";
+    if (page === "ads" || page === "ad" || page === "pickup") return "featured";
+    if (page === "admin" || page === "cms") return "cms";
+    return page;
+  }
+
+  function getLayer(){
+    return document.getElementById("pnx-module-layer");
+  }
+
+  function ensureFrame(route){
+    if (!route || route.type !== "iframe") return null;
+    var frame = document.getElementById(route.frameId);
+    if (!frame) return null;
+    frame.setAttribute("data-src", route.src);
+    if (!frame.getAttribute("src") || frame.getAttribute("src").indexOf(route.src.split("?")[0]) === -1) {
+      frame.setAttribute("src", route.src);
+    }
+    return frame;
+  }
+
+  function setNavActive(page){
+    var route = ROUTES[page] || ROUTES.calendar;
+    var navKey = route.nav || page;
+
+    document.querySelectorAll("[data-pnx-nav]").forEach(function(item){
+      var itemPage = item.getAttribute("data-pnx-nav");
+      var on = itemPage === navKey;
+      item.classList.toggle("is-active", on);
+      if (on) item.setAttribute("aria-current", "page");
+      else item.removeAttribute("aria-current");
+    });
+  }
+
+  function closeCalendarOverlays(){
+    try {
+      document.querySelectorAll("[data-pnx-add-layer],[data-pnx-detail-layer],[data-pnx-date-range-sheet],[data-pnx-month-popover]").forEach(function(el){
+        el.setAttribute("aria-hidden","true");
+        el.classList.remove("is-open","active","show");
+      });
+    } catch(e) {}
+  }
+
+  function setModulePage(page){
+    var route = ROUTES[page];
+    var layer = getLayer();
+    if (!route || route.type !== "iframe" || !layer) return false;
+
+    document.body.classList.add("pnx-module-active", "pnx-step201-module-active");
+    document.body.dataset.currentPage = page === "profileDetail" ? "profile" : page;
+
+    layer.classList.add("is-open");
+    layer.setAttribute("aria-hidden", "false");
+
+    document.querySelectorAll(".pnx-module-page").forEach(function(modulePage){
+      var on = modulePage.id === route.pageId;
+      modulePage.classList.toggle("is-active", on);
+      modulePage.setAttribute("aria-hidden", on ? "false" : "true");
+    });
+
+    ensureFrame(route);
+    closeCalendarOverlays();
+    setNavActive(page);
+
+    window.__PNX_STEP201_LAST_ROUTE__ = {
+      at:new Date().toISOString(),
+      page:page,
+      type:"iframe",
+      frameId:route.frameId,
+      src:route.src
+    };
+
+    return true;
+  }
+
+  function showCalendar(){
+    var layer = getLayer();
+
+    if (layer) {
+      layer.classList.remove("is-open");
+      layer.setAttribute("aria-hidden", "true");
+    }
+
+    document.body.classList.remove("pnx-module-active", "pnx-step201-module-active");
+    document.body.dataset.currentPage = "calendar";
+
+    document.querySelectorAll(".pnx-module-page").forEach(function(modulePage){
+      modulePage.classList.remove("is-active");
+      modulePage.setAttribute("aria-hidden", "true");
+    });
+
+    setNavActive("calendar");
+
+    try {
+      if (typeof window.renderAllPanels === "function") setTimeout(window.renderAllPanels, 30);
+      if (typeof window.renderCalList === "function") setTimeout(window.renderCalList, 60);
+    } catch(e) {}
+
+    window.__PNX_STEP201_LAST_ROUTE__ = {
+      at:new Date().toISOString(),
+      page:"calendar",
+      type:"native"
+    };
+
+    return true;
+  }
+
+  function openCMS(){
+    var url = "cms/index.html";
+    window.__PNX_STEP201_LAST_CMS_OPEN__ = {
+      at:new Date().toISOString(),
+      url:url
+    };
+    window.open(url, "_blank", "noopener,noreferrer");
+    return true;
+  }
+
+  function navigate(rawPage, options){
+    var page = normalizePage(rawPage);
+    options = options || {};
+
+    if (page === "cms") return openCMS();
+    if (page === "calendar") return showCalendar();
+    if (ROUTES[page] && ROUTES[page].type === "iframe") return setModulePage(page);
+
+    console.warn("[STEP201] Unknown route:", rawPage, page, options);
+    return false;
+  }
+
+  function bindBottomNav(){
+    document.addEventListener("click", function(event){
+      var nav = event.target.closest("[data-pnx-nav]");
+      if (!nav) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+
+      navigate(nav.getAttribute("data-pnx-nav"), { source:"bottom-nav" });
+    }, true);
+  }
+
+  function bindMessages(){
+    window.addEventListener("message", function(event){
+      var data = event && event.data || {};
+
+      if (data.type === "PNX_SET_PAGE" && data.page) {
+        navigate(data.page, { source:"postMessage" });
+        return;
+      }
+
+      if (data.type === "PNX_OPEN_PROFILE" || data.page === "profile-detail") {
+        navigate("profileDetail", { source:"postMessage" });
+        return;
+      }
+
+      if (data.type === "PNX_PROFILE_BACK_TO_MYPAGE") {
+        navigate("mypage", { source:"postMessage" });
+        return;
+      }
+
+      if (data.type === "PNX_OPEN_CMS") {
+        openCMS();
+      }
+    });
+  }
+
+  function installGlobals(){
+    window.PNXSwitchPage = navigate;
+    window.ProNexaXSwitchPage = navigate;
+    window.switchPage = navigate;
+
+    window.PNXOpenCMS = openCMS;
+    window.PNXOpenProfilePage = function(){ return navigate("profileDetail", { source:"global" }); };
+    window.PNXOpenMyPage = function(){ return navigate("mypage", { source:"global" }); };
+
+    window.PNXStep201Navigate = navigate;
+    window.PNXStep201OpenCMS = openCMS;
+  }
+
+  function getRouteState(){
+    var layer = getLayer();
+    var pages = {};
+
+    Object.keys(ROUTES).forEach(function(key){
+      var route = ROUTES[key];
+      if (route.type === "native") {
+        pages[key] = { native:true };
+        return;
+      }
+      var pageEl = document.getElementById(route.pageId);
+      var frame = document.getElementById(route.frameId);
+      pages[key] = {
+        pageExists:!!pageEl,
+        pageActive:!!pageEl && pageEl.classList.contains("is-active"),
+        frameExists:!!frame,
+        frameSrc:frame ? frame.getAttribute("src") : null,
+        display:pageEl ? getComputedStyle(pageEl).display : null,
+        ariaHidden:pageEl ? pageEl.getAttribute("aria-hidden") : null
+      };
+    });
+
+    return {
+      layerExists:!!layer,
+      layerOpen:!!layer && layer.classList.contains("is-open"),
+      layerDisplay:layer ? getComputedStyle(layer).display : null,
+      bodyPage:document.body.dataset.currentPage || "calendar",
+      bodyModuleActive:document.body.classList.contains("pnx-step201-module-active"),
+      pages:pages
+    };
+  }
+
+  function smokeTest(){
+    var required = {
+      navCalendar:!!document.querySelector('[data-pnx-nav="calendar"]'),
+      navSearch:!!document.querySelector('[data-pnx-nav="search"]'),
+      navFeatured:!!document.querySelector('[data-pnx-nav="featured"]'),
+      navFinance:!!document.querySelector('[data-pnx-nav="finance"]'),
+      navProfile:!!document.querySelector('[data-pnx-nav="profile"]'),
+      layer:!!document.getElementById("pnx-module-layer"),
+      searchFrame:!!document.getElementById("search-module-frame"),
+      featuredFrame:!!document.getElementById("featured-module-frame"),
+      financeFrame:!!document.getElementById("finance-module-frame"),
+      mypageFrame:!!document.getElementById("mypage-frame"),
+      profileFrame:!!document.getElementById("profile-frame")
+    };
+
+    var ok = Object.keys(required).every(function(k){ return required[k]; });
+
+    return {
+      ok:ok,
+      required:required,
+      current:getRouteState(),
+      lastRoute:window.__PNX_STEP201_LAST_ROUTE__ || null
+    };
+  }
+
+  bindBottomNav();
+  bindMessages();
+  installGlobals();
+  setTimeout(installGlobals, 0);
+  setTimeout(installGlobals, 300);
+  setTimeout(installGlobals, 1000);
+
+  window.PNXStep201RouteState = getRouteState;
+  window.PNXStep201SmokeTest = smokeTest;
+  window.PNXStep201NavStabilityStatus = function(){
+    return {
+      step:"201",
+      cache:CACHE,
+      current:getRouteState(),
+      smoke:smokeTest(),
+      lastRoute:window.__PNX_STEP201_LAST_ROUTE__ || null,
+      lastCMS:window.__PNX_STEP201_LAST_CMS_OPEN__ || null,
+      note:"v4.23新本体の下部ナビとiframeモジュール切替を安定化"
+    };
+  };
+})();
+</script>
+
+
+<style id="pnx-step202-search-module-fit-final">
+/* STEP202: parent side search iframe fit */
+#pnx-module-search{
+  background:#F4F6FA !important;
+}
+
+#search-module-frame{
+  width:100% !important;
+  height:100% !important;
+  min-height:0 !important;
+  max-height:100% !important;
+  border:0 !important;
+  display:block !important;
+  background:#F4F6FA !important;
+}
+
+/* 試合検索表示中はモジュールレイヤーが確実に開く */
+body[data-current-page="search"] #pnx-module-layer,
+body.pnx-step202-search-active #pnx-module-layer{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+body[data-current-page="search"] #pnx-module-search,
+body.pnx-step202-search-active #pnx-module-search{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+</style>
+
+
+<script id="pnx-step202-search-module-fit-guard">
+(function(){
+  if (window.__PNX_STEP202_SEARCH_PARENT_FIT__) return;
+  window.__PNX_STEP202_SEARCH_PARENT_FIT__ = true;
+
+  var SEARCH_SRC = "pages/search/embed.html?v=step203-calendar-link";
+
+  function ensureSearchFrame(){
+    var frame = document.getElementById("search-module-frame");
+    if (!frame) return null;
+    frame.setAttribute("data-src", SEARCH_SRC);
+    if (frame.getAttribute("src") !== SEARCH_SRC) {
+      frame.setAttribute("src", SEARCH_SRC);
+    }
+    return frame;
+  }
+
+  function markSearchActive(active){
+    document.body.classList.toggle("pnx-step202-search-active", !!active);
+  }
+
+  function openSearch(){
+    ensureSearchFrame();
+
+    if (typeof window.PNXStep201Navigate === "function") {
+      window.PNXStep201Navigate("search", { source:"step202" });
+    } else if (typeof window.PNXSwitchPage === "function") {
+      window.PNXSwitchPage("search");
+    }
+
+    markSearchActive(true);
+
+    var frame = document.getElementById("search-module-frame");
+    if (frame && frame.contentWindow) {
+      try {
+        frame.contentWindow.postMessage({ type:"PNX_SEARCH_RESET_SCROLL", step:"202" }, "*");
+      } catch(e) {}
+    }
+
+    window.__PNX_STEP202_LAST_SEARCH_OPEN__ = new Date().toISOString();
+    return true;
+  }
+
+  function observeCurrentPage(){
+    var page = document.body.dataset.currentPage || "calendar";
+    markSearchActive(page === "search");
+  }
+
+  window.addEventListener("message", function(event){
+    var data = event && event.data || {};
+    if (data.type === "PNX_SEARCH_READY") {
+      window.__PNX_STEP202_LAST_SEARCH_READY__ = data;
+    }
+    if (data.type === "PNX_SET_PAGE" && data.page) {
+      setTimeout(observeCurrentPage, 80);
+    }
+  });
+
+  document.addEventListener("click", function(event){
+    var nav = event.target.closest('[data-pnx-nav="search"]');
+    if (!nav) return;
+    setTimeout(function(){
+      ensureSearchFrame();
+      observeCurrentPage();
+    }, 80);
+  }, true);
+
+  var observer = new MutationObserver(observeCurrentPage);
+  document.addEventListener("DOMContentLoaded", function(){
+    ensureSearchFrame();
+    observeCurrentPage();
+    observer.observe(document.body, { attributes:true, attributeFilter:["data-current-page", "class"] });
+  });
+
+  setTimeout(ensureSearchFrame, 300);
+  setTimeout(ensureSearchFrame, 1000);
+
+  window.PNXStep202OpenSearch = openSearch;
+  window.PNXStep202EnsureSearchFrame = ensureSearchFrame;
+  window.PNXStep202SearchFitStatus = function(){
+    var frame = document.getElementById("search-module-frame");
+    var page = document.getElementById("pnx-module-search");
+    var layer = document.getElementById("pnx-module-layer");
+    return {
+      step:"202-parent",
+      searchFrameExists:!!frame,
+      searchFrameSrc:frame ? frame.getAttribute("src") : null,
+      searchPageExists:!!page,
+      searchPageActive:!!page && page.classList.contains("is-active"),
+      searchPageDisplay:page ? getComputedStyle(page).display : null,
+      layerOpen:!!layer && layer.classList.contains("is-open"),
+      bodyPage:document.body.dataset.currentPage || "calendar",
+      searchActiveClass:document.body.classList.contains("pnx-step202-search-active"),
+      lastOpen:window.__PNX_STEP202_LAST_SEARCH_OPEN__ || null,
+      lastReady:window.__PNX_STEP202_LAST_SEARCH_READY__ || null,
+      note:"試合検索モジュールをv4.23本体に合わせて表示調整"
+    };
+  };
+})();
+</script>
+
+
+<script id="pnx-step203-search-calendar-link">
+/* STEP203: 試合検索iframe → 本体カレンダー追加連携 */
+(function(){
+  if (window.__PNX_STEP203_SEARCH_CALENDAR_LINK__) return;
+  window.__PNX_STEP203_SEARCH_CALENDAR_LINK__ = true;
+
+  function addTournamentFromMessage(data){
+    var tournament = data && data.tournament;
+    if (!tournament) return { ok:false, reason:"missing-tournament" };
+    if (typeof window.PNXCalendarAddTournamentEvent !== "function") {
+      console.warn("[ProNexaX] PNXCalendarAddTournamentEvent is not ready.", tournament);
+      return { ok:false, reason:"calendar-api-not-ready" };
+    }
+    var result = window.PNXCalendarAddTournamentEvent(tournament, { select:true });
+    window.__PNX_STEP203_LAST_ADD_RESULT__ = {
+      at:new Date().toISOString(),
+      tournament:tournament,
+      result:result
+    };
+    return result;
+  }
+
+  window.addEventListener("message", function(event){
+    var data = event && event.data || {};
+    if (data.type !== "PNX_ADD_TOURNAMENT_TO_CALENDAR") return;
+    var result = addTournamentFromMessage(data);
+
+    try {
+      if (event.source && typeof event.source.postMessage === "function") {
+        event.source.postMessage({
+          type:"PNX_ADD_TOURNAMENT_TO_CALENDAR_RESULT",
+          source:"calendar-parent",
+          step:"203",
+          at:new Date().toISOString(),
+          tournamentId:data.tournament && data.tournament.id,
+          ok:!!(result && result.ok),
+          duplicate:!!(result && result.duplicate),
+          reason:result && result.reason || null
+        }, "*");
+      }
+    } catch(e) {}
+  });
+
+  window.PNXStep203AddTournamentFromSearch = addTournamentFromMessage;
+  window.PNXStep203SearchCalendarLinkStatus = function(){
+    return {
+      step:"203",
+      installed:true,
+      calendarApiReady:typeof window.PNXCalendarAddTournamentEvent === "function",
+      lastAdd:window.__PNX_STEP203_LAST_ADD_RESULT__ || null,
+      note:"試合検索iframeから本体カレンダーへ大会予定を追加する連携"
+    };
+  };
+})();
+</script>
+
 </body>
 </html>

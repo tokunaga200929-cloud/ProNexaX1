@@ -9,6 +9,82 @@
 
   let DEMO_EVENTS = [];
 
+  /* STEP203: 試合検索→本体カレンダー連携用の永続化キー */
+  const PNX_CALENDAR_STORAGE_KEY = 'pronexax.calendar.v2.events.step203';
+
+  function readCalendarStorage() {
+    try {
+      if (!window.localStorage) return null;
+      return window.localStorage.getItem(PNX_CALENDAR_STORAGE_KEY);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeCalendarStorage(value) {
+    try {
+      if (!window.localStorage) return false;
+      window.localStorage.setItem(PNX_CALENDAR_STORAGE_KEY, value);
+      return true;
+    } catch (e) {
+      console.warn('[ProNexaX] カレンダー保存に失敗しました:', e);
+      return false;
+    }
+  }
+
+  function normalizeCalendarEvent(event) {
+    if (!event || typeof event !== 'object') return null;
+    const y = Number(event.y);
+    const m = Number(event.m);
+    const d = Number(event.d);
+    if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
+    return Object.assign({}, event, {
+      y: y,
+      m: m,
+      d: d,
+      endY: Number(event.endY || y),
+      endM: Number(event.endM || m),
+      endD: Number(event.endD || d),
+      title: event.title || '予定',
+      chipLines: Array.isArray(event.chipLines) ? event.chipLines : [event.chipLabel || event.title || '予定'],
+      chipLabel: event.chipLabel || event.title || '予定'
+    });
+  }
+
+  function loadCalendarEventsFromStorage() {
+    const raw = readCalendarStorage();
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map(normalizeCalendarEvent).filter(Boolean);
+    } catch (e) {
+      console.warn('[ProNexaX] カレンダー復元に失敗しました:', e);
+      return [];
+    }
+  }
+
+  function persistCalendarEvents() {
+    writeCalendarStorage(JSON.stringify(DEMO_EVENTS.map(function (event) {
+      return Object.assign({}, event);
+    })));
+  }
+
+  function mergeCalendarEvents(baseEvents, storedEvents) {
+    const map = new Map();
+    (Array.isArray(baseEvents) ? baseEvents : []).forEach(function (event) {
+      const normalized = normalizeCalendarEvent(event);
+      if (!normalized) return;
+      map.set(String(normalized.id || createEventId()), normalized);
+    });
+    (Array.isArray(storedEvents) ? storedEvents : []).forEach(function (event) {
+      const normalized = normalizeCalendarEvent(event);
+      if (!normalized) return;
+      map.set(String(normalized.id || createEventId()), normalized);
+    });
+    return Array.from(map.values());
+  }
+
   function getLocalToday() {
     const now = new Date();
     return { y: now.getFullYear(), m: now.getMonth() + 1, d: now.getDate() };
@@ -82,6 +158,17 @@
 
   function pad2(n) { return n < 10 ? '0' + n : String(n); }
   function dateKey(y, m, d) { return y + '-' + pad2(m) + '-' + pad2(d); }
+  function parseISODate(value) {
+    const text = String(value || '').trim();
+    const match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (!match) return null;
+    const y = Number(match[1]);
+    const m = Number(match[2]);
+    const d = Number(match[3]);
+    const native = new Date(y, m - 1, d);
+    if (native.getFullYear() !== y || native.getMonth() + 1 !== m || native.getDate() !== d) return null;
+    return { y: y, m: m, d: d };
+  }
   function compareDate(a, b) {
     const da = new Date(a.y, a.m - 1, a.d).getTime();
     const db = new Date(b.y, b.m - 1, b.d).getTime();
@@ -354,6 +441,7 @@
       state.selected = cloneDate(targetDate);
       state.viewYear = targetDate.y;
       state.viewMonth = targetDate.m;
+      persistCalendarEvents();
       renderAll();
     }
   }
@@ -709,6 +797,7 @@
     const ok = window.confirm('「' + (target.title || 'この予定') + '」を削除しますか？');
     if (!ok) return;
     DEMO_EVENTS = DEMO_EVENTS.filter(function (event) { return String(event.id) !== String(target.id); });
+    persistCalendarEvents();
     closeDetailSheet();
     renderAll();
   }
@@ -1000,6 +1089,7 @@
       DEMO_EVENTS.push(nextEvent);
     }
 
+    persistCalendarEvents();
     state.selected = cloneDate(startDate);
     state.viewYear = startDate.y;
     state.viewMonth = startDate.m;
@@ -1627,6 +1717,7 @@
       DEMO_EVENTS.push(nextEvent);
     }
 
+    persistCalendarEvents();
     state.selected = cloneDate(startDate);
     state.viewYear = startDate.y;
     state.viewMonth = startDate.m;
@@ -1924,15 +2015,122 @@
   }
 
 
+  function buildTournamentCalendarEvent(tournament) {
+    if (!tournament || typeof tournament !== 'object') return null;
+    const rawId = tournament.id || tournament.tournamentId || tournament.name;
+    if (!rawId) return null;
+    const start = parseISODate(tournament.start || tournament.startDate || tournament.date);
+    if (!start) return null;
+    let end = parseISODate(tournament.end || tournament.endDate) || cloneDate(start);
+    if (compareDate(end, start) < 0) end = cloneDate(start);
+
+    const organizer = tournament.organizer || '不明';
+    const entryDeadline = tournament.entryDeadline || '不明';
+    const prize = tournament.prize || '不明';
+    const entryFee = tournament.entryFee || '不明';
+    const qualification = tournament.qualification || '';
+    const descLines = [
+      '大会名：' + (tournament.name || '名称未設定'),
+      '主催：' + organizer,
+      'エントリー締切：' + entryDeadline,
+      '賞金：' + prize,
+      'エントリー費：' + entryFee
+    ];
+    if (qualification) descLines.push('出場資格：' + qualification);
+
+    return {
+      id: 'tournament-' + String(rawId),
+      source: 'search-module',
+      tournamentId: String(rawId),
+      y: start.y,
+      m: start.m,
+      d: start.d,
+      endY: end.y,
+      endM: end.m,
+      endD: end.d,
+      time: '00:00',
+      endTime: '00:00',
+      allDay: true,
+      title: tournament.name || '大会予定',
+      type: '試合',
+      category: 'tournament',
+      chipLines: [tournament.name || '大会予定'],
+      chipLabel: tournament.name || '大会予定',
+      color: 'blue',
+      desc: descLines.join('\n'),
+      loc: tournament.course || tournament.venue || '',
+      locIcon: 'pin',
+      prefecture: tournament.prefecture || '',
+      organizer: organizer,
+      entryDeadline: entryDeadline,
+      prize: prize,
+      entryFee: entryFee,
+      rawTournament: Object.assign({}, tournament)
+    };
+  }
+
+  function addTournamentToCalendar(tournament, options) {
+    const nextEvent = buildTournamentCalendarEvent(tournament);
+    if (!nextEvent) {
+      return { ok: false, reason: 'invalid-tournament' };
+    }
+
+    ensureEventIds();
+    const existing = findEventById(nextEvent.id);
+    if (existing) {
+      if (options && options.select !== false) {
+        const start = eventStart(existing);
+        state.selected = cloneDate(start);
+        state.viewYear = start.y;
+        state.viewMonth = start.m;
+        if (state.root) renderAll();
+      }
+      return { ok: true, duplicate: true, event: existing };
+    }
+
+    DEMO_EVENTS.push(nextEvent);
+    persistCalendarEvents();
+
+    if (options && options.select !== false) {
+      state.selected = { y: nextEvent.y, m: nextEvent.m, d: nextEvent.d };
+      state.viewYear = nextEvent.y;
+      state.viewMonth = nextEvent.m;
+    }
+
+    if (state.root) renderAll();
+    try {
+      window.dispatchEvent(new CustomEvent('PNX_CALENDAR_TOURNAMENT_ADDED', { detail: { event: nextEvent, tournament: tournament } }));
+    } catch (e) {}
+
+    return { ok: true, duplicate: false, event: nextEvent };
+  }
+
+  window.PNXCalendarAddTournamentEvent = addTournamentToCalendar;
+  window.PNXCalendarBuildTournamentEvent = buildTournamentCalendarEvent;
+  window.PNXCalendarGetEvents = function () {
+    return DEMO_EVENTS.map(function (event) { return Object.assign({}, event); });
+  };
+  window.renderAllPanels = function () {
+    if (!state.root) return false;
+    renderAll();
+    return true;
+  };
+  window.renderCalList = function () {
+    if (!state.root) return false;
+    renderSheet();
+    return true;
+  };
+
+
   window.initProNexaCalendarV2 = function initProNexaCalendarV2(options) {
     const root = (options && options.root) || document.querySelector('[data-pnx-calendar-v2]') || document.querySelector('.pnx-calendar-v2');
     if (!root) return;
 
     state.root = root;
 
-    if (options && Array.isArray(options.events)) {
-      DEMO_EVENTS = options.events;
-    }
+    const initialEvents = (options && Array.isArray(options.events)) ? options.events : DEMO_EVENTS;
+    const storedEvents = loadCalendarEventsFromStorage();
+    DEMO_EVENTS = mergeCalendarEvents(initialEvents, storedEvents);
     ensureEventIds();
     if (options && options.initialDate) {
       const init = options.initialDate;
