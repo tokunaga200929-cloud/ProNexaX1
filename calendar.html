@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
   <title>ProNexaX Calendar v2</title>
-  <link rel="stylesheet" href="calendar.css">
+  <link rel="stylesheet" href="calendar.css?v=real-today-20260525">
   <style>
     /* 単体プレビュー用。本体統合時はこの style と body/html は使わない */
     html, body {
@@ -29,6 +29,104 @@
       background: #fff;
       overflow-x: hidden;
       overflow-y: auto;
+    }
+  </style>
+
+  <style id="pnx-nav-netlify-hard-fix">
+    html, body { background:#fff !important; }
+    body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important; }
+    #page-calendar { background:#fff !important; overflow-x:hidden !important; }
+    .pnx-calendar-v2 { padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)) !important; }
+    .pnx-cal-bottom-nav {
+      position: fixed !important;
+      left: 50% !important;
+      right: auto !important;
+      bottom: 0 !important;
+      transform: translateX(-50%) !important;
+      width: min(100vw, 430px) !important;
+      min-height: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+      padding: 8px 14px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+      z-index: 2147483647 !important;
+      display: grid !important;
+      grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+      align-items: center !important;
+      gap: 4px !important;
+      background: rgba(255,255,255,.985) !important;
+      border: 1px solid rgba(226,232,240,.95) !important;
+      border-bottom: 0 !important;
+      border-radius: 22px 22px 0 0 !important;
+      box-shadow: 0 -10px 26px rgba(15,23,42,.08) !important;
+      -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+      backdrop-filter: blur(18px) saturate(180%) !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+    }
+    .pnx-cal-bottom-nav, .pnx-cal-bottom-nav * { box-sizing: border-box !important; }
+    .pnx-cal-bottom-nav .pnx-cal-nav-item {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 4px !important;
+      width: auto !important;
+      min-width: 0 !important;
+      height: 58px !important;
+      min-height: 58px !important;
+      max-height: 58px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 16px !important;
+      background: transparent !important;
+      color: #0f172a !important;
+      font-family: -apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans","Noto Sans JP",sans-serif !important;
+      font-size: 11.5px !important;
+      font-weight: 430 !important;
+      line-height: 1 !important;
+      letter-spacing: -.035em !important;
+      white-space: nowrap !important;
+      text-align: center !important;
+    }
+    .pnx-cal-bottom-nav .pnx-cal-nav-item.is-active {
+      color:#0a74ff !important;
+      background: linear-gradient(180deg, rgba(235,244,255,.98), rgba(242,247,255,.98)) !important;
+      box-shadow: inset 0 0 0 1px rgba(10,116,255,.16) !important;
+      font-weight: 540 !important;
+    }
+    .pnx-cal-bottom-nav .pnx-cal-nav-item svg {
+      display:block !important;
+      width:23px !important; height:23px !important;
+      min-width:23px !important; min-height:23px !important;
+      max-width:23px !important; max-height:23px !important;
+      margin:0 !important; padding:0 !important;
+      fill:none !important;
+      stroke:currentColor !important;
+      stroke-width:1.85 !important;
+      stroke-linecap:round !important;
+      stroke-linejoin:round !important;
+      overflow:visible !important;
+    }
+    .pnx-cal-bottom-nav .pnx-cal-nav-item svg * {
+      fill:none !important;
+      stroke:currentColor !important;
+      stroke-width:inherit !important;
+      stroke-linecap:round !important;
+      stroke-linejoin:round !important;
+    }
+    .pnx-cal-bottom-nav .pnx-cal-nav-item span {
+      display:block !important;
+      width:100% !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
+      white-space:nowrap !important;
+      color:currentColor !important;
+    }
+    @media (max-width: 374px) {
+      .pnx-cal-bottom-nav { padding-left:8px !important; padding-right:8px !important; gap:2px !important; }
+      .pnx-cal-bottom-nav .pnx-cal-nav-item { height:55px !important; min-height:55px !important; max-height:55px !important; font-size:10.5px !important; border-radius:14px !important; }
+      .pnx-cal-bottom-nav .pnx-cal-nav-item svg { width:21px !important; height:21px !important; min-width:21px !important; min-height:21px !important; max-width:21px !important; max-height:21px !important; }
     }
   </style>
 </head>
@@ -80,13 +178,27 @@
       <button class="pnx-cal-month-nav" type="button" data-pnx-action="prev-month" aria-label="前の月">
         <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M17 7.5L10.5 14L17 20.5" /></svg>
       </button>
-      <button class="pnx-cal-month-label" type="button" data-pnx-action="pick-month" aria-label="月を選択">
+      <button class="pnx-cal-month-label" type="button" data-pnx-action="pick-month" aria-label="月を選択" aria-expanded="false" aria-controls="pnx-month-popover">
         <span data-pnx-month-label>2026年 5月</span>
         <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M9 11.5L14 16.5L19 11.5" /></svg>
       </button>
       <button class="pnx-cal-month-nav" type="button" data-pnx-action="next-month" aria-label="次の月">
         <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M11 7.5L17.5 14L11 20.5" /></svg>
       </button>
+    </div>
+
+    <div class="pnx-cal-month-popover" id="pnx-month-popover" data-pnx-month-popover aria-hidden="true">
+      <div class="pnx-cal-month-popover-head">
+        <button class="pnx-cal-month-popover-nav" type="button" data-pnx-action="month-picker-prev-year" aria-label="前の年">
+          <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M17 7.5L10.5 14L17 20.5" /></svg>
+        </button>
+        <strong data-pnx-month-picker-year>2026年</strong>
+        <button class="pnx-cal-month-popover-nav" type="button" data-pnx-action="month-picker-next-year" aria-label="次の年">
+          <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M11 7.5L17.5 14L11 20.5" /></svg>
+        </button>
+      </div>
+      <div class="pnx-cal-month-popover-line" aria-hidden="true"></div>
+      <div class="pnx-cal-month-popover-grid" data-pnx-month-picker-grid aria-label="月を選択"></div>
     </div>
 
     <div class="pnx-cal-weekdays" aria-hidden="true">
@@ -131,6 +243,204 @@
       <div class="pnx-cal-event-list" data-pnx-sheet-list></div>
     </section>
 
+    <div class="pnx-cal-add-layer" data-pnx-add-layer aria-hidden="true">
+      <button class="pnx-cal-add-backdrop" type="button" data-pnx-action="close-add" aria-label="閉じる"></button>
+      <section class="pnx-cal-add-sheet" role="dialog" aria-modal="true" aria-labelledby="pnx-add-title">
+        <div class="pnx-cal-add-handle" aria-hidden="true"></div>
+        <div class="pnx-cal-add-head">
+          <button class="pnx-cal-add-cancel" type="button" data-pnx-action="close-add">キャンセル</button>
+          <h2 id="pnx-add-title">新規予定</h2>
+          <button class="pnx-cal-add-save-mini" type="button" data-pnx-action="save-add">保存</button>
+        </div>
+
+        <div class="pnx-cal-add-body">
+          <label class="pnx-cal-title-box" for="pnx-add-title-input">
+            <span class="pnx-cal-title-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4.5 19.5L8.2 18.8L19.1 7.9C19.9 7.1 19.9 5.9 19.1 5.1C18.3 4.3 17.1 4.3 16.3 5.1L5.4 16L4.5 19.5Z"/><path d="M14.8 6.6L17.6 9.4"/></svg>
+            </span>
+            <input id="pnx-add-title-input" data-pnx-add-title type="text" autocomplete="off" inputmode="text" placeholder="タイトル" value="">
+          </label>
+
+          <div class="pnx-cal-add-form">
+            <button class="pnx-cal-add-row" type="button" data-pnx-action="toggle-type">
+              <span class="pnx-cal-add-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 7.5H19"/><path d="M5 12H19"/><path d="M5 16.5H13"/></svg></span>
+              <span class="pnx-cal-add-row-label">種類</span>
+              <span class="pnx-cal-add-row-value" data-pnx-add-type-label>未設定</span>
+              <span class="pnx-cal-add-chevron">›</span>
+            </button>
+
+            <div class="pnx-cal-type-panel" data-pnx-type-panel hidden>
+              <button type="button" class="pnx-cal-type-chip" data-pnx-type="練習" data-color="green">練習</button>
+              <button type="button" class="pnx-cal-type-chip" data-pnx-type="レッスン" data-color="purple">レッスン</button>
+              <button type="button" class="pnx-cal-type-chip" data-pnx-type="試合" data-color="blue">試合</button>
+              <button type="button" class="pnx-cal-type-chip" data-pnx-type="移動" data-color="orange">移動</button>
+              <button type="button" class="pnx-cal-type-chip" data-pnx-type="締切" data-color="red">締切</button>
+              <button type="button" class="pnx-cal-type-chip" data-pnx-type="その他" data-color="blue">その他</button>
+            </div>
+
+            <button class="pnx-cal-add-row" type="button" data-pnx-action="open-date-range">
+              <span class="pnx-cal-add-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 9H20"/><path d="M8 3.5V6.5"/><path d="M16 3.5V6.5"/></svg></span>
+              <span class="pnx-cal-add-row-label">日時</span>
+              <span class="pnx-cal-add-row-value" data-pnx-add-date>5月20日（水） 09:00〜10:00</span>
+              <span class="pnx-cal-add-chevron">›</span>
+            </button>
+
+            <button class="pnx-cal-add-row" type="button" data-pnx-action="open-date-range">
+              <span class="pnx-cal-add-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12L15.2 14"/></svg></span>
+              <span class="pnx-cal-add-row-label">時間</span>
+              <span class="pnx-cal-add-row-value" data-pnx-add-time>09:00〜10:00</span>
+              <span class="pnx-cal-add-chevron">›</span>
+            </button>
+
+            <label class="pnx-cal-add-row pnx-cal-add-row-input">
+              <span class="pnx-cal-add-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 5.5 15.2 5.5 9.7C5.5 6.1 8.4 3.5 12 3.5C15.6 3.5 18.5 6.1 18.5 9.7C18.5 15.2 12 21 12 21Z"/><circle cx="12" cy="9.6" r="2.25"/></svg></span>
+              <span class="pnx-cal-add-row-label">場所</span>
+              <input data-pnx-add-place type="text" autocomplete="off" placeholder="場所を入力" value="">
+            </label>
+
+            <label class="pnx-cal-add-memo">
+              <span class="pnx-cal-add-memo-label">メモ</span>
+              <textarea data-pnx-add-memo maxlength="200" placeholder="メモを入力"></textarea>
+            </label>
+
+            <div class="pnx-cal-notify-row">
+              <span class="pnx-cal-notify-label">通知</span>
+              <div class="pnx-cal-notify-options" data-pnx-notify-options>
+                <button type="button" class="is-active" data-pnx-notify="なし">なし</button>
+                <button type="button" data-pnx-notify="当日">当日</button>
+                <button type="button" data-pnx-notify="前日">前日</button>
+                <button type="button" data-pnx-notify="1週間前">1週間前</button>
+              </div>
+            </div>
+          </div>
+
+          <section class="pnx-cal-color-card" aria-label="予定カラーを選択">
+            <div class="pnx-cal-color-top">
+              <div>
+                <h3>カラー</h3>
+                <p>カレンダーに表示するチップ色</p>
+              </div>
+              <span class="pnx-cal-color-name" data-pnx-color-name>ブルー</span>
+            </div>
+            <div class="pnx-cal-color-options" data-pnx-color-options>
+              <button type="button" class="pnx-cal-color-dot is-selected" data-pnx-color="blue" aria-label="ブルー"><span></span></button>
+              <button type="button" class="pnx-cal-color-dot" data-pnx-color="green" aria-label="グリーン"><span></span></button>
+              <button type="button" class="pnx-cal-color-dot" data-pnx-color="purple" aria-label="パープル"><span></span></button>
+              <button type="button" class="pnx-cal-color-dot" data-pnx-color="orange" aria-label="オレンジ"><span></span></button>
+              <button type="button" class="pnx-cal-color-dot" data-pnx-color="red" aria-label="レッド"><span></span></button>
+              <button type="button" class="pnx-cal-color-dot" data-pnx-color="gray" aria-label="グレー"><span></span></button>
+            </div>
+            <div class="pnx-cal-color-preview">
+              <span class="pnx-cal-color-preview-label">表示プレビュー</span>
+              <span class="pnx-cal-preview-chip" data-pnx-color-preview-chip style="--pnx-chip-color:#0a74ff"><span data-pnx-color-preview-title>新規予定</span></span>
+            </div>
+          </section>
+
+          <button class="pnx-cal-add-save" type="button" data-pnx-action="save-add">保存する</button>
+        </div>
+      </section>
+
+            <section class="pnx-cal-date-range-sheet" data-pnx-date-range-sheet aria-hidden="true" role="dialog" aria-modal="true" aria-label="日付と時間を選択">
+        <div class="pnx-cal-date-range-handle" aria-hidden="true"></div>
+        <div class="pnx-cal-date-range-head is-wheel-style">
+          <button class="pnx-cal-date-range-text-btn" type="button" data-pnx-action="cancel-date-range">キャンセル</button>
+          <h3>日付を選択</h3>
+          <button class="pnx-cal-date-range-text-btn is-primary" type="button" data-pnx-action="apply-date-range">完了</button>
+        </div>
+
+        <div class="pnx-cal-dt-summary">
+          <button type="button" class="pnx-cal-dt-card is-active" data-pnx-dt-field="start">
+            <span>開始</span>
+            <strong data-pnx-dt-start-summary>5/26(火) 00:00</strong>
+          </button>
+          <span class="pnx-cal-dt-arrow" aria-hidden="true">→</span>
+          <button type="button" class="pnx-cal-dt-card" data-pnx-dt-field="end">
+            <span>終了</span>
+            <strong data-pnx-dt-end-summary>5/26(火) 00:00</strong>
+          </button>
+          <button type="button" class="pnx-cal-dt-allday" data-pnx-action="toggle-all-day">終日</button>
+        </div>
+
+        <div class="pnx-cal-dt-wheel-area">
+          <div class="pnx-cal-dt-wheel-grid">
+            <div class="pnx-cal-dt-wheel-col is-date">
+              <div class="pnx-cal-dt-wheel" data-pnx-picker-date-list></div>
+            </div>
+            <div class="pnx-cal-dt-wheel-col is-hour" data-pnx-dt-time-col>
+              <div class="pnx-cal-dt-wheel" data-pnx-picker-hour-list></div>
+            </div>
+            <div class="pnx-cal-dt-wheel-col is-minute" data-pnx-dt-time-col>
+              <div class="pnx-cal-dt-wheel" data-pnx-picker-minute-list></div>
+            </div>
+            <div class="pnx-cal-dt-wheel-highlight" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div class="pnx-cal-dt-step-row">
+          <span class="pnx-cal-dt-step-label">分の単位</span>
+          <div class="pnx-cal-dt-step-pills">
+            <button type="button" data-pnx-minute-step="1">1</button>
+            <button type="button" data-pnx-minute-step="5">5</button>
+            <button type="button" data-pnx-minute-step="15" class="is-active">15</button>
+            <button type="button" data-pnx-minute-step="30">30</button>
+            <button type="button" data-pnx-minute-step="60">60</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="pnx-cal-detail-layer" data-pnx-detail-layer aria-hidden="true">
+      <button class="pnx-cal-detail-backdrop" type="button" data-pnx-action="close-detail" aria-label="閉じる"></button>
+      <section class="pnx-cal-detail-sheet" role="dialog" aria-modal="true" aria-labelledby="pnx-detail-title">
+        <div class="pnx-cal-detail-handle" aria-hidden="true"></div>
+        <div class="pnx-cal-detail-head">
+          <button class="pnx-cal-detail-close" type="button" data-pnx-action="close-detail">閉じる</button>
+          <h2 id="pnx-detail-title">予定の詳細</h2>
+          <span aria-hidden="true"></span>
+        </div>
+
+        <div class="pnx-cal-detail-card">
+          <div class="pnx-cal-detail-row">
+            <span class="pnx-cal-detail-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2.4"/><path d="M8.5 8.5H15.5"/><path d="M8.5 12H15.5"/><path d="M8.5 15.5H13"/></svg></span>
+            <span class="pnx-cal-detail-label">タイトル</span>
+            <strong class="pnx-cal-detail-value" data-pnx-detail-title-text>予定</strong>
+          </div>
+          <div class="pnx-cal-detail-row">
+            <span class="pnx-cal-detail-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.5 11.3V6.2C4.5 5.3 5.3 4.5 6.2 4.5H11.3L20 13.2C20.7 13.9 20.7 15.1 20 15.8L15.8 20C15.1 20.7 13.9 20.7 13.2 20L4.5 11.3Z"/><circle cx="8.3" cy="8.3" r="1.1"/></svg></span>
+            <span class="pnx-cal-detail-label">種類</span>
+            <strong class="pnx-cal-detail-value"><span class="pnx-cal-detail-dot" data-pnx-detail-dot></span><span data-pnx-detail-type>未設定</span></strong>
+          </div>
+          <div class="pnx-cal-detail-row">
+            <span class="pnx-cal-detail-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 9H20"/><path d="M8 3.5V6.5"/><path d="M16 3.5V6.5"/></svg></span>
+            <span class="pnx-cal-detail-label">日時</span>
+            <strong class="pnx-cal-detail-value" data-pnx-detail-date>未設定</strong>
+          </div>
+          <div class="pnx-cal-detail-row">
+            <span class="pnx-cal-detail-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21C12 21 5.5 15.2 5.5 9.7C5.5 6.1 8.4 3.5 12 3.5C15.6 3.5 18.5 6.1 18.5 9.7C18.5 15.2 12 21 12 21Z"/><circle cx="12" cy="9.6" r="2.25"/></svg></span>
+            <span class="pnx-cal-detail-label">場所</span>
+            <strong class="pnx-cal-detail-value" data-pnx-detail-place>未設定</strong>
+          </div>
+          <div class="pnx-cal-detail-row">
+            <span class="pnx-cal-detail-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4.5H19V17.5H9L5 21.2V4.5Z"/><path d="M8.5 8.5H15.5"/><path d="M8.5 12H14"/></svg></span>
+            <span class="pnx-cal-detail-label">メモ</span>
+            <strong class="pnx-cal-detail-value" data-pnx-detail-memo>なし</strong>
+          </div>
+        </div>
+
+        <div class="pnx-cal-detail-actions">
+          <button class="pnx-cal-detail-action is-edit" type="button" data-pnx-action="edit-detail">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 19.5L8.2 18.8L19.1 7.9C19.9 7.1 19.9 5.9 19.1 5.1C18.3 4.3 17.1 4.3 16.3 5.1L5.4 16L4.5 19.5Z"/><path d="M14.8 6.6L17.6 9.4"/></svg>
+            <span>編集</span>
+          </button>
+          <button class="pnx-cal-detail-action is-delete" type="button" data-pnx-action="delete-detail">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7H19"/><path d="M9 7V5.2C9 4.5 9.5 4 10.2 4H13.8C14.5 4 15 4.5 15 5.2V7"/><path d="M8 10V18.2C8 19.2 8.8 20 9.8 20H14.2C15.2 20 16 19.2 16 18.2V10"/><path d="M10.5 11.5V17"/><path d="M13.5 11.5V17"/></svg>
+            <span>削除</span>
+          </button>
+        </div>
+      </section>
+    </div>
+
+
     <nav class="pnx-cal-bottom-nav" aria-label="メインナビゲーション">
       <button class="pnx-cal-nav-item is-active" type="button" data-pnx-nav="calendar" aria-current="page">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -174,7 +484,7 @@
   </div>
 </section>
 
-<script src="calendar.js" charset="UTF-8"></script>
+<script src="calendar.js?v=real-today-20260525" charset="UTF-8"></script>
 <script>
   if (window.initProNexaCalendarV2) window.initProNexaCalendarV2();
 </script>
