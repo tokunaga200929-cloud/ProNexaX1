@@ -1,0 +1,2976 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#F2F2F7">
+  <title>収支 — ProNexaX</title>
+  <link rel="stylesheet" href="finance.css?v=step180h-mypage">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+  <script src="finance.js?v=step180h-mypage" defer></script>
+
+  <style>
+    /* ProNexaX本体統合用：収支単独版をiframe内で綺麗に表示 */
+    html, body {
+      margin: 0 !important;
+      width: 100%;
+      height: 100%;
+      background: #F2F2F7 !important;
+      overflow: hidden;
+    }
+    .finance-root {
+      min-height: 100dvh !important;
+      height: 100dvh !important;
+      max-width: none !important;
+      width: 100% !important;
+      margin: 0 !important;
+      border-left: none !important;
+      border-right: none !important;
+      box-shadow: none !important;
+    }
+  </style>
+
+
+  <style>
+    /* STEP4 finance embed stability */
+    html, body {
+      margin: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 100dvh !important;
+      overflow: hidden !important;
+      background: #F2F2F7 !important;
+    }
+    .finance-root {
+      min-height: 100dvh !important;
+      height: 100dvh !important;
+      max-width: none !important;
+      width: 100% !important;
+      margin: 0 !important;
+      overflow: hidden !important;
+    }
+  </style>
+
+<style>
+/* ================================================================
+   STEP18: Tournament Expense Panel
+   既存収支UIを壊さず下部に追加する大会連携パネル
+   ================================================================ */
+.pnx-fin-tournament-panel{
+  margin:18px 16px 28px;
+  padding:18px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-fin-tournament-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:14px;
+}
+.pnx-fin-kicker{
+  margin:0 0 4px;
+  color:#3478f6;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.04em;
+}
+.pnx-fin-tournament-panel h2{
+  margin:0 0 5px;
+  font-size:17px;
+  color:#101828;
+  letter-spacing:-.04em;
+}
+.pnx-fin-tournament-panel p{
+  margin:0;
+  color:#667085;
+  font-size:12px;
+  line-height:1.65;
+}
+.pnx-fin-form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.pnx-fin-form-grid label,
+.pnx-fin-memo-label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  font-size:11px;
+  font-weight:800;
+  color:#344054;
+}
+.pnx-fin-form-grid input,
+.pnx-fin-form-grid select,
+.pnx-fin-memo-label input{
+  height:40px;
+  border:1px solid #d0d5dd;
+  border-radius:13px;
+  padding:0 11px;
+  font-size:13px;
+  background:#fff;
+  outline:none;
+}
+.pnx-fin-form-grid input:focus,
+.pnx-fin-form-grid select:focus,
+.pnx-fin-memo-label input:focus{
+  border-color:#3478f6;
+  box-shadow:0 0 0 3px rgba(52,120,246,.12);
+}
+.pnx-fin-memo-label{
+  margin-top:10px;
+}
+.pnx-fin-actions{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+}
+.pnx-fin-main-btn,
+.pnx-fin-sub-btn{
+  border:0;
+  height:40px;
+  border-radius:14px;
+  padding:0 14px;
+  font-weight:800;
+  cursor:pointer;
+}
+.pnx-fin-main-btn{
+  flex:1;
+  background:#3478f6;
+  color:#fff;
+}
+.pnx-fin-sub-btn{
+  background:#eef4ff;
+  color:#175cd3;
+  white-space:nowrap;
+}
+.pnx-fin-status{
+  margin-top:11px;
+  border-radius:13px;
+  background:#f9fafb;
+  color:#667085;
+  font-size:12px;
+  font-weight:800;
+  padding:10px 12px;
+}
+.pnx-fin-status.is-success{
+  background:#ecfdf3;
+  color:#027a48;
+}
+.pnx-fin-status.is-error{
+  background:#fef3f2;
+  color:#b42318;
+}
+@media(max-width:420px){
+  .pnx-fin-form-grid{grid-template-columns:1fr;}
+  .pnx-fin-tournament-head{flex-direction:column;}
+}
+</style>
+<style>
+/* ================================================================
+   STEP19: Tournament Finance Transaction List
+   保存済み大会経費の一覧表示
+   ================================================================ */
+.pnx-fin-transaction-list-panel{
+  margin:18px 16px 34px;
+  padding:18px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-fin-list-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:12px;
+}
+.pnx-fin-list-head h2{
+  margin:0 0 5px;
+  font-size:17px;
+  color:#101828;
+  letter-spacing:-.04em;
+}
+.pnx-fin-list-head p{
+  margin:0;
+  color:#667085;
+  font-size:12px;
+  line-height:1.65;
+}
+.pnx-fin-transaction-list{
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+}
+.pnx-fin-tx-item{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px;
+  border-radius:16px;
+  background:#f9fafb;
+  border:1px solid #eef2f6;
+}
+.pnx-fin-tx-title{
+  font-size:13px;
+  font-weight:800;
+  color:#101828;
+  margin-bottom:3px;
+}
+.pnx-fin-tx-meta{
+  font-size:11px;
+  color:#667085;
+  line-height:1.5;
+}
+.pnx-fin-tx-amount{
+  font-size:14px;
+  font-weight:900;
+  color:#b42318;
+  white-space:nowrap;
+}
+.pnx-fin-empty{
+  padding:14px;
+  border-radius:16px;
+  background:#f9fafb;
+  color:#667085;
+  font-size:12px;
+  font-weight:800;
+  text-align:center;
+}
+</style>
+<style>
+/* ================================================================
+   STEP20: Tournament Finance Summary
+   大会別収支サマリー
+   ================================================================ */
+.pnx-fin-summary-panel{
+  margin:18px 16px 38px;
+  padding:18px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-fin-summary-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:12px;
+}
+.pnx-fin-summary-head h2{
+  margin:0 0 5px;
+  font-size:17px;
+  color:#101828;
+  letter-spacing:-.04em;
+}
+.pnx-fin-summary-head p{
+  margin:0;
+  color:#667085;
+  font-size:12px;
+  line-height:1.65;
+}
+.pnx-fin-summary-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.pnx-fin-summary-card{
+  border-radius:18px;
+  background:#f9fafb;
+  border:1px solid #eef2f6;
+  padding:13px;
+}
+.pnx-fin-summary-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:10px;
+}
+.pnx-fin-summary-title{
+  font-size:14px;
+  font-weight:900;
+  color:#101828;
+  margin-bottom:3px;
+}
+.pnx-fin-summary-meta{
+  font-size:11px;
+  color:#667085;
+  line-height:1.5;
+}
+.pnx-fin-summary-total{
+  font-size:16px;
+  font-weight:950;
+  color:#b42318;
+  white-space:nowrap;
+}
+.pnx-fin-summary-breakdown{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+}
+.pnx-fin-summary-chip{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  align-items:center;
+  padding:8px 10px;
+  border-radius:12px;
+  background:#fff;
+  border:1px solid #eef2f6;
+  font-size:11px;
+  color:#475467;
+  font-weight:800;
+}
+.pnx-fin-summary-chip strong{
+  color:#101828;
+  font-size:12px;
+}
+@media(max-width:420px){
+  .pnx-fin-summary-breakdown{grid-template-columns:1fr;}
+  .pnx-fin-summary-head{flex-direction:column;}
+}
+</style>
+<style>
+/* ================================================================
+   STEP21: Tournament Income & Profit
+   大会別収入入力・利益サマリー
+   ================================================================ */
+.pnx-fin-income-panel,
+.pnx-fin-profit-panel{
+  margin:18px 16px 38px;
+  padding:18px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-fin-income-head,
+.pnx-fin-profit-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:12px;
+}
+.pnx-fin-income-head h2,
+.pnx-fin-profit-head h2{
+  margin:0 0 5px;
+  font-size:17px;
+  color:#101828;
+  letter-spacing:-.04em;
+}
+.pnx-fin-income-head p,
+.pnx-fin-profit-head p{
+  margin:0;
+  color:#667085;
+  font-size:12px;
+  line-height:1.65;
+}
+.pnx-fin-profit-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.pnx-fin-profit-card{
+  border-radius:18px;
+  background:#f9fafb;
+  border:1px solid #eef2f6;
+  padding:13px;
+}
+.pnx-fin-profit-top{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+  margin-bottom:10px;
+}
+.pnx-fin-profit-title{
+  font-size:14px;
+  font-weight:900;
+  color:#101828;
+  margin-bottom:3px;
+}
+.pnx-fin-profit-meta{
+  font-size:11px;
+  color:#667085;
+  line-height:1.5;
+}
+.pnx-fin-profit-main{
+  font-size:16px;
+  font-weight:950;
+  white-space:nowrap;
+}
+.pnx-fin-profit-main.is-plus{color:#027a48;}
+.pnx-fin-profit-main.is-minus{color:#b42318;}
+.pnx-fin-profit-row{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+.pnx-fin-profit-box{
+  background:#fff;
+  border:1px solid #eef2f6;
+  border-radius:14px;
+  padding:10px;
+}
+.pnx-fin-profit-box span{
+  display:block;
+  font-size:10px;
+  color:#667085;
+  font-weight:800;
+  margin-bottom:4px;
+}
+.pnx-fin-profit-box strong{
+  display:block;
+  font-size:13px;
+  color:#101828;
+  font-weight:900;
+}
+.pnx-fin-profit-box.income strong{color:#027a48;}
+.pnx-fin-profit-box.expense strong{color:#b42318;}
+@media(max-width:420px){
+  .pnx-fin-profit-row{grid-template-columns:1fr;}
+  .pnx-fin-income-head,
+  .pnx-fin-profit-head{flex-direction:column;}
+}
+</style>
+<style>
+/* ================================================================
+   STEP22: Finance Accuracy Summary
+   年間・月別収支サマリー
+   ================================================================ */
+.pnx-fin-accuracy-panel{
+  margin:18px 16px 40px;
+  padding:18px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-fin-accuracy-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:14px;
+}
+.pnx-fin-accuracy-head h2{
+  margin:0 0 5px;
+  font-size:17px;
+  color:#101828;
+  letter-spacing:-.04em;
+}
+.pnx-fin-accuracy-head p{
+  margin:0;
+  color:#667085;
+  font-size:12px;
+  line-height:1.65;
+}
+.pnx-fin-accuracy-cards{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.pnx-fin-accuracy-card{
+  border-radius:18px;
+  background:#f9fafb;
+  border:1px solid #eef2f6;
+  padding:13px;
+}
+.pnx-fin-accuracy-card span{
+  display:block;
+  color:#667085;
+  font-size:11px;
+  font-weight:800;
+  margin-bottom:6px;
+}
+.pnx-fin-accuracy-card strong{
+  display:block;
+  font-size:18px;
+  font-weight:950;
+  color:#101828;
+}
+.pnx-fin-accuracy-card.income strong{color:#027a48;}
+.pnx-fin-accuracy-card.expense strong{color:#b42318;}
+.pnx-fin-accuracy-card.profit strong.is-plus{color:#027a48;}
+.pnx-fin-accuracy-card.profit strong.is-minus{color:#b42318;}
+.pnx-fin-monthly-list{
+  margin-top:12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.pnx-fin-month-row{
+  display:grid;
+  grid-template-columns:70px 1fr 1fr 1fr;
+  gap:8px;
+  align-items:center;
+  padding:10px 12px;
+  border-radius:14px;
+  background:#f9fafb;
+  border:1px solid #eef2f6;
+  font-size:12px;
+  font-weight:800;
+}
+.pnx-fin-month-row .month{color:#101828;}
+.pnx-fin-month-row .income{color:#027a48;}
+.pnx-fin-month-row .expense{color:#b42318;}
+.pnx-fin-month-row .profit.plus{color:#027a48;}
+.pnx-fin-month-row .profit.minus{color:#b42318;}
+@media(max-width:520px){
+  .pnx-fin-accuracy-cards{grid-template-columns:1fr;}
+  .pnx-fin-month-row{grid-template-columns:1fr; gap:4px;}
+  .pnx-fin-accuracy-head{flex-direction:column;}
+}
+</style>
+<style>
+/* ================================================================
+   STEP23: Tax Category Mapping
+   確定申告カテゴリ集計
+   ================================================================ */
+.pnx-fin-tax-panel{
+  margin:18px 16px 42px;
+  padding:18px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-fin-tax-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:12px;
+}
+.pnx-fin-tax-head h2{
+  margin:0 0 5px;
+  font-size:17px;
+  color:#101828;
+  letter-spacing:-.04em;
+}
+.pnx-fin-tax-head p{
+  margin:0;
+  color:#667085;
+  font-size:12px;
+  line-height:1.65;
+}
+.pnx-fin-tax-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.pnx-fin-tax-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:12px;
+  border-radius:16px;
+  background:#f9fafb;
+  border:1px solid #eef2f6;
+}
+.pnx-fin-tax-name{
+  font-size:13px;
+  color:#101828;
+  font-weight:900;
+}
+.pnx-fin-tax-meta{
+  margin-top:3px;
+  color:#667085;
+  font-size:11px;
+  line-height:1.45;
+}
+.pnx-fin-tax-amount{
+  font-size:14px;
+  font-weight:950;
+  color:#344054;
+  white-space:nowrap;
+}
+.pnx-fin-tax-note{
+  margin-top:12px;
+  padding:11px 12px;
+  border-radius:14px;
+  background:#eef4ff;
+  color:#175cd3;
+  font-size:11px;
+  font-weight:800;
+  line-height:1.6;
+}
+</style>
+<style>
+/* ================================================================
+   STEP24: CSV Export
+   税理士共有・会計ソフト連携用CSV出力
+   ================================================================ */
+.pnx-fin-export-panel{
+  margin:18px 16px 44px;
+  padding:18px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-fin-export-head{
+  margin-bottom:14px;
+}
+.pnx-fin-export-head h2{
+  margin:0 0 5px;
+  font-size:17px;
+  color:#101828;
+  letter-spacing:-.04em;
+}
+.pnx-fin-export-head p{
+  margin:0;
+  color:#667085;
+  font-size:12px;
+  line-height:1.65;
+}
+.pnx-fin-export-actions{
+  display:flex;
+  gap:10px;
+  margin-bottom:12px;
+}
+.pnx-fin-export-output{
+  width:100%;
+  min-height:160px;
+  resize:vertical;
+  border:1px solid #d0d5dd;
+  border-radius:16px;
+  padding:12px;
+  font-size:11px;
+  line-height:1.55;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  background:#f9fafb;
+  color:#344054;
+  outline:none;
+}
+@media(max-width:420px){
+  .pnx-fin-export-actions{flex-direction:column;}
+}
+</style>
+<style>
+/* ================================================================
+   STEP25: PDF Report
+   税理士共有PDFレポート
+   ================================================================ */
+.pnx-fin-pdf-panel{
+  margin:18px 16px 46px;
+  padding:18px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-fin-pdf-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:14px;
+}
+.pnx-fin-pdf-head h2{
+  margin:0 0 5px;
+  font-size:17px;
+  color:#101828;
+  letter-spacing:-.04em;
+}
+.pnx-fin-pdf-head p{
+  margin:0;
+  color:#667085;
+  font-size:12px;
+  line-height:1.65;
+}
+.pnx-fin-pdf-preview{
+  border-radius:20px;
+  background:#f9fafb;
+  border:1px solid #eef2f6;
+  overflow:hidden;
+}
+.pnx-pdf-report{
+  background:#fff;
+  padding:22px;
+  color:#101828;
+}
+.pnx-pdf-title-row{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:flex-start;
+  border-bottom:1px solid #eaecf0;
+  padding-bottom:14px;
+  margin-bottom:16px;
+}
+.pnx-pdf-brand{
+  font-size:12px;
+  font-weight:900;
+  color:#3478f6;
+  letter-spacing:.04em;
+}
+.pnx-pdf-report h1{
+  margin:4px 0 4px;
+  font-size:24px;
+  letter-spacing:-.05em;
+}
+.pnx-pdf-date{
+  color:#667085;
+  font-size:12px;
+  font-weight:700;
+}
+.pnx-pdf-summary{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:18px;
+}
+.pnx-pdf-card{
+  border:1px solid #eef2f6;
+  border-radius:16px;
+  padding:12px;
+  background:#f9fafb;
+}
+.pnx-pdf-card span{
+  display:block;
+  color:#667085;
+  font-size:11px;
+  font-weight:800;
+  margin-bottom:5px;
+}
+.pnx-pdf-card strong{
+  display:block;
+  font-size:17px;
+  font-weight:950;
+}
+.pnx-pdf-card.income strong{color:#027a48;}
+.pnx-pdf-card.expense strong{color:#b42318;}
+.pnx-pdf-card.profit strong.plus{color:#027a48;}
+.pnx-pdf-card.profit strong.minus{color:#b42318;}
+.pnx-pdf-section{
+  margin-top:18px;
+}
+.pnx-pdf-section h2{
+  font-size:15px;
+  margin:0 0 8px;
+}
+.pnx-pdf-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:11px;
+}
+.pnx-pdf-table th,
+.pnx-pdf-table td{
+  border-bottom:1px solid #eef2f6;
+  padding:8px 6px;
+  text-align:left;
+}
+.pnx-pdf-table th{
+  color:#667085;
+  font-weight:900;
+  background:#f9fafb;
+}
+.pnx-pdf-note{
+  margin-top:16px;
+  padding:11px 12px;
+  border-radius:14px;
+  background:#eef4ff;
+  color:#175cd3;
+  font-size:11px;
+  font-weight:800;
+  line-height:1.6;
+}
+@media print{
+  body *{visibility:hidden !important;}
+  #pnx-fin-pdf-preview,
+  #pnx-fin-pdf-preview *{visibility:visible !important;}
+  #pnx-fin-pdf-preview{
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    border:0 !important;
+    background:#fff !important;
+  }
+  .pnx-pdf-report{padding:24px !important;}
+}
+@media(max-width:520px){
+  .pnx-fin-pdf-head{flex-direction:column;}
+  .pnx-pdf-summary{grid-template-columns:1fr;}
+  .pnx-pdf-title-row{flex-direction:column;}
+}
+</style>
+<style>
+/* ================================================================
+   STEP26: Tax Advisor Package
+   税理士共有パッケージ
+   ================================================================ */
+.pnx-fin-advisor-panel{
+  margin:18px 16px 48px;
+  padding:18px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-fin-advisor-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:14px;
+}
+.pnx-fin-advisor-head h2{
+  margin:0 0 5px;
+  font-size:17px;
+  color:#101828;
+  letter-spacing:-.04em;
+}
+.pnx-fin-advisor-head p{
+  margin:0;
+  color:#667085;
+  font-size:12px;
+  line-height:1.65;
+}
+.pnx-fin-advisor-summary{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.pnx-advisor-card{
+  border-radius:18px;
+  background:#f9fafb;
+  border:1px solid #eef2f6;
+  padding:14px;
+}
+.pnx-advisor-card h3{
+  margin:0 0 8px;
+  font-size:14px;
+  color:#101828;
+  letter-spacing:-.03em;
+}
+.pnx-advisor-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+.pnx-advisor-metric{
+  background:#fff;
+  border:1px solid #eef2f6;
+  border-radius:14px;
+  padding:10px;
+}
+.pnx-advisor-metric span{
+  display:block;
+  font-size:10px;
+  font-weight:800;
+  color:#667085;
+  margin-bottom:4px;
+}
+.pnx-advisor-metric strong{
+  display:block;
+  font-size:14px;
+  font-weight:950;
+  color:#101828;
+}
+.pnx-advisor-checklist{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.pnx-advisor-check{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  padding:9px 10px;
+  background:#fff;
+  border:1px solid #eef2f6;
+  border-radius:13px;
+  font-size:12px;
+  font-weight:800;
+  color:#344054;
+}
+.pnx-advisor-badge{
+  padding:4px 8px;
+  border-radius:999px;
+  background:#ecfdf3;
+  color:#027a48;
+  font-size:10px;
+  font-weight:900;
+}
+.pnx-advisor-note{
+  margin-top:10px;
+  padding:11px 12px;
+  border-radius:14px;
+  background:#eef4ff;
+  color:#175cd3;
+  font-size:11px;
+  font-weight:800;
+  line-height:1.6;
+}
+@media(max-width:520px){
+  .pnx-fin-advisor-head{flex-direction:column;}
+  .pnx-advisor-grid{grid-template-columns:1fr;}
+}
+</style>
+<style>
+/* ================================================================
+   STEP27: Receipt OCR Ready
+   領収書/OCR連携準備
+   ================================================================ */
+.pnx-fin-receipt-panel{
+  margin:18px 16px 50px;
+  padding:18px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-fin-receipt-head{
+  margin-bottom:14px;
+}
+.pnx-fin-receipt-head h2{
+  margin:0 0 5px;
+  font-size:17px;
+  color:#101828;
+  letter-spacing:-.04em;
+}
+.pnx-fin-receipt-head p{
+  margin:0;
+  color:#667085;
+  font-size:12px;
+  line-height:1.65;
+}
+.pnx-fin-receipt-box{
+  display:grid;
+  grid-template-columns:140px 1fr;
+  gap:12px;
+  margin-bottom:12px;
+}
+.pnx-fin-receipt-upload{
+  height:120px;
+  border:1.5px dashed #98a2b3;
+  border-radius:18px;
+  background:#f9fafb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:12px;
+  color:#3478f6;
+  font-size:12px;
+  font-weight:900;
+  cursor:pointer;
+}
+.pnx-fin-receipt-upload input{
+  display:none;
+}
+.pnx-fin-receipt-preview{
+  min-height:120px;
+  border-radius:18px;
+  background:#f9fafb;
+  border:1px solid #eef2f6;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  color:#667085;
+  font-size:12px;
+  font-weight:800;
+}
+.pnx-fin-receipt-preview img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+@media(max-width:520px){
+  .pnx-fin-receipt-box{grid-template-columns:1fr;}
+}
+</style>
+<style>
+/* ================================================================
+   STEP28: AI Receipt Assist
+   AIカテゴリ判定・大会自動紐付け準備
+   ================================================================ */
+.pnx-fin-ai-panel{
+  margin:18px 16px 52px;
+  padding:18px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 12px 34px rgba(15,23,42,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+}
+.pnx-fin-ai-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:14px;
+}
+.pnx-fin-ai-head h2{
+  margin:0 0 5px;
+  font-size:17px;
+  color:#101828;
+  letter-spacing:-.04em;
+}
+.pnx-fin-ai-head p{
+  margin:0;
+  color:#667085;
+  font-size:12px;
+  line-height:1.65;
+}
+.pnx-fin-ai-result{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.pnx-ai-card{
+  border-radius:18px;
+  background:#f9fafb;
+  border:1px solid #eef2f6;
+  padding:13px;
+}
+.pnx-ai-title{
+  font-size:14px;
+  font-weight:900;
+  color:#101828;
+  margin-bottom:6px;
+}
+.pnx-ai-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.pnx-ai-item{
+  background:#fff;
+  border:1px solid #eef2f6;
+  border-radius:13px;
+  padding:9px 10px;
+}
+.pnx-ai-item span{
+  display:block;
+  font-size:10px;
+  color:#667085;
+  font-weight:800;
+  margin-bottom:3px;
+}
+.pnx-ai-item strong{
+  display:block;
+  font-size:13px;
+  color:#101828;
+  font-weight:900;
+}
+.pnx-ai-note{
+  margin-top:10px;
+  padding:10px 11px;
+  border-radius:13px;
+  background:#eef4ff;
+  color:#175cd3;
+  font-size:11px;
+  font-weight:800;
+  line-height:1.6;
+}
+@media(max-width:420px){
+  .pnx-fin-ai-head{flex-direction:column;}
+  .pnx-ai-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+
+<body>
+
+<!--
+  ProNexaX 収支モジュール v4
+  統合メモ: .finance-root を ProNexaX 本体の収支タブコンテナへ移植
+-->
+<div class="finance-root pnx-step143-ui-unify" id="finance-root" data-pnx-ui-step="143">
+
+  <!-- ══════════════════════════════════════════════
+       ヘッダー — ブランド + 下線タブ
+       ══════════════════════════════════════════════ -->
+  <header class="fin-header">
+    <div class="fin-header-top">
+      <div class="fin-brand">
+        <div class="fin-brand-name">ProNexaX</div>
+        <div class="fin-brand-sub">finance</div>
+      </div>
+      <div class="fin-header-icons">
+        <button class="fin-icon-btn" aria-label="通知">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+        <button class="fin-avatar" aria-label="プロフィール">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- タブバー — 下線スタイル -->
+    <div class="fin-tabs" role="tablist" aria-label="収支タブ">
+      <button class="fin-tab active" data-tab="overview"      role="tab" aria-selected="true" >概要</button>
+      <button class="fin-tab"        data-tab="transactions"  role="tab" aria-selected="false">取引</button>
+      <button class="fin-tab"        data-tab="analysis"      role="tab" aria-selected="false">分析</button>
+      <button class="fin-tab"        data-tab="filing"        role="tab" aria-selected="false">申告</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════
+       タブパネル群
+       ══════════════════════════════════════════════ -->
+  <div class="fin-panels">
+
+    <!-- ────────────────────────────────────────────
+         ① 概要
+         ──────────────────────────────────────────── -->
+    <section class="fin-panel active" id="tab-overview" role="tabpanel">
+
+      <!-- 月バー -->
+      <div class="month-bar">
+        <div>
+          <div class="month-bar-title" id="month-label">2024年5月</div>
+          <div class="month-bar-range" id="month-sub">5/1 〜 5/31</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="month-btn" id="btn-prev-month" aria-label="前の月">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            前月
+          </button>
+          <button class="month-btn" id="btn-next-month" aria-label="次の月">
+            翌月
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- メトリクス — 収入 / 支出 2列 -->
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-label">収入</div>
+          <div class="metric-value blue" id="overview-income">¥563,000</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">支出</div>
+          <div class="metric-value red" id="overview-expense">¥314,500</div>
+        </div>
+      </div>
+
+      <!-- 利益カード -->
+      <div class="profit-card" style="margin: 0 var(--pad) 16px;">
+        <div class="metric-label">利益</div>
+        <div class="profit-value" id="overview-profit">¥248,500</div>
+        <div style="margin-top:12px; display:flex; align-items:center; gap:8px;">
+          <div style="flex:1; height:5px; background:var(--border); border-radius:3px; overflow:hidden;">
+            <div id="profit-bar" style="height:100%; background:var(--blue); border-radius:3px; width:44%; transition:width 0.6s cubic-bezier(0.22,1,0.36,1);"></div>
+          </div>
+          <span id="profit-ratio" style="font-size:12px; font-weight:700; color:var(--blue); min-width:36px; text-align:right; font-feature-settings:'tnum';">44%</span>
+          <span id="overview-margin" style="font-size:11px; color:var(--t3);">利益率</span>
+        </div>
+      </div>
+
+
+
+      <!-- STEP141: 分析画面強化 -->
+      <section class="pnx-analysis-enhance-card" id="pnx-step141-analysis-enhance">
+        <div class="pnx-analysis-enhance-head">
+          <div>
+            <p class="pnx-analysis-enhance-kicker">Advanced Analysis</p>
+            <h3>分析ダッシュボード</h3>
+            <p>大会別ランキング・カテゴリ別支出・月別推移をまとめて確認できます。</p>
+          </div>
+          <span class="pnx-analysis-enhance-badge" id="pnx-step141-analysis-count">0件</span>
+        </div>
+
+        <div class="pnx-analysis-tabs">
+          <button type="button" class="pnx-analysis-tab is-active" data-pnx-analysis-mode="ranking">大会ランキング</button>
+          <button type="button" class="pnx-analysis-tab" data-pnx-analysis-mode="category">カテゴリ別</button>
+          <button type="button" class="pnx-analysis-tab" data-pnx-analysis-mode="monthly">月別推移</button>
+        </div>
+
+        <div class="pnx-analysis-panel is-active" data-pnx-analysis-panel="ranking">
+          <div id="pnx-step141-tournament-ranking" class="pnx-step141-list">
+            <div class="pnx-step141-empty">大会取引がまだありません</div>
+          </div>
+        </div>
+
+        <div class="pnx-analysis-panel" data-pnx-analysis-panel="category">
+          <div id="pnx-step141-category-breakdown" class="pnx-step141-list">
+            <div class="pnx-step141-empty">カテゴリ別に集計できる取引がまだありません</div>
+          </div>
+        </div>
+
+        <div class="pnx-analysis-panel" data-pnx-analysis-panel="monthly">
+          <div id="pnx-step141-monthly-trend" class="pnx-step141-list">
+            <div class="pnx-step141-empty">月別に集計できる取引がまだありません</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP140: 大会別収支サマリー -->
+      <section class="pnx-tour-summary-card" id="pnx-tour-summary-overview">
+        <div class="pnx-tour-summary-head">
+          <div>
+            <p class="pnx-tour-summary-kicker">Tournament Profit</p>
+            <h3>大会別収支</h3>
+            <p>大会ごとの収入・支出・利益を自動集計します。</p>
+          </div>
+          <button type="button" class="pnx-tour-summary-chip" id="pnx-tour-summary-jump">すべて見る</button>
+        </div>
+        <div id="pnx-tour-summary-list" class="pnx-tour-summary-list">
+          <div class="pnx-tour-summary-empty">大会に紐づく取引がまだありません</div>
+        </div>
+      </section>
+
+
+      <!-- STEP146: レシート撮影/OCR風入力 -->
+      <section class="pnx-receipt-card" id="pnx-step146-receipt-card">
+        <div class="pnx-receipt-card-main">
+          <div class="pnx-receipt-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M7 3.8h10c.8 0 1.4.6 1.4 1.4v15l-2-1.1-2 1.1-2-1.1-2 1.1-2-1.1-2 1.1v-15c0-.8.6-1.4 1.4-1.4Z"/><path d="M9 8h6"/><path d="M9 11.2h6"/><path d="M9 14.4h3.8"/></svg>
+          </div>
+          <div>
+            <p class="pnx-receipt-kicker">Receipt Scan</p>
+            <h3>レシート撮影で入力</h3>
+            <p>画像を選んで、日付・金額・内容を確認して保存できます。</p>
+          </div>
+        </div>
+        <button type="button" class="pnx-receipt-open-btn" id="pnx-step146-open-receipt">撮影/選択</button>
+      </section>
+
+      <!-- 最近の取引 -->
+      <div class="section-hd">
+        <div class="section-hd-title">最近の取引</div>
+        <span class="section-hd-link" id="link-all-tx">すべて表示</span>
+      </div>
+
+      <div class="tx-card" id="overview-tx-list">
+        <!-- JS が .tx-row を挿入 -->
+      </div>
+
+      <!-- 大会紐付けリンク -->
+      <div style="margin: 12px var(--pad) 0; background:var(--surface); border-radius:var(--r-md); overflow:hidden; box-shadow:var(--sh-sm); border:1px solid var(--border);">
+        <div style="display:flex; align-items:center; padding:13px 16px; gap:10px; cursor:pointer; min-height:48px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <span style="font-size:14px; color:var(--blue); flex:1; font-weight:500;">大会と取引を紐付ける</span>
+          <span style="font-size:13px; color:var(--t3);">›</span>
+        </div>
+      </div>
+
+      <div style="height:110px;"></div>
+    </section>
+
+
+    <!-- ────────────────────────────────────────────
+         ② 取引
+         ──────────────────────────────────────────── -->
+    <section class="fin-panel" id="tab-transactions" role="tabpanel">
+
+      <!-- 検索バー -->
+      <div class="search-bar-wrap">
+        <div class="search-bar">
+          <span class="search-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
+          <input type="search" class="search-input" id="tx-search"
+                 placeholder="取引を検索" autocomplete="off" spellcheck="false">
+          <button class="filter-select" id="btn-filter" style="flex-shrink:0;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+            絞込
+          </button>
+        </div>
+      </div>
+
+      <!-- カテゴリチップ -->
+      <div class="chips-scroll" id="chips-scroll" role="group" aria-label="カテゴリ">
+        <button class="chip active" data-cat="all">すべて</button>
+        <button class="chip" data-cat="交通費">交通費</button>
+        <button class="chip" data-cat="宿泊費">宿泊費</button>
+        <button class="chip" data-cat="エントリー費">エントリー費</button>
+        <button class="chip" data-cat="練習場代">練習場代</button>
+        <button class="chip" data-cat="ラウンド代">ラウンド代</button>
+        <button class="chip" data-cat="キャディ代">キャディ代</button>
+        <button class="chip" data-cat="賞金">賞金</button>
+        <button class="chip" data-cat="スポンサー料">スポンサー料</button>
+      </div>
+
+      <!-- 取引グループ（JS が挿入） -->
+      <div id="tx-groups-container"></div>
+
+      <div style="height:32px;"></div>
+    </section>
+
+
+    <!-- ────────────────────────────────────────────
+         ③ 分析
+         ──────────────────────────────────────────── -->
+    <section class="fin-panel" id="tab-analysis" role="tabpanel">
+
+      <!-- 期間バー -->
+      <div class="period-bar">
+        <button class="period-select">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <span id="year-label">2024年</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="period-type" id="btn-prev-year" aria-label="前年">‹ 前年</button>
+        <button class="period-type" id="btn-next-year" aria-label="翌年">翌年 ›</button>
+      </div>
+
+      <!-- 年間サマリー — 3列 -->
+      <div class="annual-row">
+        <div class="annual-col">
+          <div class="annual-col-label">収入</div>
+          <div class="annual-col-value blue">¥5.68M</div>
+        </div>
+        <div class="annual-col">
+          <div class="annual-col-label">支出</div>
+          <div class="annual-col-value red">¥3.23M</div>
+        </div>
+        <div class="annual-col">
+          <div class="annual-col-label">利益</div>
+          <div class="annual-col-value">¥2.45M</div>
+        </div>
+      </div>
+
+
+      <!-- STEP140: 大会別収支サマリー -->
+      <section class="pnx-tour-analysis-card" id="pnx-tour-summary-analysis">
+        <div class="pnx-tour-summary-head">
+          <div>
+            <p class="pnx-tour-summary-kicker">Tournament Summary</p>
+            <h3>大会別サマリー</h3>
+            <p>大会ごとに、賞金・スポンサー収入・経費・利益を確認できます。</p>
+          </div>
+          <div class="pnx-tour-summary-total" id="pnx-tour-summary-total">0大会</div>
+        </div>
+        <div id="pnx-tour-analysis-list" class="pnx-tour-analysis-list">
+          <div class="pnx-tour-summary-empty">大会に紐づく取引がまだありません</div>
+        </div>
+      </section>
+
+      <!-- 月別収支バーチャート -->
+      <div class="chart-card">
+        <div class="chart-card-title">月別収支</div>
+        <div class="chart-legend-row">
+          <span class="chart-legend-item">
+            <span class="chart-legend-dot" style="background:var(--blue);"></span>収入
+          </span>
+          <span class="chart-legend-item">
+            <span class="chart-legend-dot" style="background:rgba(0,0,0,0.12);"></span>支出
+          </span>
+        </div>
+        <div class="chart-container chart-container-bar">
+          <canvas id="chart-monthly"></canvas>
+        </div>
+      </div>
+
+      <!-- 支出内訳ドーナツ -->
+      <div class="chart-card">
+        <div class="chart-card-title">支出の内訳</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center;">
+          <div class="chart-container chart-container-pie">
+            <canvas id="chart-donut"></canvas>
+          </div>
+          <div class="legend" id="donut-legend"></div>
+        </div>
+      </div>
+
+      <div style="height:32px;"></div>
+    </section>
+
+
+    <!-- ────────────────────────────────────────────
+         ④ 申告 — 画面1: 申告準備
+         ──────────────────────────────────────────── -->
+    <section class="fin-panel" id="tab-filing" role="tabpanel">
+
+      <!-- ページタイトル -->
+      
+      <!-- STEP148: 申告・出力トップ Reference UI -->
+      <section class="pnx-filing-home-ref pnx-step171-official-filing-home pnx-step171c-official-filing-home" id="pnx-step148-filing-home">
+        <div class="pnx-filing-ref-title-row pnx-step171c-hidden-title" aria-hidden="true"></div>
+
+        <article class="pnx-filing-ref-status-card">
+          <h2>確定申告の準備状況</h2>
+
+          <div class="pnx-filing-ref-status-main">
+            <div class="pnx-filing-ref-ring" aria-label="申告準備率">
+              <svg viewBox="0 0 120 120">
+                <circle class="track" cx="60" cy="60" r="48"></circle>
+                <circle class="progress" id="pnx-step148-ring-progress" cx="60" cy="60" r="48"></circle>
+              </svg>
+              <div class="pnx-filing-ref-ring-label">
+                <span>申告準備</span>
+                <strong id="pnx-step148-progress-num">78</strong><em>%</em>
+              </div>
+            </div>
+
+            <div class="pnx-filing-ref-money">
+              <div>
+                <span>今年の利益（概算）</span>
+                <strong class="blue" id="pnx-step148-profit">¥2,450,000</strong>
+              </div>
+              <div>
+                <span>経費合計</span>
+                <strong class="red" id="pnx-step148-expense">¥1,120,000</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="pnx-filing-ref-updated">
+            <div class="pnx-filing-ref-checkmark">✓</div>
+            <div>
+              <strong>収支入力は最新です</strong>
+              <span id="pnx-step148-updated-date">最終更新：2024/05/22</span>
+            </div>
+          </div>
+        </article>
+
+        
+        <section class="pnx-filing-ref-todo-section pnx-step178j-todo-section">
+          <h2>やること一覧</h2>
+
+          <div class="pnx-filing-ref-todo-card pnx-step178j-todo-card" id="pnx-step148-todo-list">
+            <button type="button" class="pnx-filing-ref-todo-row pnx-step178j-clickable-row" data-step148-task="transactions">
+              <span class="circle empty"></span>
+              <strong>収支の入力・確認</strong>
+              <em>未確認</em>
+              <i>›</i>
+            </button>
+
+            <button type="button" class="pnx-filing-ref-todo-row pnx-step178j-clickable-row" data-step148-task="tournaments">
+              <span class="circle empty"></span>
+              <strong>大会ごとの収支を確認</strong>
+              <em>未確認</em>
+              <i>›</i>
+            </button>
+
+            <button type="button" class="pnx-filing-ref-todo-row pnx-step178j-clickable-row" data-step148-task="categories">
+              <span class="circle empty"></span>
+              <strong>経費の分類</strong>
+              <em>未確認</em>
+              <i>›</i>
+            </button>
+
+            <button type="button" class="pnx-filing-ref-todo-row pnx-step178j-clickable-row" data-step148-task="receipts">
+              <span class="circle empty"></span>
+              <strong>レシートの確認・不足分の追加</strong>
+              <em>未確認</em>
+              <i>›</i>
+            </button>
+
+            <button type="button" class="pnx-filing-ref-todo-row pnx-step178j-clickable-row" data-step148-task="rent">
+              <span class="circle empty"></span>
+              <strong>家賃按分の確認（該当者のみ）</strong>
+              <em>任意</em>
+              <i>›</i>
+            </button>
+          </div>
+        </section>
+
+        <section id="pnx-step171-final-flow" class="pnx-step171-final-flow pnx-step178j-final-flow">
+          <button type="button" id="pnx-step171-open-docs" class="pnx-step171-open-docs">
+            確定申告書類作成に進む
+          </button>
+          <button type="button" id="pnx-step171-open-share" class="pnx-step171-open-share" aria-hidden="true">
+            税理士へ共有する
+          </button>
+        </section>
+
+        <button type="button" class="pnx-filing-ref-help">
+          <span>確定申告とは？</span>
+          <small>初めての方はこちら</small>
+          <i>›</i>
+        </button>
+      </section>
+
+<div class="filing-page-title">申告準備</div>
+
+
+
+      <!-- STEP144: 申告書類作成ページ本格化 -->
+      <section class="pnx-taxdocs-page" id="pnx-step144-taxdocs">
+        <div class="pnx-taxdocs-hero">
+          <button type="button" class="pnx-taxdocs-back" id="pnx-step144-back" aria-label="申告準備へ戻る">‹</button>
+          <div>
+            <p class="pnx-taxdocs-kicker">Documents</p>
+            <h2>申告書類の作成</h2>
+            <p>収支データから、申告前に確認・共有しやすい書類を作成します。</p>
+          </div>
+          <span class="pnx-taxdocs-year" id="pnx-step144-doc-year">今年</span>
+        </div>
+
+        <article class="pnx-taxdocs-card">
+          <div class="pnx-taxdocs-card-head">
+            <div>
+              <h3>作成できる書類</h3>
+              <p>PDFは印刷画面から保存、CSVはそのまま保存できます。</p>
+            </div>
+            <span id="pnx-step144-doc-count">5件</span>
+          </div>
+
+          <div class="pnx-taxdocs-list" id="pnx-step144-doc-list">
+            <button type="button" class="pnx-taxdoc-row" data-pnx-doc="income-expense-general">
+              <span class="pnx-taxdoc-download">↓</span>
+              <div>
+                <strong>収支内訳書（一般用）</strong>
+                <small>年間収入・経費を申告用に整理</small>
+              </div>
+              <em>PDF</em>
+            </button>
+
+            <button type="button" class="pnx-taxdoc-row" data-pnx-doc="income-expense-simple">
+              <span class="pnx-taxdoc-download">↓</span>
+              <div>
+                <strong>収支内訳書（簡易版）</strong>
+                <small>税理士共有や確認用の簡易版</small>
+              </div>
+              <em>PDF</em>
+            </button>
+
+            <button type="button" class="pnx-taxdoc-row" data-pnx-doc="annual-detail">
+              <span class="pnx-taxdoc-download">↓</span>
+              <div>
+                <strong>年間収支一覧（詳細）</strong>
+                <small>全取引を日付順で一覧化</small>
+              </div>
+              <em>CSV</em>
+            </button>
+
+            <button type="button" class="pnx-taxdoc-row" data-pnx-doc="expense-list">
+              <span class="pnx-taxdoc-download">↓</span>
+              <div>
+                <strong>経費一覧表</strong>
+                <small>カテゴリ別の経費確認用</small>
+              </div>
+              <em>CSV</em>
+            </button>
+
+            <button type="button" class="pnx-taxdoc-row" data-pnx-doc="tournament-list">
+              <span class="pnx-taxdoc-download">↓</span>
+              <div>
+                <strong>大会別収支一覧（任意）</strong>
+                <small>大会ごとの収入・経費・利益</small>
+              </div>
+              <em>CSV</em>
+            </button>
+          </div>
+        </article>
+
+        <article class="pnx-taxdocs-etax">
+          <div>
+            <p class="pnx-taxdocs-kicker">e-Tax</p>
+            <h3>e-Taxに進む</h3>
+            <p>作成したデータを確認して、申告手続きへ進むための導線です。</p>
+          </div>
+          <button type="button" id="pnx-step144-etax-btn">e-Taxに進む</button>
+        </article>
+
+        <article class="pnx-taxdocs-card">
+          <div class="pnx-taxdocs-card-head">
+            <div>
+              <h3>税理士共有パック</h3>
+              <p>税理士へ送る前の確認メモを作成します。</p>
+            </div>
+            <span>共有</span>
+          </div>
+
+          <div class="pnx-taxdocs-share">
+            <button type="button" id="pnx-step144-copy-taxpack">共有メモをコピー</button>
+            <button type="button" id="pnx-step144-print-pack">確認用PDFを作成</button>
+          </div>
+        </article>
+
+        <article class="pnx-taxdocs-deadline">
+          <div>
+            <h3>申告期限</h3>
+            <p id="pnx-step144-deadline-text">今年の申告期限を確認してください。</p>
+          </div>
+          <div id="pnx-step144-doc-status" class="pnx-taxdocs-status">書類作成データを準備中</div>
+        </article>
+      </section>
+
+      <!-- STEP142: 申告準備ページ本格化 -->
+      <section class="pnx-taxprep-dashboard" id="pnx-step142-taxprep">
+        <div class="pnx-taxprep-hero">
+          <div>
+            <p class="pnx-taxprep-kicker">Tax Preparation</p>
+            <h2>申告準備ダッシュボード</h2>
+            <p>収支データを、年間収支・経費カテゴリ・大会別明細・未確認リストに自動整理します。</p>
+          </div>
+          <div class="pnx-taxprep-year">
+            <label for="pnx-step142-year">対象年</label>
+            <select id="pnx-step142-year" aria-label="対象年"></select>
+          </div>
+        </div>
+
+        <div class="pnx-taxprep-metrics">
+          <div class="pnx-taxprep-metric">
+            <span>年間収入</span>
+            <strong id="pnx-step142-income">¥0</strong>
+          </div>
+          <div class="pnx-taxprep-metric">
+            <span>年間経費</span>
+            <strong id="pnx-step142-expense">¥0</strong>
+          </div>
+          <div class="pnx-taxprep-metric">
+            <span>年間利益</span>
+            <strong id="pnx-step142-profit">¥0</strong>
+          </div>
+          <div class="pnx-taxprep-metric">
+            <span>準備率</span>
+            <strong id="pnx-step142-progress">0%</strong>
+          </div>
+        </div>
+
+        <div class="pnx-taxprep-grid">
+          <article class="pnx-taxprep-card">
+            <div class="pnx-taxprep-card-head">
+              <div>
+                <h3>経費カテゴリ別</h3>
+                <p>申告用カテゴリに整理</p>
+              </div>
+              <span id="pnx-step142-category-count">0件</span>
+            </div>
+            <div id="pnx-step142-category-list" class="pnx-taxprep-list">
+              <div class="pnx-taxprep-empty">経費がまだありません</div>
+            </div>
+          </article>
+
+          <article class="pnx-taxprep-card">
+            <div class="pnx-taxprep-card-head">
+              <div>
+                <h3>大会別明細</h3>
+                <p>大会ごとの収入・経費</p>
+              </div>
+              <span id="pnx-step142-tournament-count">0大会</span>
+            </div>
+            <div id="pnx-step142-tournament-list" class="pnx-taxprep-list">
+              <div class="pnx-taxprep-empty">大会に紐づく取引がまだありません</div>
+            </div>
+          </article>
+        </div>
+
+        <article class="pnx-taxprep-card pnx-taxprep-wide">
+          <div class="pnx-taxprep-card-head">
+            <div>
+              <h3>未確認・要整理</h3>
+              <p>申告前に確認したい項目</p>
+            </div>
+            <span id="pnx-step142-issue-count">0件</span>
+          </div>
+          <div id="pnx-step142-issue-list" class="pnx-taxprep-issues">
+            <div class="pnx-taxprep-empty">未確認項目はありません</div>
+          </div>
+        </article>
+
+        <article class="pnx-taxprep-actions-card">
+          <div>
+            <h3>書類作成の土台</h3>
+            <p>CSV保存・税理士共有メモの下書きを作れます。</p>
+          </div>
+          <div class="pnx-taxprep-actions">
+            <button type="button" id="pnx-step142-export-csv">CSV保存</button>
+            <button type="button" id="pnx-step142-copy-summary">税理士共有メモ</button>
+            <button type="button" id="pnx-step142-refresh">再集計</button>
+          </div>
+          <div id="pnx-step142-action-status" class="pnx-taxprep-status">申告準備データを集計します</div>
+        </article>
+      </section>
+
+      <!-- 今年の申告準備率カード -->
+      <div class="filing-prep-card">
+        <div class="filing-prep-title">今年の申告準備率</div>
+        <div class="filing-prep-sub">あと少しで申告準備完了です！</div>
+
+        <div class="filing-prep-body">
+          <div class="ring-wrap" id="filing-ring-wrap">
+            <svg width="110" height="110" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle class="ring-track" cx="55" cy="55" r="46"></circle>
+              <circle class="ring-fill"  cx="55" cy="55" r="46" id="ring-fill"></circle>
+            </svg>
+            <div class="ring-label" id="ring-label"><span class="ring-text"><span class="ring-num">78</span><span class="ring-pct">%</span></span></div>
+          </div>
+
+          <div class="filing-checklist">
+            <div class="filing-check-row done">
+              <span class="fc-text">収入の確認</span>
+              <span class="fc-mark">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg>
+              </span>
+            </div>
+            <div class="filing-check-row done">
+              <span class="fc-text">経費の確認</span>
+              <span class="fc-mark">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg>
+              </span>
+            </div>
+            <div class="filing-check-row done">
+              <span class="fc-text">不足レシートの追加</span>
+              <span class="fc-mark">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg>
+              </span>
+            </div>
+            <div class="filing-check-row empty">
+              <span class="fc-text">PDF出力</span>
+              <span class="fc-mark fc-mark-empty"></span>
+            </div>
+            <div class="filing-check-row empty">
+              <span class="fc-text">e-Tax提出</span>
+              <span class="fc-mark fc-mark-empty"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- やることリスト -->
+      <div class="filing-section-label">やることリスト</div>
+      <div class="todo-card">
+        <div class="todo-item">
+          <span class="todo-circle red" aria-hidden="true"></span>
+          <div class="todo-text">不足しているレシートがあります</div>
+          <span class="todo-badge-pill red">3件</span>
+        </div>
+        <div class="todo-item">
+          <span class="todo-circle gray" aria-hidden="true"></span>
+          <div class="todo-text">未分類の取引を確認する</div>
+          <span class="todo-badge-pill blue">2件</span>
+        </div>
+        <div class="todo-item">
+          <span class="todo-circle gray" aria-hidden="true"></span>
+          <div class="todo-text">大会との紐付けを確認する</div>
+          <span class="todo-badge-pill orange">1件</span>
+        </div>
+      </div>
+
+      <!-- 申告書類を作成する CTA -->
+      <button class="filing-cta-btn" id="btn-open-doc-list">申告書類を作成する（PDF/CSV）</button>
+
+      <div style="height:32px;"></div>
+    </section>
+
+  </div><!-- /fin-panels -->
+
+
+  <!-- ══════════════════════════════════════════════
+       申告書類作成フロー — スタックビュー（画面2〜6）
+       ══════════════════════════════════════════════ -->
+  <div class="filing-stack" id="filing-stack" aria-hidden="true">
+
+    <!-- 画面2: 申告書類の作成（一覧） -->
+    <section class="filing-screen" id="screen-doc-list" data-screen="doc-list" data-screen-label="02 申告書類の作成">
+      <header class="screen-nav">
+        <button class="nav-back" data-nav-back aria-label="戻る">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="nav-title">申告書類の作成</div>
+        <div class="nav-spacer"></div>
+      </header>
+
+      <div class="screen-scroll">
+        <div class="filing-section-label">作成できる書類</div>
+        <div class="docs-card" id="doc-list-card">
+          <div class="docs-item" data-doc="ippan" data-pro="1">
+            <span class="docs-icon-line">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </span>
+            <div class="docs-name">収支内訳書（一般用）</div>
+            <span class="pro-badge">PRO</span>
+          </div>
+          <div class="docs-item" data-doc="kani" data-pro="1">
+            <span class="docs-icon-line">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </span>
+            <div class="docs-name">収支内訳書（簡易版）</div>
+            <span class="pro-badge">PRO</span>
+          </div>
+          <div class="docs-item" data-doc="nenkan" data-pro="1">
+            <span class="docs-icon-line">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </span>
+            <div class="docs-name">年間収支一覧（詳細）</div>
+            <span class="pro-badge">PRO</span>
+          </div>
+          <div class="docs-item" data-doc="keihi" data-pro="1">
+            <span class="docs-icon-line">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </span>
+            <div class="docs-name">経費一覧表</div>
+            <span class="pro-badge">PRO</span>
+          </div>
+          <div class="docs-item" data-doc="taikai" data-pro="1">
+            <span class="docs-icon-line">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </span>
+            <div class="docs-name">大会別収支一覧（任意）</div>
+            <span class="pro-badge">PRO</span>
+          </div>
+        </div>
+
+        <div class="etax-card-v2" id="etax-card">
+          <div class="etax-card-title">e-Taxに進む</div>
+          <div class="etax-card-sub">e-Taxの申請にはPROプランが必要です。</div>
+        </div>
+
+        <button class="pro-cta-btn" id="btn-pro-cta">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          PROプランで利用する
+        </button>
+
+        <div class="deadline-section">
+          <div class="deadline-section-title">申告期限</div>
+          <div class="deadline-row-v2">
+            <div class="deadline-label-v2">所得税・復興特別所得税</div>
+            <div class="deadline-date-v2">2025年3月17日（月）まで</div>
+          </div>
+          <div class="deadline-note-v2">※ 消費税（個人事業者）は3月31日（月）まで</div>
+        </div>
+
+        <div style="height:120px;"></div>
+      </div>
+    </section>
+
+
+    <!-- 画面4: ProNexaX PRO ランディング -->
+    <section class="filing-screen" id="screen-pro-landing" data-screen="pro-landing" data-screen-label="04 PRO案内">
+      <header class="screen-nav">
+        <button class="nav-back nav-back-text" data-nav-back aria-label="戻る">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>戻る</span>
+        </button>
+        <div class="nav-title"></div>
+        <div class="nav-spacer"></div>
+      </header>
+
+      <div class="screen-scroll">
+        <div class="pro-hero">
+          <div class="pro-hero-title">ProNexaX <span class="pro-hero-pro">PRO</span></div>
+          <div class="pro-hero-sub">確定申告を、もっとかんたんに。</div>
+        </div>
+
+        <div class="pro-features-card">
+          <div class="pro-feature-row">
+            <span class="pro-feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            </span>
+            <div class="pro-feature-text">
+              <div class="pro-feature-title">レシート撮影で自動入力（OCR）</div>
+              <div class="pro-feature-sub">手入力の手間を大幅カット</div>
+            </div>
+          </div>
+          <div class="pro-feature-row">
+            <span class="pro-feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 10v6M4.22 4.22l4.24 4.24m7.08 7.08l4.24 4.24M1 12h6m10 0h6M4.22 19.78l4.24-4.24m7.08-7.08l4.24-4.24"></path></svg>
+            </span>
+            <div class="pro-feature-text">
+              <div class="pro-feature-title">AIが自動で仕訳・分類</div>
+              <div class="pro-feature-sub">取引の内容を正確に自動判定</div>
+            </div>
+          </div>
+          <div class="pro-feature-row">
+            <span class="pro-feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg>
+            </span>
+            <div class="pro-feature-text">
+              <div class="pro-feature-title">申告書類を自動作成</div>
+              <div class="pro-feature-sub">PDF/CSVで出力、すぐに提出OK</div>
+            </div>
+          </div>
+          <div class="pro-feature-row">
+            <span class="pro-feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><polyline points="8 12 11 15 16 9"></polyline></svg>
+            </span>
+            <div class="pro-feature-text">
+              <div class="pro-feature-title">e-Tax連携</div>
+              <div class="pro-feature-sub">ワンクリックでe-Taxに進む</div>
+            </div>
+          </div>
+          <div class="pro-feature-row">
+            <span class="pro-feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </span>
+            <div class="pro-feature-text">
+              <div class="pro-feature-title">税理士とデータ共有</div>
+              <div class="pro-feature-sub">必要なデータを安全に共有可能</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="pro-primary-btn" id="btn-select-plan">プランを選択する</button>
+        <button class="pro-later-link" data-nav-close>あとで</button>
+
+        <div style="height:120px;"></div>
+      </div>
+    </section>
+
+
+    <!-- 画面5: 税理士監修で安心 -->
+    <section class="filing-screen" id="screen-tax-accountant" data-screen="tax-accountant" data-screen-label="05 税理士監修">
+      <header class="screen-nav">
+        <button class="nav-back nav-back-text" data-nav-back aria-label="戻る">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>戻る</span>
+        </button>
+        <div class="nav-title"></div>
+        <div class="nav-spacer"></div>
+      </header>
+
+      <div class="screen-scroll">
+        <div class="tax-hero">
+          <div class="tax-hero-title">税理士監修で安心</div>
+          <div class="tax-hero-sub">税理士が監修したルールに基づき、<br>正確な申告をサポートします。</div>
+        </div>
+
+        <div class="tax-photo-wrap">
+          <div class="tax-photo" id="tax-accountant-photo" aria-label="監修税理士の写真">
+            <svg viewBox="0 0 140 140" width="140" height="140" aria-hidden="true">
+              <defs>
+                <linearGradient id="taxBg" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stop-color="#EEF4FF"></stop>
+                  <stop offset="1" stop-color="#C7D9FD"></stop>
+                </linearGradient>
+              </defs>
+              <rect width="140" height="140" fill="url(#taxBg)"></rect>
+              <circle cx="70" cy="56" r="22" fill="#3478F6" opacity="0.92"></circle>
+              <path d="M26 130 C32 100, 54 88, 70 88 C86 88, 108 100, 114 130 Z" fill="#3478F6" opacity="0.92"></path>
+              <path d="M58 110 L58 130 L82 130 L82 110 L76 106 L70 108 L64 106 Z" fill="#fff"></path>
+              <rect x="68" y="106" width="4" height="24" fill="#3478F6"></rect>
+            </svg>
+          </div>
+          <div class="tax-name-block">
+            <div class="tax-role">監修税理士</div>
+            <div class="tax-name">山田 太郎 税理士</div>
+            <div class="tax-affil">（東京税理士会所属）</div>
+          </div>
+        </div>
+
+        <div class="user-voice-card">
+          <div class="user-voice-label">ユーザーの声</div>
+          <div class="user-voice-quote">申告が驚くほどラクになりました！</div>
+          <div class="user-voice-rating">
+            <span class="stars" aria-label="5つ星評価">
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="#F5A623" aria-hidden="true"><polygon points="8,1 10,6 15,6 11,9.5 12.5,15 8,12 3.5,15 5,9.5 1,6 6,6"></polygon></svg>
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="#F5A623" aria-hidden="true"><polygon points="8,1 10,6 15,6 11,9.5 12.5,15 8,12 3.5,15 5,9.5 1,6 6,6"></polygon></svg>
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="#F5A623" aria-hidden="true"><polygon points="8,1 10,6 15,6 11,9.5 12.5,15 8,12 3.5,15 5,9.5 1,6 6,6"></polygon></svg>
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="#F5A623" aria-hidden="true"><polygon points="8,1 10,6 15,6 11,9.5 12.5,15 8,12 3.5,15 5,9.5 1,6 6,6"></polygon></svg>
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="#F5A623" aria-hidden="true"><polygon points="8,1 10,6 15,6 11,9.5 12.5,15 8,12 3.5,15 5,9.5 1,6 6,6"></polygon></svg>
+            </span>
+            <span class="rating-num">5.0</span>
+          </div>
+        </div>
+
+        <button class="pro-primary-btn" id="btn-start-pro">機能を使い始める</button>
+
+        <div style="height:120px;"></div>
+      </div>
+    </section>
+
+
+    <!-- 画面6: PRO登録完了 -->
+    <section class="filing-screen" id="screen-pro-success" data-screen="pro-success" data-screen-label="06 PRO登録完了">
+      <div class="screen-scroll success-scroll">
+        <div class="success-content">
+          <div class="success-check-wrap" id="success-check-wrap">
+            <span class="sparkle s1"></span>
+            <span class="sparkle s2"></span>
+            <span class="sparkle s3"></span>
+            <span class="sparkle s4"></span>
+            <span class="sparkle s5"></span>
+            <span class="sparkle s6"></span>
+            <span class="sparkle s7"></span>
+            <span class="sparkle s8"></span>
+            <div class="success-check-circle">
+              <svg viewBox="0 0 60 60" width="60" height="60" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="14,32 25,43 46,18" id="success-check-path"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <h2 class="success-title">PRO登録が完了しました！</h2>
+          <p class="success-sub">すべてのPRO機能がご利用いただけます。</p>
+
+          <div class="success-feature-card">
+            <div class="success-feat-row">
+              <span class="success-feat-mark">
+                <svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4,9 7.5,12.5 14,5.5"></polyline></svg>
+              </span>
+              <span class="success-feat-text">レシート自動入力</span>
+            </div>
+            <div class="success-feat-row">
+              <span class="success-feat-mark">
+                <svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4,9 7.5,12.5 14,5.5"></polyline></svg>
+              </span>
+              <span class="success-feat-text">AI自動仕訳</span>
+            </div>
+            <div class="success-feat-row">
+              <span class="success-feat-mark">
+                <svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4,9 7.5,12.5 14,5.5"></polyline></svg>
+              </span>
+              <span class="success-feat-text">申告書類の自動作成</span>
+            </div>
+            <div class="success-feat-row">
+              <span class="success-feat-mark">
+                <svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4,9 7.5,12.5 14,5.5"></polyline></svg>
+              </span>
+              <span class="success-feat-text">e-Tax連携</span>
+            </div>
+            <div class="success-feat-row">
+              <span class="success-feat-mark">
+                <svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4,9 7.5,12.5 14,5.5"></polyline></svg>
+              </span>
+              <span class="success-feat-text">税理士共有・サポート</span>
+            </div>
+          </div>
+
+          <button class="pro-primary-btn" id="btn-finish-pro">機能を使い始める</button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /filing-stack -->
+
+
+  <!-- ══════════════════════════════════════════════
+       PRO案内モーダル（画面3）
+       ══════════════════════════════════════════════ -->
+  <div class="pro-modal-overlay" id="pro-modal" role="dialog" aria-modal="true" aria-label="PRO案内">
+    <div class="pro-modal-sheet">
+      <div class="pro-modal-lock">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      </div>
+
+      <h3 class="pro-modal-title">この機能はPROでご利用いただけます</h3>
+      <p class="pro-modal-desc">確定申告をもっと簡単・正確に。PROなら自動化とサポートで、申告準備をスムーズに。</p>
+
+      <ul class="pro-modal-bullets">
+        <li><span class="pm-check"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg></span>レシートを自動で読み取り・分類</li>
+        <li><span class="pm-check"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg></span>AIが取引を自動で仕訳</li>
+        <li><span class="pm-check"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg></span>申告書類を自動作成（PDF/CSV）</li>
+        <li><span class="pm-check"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg></span>e-Tax連携で提出までサポート</li>
+        <li><span class="pm-check"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2,7.5 6,11 12,3.5"></polyline></svg></span>不足レシートを自動チェック</li>
+      </ul>
+
+      <button class="pro-primary-btn pro-modal-cta" id="btn-try-free">7日間無料で試す</button>
+      <button class="pro-later-link" id="btn-modal-later">あとで</button>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       固定 追加ボタン
+       ══════════════════════════════════════════════ -->
+  <button class="add-btn-fixed" id="btn-add-tx">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    収入・支出を追加
+  </button>
+
+
+  <!-- ══════════════════════════════════════════════
+       入力モーダル
+       ══════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="add-modal" role="dialog" aria-modal="true" aria-label="取引を追加">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+
+      <div class="modal-header">
+        <span class="modal-title">取引を追加</span>
+        <button class="modal-close" id="modal-close-btn" aria-label="閉じる">×</button>
+      </div>
+
+      <!-- 収入 / 支出 切り替え -->
+      <div class="type-selector">
+        <button class="type-btn active-expense" data-type="expense" id="type-expense">
+          <span class="type-icon pnx-fin-icon pnx-icon-expense" aria-hidden="true">
+  <svg viewBox="0 0 24 24"><path d="M4.5 7.5h12.2c1.3 0 2.3 1 2.3 2.3v7c0 1.3-1 2.3-2.3 2.3H5.8c-1.3 0-2.3-1-2.3-2.3V8.9c0-.8.6-1.4 1.4-1.4Z"/><path d="M6.4 7.4 16 4.5c1-.3 2 .4 2 1.4v1.6"/><path d="M15.8 13.2h4.1v3.1h-4.1c-.9 0-1.6-.7-1.6-1.6 0-.8.7-1.5 1.6-1.5Z"/><path d="M18.8 5.1c1.3.4 2.2 1.4 2.6 2.7"/><path d="M21.8 3.2v4.7h-4.7"/></svg>
+</span>
+          <span class="type-label">支出</span>
+        </button>
+        <button class="type-btn" data-type="income" id="type-income">
+          <span class="type-icon pnx-fin-icon pnx-icon-income" aria-hidden="true">
+  <svg viewBox="0 0 24 24"><path d="M8.2 7.5h7.6l1.5 2.6c.6 1 .9 2.2.9 3.4v1.4c0 3-2.4 5.4-5.4 5.4h-1.6c-3 0-5.4-2.4-5.4-5.4v-1.4c0-1.2.3-2.4.9-3.4l1.5-2.6Z"/><path d="M9.1 7.4 7.8 4.1h8.4l-1.3 3.3"/><path d="M12 10.5v6.2"/><path d="M9.8 12.2c.5-.6 1.2-.9 2.2-.9 1.1 0 2 .5 2 1.5 0 .9-.7 1.3-2 1.3s-2 .4-2 1.3c0 1 .9 1.5 2 1.5 1 0 1.8-.3 2.3-1"/></svg>
+</span>
+          <span class="type-label">収入</span>
+        </button>
+      </div>
+
+      <!-- STEP138i_ICON_REFRESH_MARKER -->
+      <!-- 金額 -->
+      <div class="form-group">
+        <label class="form-label">金額</label>
+        <div class="amount-input-wrap">
+          <span class="currency-symbol">¥</span>
+          <input type="number" class="amount-input" id="modal-amount"
+                 placeholder="0" inputmode="numeric" min="0">
+        </div>
+      </div>
+
+      <!-- 内容 -->
+      <div class="form-group">
+        <label class="form-label">内容</label>
+        <input type="text" class="form-input" id="modal-desc" placeholder="例：新幹線代（東京→大阪）">
+      </div>
+
+      <!-- カテゴリ -->
+      <div class="form-group">
+        <label class="form-label">カテゴリ</label>
+      </div>
+      <div class="cat-grid" id="cat-grid">
+        <button class="cat-grid-item" data-cat="交通費">
+          <span class="cat-emoji pnx-fin-icon pnx-cat-icon icon-transport" aria-hidden="true">
+  <svg viewBox="0 0 24 24"><path d="M5.5 15.5h13l-.9-5.3c-.2-1-1-1.7-2-1.7H8.4c-1 0-1.8.7-2 1.7l-.9 5.3Z"/><path d="M7.2 15.5v2.2"/><path d="M16.8 15.5v2.2"/><path d="M8 18h0"/><path d="M16 18h0"/><path d="M6.8 12.4h10.4"/><path d="M4.8 13.2 3.5 12"/><path d="M19.2 13.2l1.3-1.2"/></svg>
+</span><span class="cat-text">交通費</span>
+        </button>
+        <button class="cat-grid-item" data-cat="宿泊費">
+          <span class="cat-emoji pnx-fin-icon pnx-cat-icon icon-hotel" aria-hidden="true">
+  <svg viewBox="0 0 24 24"><path d="M5.5 20V6.8c0-.8.6-1.4 1.4-1.4h7.2c.8 0 1.4.6 1.4 1.4V20"/><path d="M15.5 11.2h2.8c.8 0 1.4.6 1.4 1.4V20"/><path d="M8.2 8.5h1.4"/><path d="M11.6 8.5H13"/><path d="M8.2 11.5h1.4"/><path d="M11.6 11.5H13"/><path d="M8.2 14.5h1.4"/><path d="M11.6 14.5H13"/><path d="M3.8 20h16.4"/></svg>
+</span><span class="cat-text">宿泊費</span>
+        </button>
+        <button class="cat-grid-item" data-cat="エントリー費">
+          <span class="cat-emoji pnx-fin-icon pnx-cat-icon icon-entry" aria-hidden="true">
+  <svg viewBox="0 0 24 24"><path d="M5.5 8.1c0-.9.7-1.6 1.6-1.6h9.8c.9 0 1.6.7 1.6 1.6v2.2c-1 .2-1.8 1.1-1.8 2.2s.8 2 1.8 2.2v2.2c0 .9-.7 1.6-1.6 1.6H7.1c-.9 0-1.6-.7-1.6-1.6v-2.2c1-.2 1.8-1.1 1.8-2.2s-.8-2-1.8-2.2V8.1Z"/><path d="m12 9.5.8 1.7 1.9.2-1.4 1.3.4 1.8-1.7-.9-1.7.9.4-1.8-1.4-1.3 1.9-.2.8-1.7Z"/></svg>
+</span><span class="cat-text">エントリー費</span>
+        </button>
+        <button class="cat-grid-item" data-cat="練習場代">
+          <span class="cat-emoji pnx-fin-icon pnx-cat-icon icon-practice" aria-hidden="true">
+  <svg viewBox="0 0 24 24"><circle cx="12.2" cy="10.3" r="4.3"/><path d="M12.2 5.9v8.8"/><path d="M7.9 10.3h8.7"/><path d="M9 7.5c1.8 1.6 4.5 1.6 6.3 0"/><path d="M9 13.1c1.8-1.6 4.5-1.6 6.3 0"/><path d="M12.2 14.7v3.7"/><path d="M9.4 18.4H15"/></svg>
+</span><span class="cat-text">練習場代</span>
+        </button>
+        <button class="cat-grid-item" data-cat="ラウンド代">
+          <span class="cat-emoji pnx-fin-icon pnx-cat-icon icon-round" aria-hidden="true">
+  <svg viewBox="0 0 24 24"><path d="M8.2 19.5V5.3"/><path d="M8.2 5.3h8.1l-1.1 2.2 1.1 2.2H8.2"/><path d="M6.4 19.5h9.7"/><path d="M12.4 16.4c3.2.3 5.5 1.2 5.5 2.2 0 1.2-3.5 2.2-7.9 2.2s-7.9-1-7.9-2.2c0-.9 2-1.7 4.9-2.1"/></svg>
+</span><span class="cat-text">ラウンド代</span>
+        </button>
+        <button class="cat-grid-item" data-cat="キャディ代">
+          <span class="cat-emoji pnx-fin-icon pnx-cat-icon icon-caddie" aria-hidden="true">
+  <svg viewBox="0 0 24 24"><path d="M9.1 20.2h6.1c1.1 0 2-.9 2-2l-.6-7.7c-.1-1.1-1-1.9-2-1.9h-5c-1.1 0-1.9.8-2 1.9L7.1 18.2c-.1 1.1.8 2 2 2Z"/><path d="M9.8 8.5 8.7 4.2"/><path d="M12.4 8.5 12.1 3.5"/><path d="M15 8.5l1.5-4.2"/><path d="M10.2 13.5h4"/><path d="M11 16.2h2.8"/></svg>
+</span><span class="cat-text">キャディ代</span>
+        </button>
+        <button class="cat-grid-item" data-cat="賞金">
+          <span class="cat-emoji pnx-fin-icon pnx-cat-icon icon-prize" aria-hidden="true">
+  <svg viewBox="0 0 24 24"><path d="M8.2 5.2h7.6v3.6c0 2.1-1.7 3.8-3.8 3.8S8.2 10.9 8.2 8.8V5.2Z"/><path d="M8.2 6.7H5.6v1.8c0 1.7 1.3 3 3 3"/><path d="M15.8 6.7h2.6v1.8c0 1.7-1.3 3-3 3"/><path d="M12 12.6v3.6"/><path d="M8.9 19h6.2"/><path d="M10.1 16.2h3.8"/></svg>
+</span><span class="cat-text">賞金</span>
+        </button>
+        <button class="cat-grid-item" data-cat="スポンサー料">
+          <span class="cat-emoji pnx-fin-icon pnx-cat-icon icon-sponsor" aria-hidden="true">
+  <svg viewBox="0 0 24 24"><path d="m8.7 12.4 2.2 2.2c.7.7 1.8.7 2.5 0l2.1-2.1"/><path d="m7.7 13.4-2.1-2.1c-.8-.8-.8-2.1 0-2.9l.9-.9c.7-.7 1.9-.8 2.7-.2l1.2.9"/><path d="m16.3 13.4 2.1-2.1c.8-.8.8-2.1 0-2.9l-.9-.9c-.7-.7-1.9-.8-2.7-.2l-1.2.9"/><path d="m10.4 8.2 1.4-1.1c.6-.5 1.5-.5 2.1 0l2.4 1.9"/><path d="m9.3 15.4 1 1c.6.6 1.6.6 2.2 0"/><path d="m14.7 15.4-1 1"/></svg>
+</span><span class="cat-text">スポンサー料</span>
+        </button>
+      </div>
+
+      <!-- 大会 -->
+      <div class="form-group">
+        <label class="form-label">大会（任意）</label>
+        <input type="text" class="form-input" id="modal-tournament" placeholder="例：日本プロゴルフ選手権">
+      </div>
+
+      <!-- 日付 -->
+      <div class="form-group">
+        <label class="form-label">日付</label>
+        <input type="date" class="form-input" id="modal-date">
+      </div>
+
+      <button class="modal-save-btn" id="modal-save-btn">保存する</button>
+      <div style="height:10px;"></div>
+
+    </div>
+  </div><!-- /add-modal -->
+
+</div><!-- /finance-root -->
+
+
+<!-- STEP18 Tournament Expense Panel -->
+<section id="pnx-fin-tournament-panel" class="pnx-fin-tournament-panel">
+  <div class="pnx-fin-tournament-head">
+    <div>
+      <p class="pnx-fin-kicker">Tournament Link</p>
+      <h2>大会に紐づけて経費入力</h2>
+      <p>CMS/試合検索で追加した大会を選んで、エントリー費・交通費などを保存できます。</p>
+    </div>
+    <button type="button" id="pnx-fin-refresh-tournaments" class="pnx-fin-sub-btn">大会読込</button>
+  </div>
+
+  <div class="pnx-fin-form-grid">
+    <label>大会
+      <select id="pnx-fin-tournament-select">
+        <option value="">大会を選択</option>
+      </select>
+    </label>
+    <label>経費カテゴリ
+      <select id="pnx-fin-expense-category">
+        <option value="entryFee">エントリー費</option>
+        <option value="transport">交通費</option>
+        <option value="hotel">宿泊費</option>
+        <option value="meal">食費</option>
+        <option value="practice">練習費</option>
+        <option value="other">その他</option>
+      </select>
+    </label>
+    <label>金額
+      <input id="pnx-fin-expense-amount" type="number" placeholder="例：15000">
+    </label>
+    <label>日付
+      <input id="pnx-fin-expense-date" type="date">
+    </label>
+  </div>
+
+  <label class="pnx-fin-memo-label">メモ
+    <input id="pnx-fin-expense-memo" type="text" placeholder="例：エントリー費・高速代など">
+  </label>
+
+  <div class="pnx-fin-actions">
+    <button type="button" id="pnx-fin-save-expense" class="pnx-fin-main-btn">大会経費を保存</button>
+  </div>
+
+  <div id="pnx-fin-expense-status" class="pnx-fin-status">大会を読み込んでください</div>
+</section>
+
+
+<!-- STEP19 Tournament Finance Transaction List -->
+<section id="pnx-fin-transaction-list-panel" class="pnx-fin-transaction-list-panel">
+  <div class="pnx-fin-list-head">
+    <div>
+      <p class="pnx-fin-kicker">Tournament Expenses</p>
+      <h2>大会別 経費一覧</h2>
+      <p>保存した大会経費がここに表示されます。</p>
+    </div>
+    <button type="button" id="pnx-fin-refresh-transactions" class="pnx-fin-sub-btn">更新</button>
+  </div>
+  <div id="pnx-fin-transaction-list" class="pnx-fin-transaction-list">
+    <div class="pnx-fin-empty">まだ大会経費がありません</div>
+  </div>
+</section>
+
+
+<!-- STEP20 Tournament Finance Summary -->
+<section id="pnx-fin-summary-panel" class="pnx-fin-summary-panel">
+  <div class="pnx-fin-summary-head">
+    <div>
+      <p class="pnx-fin-kicker">Tournament Summary</p>
+      <h2>大会別 収支サマリー</h2>
+      <p>大会ごとの経費合計を自動集計します。</p>
+    </div>
+    <button type="button" id="pnx-fin-refresh-summary" class="pnx-fin-sub-btn">集計更新</button>
+  </div>
+  <div id="pnx-fin-summary-list" class="pnx-fin-summary-list">
+    <div class="pnx-fin-empty">まだ集計できる大会経費がありません</div>
+  </div>
+</section>
+
+
+<!-- STEP21 Tournament Income Panel -->
+<section id="pnx-fin-income-panel" class="pnx-fin-income-panel">
+  <div class="pnx-fin-income-head">
+    <div>
+      <p class="pnx-fin-kicker">Tournament Income</p>
+      <h2>大会に紐づけて収入入力</h2>
+      <p>賞金・スポンサー収入・レッスン収入などを大会ごとに保存できます。</p>
+    </div>
+    <button type="button" id="pnx-fin-refresh-income-tournaments" class="pnx-fin-sub-btn">大会読込</button>
+  </div>
+
+  <div class="pnx-fin-form-grid">
+    <label>大会
+      <select id="pnx-fin-income-tournament-select">
+        <option value="">大会を選択</option>
+      </select>
+    </label>
+    <label>収入カテゴリ
+      <select id="pnx-fin-income-category">
+        <option value="prize">賞金</option>
+        <option value="sponsor">スポンサー収入</option>
+        <option value="lesson">レッスン収入</option>
+        <option value="appearance">出演・イベント</option>
+        <option value="otherIncome">その他収入</option>
+      </select>
+    </label>
+    <label>金額
+      <input id="pnx-fin-income-amount" type="number" placeholder="例：120000">
+    </label>
+    <label>日付
+      <input id="pnx-fin-income-date" type="date">
+    </label>
+  </div>
+
+  <label class="pnx-fin-memo-label">メモ
+    <input id="pnx-fin-income-memo" type="text" placeholder="例：賞金・スポンサー費など">
+  </label>
+
+  <div class="pnx-fin-actions">
+    <button type="button" id="pnx-fin-save-income" class="pnx-fin-main-btn">大会収入を保存</button>
+  </div>
+
+  <div id="pnx-fin-income-status" class="pnx-fin-status">大会を読み込んでください</div>
+</section>
+
+
+<!-- STEP21 Tournament Profit Summary -->
+<section id="pnx-fin-profit-panel" class="pnx-fin-profit-panel">
+  <div class="pnx-fin-profit-head">
+    <div>
+      <p class="pnx-fin-kicker">Profit Summary</p>
+      <h2>大会別 利益サマリー</h2>
+      <p>大会ごとの収入・支出・利益を自動計算します。</p>
+    </div>
+    <button type="button" id="pnx-fin-refresh-profit" class="pnx-fin-sub-btn">利益更新</button>
+  </div>
+  <div id="pnx-fin-profit-list" class="pnx-fin-profit-list">
+    <div class="pnx-fin-empty">まだ利益計算できるデータがありません</div>
+  </div>
+</section>
+
+
+<!-- STEP22 Finance Accuracy Summary -->
+<section id="pnx-fin-accuracy-panel" class="pnx-fin-accuracy-panel">
+  <div class="pnx-fin-accuracy-head">
+    <div>
+      <p class="pnx-fin-kicker">Finance Accuracy</p>
+      <h2>年間・月別 収支サマリー</h2>
+      <p>大会に紐づく収入・支出を自動集計して、年間利益と月別推移を確認できます。</p>
+    </div>
+    <button type="button" id="pnx-fin-refresh-accuracy" class="pnx-fin-sub-btn">再集計</button>
+  </div>
+
+  <div id="pnx-fin-accuracy-cards" class="pnx-fin-accuracy-cards">
+    <div class="pnx-fin-empty">まだ集計できるデータがありません</div>
+  </div>
+
+  <div id="pnx-fin-monthly-list" class="pnx-fin-monthly-list"></div>
+</section>
+
+
+<!-- STEP23 Tax Category Summary -->
+<section id="pnx-fin-tax-panel" class="pnx-fin-tax-panel">
+  <div class="pnx-fin-tax-head">
+    <div>
+      <p class="pnx-fin-kicker">Tax Category</p>
+      <h2>確定申告カテゴリ集計</h2>
+      <p>大会経費を税務カテゴリへ変換して、申告準備に使える形で集計します。</p>
+    </div>
+    <button type="button" id="pnx-fin-refresh-tax" class="pnx-fin-sub-btn">税務集計</button>
+  </div>
+  <div id="pnx-fin-tax-list" class="pnx-fin-tax-list">
+    <div class="pnx-fin-empty">まだ税務集計できる経費がありません</div>
+  </div>
+</section>
+
+
+<!-- STEP24 CSV Export Panel -->
+<section id="pnx-fin-export-panel" class="pnx-fin-export-panel">
+  <div class="pnx-fin-export-head">
+    <div>
+      <p class="pnx-fin-kicker">Export</p>
+      <h2>税理士共有CSV出力</h2>
+      <p>大会収支・税務カテゴリをCSV形式で出力できます。</p>
+    </div>
+  </div>
+
+  <div class="pnx-fin-export-actions">
+    <button type="button" id="pnx-fin-export-transactions" class="pnx-fin-main-btn">取引CSVを作成</button>
+    <button type="button" id="pnx-fin-export-tax" class="pnx-fin-sub-btn">税務カテゴリCSV</button>
+  </div>
+
+  <textarea id="pnx-fin-export-output" class="pnx-fin-export-output" readonly placeholder="CSVプレビューがここに表示されます"></textarea>
+  <div id="pnx-fin-export-status" class="pnx-fin-status">未作成</div>
+</section>
+
+
+<!-- STEP25 PDF Report Panel -->
+<section id="pnx-fin-pdf-panel" class="pnx-fin-pdf-panel">
+  <div class="pnx-fin-pdf-head">
+    <div>
+      <p class="pnx-fin-kicker">PDF Report</p>
+      <h2>税理士共有PDFレポート</h2>
+      <p>年間収支・大会別利益・税務カテゴリをPDF保存用に整形します。</p>
+    </div>
+    <button type="button" id="pnx-fin-generate-pdf-report" class="pnx-fin-main-btn">PDFレポート作成</button>
+  </div>
+  <div id="pnx-fin-pdf-preview" class="pnx-fin-pdf-preview">
+    <div class="pnx-fin-empty">PDFレポートはまだ作成されていません</div>
+  </div>
+</section>
+
+
+<!-- STEP26 Tax Advisor Package -->
+<section id="pnx-fin-advisor-panel" class="pnx-fin-advisor-panel">
+  <div class="pnx-fin-advisor-head">
+    <div>
+      <p class="pnx-fin-kicker">Tax Advisor Package</p>
+      <h2>税理士共有パッケージ</h2>
+      <p>CSV・PDF・税務カテゴリ・大会別損益をまとめて確認できます。</p>
+    </div>
+    <button type="button" id="pnx-fin-build-advisor-package" class="pnx-fin-main-btn">共有パッケージ作成</button>
+  </div>
+
+  <div id="pnx-fin-advisor-summary" class="pnx-fin-advisor-summary">
+    <div class="pnx-fin-empty">まだ共有パッケージは作成されていません</div>
+  </div>
+</section>
+
+
+<!-- STEP27 Receipt OCR Panel -->
+<section id="pnx-fin-receipt-panel" class="pnx-fin-receipt-panel">
+  <div class="pnx-fin-receipt-head">
+    <div>
+      <p class="pnx-fin-kicker">Receipt OCR</p>
+      <h2>領収書・レシート読み取り</h2>
+      <p>レシート画像から日付・金額・店名を読み取り、経費化する準備画面です。</p>
+    </div>
+  </div>
+
+  <div class="pnx-fin-receipt-box">
+    <label class="pnx-fin-receipt-upload">
+      <input id="pnx-fin-receipt-file" type="file" accept="image/*">
+      <span>レシート画像を選択</span>
+    </label>
+    <div id="pnx-fin-receipt-preview" class="pnx-fin-receipt-preview">画像未選択</div>
+  </div>
+
+  <div class="pnx-fin-form-grid">
+    <label>日付
+      <input id="pnx-fin-ocr-date" type="date">
+    </label>
+    <label>店名
+      <input id="pnx-fin-ocr-merchant" type="text" placeholder="例：高速道路・ホテル・練習場">
+    </label>
+    <label>金額
+      <input id="pnx-fin-ocr-amount" type="number" placeholder="例：3500">
+    </label>
+    <label>カテゴリ
+      <select id="pnx-fin-ocr-category">
+        <option value="transport">交通費</option>
+        <option value="hotel">宿泊費</option>
+        <option value="meal">食費</option>
+        <option value="practice">練習費</option>
+        <option value="other">その他</option>
+      </select>
+    </label>
+  </div>
+
+  <label class="pnx-fin-memo-label">メモ
+    <input id="pnx-fin-ocr-memo" type="text" placeholder="例：大会遠征の経費">
+  </label>
+
+  <div class="pnx-fin-actions">
+    <button type="button" id="pnx-fin-run-demo-ocr" class="pnx-fin-sub-btn">OCRデモ入力</button>
+    <button type="button" id="pnx-fin-save-ocr-expense" class="pnx-fin-main-btn">経費として保存</button>
+  </div>
+
+  <div id="pnx-fin-ocr-status" class="pnx-fin-status">画像を選択してください</div>
+</section>
+
+
+<!-- STEP28 AI Receipt Assist Panel -->
+<section id="pnx-fin-ai-panel" class="pnx-fin-ai-panel">
+  <div class="pnx-fin-ai-head">
+    <div>
+      <p class="pnx-fin-kicker">AI Assist</p>
+      <h2>AI経費整理・大会紐付け</h2>
+      <p>レシート内容からカテゴリ推定・近い大会候補を自動提案します。</p>
+    </div>
+    <button type="button" id="pnx-fin-run-ai-assist" class="pnx-fin-main-btn">AI整理デモ</button>
+  </div>
+
+  <div id="pnx-fin-ai-result" class="pnx-fin-ai-result">
+    <div class="pnx-fin-empty">まだAI整理結果はありません</div>
+  </div>
+</section>
+
+
+      <!-- STEP146: レシート撮影/OCR風入力シート -->
+      <div class="pnx-receipt-sheet" id="pnx-step146-receipt-sheet" aria-hidden="true">
+        <div class="pnx-receipt-backdrop" data-pnx-receipt-close="1"></div>
+        <div class="pnx-receipt-panel" role="dialog" aria-modal="true" aria-label="レシート撮影で入力">
+          <div class="pnx-receipt-handle"></div>
+
+          <div class="pnx-receipt-head">
+            <div>
+              <p class="pnx-receipt-kicker">Receipt Scan</p>
+              <h2>レシート撮影で入力</h2>
+              <p>画像を選んで、読み取り結果を確認して保存します。</p>
+            </div>
+            <button type="button" class="pnx-receipt-close" data-pnx-receipt-close="1" aria-label="閉じる">×</button>
+          </div>
+
+          <label class="pnx-receipt-uploader" for="pnx-step146-receipt-file">
+            <input id="pnx-step146-receipt-file" type="file" accept="image/*" capture="environment">
+            <span class="pnx-receipt-upload-icon">
+              <svg viewBox="0 0 24 24"><path d="M4.5 8.8c0-1 .8-1.8 1.8-1.8h2l1.2-1.7h5L15.7 7h2c1 0 1.8.8 1.8 1.8v7.7c0 1-.8 1.8-1.8 1.8H6.3c-1 0-1.8-.8-1.8-1.8V8.8Z"/><circle cx="12" cy="12.6" r="3.2"/></svg>
+            </span>
+            <strong>レシート画像を選択</strong>
+            <small>カメラ撮影または写真から選択</small>
+          </label>
+
+          <div class="pnx-receipt-preview-wrap" id="pnx-step146-preview-wrap">
+            <img id="pnx-step146-receipt-preview" alt="レシート画像プレビュー">
+          </div>
+
+          <div class="pnx-receipt-auto-box" id="pnx-step146-auto-box">
+            <div>
+              <strong>読み取り候補</strong>
+              <span>今はOCRの土台です。確認して保存してください。</span>
+            </div>
+            <button type="button" id="pnx-step146-mock-read">自動入力</button>
+          </div>
+
+          <div class="pnx-receipt-form">
+            <label>
+              <span>日付</span>
+              <input id="pnx-step146-date" type="date">
+            </label>
+            <label>
+              <span>金額</span>
+              <input id="pnx-step146-amount" type="number" inputmode="numeric" placeholder="例：14320">
+            </label>
+            <label>
+              <span>内容</span>
+              <input id="pnx-step146-memo" type="text" placeholder="例：新幹線代 / ガソリン代">
+            </label>
+            <label>
+              <span>カテゴリ</span>
+              <select id="pnx-step146-category">
+                <option value="交通費">交通費</option>
+                <option value="宿泊費">宿泊費</option>
+                <option value="エントリー費">エントリー費</option>
+                <option value="練習場代">練習場代</option>
+                <option value="ラウンド代">ラウンド代</option>
+                <option value="キャディ代">キャディ代</option>
+                <option value="食費">食費</option>
+                <option value="その他">その他</option>
+              </select>
+            </label>
+            <label>
+              <span>大会（任意）</span>
+              <input id="pnx-step146-tournament" type="text" placeholder="例：日本プロゴルフ選手権">
+            </label>
+          </div>
+
+          <div class="pnx-receipt-actions">
+            <button type="button" class="pnx-receipt-sub" data-pnx-receipt-close="1">閉じる</button>
+            <button type="button" class="pnx-receipt-main" id="pnx-step146-save-receipt">この内容で保存</button>
+          </div>
+
+          <div class="pnx-receipt-status" id="pnx-step146-receipt-status">レシート画像を選択してください</div>
+        </div>
+      </div>
+
+
+      <!-- STEP150: 申告 STEP1 収入確認画面 -->
+      <section class="pnx-filing-step-screen" id="pnx-step150-income-screen" aria-hidden="true">
+        <div class="pnx-step150-head">
+          <button type="button" class="pnx-step150-back" id="pnx-step150-income-back" aria-label="申告トップへ戻る">←</button>
+          <span class="pnx-step150-badge">STEP 1</span>
+          <h2>収入を確認する</h2>
+        </div>
+
+        <p class="pnx-step150-lead">
+          以下の収入が登録されています。<br>
+          内容を確認しましょう。
+        </p>
+
+        <article class="pnx-step150-income-card">
+          <div class="pnx-step150-income-row total">
+            <span>収入合計</span>
+            <strong id="pnx-step150-income-total">¥0</strong>
+          </div>
+          <div class="pnx-step150-income-row">
+            <span>賞金</span>
+            <strong id="pnx-step150-income-prize">¥0</strong>
+          </div>
+          <div class="pnx-step150-income-row">
+            <span>スポンサー収入</span>
+            <strong id="pnx-step150-income-sponsor">¥0</strong>
+          </div>
+          <div class="pnx-step150-income-row">
+            <span>レッスン収入</span>
+            <strong id="pnx-step150-income-lesson">¥0</strong>
+          </div>
+          <div class="pnx-step150-income-row">
+            <span>出演料</span>
+            <strong id="pnx-step150-income-appearance">¥0</strong>
+          </div>
+          <div class="pnx-step150-income-row">
+            <span>その他の収入</span>
+            <strong id="pnx-step150-income-other">¥0</strong>
+          </div>
+        </article>
+
+        <article class="pnx-step150-add-card">
+          <div class="pnx-step150-add-title">
+            <span class="pnx-step150-add-icon">⇧</span>
+            <span>収入の追加・修正はこちらから</span>
+          </div>
+          <button type="button" id="pnx-step150-open-income-input">収入を入力する</button>
+        </article>
+
+        <button type="button" class="pnx-step150-confirm" id="pnx-step150-confirm-income">確認しました</button>
+
+        <div class="pnx-step150-status" id="pnx-step150-income-status"></div>
+      </section>
+
+
+      <!-- STEP154: 申告 STEP2 大会ごとの収支確認画面 -->
+      <section class="pnx-filing-step-screen" id="pnx-step154-tournament-screen" aria-hidden="true">
+        <div class="pnx-step154-head">
+          <button type="button" class="pnx-step154-back" id="pnx-step154-tournament-back" aria-label="申告トップへ戻る">←</button>
+          <span class="pnx-step154-badge">STEP 2</span>
+          <h2>大会ごとの収支を確認する</h2>
+        </div>
+
+        <p class="pnx-step154-lead">
+          大会ごとに収入・経費が整理されています。<br>
+          内容を確認しましょう。
+        </p>
+
+        <article class="pnx-step154-summary-card">
+          <div>
+            <span>大会別に整理済み</span>
+            <strong id="pnx-step154-linked-count">0件</strong>
+          </div>
+          <div>
+            <span>未紐づけの取引</span>
+            <strong id="pnx-step154-unlinked-count">0件</strong>
+          </div>
+        </article>
+
+        <section class="pnx-step154-section">
+          <h3>大会別サマリー</h3>
+          <div class="pnx-step154-tournament-list" id="pnx-step154-tournament-list"></div>
+        </section>
+
+        <section class="pnx-step154-section">
+          <h3>大会と紐づいていない取引</h3>
+          <div class="pnx-step154-unlinked-list" id="pnx-step154-unlinked-list"></div>
+        </section>
+
+        <article class="pnx-step154-link-card">
+          <div class="pnx-step154-link-title">
+            <span class="pnx-step154-link-icon">↔</span>
+            <span>大会名が入っていない取引はこちらから整理できます</span>
+          </div>
+          <button type="button" id="pnx-step154-open-tournament-link">大会と取引を紐づける</button>
+        </article>
+
+        <button type="button" class="pnx-step154-confirm" id="pnx-step154-confirm-tournament">確認しました</button>
+      </section>
+
+
+      <!-- STEP155: 申告 STEP3 経費分類確認画面 -->
+      <section class="pnx-filing-step-screen" id="pnx-step155-expense-screen" aria-hidden="true">
+        <div class="pnx-step155-head">
+          <button type="button" class="pnx-step155-back" id="pnx-step155-expense-back" aria-label="申告トップへ戻る">←</button>
+          <span class="pnx-step155-badge">STEP 3</span>
+          <h2>経費を分類する</h2>
+        </div>
+
+        <p class="pnx-step155-lead">
+          交通費・宿泊費・エントリー費など、経費が正しく分類されているか確認しましょう。
+        </p>
+
+        <article class="pnx-step155-summary-card">
+          <div>
+            <span>分類済みの経費</span>
+            <strong id="pnx-step155-classified-count">0件</strong>
+          </div>
+          <div>
+            <span>未分類の経費</span>
+            <strong id="pnx-step155-unclassified-count">0件</strong>
+          </div>
+        </article>
+
+        <section class="pnx-step155-section">
+          <h3>カテゴリ別の経費</h3>
+          <div class="pnx-step155-category-list" id="pnx-step155-category-list"></div>
+        </section>
+
+        <section class="pnx-step155-section">
+          <h3>未分類の経費</h3>
+          <div class="pnx-step155-unclassified-list" id="pnx-step155-unclassified-list"></div>
+        </section>
+
+        <article class="pnx-step155-action-card">
+          <div class="pnx-step155-action-title">
+            <span class="pnx-step155-action-icon">⌘</span>
+            <span>未分類の経費は、あとからカテゴリを選び直せます</span>
+          </div>
+          <button type="button" id="pnx-step155-open-expense-input">経費を入力・修正する</button>
+        </article>
+
+        <button type="button" class="pnx-step155-confirm" id="pnx-step155-confirm-expense">確認しました</button>
+      </section>
+
+
+      <!-- STEP156: 申告 STEP4 レシート・領収書確認画面 -->
+      <section class="pnx-filing-step-screen" id="pnx-step156-receipt-screen" aria-hidden="true">
+        <div class="pnx-step156-head">
+          <button type="button" class="pnx-step156-back" id="pnx-step156-receipt-back" aria-label="申告トップへ戻る">←</button>
+          <span class="pnx-step156-badge">STEP 4</span>
+          <h2>レシート・領収書をそろえる</h2>
+        </div>
+
+        <p class="pnx-step156-lead">
+          経費として登録した取引に、レシートや領収書がそろっているか確認しましょう。
+        </p>
+
+        <article class="pnx-step156-summary-card">
+          <div>
+            <span>証憑あり</span>
+            <strong id="pnx-step156-attached-count">0件</strong>
+          </div>
+          <div>
+            <span>不足している証憑</span>
+            <strong id="pnx-step156-missing-count">0件</strong>
+          </div>
+        </article>
+
+        <section class="pnx-step156-section">
+          <h3>不足しているレシート・領収書</h3>
+          <div class="pnx-step156-missing-list" id="pnx-step156-missing-list"></div>
+        </section>
+
+        <section class="pnx-step156-section">
+          <h3>証憑がそろっている経費</h3>
+          <div class="pnx-step156-attached-list" id="pnx-step156-attached-list"></div>
+        </section>
+
+        <article class="pnx-step156-action-card">
+          <div class="pnx-step156-action-title">
+            <span class="pnx-step156-action-icon">▧</span>
+            <span>紙のレシートは撮影して、取引に紐づけて保存できます</span>
+          </div>
+          <button type="button" id="pnx-step156-open-receipt-input">レシートを追加する</button>
+        </article>
+
+        <button type="button" class="pnx-step156-confirm" id="pnx-step156-confirm-receipt">確認しました</button>
+      </section>
+
+
+      <!-- STEP157: 申告 STEP5 家賃按分確認画面 -->
+      <section class="pnx-filing-step-screen" id="pnx-step157-rent-screen" aria-hidden="true">
+        <div class="pnx-step157-head">
+          <button type="button" class="pnx-step157-back" id="pnx-step157-rent-back" aria-label="申告トップへ戻る">←</button>
+          <span class="pnx-step157-badge">STEP 5</span>
+          <h2>家賃按分を確認する</h2>
+        </div>
+
+        <p class="pnx-step157-lead">
+          自宅や事務所の一部を仕事で使っている場合は、家賃の一部を経費として整理できます。
+        </p>
+
+        <article class="pnx-step157-summary-card">
+          <div>
+            <span>按分対象の支出</span>
+            <strong id="pnx-step157-rent-count">0件</strong>
+          </div>
+          <div>
+            <span>経費計上予定額</span>
+            <strong id="pnx-step157-deductible-total">¥0</strong>
+          </div>
+        </article>
+
+        <section class="pnx-step157-rate-card">
+          <div>
+            <span>現在の按分率</span>
+            <strong id="pnx-step157-rate-label">未設定</strong>
+          </div>
+          <p id="pnx-step157-rate-note">該当する場合は、事業で使っている割合を設定してください。</p>
+        </section>
+
+        <section class="pnx-step157-section">
+          <h3>按分対象になりそうな支出</h3>
+          <div class="pnx-step157-rent-list" id="pnx-step157-rent-list"></div>
+        </section>
+
+        <article class="pnx-step157-action-card">
+          <div class="pnx-step157-action-title">
+            <span class="pnx-step157-action-icon">%</span>
+            <span>家賃按分は、税理士に確認しながら設定すると安心です</span>
+          </div>
+          <button type="button" id="pnx-step157-open-rent-setting">按分率を設定する</button>
+        </article>
+
+        <button type="button" class="pnx-step157-confirm" id="pnx-step157-confirm-rent">確認しました</button>
+      </section>
+
+
+      <!-- STEP158: 申告 STEP6 税理士共有画面 -->
+      <section class="pnx-filing-step-screen" id="pnx-step158-share-screen" aria-hidden="true">
+        <div class="pnx-step158-head">
+          <button type="button" class="pnx-step158-back" id="pnx-step158-share-back" aria-label="申告トップへ戻る">←</button>
+          <span class="pnx-step158-badge">STEP 6</span>
+          <h2>税理士へ共有する</h2>
+        </div>
+
+        <p class="pnx-step158-lead">
+          税理士・会計事務所に渡すデータをまとめます。共有前に、収入・経費・レシート・申告書類の状態を確認しましょう。
+        </p>
+
+        <article class="pnx-step158-summary-card">
+          <div>
+            <span>共有できる項目</span>
+            <strong id="pnx-step158-ready-count">0/5</strong>
+          </div>
+          <div>
+            <span>共有メモ</span>
+            <strong id="pnx-step158-memo-status">未作成</strong>
+          </div>
+        </article>
+
+        <section class="pnx-step158-section">
+          <h3>共有する内容</h3>
+          <div class="pnx-step158-share-list" id="pnx-step158-share-list"></div>
+        </section>
+
+        <section class="pnx-step158-section">
+          <h3>共有前チェック</h3>
+          <div class="pnx-step158-check-list" id="pnx-step158-check-list"></div>
+        </section>
+
+        <article class="pnx-step158-memo-card">
+          <div class="pnx-step158-memo-title">
+            <span class="pnx-step158-memo-icon">✎</span>
+            <span>税理士へ送る時に使える確認用メモを作成します</span>
+          </div>
+          <textarea id="pnx-step158-share-memo" rows="8" readonly></textarea>
+          <button type="button" id="pnx-step158-copy-share-memo">税理士共有用メモをコピー</button>
+        </article>
+
+        <div class="pnx-step158-actions">
+          <button type="button" id="pnx-step158-open-documents">申告書類PDF/CSVを確認</button>
+          <button type="button" class="pnx-step158-confirm" id="pnx-step158-confirm-share">確認しました</button>
+        </div>
+      </section>
+
+
+<script id="pnx-step180h-iframe-nav-bridge">
+(function(){
+  if (window.__PNX_STEP180H_IFRAME_NAV_BRIDGE__) return;
+  window.__PNX_STEP180H_IFRAME_NAV_BRIDGE__ = true;
+
+  function send(page){
+    try {
+      window.parent.postMessage({ type:"PNX_SET_PAGE", page:page, source:"iframe-nav-bridge" }, "*");
+    } catch(e) {}
+  }
+
+  document.addEventListener("click", function(e){
+    var trigger = e.target && e.target.closest && e.target.closest("[data-page], [data-target], [data-tab], [href]");
+    if (!trigger) return;
+    var page = trigger.getAttribute("data-page") || trigger.getAttribute("data-target") || trigger.getAttribute("data-tab") || "";
+    var href = trigger.getAttribute("href") || "";
+    if (href === "#mypage" || href === "#page-mypage") page = "mypage";
+    if (["calendar","search","featured","finance","mypage"].indexOf(page) === -1) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+    send(page);
+  }, true);
+
+  window.PNXStep180hIframeNavBridgeStatus = function(){
+    return { step:"180h", bridge:true, href:location.href };
+  };
+})();
+</script>
+
+</body>
+</html>
+
+<!-- STEP143_FINANCE_UI_UNIFY_MARKER -->
+
+<!-- STEP145_TYPOGRAPHY_UNIFY_MARKER -->
+
+<!-- STEP147B_FILING_RETURN_FIX_MARKER -->
+
+<!-- STEP147C_FILING_INLINE_DOCS_FIX_MARKER -->
+
+<!-- STEP147D_RECEIPT_CLICK_ISOLATION_MARKER -->
+
+<!-- STEP147E_ANALYSIS_CHARTS_FILING_CTA_MARKER -->
+
+<!-- STEP148_FILING_HOME_REF_MARKER -->
+
+<!-- STEP148B_FILING_HOME_POLISH_MARKER -->
+
+<!-- STEP148C_FILING_HOME_PHOTO_MATCH_MARKER -->
+
+<!-- STEP148D_FILING_PREP_CARD_TOP_SWAP_MARKER -->
+
+<!-- STEP149_FILING_CTA_BUTTONS_MARKER -->
+
+<!-- STEP150_FILING_INCOME_CONFIRM_MARKER -->
+
+<!-- STEP150B_INCOME_SCREEN_ONLY_MARKER -->
+
+<!-- STEP150C_INCOME_SCREEN_STRICT_ONLY_MARKER -->
+
+<!-- STEP150D_INCOME_SCREEN_LIGHT_FIX_MARKER -->
+
+<!-- STEP150E_INCOME_SCREEN_OVERLAY_FIX_MARKER -->
+
+<!-- STEP150F_INCOME_SCREEN_FORCE_FIXED_MARKER -->
+
+<!-- STEP151_REMOVE_TOURNAMENT_INCOME_TASK_MARKER -->
+
+<!-- STEP151B_RESTORE_TOURNAMENT_INCOME_TASK_MARKER -->
+
+<!-- STEP152_TAX_DOCUMENTS_OPEN_ON_CTA_MARKER -->
+
+<!-- STEP152B_TAX_DOCUMENTS_CTA_CLICK_FIX_MARKER -->
+
+<!-- STEP152C_TAX_DOCUMENTS_STANDALONE_PAGE_MARKER -->
+
+<!-- STEP152D_TAX_DOCUMENTS_HEADER_DEDUPE_MARKER -->
+
+<!-- STEP152E_TAX_DOCUMENTS_INTRO_CARD_REMOVED_MARKER -->
+
+<!-- STEP153_FILING_TASK_LABELS_REFINED_MARKER -->
+
+<!-- STEP154_TOURNAMENT_FINANCE_CONFIRM_MARKER -->
+
+<!-- STEP154B_TOURNAMENT_SCREEN_FORCE_FIXED_MARKER -->
+
+<!-- STEP155_EXPENSE_CATEGORY_CONFIRM_MARKER -->
+
+<!-- STEP156_RECEIPT_CONFIRM_MARKER -->
+
+<!-- STEP157_RENT_ALLOCATION_CONFIRM_MARKER -->
+
+<!-- STEP158_TAX_ADVISOR_SHARE_MARKER -->
+
+<!-- STEP159_FILING_PROGRESS_SYNC_MARKER -->
+
+<!-- STEP160_TAX_DOCUMENTS_REFINED_MARKER -->
+
+<!-- STEP161_TAX_ADVISOR_MISSING_CHECKS_MARKER -->
+
+<!-- STEP162_FILING_FLOW_STABILITY_MARKER -->
+
+<!-- STEP163_TAX_DOCUMENTS_FINAL_CTA_MARKER -->
+
+<!-- STEP164_TAX_DOCUMENTS_TASK_LABEL_REFINED_MARKER -->
+
+<!-- STEP165_TAX_DOCUMENTS_CONTENT_REVIEW_MARKER -->
+
+<!-- STEP165B_TAX_DOCUMENTS_REVIEW_LAYOUT_FIX_MARKER -->

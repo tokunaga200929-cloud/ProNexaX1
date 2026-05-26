@@ -217,6 +217,7 @@
     const dateText = compareDate(start, end) === 0
       ? formatDateJP(start, true)
       : formatDateJP(start, true) + ' 〜 ' + formatDateJP(end, true);
+    if (event && event.allDay) return dateText + '　終日';
     if (event.endTime) return dateText + '　' + (event.time || '時間未設定') + '〜' + event.endTime;
     if (event.time) return dateText + '　' + event.time + '〜';
     return dateText;
@@ -754,16 +755,85 @@
     if (el) el.textContent = value || '';
   }
 
+  function isTournamentEvent(event) {
+    if (!event) return false;
+    if (event.category === 'tournament' || event.kind === 'tournament') return true;
+    if (event.source === 'search-module') return true;
+    if (event.tournamentId || event.rawTournament) return true;
+    return String(event.id || '').indexOf('tournament-') === 0;
+  }
+
+  function firstValue() {
+    for (let i = 0; i < arguments.length; i++) {
+      const value = arguments[i];
+      if (value !== undefined && value !== null && String(value).trim() !== '') return String(value).trim();
+    }
+    return '';
+  }
+
+  function tournamentValue(event, key, fallback) {
+    const raw = event && event.rawTournament ? event.rawTournament : {};
+    return firstValue(event && event[key], raw && raw[key], fallback || '不明');
+  }
+
+  function formatTournamentPlace(event) {
+    const raw = event && event.rawTournament ? event.rawTournament : {};
+    const course = firstValue(event && event.loc, raw.course, raw.venue, event && event.course, event && event.venue, '未設定');
+    const pref = firstValue(event && event.prefecture, raw.prefecture);
+    if (pref && course.indexOf(pref) === -1) return course + '（' + pref + '）';
+    return course;
+  }
+
+  function setTournamentDetailVisible(visible) {
+    if (!state.root) return;
+    const section = state.root.querySelector('[data-pnx-tournament-detail]');
+    if (section) section.hidden = !visible;
+    state.root.classList.toggle('is-detail-tournament', !!visible);
+  }
+
+  function renderTournamentDetail(event) {
+    if (!state.root || !event) return;
+    const raw = event.rawTournament || {};
+    const category = firstValue(event.cat, raw.cat, event.type, raw.category, '試合');
+    const gender = firstValue(event.gender, raw.gender);
+    const area = firstValue(raw.area, raw.region, event.region);
+    const status = firstValue(raw.status, event.status);
+
+    setDetailText('[data-pnx-tournament-title]', event.title || raw.name || '大会予定');
+    setDetailText('[data-pnx-tournament-date]', formatEventDateTime(event));
+    setDetailText('[data-pnx-tournament-place]', formatTournamentPlace(event));
+    setDetailText('[data-pnx-tournament-organizer]', tournamentValue(event, 'organizer'));
+    setDetailText('[data-pnx-tournament-prize]', tournamentValue(event, 'prize'));
+    setDetailText('[data-pnx-tournament-deadline]', tournamentValue(event, 'entryDeadline'));
+    setDetailText('[data-pnx-tournament-fee]', tournamentValue(event, 'entryFee'));
+    setDetailText('[data-pnx-tournament-category]', category + (gender ? ' / ' + gender : '') + (area ? ' / ' + area : ''));
+    setDetailText('[data-pnx-tournament-status]', status || '追加済み');
+    setDetailText('[data-pnx-tournament-note]', firstValue(raw.qualification, event.qualification, raw.entryMethod, event.desc, '試合検索から追加された大会予定です。'));
+  }
+
   function renderDetail(event) {
     if (!state.root || !event) return;
     const color = COLOR[event.color] || event.color || '#0a74ff';
+    const isTournament = isTournamentEvent(event);
+    const heading = state.root.querySelector('[data-pnx-detail-heading]');
+    if (heading) heading.textContent = isTournament ? '大会の詳細' : '予定の詳細';
+
     setDetailText('[data-pnx-detail-title-text]', event.title || '予定');
-    setDetailText('[data-pnx-detail-type]', inferEventType(event));
+    setDetailText('[data-pnx-detail-type]', isTournament ? '試合' : inferEventType(event));
     setDetailText('[data-pnx-detail-date]', formatEventDateTime(event));
-    setDetailText('[data-pnx-detail-place]', event.loc || '未設定');
-    setDetailText('[data-pnx-detail-memo]', event.desc || 'なし');
+    setDetailText('[data-pnx-detail-place]', isTournament ? formatTournamentPlace(event) : (event.loc || '未設定'));
+    setDetailText('[data-pnx-detail-memo]', isTournament ? firstValue(event.desc, '試合検索から追加された大会予定です。') : (event.desc || 'なし'));
+
     const dot = state.root.querySelector('[data-pnx-detail-dot]');
     if (dot) dot.style.backgroundColor = color;
+
+    const editBtn = state.root.querySelector('[data-pnx-action="edit-detail"]');
+    if (editBtn) editBtn.hidden = isTournament;
+    const deleteText = state.root.querySelector('[data-pnx-detail-delete-label]');
+    if (deleteText) deleteText.textContent = isTournament ? '大会を削除' : '削除';
+
+    setTournamentDetailVisible(isTournament);
+    if (isTournament) renderTournamentDetail(event);
   }
 
   function openDetailSheet(eventId) {
@@ -783,10 +853,12 @@
     if (!state.root) return;
     const layer = state.root.querySelector('[data-pnx-detail-layer]');
     state.root.classList.remove('is-detail-open');
+    state.root.classList.remove('is-detail-tournament');
     if (layer) {
       layer.classList.remove('is-open');
       layer.setAttribute('aria-hidden', 'true');
     }
+    setTournamentDetailVisible(false);
     state.selectedEventId = null;
   }
 
@@ -1477,6 +1549,14 @@
       const notifyBtn = event.target.closest('[data-pnx-notify]');
       if (notifyBtn && state.root.contains(notifyBtn)) {
         state.root.querySelectorAll('[data-pnx-notify]').forEach(function (btn) { btn.classList.toggle('is-active', btn === notifyBtn); });
+        return;
+      }
+
+      const eventChip = event.target.closest('[data-pnx-event-chip]');
+      if (eventChip && state.root.contains(eventChip)) {
+        event.preventDefault();
+        event.stopPropagation();
+        openDetailSheet(eventChip.getAttribute('data-pnx-event-id'));
         return;
       }
 

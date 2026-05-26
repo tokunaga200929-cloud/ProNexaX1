@@ -1,0 +1,773 @@
+/* ================================================================
+   ProNexaX — 注目（feature）ページ  style.css
+   iOS ネイティブ UI / モバイル専用
+   ================================================================
+
+   【画像差し替え一覧】 ★ 以下のパスに画像を置けば自動反映
+   ┌─────────────────────────────────────────────────────────┐
+   │  Pロゴアイコン  ../../assets/images/p-tab-icon.png             │
+   │  バナー 1枚目   ../../assets/images/feature-hero-1.jpg         │
+   │  バナー 2枚目   ../../assets/images/feature-hero-2.jpg         │
+   │  バナー 3枚目   ../../assets/images/feature-hero-3.jpg         │
+   │  記事 ドライバー ../../assets/images/article-driver.jpg        │
+   │  記事 ゴルフ場  ../../assets/images/article-course.jpg         │
+   │  記事 レッスン  ../../assets/images/article-lesson.jpg         │
+   └─────────────────────────────────────────────────────────┘
+   画像がない場合はグラデーションがフォールバック表示されます。
+
+   【本体統合時の注意点】
+   - .bottom-nav / .bnav-btn は本体の nav と置き換える
+   - .scroll-content の padding-bottom は本体 nav 高さに合わせる
+   - script.js の navigateToFeature() に遷移処理を実装する
+   ================================================================ */
+
+/* ----------------------------------------------------------------
+   CSS Variables
+   ---------------------------------------------------------------- */
+:root {
+  /* Brand colors */
+  --green-main:  #1AAF7A;
+  --green-dark:  #0D8C60;
+  --green-deep:  #083d24;
+  --green-pale:  #E8F5EF;
+  --green-tint:  rgba(26,175,122,0.12);
+
+  /* Surface */
+  --bg:          #F2F4F3;
+  --card-bg:     #FFFFFF;
+  --nav-bg:      rgba(250,252,251,0.88);
+
+  /* Text */
+  --t1: #0F1E18;
+  --t2: #4A6059;
+  --t3: #94B4AA;
+
+  /* Borders */
+  --sep:         rgba(0,0,0,0.07);
+
+  /* Shadows — 3 levels */
+  --sh1: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.04);
+  --sh2: 0 2px 10px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.04);
+  --sh3: 0 6px 24px rgba(0,0,0,0.11), 0 1px 4px rgba(0,0,0,0.06);
+
+  /* Radius */
+  --r1: 10px;
+  --r2: 14px;
+  --r3: 18px;
+  --r4: 24px;
+
+  /* Tab bar */
+  --tab-h: 54px;
+
+  /* Spring easing */
+  --spring: cubic-bezier(.34,1.4,.64,1);
+  --ease:   cubic-bezier(.25,.46,.45,.94);
+}
+
+/* ----------------------------------------------------------------
+   Reset & Base
+   ---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont,
+    "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--t1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  min-height: 100dvh;
+}
+
+button {
+  background: none; border: none; cursor: pointer;
+  font-family: inherit; color: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+img { display: block; max-width: 100%; }
+
+/* ----------------------------------------------------------------
+   App Wrapper
+   ---------------------------------------------------------------- */
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.scroll-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  /* tab-h + safe-area + 中央タブ突出(7px) + 余白(32px) */
+  padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + 39px);
+}
+
+/* ================================================================
+   HEADER
+   ================================================================ */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  /* safe-area-inset-top + extra padding */
+  padding: calc(env(safe-area-inset-top, 44px) + 4px) 20px 12px;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  /* スクロール時にガラス効果 */
+  transition: background .2s ease, box-shadow .2s ease;
+}
+/* JS でスクロール時に .scrolled クラスを付与 */
+.page-header.scrolled {
+  background: rgba(242,244,243,0.92);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 0.5px 0 var(--sep);
+}
+
+.header-text .header-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  color: var(--t1);
+  line-height: 1.1;
+}
+.header-text .header-sub {
+  font-size: 12px;
+  color: var(--t2);
+  margin-top: 3px;
+  letter-spacing: 0.05px;
+  font-weight: 400;
+  /* 375px でも右アイコンに突っ込まない */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-text {
+  flex: 1;
+  min-width: 0; /* 375px幅でも右アイコンを押しつぶさない */
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 4px;
+  flex-shrink: 0;
+  margin-left: 10px; /* テキストと最低限の間隔を確保 */
+}
+.header-icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--sh1);
+  transition: transform .12s var(--spring), opacity .12s ease;
+  position: relative;
+}
+.header-icon-btn:active {
+  transform: scale(.86);
+  opacity: .65;
+}
+.notif-dot {
+  position: absolute; top: 7px; right: 7px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #FF3B30;
+  border: 1.5px solid var(--bg);
+}
+
+/* ================================================================
+   BANNER
+   ================================================================ */
+.banner-section {
+  padding: 6px 16px 0;
+}
+
+.banner-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--r4);
+  overflow: hidden;
+  box-shadow: var(--sh3);
+  transition: transform .18s var(--spring);
+}
+.banner-card:active { transform: scale(.975); }
+
+/* ── バナー背景スライド ★画像一覧はファイル先頭参照 ──
+   多重background: url(画像) が上、gradient がフォールバック */
+.banner-bg {
+  position: absolute; inset: 0;
+  background-size: cover, cover;
+  background-position: center center, center center;
+  background-repeat: no-repeat, no-repeat;
+  transition: opacity .6s var(--ease);
+}
+.banner-bg-1 {
+  background-image:
+    url('../../assets/images/feature-hero-1.jpg'),
+    linear-gradient(145deg, #0d4a2e 0%, #1a6840 40%, #2fa06a 80%, #30b87a 100%);
+}
+.banner-bg-2 {
+  background-image:
+    url('../../assets/images/feature-hero-2.jpg'),
+    linear-gradient(145deg, #1a2c1e 0%, #2a4f35 45%, #3a7050 80%, #3d7a52 100%);
+  opacity: 0;
+}
+.banner-bg-3 {
+  background-image:
+    url('../../assets/images/feature-hero-3.jpg'),
+    linear-gradient(145deg, #0a3d2a 0%, #1a6848 45%, #22845e 80%, #2fa06a 100%);
+  opacity: 0;
+}
+
+/* ── テキスト可読性オーバーレイ（左→右 + 下→上 の2層） */
+.banner-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background:
+    /* left → right: text readability curtain */
+    linear-gradient(
+      to right,
+      rgba(2,10,5,0.90)   0%,
+      rgba(2,10,5,0.70)  38%,
+      rgba(2,10,5,0.22)  62%,
+      transparent        100%
+    ),
+    /* bottom → top: depth & vignette */
+    linear-gradient(
+      to top,
+      rgba(2,10,5,0.62)   0%,
+      rgba(2,10,5,0.22)  35%,
+      transparent        62%
+    );
+}
+
+.banner-content {
+  position: absolute;
+  bottom: 0; left: 0;
+  z-index: 2;
+  padding: 20px 18px;
+  width: clamp(260px, 80%, 340px); /* 375px〜430px で右端の写真が見える幅 */
+}
+.banner-label {
+  display: inline-block;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 1.6px;
+  color: #5CFBB7;
+  background: rgba(26,175,122,0.22);
+  border: 0.5px solid rgba(92,251,183,0.45);
+  border-radius: 5px;
+  padding: 2.5px 8px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.banner-title {
+  font-size: 19px; font-weight: 700;
+  color: #fff;
+  line-height: 1.28;
+  letter-spacing: -0.4px;
+  margin-bottom: 6px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 2px 16px rgba(0,0,0,0.4);
+}
+.banner-desc {
+  font-size: 11.5px; font-weight: 400;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.55;
+  margin-bottom: 14px;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.55);
+}
+.banner-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fff;
+  color: var(--green-dark);
+  font-size: 12px; font-weight: 700;
+  padding: 8px 16px 8px 14px;
+  border-radius: 22px;
+  letter-spacing: -0.1px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.22);
+  transition: transform .12s var(--spring), opacity .1s ease;
+}
+.banner-btn:active { transform: scale(.93); opacity: .85; }
+.banner-btn svg {
+  width: 14px; height: 14px;
+  stroke: var(--green-dark);
+  stroke-width: 2.2;
+  fill: none;
+  stroke-linecap: round;
+}
+
+/* Slider Dots */
+.banner-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  padding: 11px 0 2px;
+}
+.dot {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0,0,0,0.15);
+  cursor: pointer;
+  width: 6px;
+  transition: width .3s var(--ease), background .3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.dot.active {
+  background: var(--green-main);
+  width: 18px;
+}
+
+/* ================================================================
+   SECTION 共通
+   ================================================================ */
+.section {
+  padding: 26px 16px 0;
+}
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-size: 17px; font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--t1);
+}
+.section-more {
+  font-size: 13px; font-weight: 500;
+  color: var(--green-main);
+  padding: 4px 0;
+  transition: opacity .1s;
+}
+.section-more:active { opacity: .55; }
+
+/* ================================================================
+   CATEGORY
+   ================================================================ */
+.category-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 0 -16px;
+  padding: 0 16px;
+}
+.category-scroll-wrap::-webkit-scrollbar { display: none; }
+
+.category-row {
+  display: flex;
+  gap: 10px;
+  padding-bottom: 6px;
+  width: max-content;
+}
+
+.cat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 72px;
+  padding: 14px 6px 13px;
+  background: var(--card-bg);
+  border-radius: var(--r2);
+  box-shadow: var(--sh1);
+  transition:
+    transform .15s var(--spring),
+    opacity   .12s ease,
+    box-shadow .12s ease;
+}
+.cat-card:active {
+  transform: scale(.91) translateY(1px);
+  opacity: .72;
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,0.04);
+}
+.cat-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: var(--green-pale);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cat-icon svg {
+  width: 20px; height: 20px;
+  stroke: var(--green-dark);
+  stroke-width: 1.65;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.cat-label {
+  font-size: 10.5px; font-weight: 600;
+  color: var(--t1);
+  text-align: center;
+  line-height: 1.25;
+  letter-spacing: -0.1px;
+}
+
+/* ================================================================
+   ARTICLES
+   ================================================================ */
+.article-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.article-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  background: var(--card-bg);
+  border-radius: var(--r3);
+  padding: 14px 12px;
+  min-height: 102px; /* thumb(74px) + padding(28px) = 全カード同一高さ */
+  box-shadow: var(--sh1);
+  transition:
+    transform .15s var(--spring),
+    opacity   .12s ease;
+  text-align: left;
+  width: 100%;
+}
+.article-card:active {
+  transform: scale(.975);
+  opacity: .82;
+}
+
+/* ── 記事サムネイル ★画像一覧はファイル先頭参照
+   多重background: url(画像) が上、gradient がフォールバック */
+.article-thumb {
+  width: 74px; height: 74px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.article-thumb-img {
+  width: 100%; height: 100%;
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+.article-thumb-1 {
+  background-image:
+    url('../../assets/images/article-driver.jpg'),
+    linear-gradient(135deg, #1a3a2a 0%, #2d6645 55%, #3d8a5a 100%);
+}
+.article-thumb-2 {
+  background-image:
+    url('../../assets/images/article-course.jpg'),
+    linear-gradient(135deg, #1e3a18 0%, #3a6030 55%, #4d8040 100%);
+}
+.article-thumb-3 {
+  background-image:
+    url('../../assets/images/article-lesson.jpg'),
+    linear-gradient(135deg, #0a2030 0%, #1a4060 55%, #205090 100%);
+}
+
+.article-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 1px;
+}
+.article-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.article-badge {
+  font-size: 9px; font-weight: 700;
+  color: #fff;
+  background: var(--green-main);
+  border-radius: 4px;
+  padding: 1.5px 5px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+.article-date {
+  font-size: 10px; font-weight: 400;
+  color: var(--t3);
+  letter-spacing: 0.2px;
+}
+.article-title {
+  font-size: 13.5px; font-weight: 700;
+  color: var(--t1);
+  line-height: 1.46;
+  letter-spacing: -0.25px;
+  height: 39px; /* 2行固定 (13.5 × 1.46 × 2 ≈ 39px) — カード高さを統一 */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.article-desc {
+  font-size: 11px; font-weight: 400;
+  color: var(--t2);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.article-arrow {
+  flex-shrink: 0;
+  opacity: .35;
+  align-self: center;
+  margin-left: 2px;
+}
+
+/* ================================================================
+   PROMO BANNER
+   ================================================================ */
+.promo-section {
+  padding: 26px 16px 0;
+}
+.promo-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: linear-gradient(118deg, #062a17 0%, #0d6644 55%, #1AAF7A 100%);
+  border-radius: var(--r3);
+  padding: 20px 18px;
+  box-shadow: 0 4px 18px rgba(6,42,23,0.25), 0 1px 4px rgba(6,42,23,0.14);
+  transition: transform .15s var(--spring), opacity .12s ease;
+  width: 100%;
+  text-align: left;
+}
+.promo-card:active {
+  transform: scale(.975);
+  opacity: .88;
+}
+.promo-text-wrap { flex: 1; min-width: 0; }
+.promo-tag {
+  display: inline-block;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 1.4px;
+  color: rgba(255,255,255,0.60);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.promo-title {
+  font-size: 15px; font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+  line-height: 1.38;
+}
+.promo-sub {
+  font-size: 11px; font-weight: 400;
+  color: rgba(255,255,255,0.60);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.promo-btn-wrap { flex-shrink: 0; }
+.promo-action-btn {
+  display: block;
+  background: rgba(255,255,255,0.16);
+  border: 0.5px solid rgba(255,255,255,0.28);
+  color: #fff;
+  font-size: 12px; font-weight: 600;
+  padding: 9px 15px;
+  border-radius: 22px;
+  white-space: nowrap;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  letter-spacing: -0.1px;
+  transition: background .1s ease;
+}
+.promo-action-btn:active { background: rgba(255,255,255,0.28); }
+
+/* ================================================================
+   BOTTOM NAV — Apple 純正タブバー
+   ================================================================ */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  overflow: visible;
+
+  display: flex;
+  align-items: center;
+
+  /* 高さ：タブ部分 + safe-area */
+  height: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
+  padding:
+    0 6px
+    env(safe-area-inset-bottom, 0px);
+
+  /* Apple 純正 frosted glass */
+  background: var(--nav-bg);
+  -webkit-backdrop-filter: blur(28px) saturate(200%) brightness(1.05);
+  backdrop-filter:         blur(28px) saturate(200%) brightness(1.05);
+
+  /* 0.5px セパレーター */
+  border-top: 0.5px solid rgba(0,0,0,0.10);
+}
+
+/* ホームインジケーター下をナビ背景色で塗りつぶす（iOS 全機種対応） */
+.bottom-nav::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: env(safe-area-inset-bottom, 0px);
+  background: var(--nav-bg);
+  -webkit-backdrop-filter: inherit;
+  backdrop-filter: inherit;
+}
+
+.bnav-btn {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px;
+  height: var(--tab-h);
+  padding: 6px 4px 4px;
+  border-radius: 10px;
+  transition:
+    transform  .15s var(--spring),
+    opacity    .12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.bnav-btn:active {
+  transform: scale(.84);
+  opacity: .60;
+}
+
+.bnav-icon svg {
+  display: block;
+}
+
+.bnav-label {
+  font-size: 10px; font-weight: 500;
+  color: var(--t3);
+  line-height: 1;
+  letter-spacing: 0.1px;
+  transition: color .15s ease;
+  /* ラベルの折り返し・はみ出しを防止（全幅共通） */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  max-width: 72px;
+}
+.bnav-btn.active .bnav-label {
+  color: var(--green-main);
+  font-weight: 600;
+}
+
+/* ── 中央Pロゴタブ ★画像: ../../assets/images/p-tab-icon.png ──
+   タップ領域 60×60px (iOS 最低 44×44px を超過)
+   translateY(-7px) で控えめに浮かせる（FAB風にしない）      */
+.bnav-btn.center-tab {
+  flex: 0 0 60px;
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: none;
+  padding: 0; gap: 0;
+  transform: translateY(-7px);
+  align-self: center;
+  position: relative;
+  z-index: 10;
+  transition: transform .18s var(--spring), opacity .12s ease;
+}
+.bnav-btn.center-tab:active {
+  transform: translateY(-3px) scale(.90);
+  opacity: .82;
+}
+
+.p-tab-icon {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  pointer-events: none;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* 画像なし時のフォールバック: 白丸 + P文字 */
+.p-tab-fallback {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 4px 18px rgba(0,0,0,0.15),
+    0 1.5px 5px rgba(0,0,0,0.09),
+    0 0 0 0.5px rgba(0,0,0,0.06);
+  color: var(--green-dark);
+  font-size: 27px; font-weight: 800;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  display: flex; align-items: center; justify-content: center;
+  letter-spacing: -0.5px;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   PAGE END SPACER
+   ================================================================ */
+.page-end-spacer { height: 8px; }
+
+/* ================================================================
+   レスポンシブ — iPhone 実機専用（PC対応なし）
+   ================================================================ */
+
+/* ≤ 380px: iPhone SE / mini (375px) */
+@media (max-width: 380px) {
+
+  /* ── ページ余白 ── */
+  .page-header    { padding-left: 16px; padding-right: 16px; }
+  .banner-section { padding-left: 12px; padding-right: 12px; }
+  .section        { padding-top: 22px; padding-left: 14px; padding-right: 14px; }
+  .promo-section  { padding-top: 22px; padding-left: 14px; padding-right: 14px; }
+
+  .category-scroll-wrap { margin: 0 -14px; padding: 0 14px; }
+  .header-text .header-title { font-size: 28px; letter-spacing: -0.6px; }
+  .header-text .header-sub   { font-size: 11px; }
+  .banner-content { padding: 16px 14px; }
+  .banner-label   { font-size: 8.5px; margin-bottom: 5px; }
+  .banner-title   { font-size: 17px;  margin-bottom: 4px; }
+  .banner-desc    { font-size: 11px;  margin-bottom: 10px; line-height: 1.5; }
+  .banner-btn     { font-size: 11.5px; padding: 7px 12px 7px 11px; }
+  .banner-btn svg { width: 12px; height: 12px; }
+  .article-card   { gap: 11px; padding: 12px 10px; }
+  .article-title  { font-size: 13px; height: 38px; } /* 13 × 1.46 × 2 ≈ 38px */
+  .article-desc   { font-size: 10.5px; }
+  .promo-card       { padding: 18px 16px; gap: 12px; }
+  .promo-title      { font-size: 14px; }
+  .promo-sub        { font-size: 10.5px; }
+  .promo-action-btn { font-size: 11.5px; padding: 8px 12px; }
+  .bnav-label  { font-size: 9.5px; }
+  /* Pロゴを56pxに縮小して左右タブに余裕を持たせる */
+  .bnav-btn.center-tab { flex: 0 0 56px; width: 56px; height: 56px; transform: translateY(-6px); }
+  .p-tab-icon          { width: 56px; height: 56px; }
+  .p-tab-fallback      { width: 56px; height: 56px; font-size: 25px; }
+}
+
+/* ≥ 410px: iPhone 14 Pro Max / Plus (430px) — 余白を広めに */
+@media (min-width: 410px) {
+  .section        { padding-top: 28px; }
+  .promo-section  { padding-top: 28px; }
+  .banner-title   { font-size: 20px; }
+  .article-card   { gap: 14px; }
+}

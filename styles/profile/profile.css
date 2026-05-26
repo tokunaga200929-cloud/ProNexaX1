@@ -1,0 +1,426 @@
+/* =========================================================
+   ProNexaX - プロフィール詳細画面
+   すべて .pnx-profile-screen 配下にスコープ
+   ========================================================= */
+
+/* 全体ベース: body の影響を最小化しつつ画面中央寄せ */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #F4F6FA;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* ---------------- ルート ---------------- */
+.pnx-profile-screen {
+  --pnx-bg: #F4F6FA;
+  --pnx-card-bg: #FFFFFF;
+  --pnx-text-main: #0F172A;
+  --pnx-text-strong: #071A44;
+  --pnx-text-sub: #64748B;
+  --pnx-text-muted: #94A3B8;
+  --pnx-blue: #0B5CFF;
+  --pnx-blue-strong: #0057FF;
+  --pnx-blue-bg: #EEF6FF;
+  --pnx-badge-bg: #EAF2FF;
+  --pnx-divider: #E8EEF5;
+  --pnx-danger: #EA3B1F;
+  --pnx-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 14px rgba(15, 23, 42, 0.05);
+  --pnx-radius-card: 18px;
+  --pnx-radius-pill: 999px;
+
+  width: 100%;
+  max-width: 430px;
+  min-height: 100vh;
+  background: var(--pnx-bg);
+  color: var(--pnx-text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Noto Sans JP", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.pnx-profile-screen *,
+.pnx-profile-screen *::before,
+.pnx-profile-screen *::after {
+  box-sizing: border-box;
+}
+
+.pnx-profile-screen button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.pnx-profile-screen ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pnx-profile-screen h1,
+.pnx-profile-screen h2,
+.pnx-profile-screen p {
+  margin: 0;
+}
+
+/* ---------------- 1. ヘッダー ---------------- */
+.pnx-profile-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 16px;
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--pnx-divider);
+}
+
+.pnx-profile-header__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-left: -8px;
+  color: #0F172A;
+  border-radius: 8px;
+}
+.pnx-profile-header__back:active { background: rgba(15,23,42,0.05); }
+
+.pnx-profile-header__title {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--pnx-text-strong);
+}
+
+.pnx-profile-header__edit {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--pnx-blue);
+  padding: 8px 4px;
+}
+.pnx-profile-header__edit:active { opacity: 0.6; }
+
+/* ---------------- メイン ---------------- */
+.pnx-profile-main {
+  padding: 14px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---------------- 共通カード ---------------- */
+.pnx-profile-card {
+  background: var(--pnx-card-bg);
+  border-radius: var(--pnx-radius-card);
+  box-shadow: var(--pnx-shadow);
+}
+
+/* ---------------- 2. プロフィールカード ---------------- */
+.pnx-profile-userCard {
+  padding: 20px 20px 16px;
+}
+
+.pnx-profile-userCard__top {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.pnx-profile-avatar {
+  flex: 0 0 auto;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: #E7ECF3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+.pnx-profile-avatar svg {
+  width: 60px;
+  height: 60px;
+  margin-bottom: -4px;
+}
+
+.pnx-profile-userCard__info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pnx-profile-userCard__name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--pnx-text-strong);
+  letter-spacing: 0.02em;
+}
+
+.pnx-profile-userCard__email {
+  font-size: 14px;
+  color: var(--pnx-text-sub);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pnx-profile-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  padding: 4px 14px;
+  margin-top: 4px;
+  border-radius: var(--pnx-radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.pnx-profile-badge--free {
+  background: var(--pnx-badge-bg);
+  color: var(--pnx-blue);
+}
+
+.pnx-profile-userCard__divider {
+  height: 1px;
+  background: var(--pnx-divider);
+  margin: 18px 0 14px;
+}
+
+.pnx-profile-userCard__action {
+  display: flex;
+  justify-content: center;
+}
+
+.pnx-profile-outlineBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border: 1px solid #DCE3EE;
+  border-radius: 12px;
+  background: #FFFFFF;
+  color: var(--pnx-text-main);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s ease;
+}
+.pnx-profile-outlineBtn:active { background: #F4F6FA; }
+
+/* ---------------- 3. プランカード ---------------- */
+.pnx-profile-planCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--pnx-blue-bg);
+  border-radius: var(--pnx-radius-card);
+}
+
+.pnx-profile-planCard__iconWrap {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--pnx-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pnx-profile-planCard__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pnx-profile-planCard__label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--pnx-text-strong);
+}
+.pnx-profile-planCard__value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pnx-blue);
+  letter-spacing: 0.06em;
+}
+
+.pnx-profile-planCard__cta {
+  flex: 0 0 auto;
+  padding: 10px 18px;
+  border-radius: var(--pnx-radius-pill);
+  background: var(--pnx-blue);
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background 0.15s ease;
+}
+.pnx-profile-planCard__cta:active { background: #0048D4; }
+
+/* ---------------- 4-7. リストカード ---------------- */
+.pnx-profile-listCard {
+  padding: 16px 18px 4px;
+}
+
+.pnx-profile-listCard__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--pnx-text-strong);
+  padding: 4px 0 8px;
+}
+
+.pnx-profile-list__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0;
+  border-top: 1px solid var(--pnx-divider);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.pnx-profile-list__row:hover { background: #FAFBFD; }
+.pnx-profile-list__row:active { background: #F2F5FA; }
+.pnx-profile-list__row:focus-visible {
+  outline: 2px solid rgba(11, 92, 255, 0.3);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+.pnx-profile-list__label {
+  flex: 0 0 auto;
+  font-size: 15px;
+  color: var(--pnx-text-main);
+}
+
+.pnx-profile-list__value {
+  flex: 1 1 auto;
+  text-align: right;
+  font-size: 15px;
+  color: var(--pnx-text-sub);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+
+/* chevron 右矢印 */
+.pnx-profile-list__chevron {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 14px;
+  margin-left: 10px;
+  position: relative;
+}
+.pnx-profile-list__chevron::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-right: 2px solid #C2CAD6;
+  border-bottom: 2px solid #C2CAD6;
+  width: 8px;
+  height: 8px;
+  top: 3px;
+  left: 0;
+  transform: rotate(-45deg);
+  border-radius: 1px;
+}
+.pnx-profile-list__chevron--danger::before {
+  border-color: #C2CAD6;
+}
+
+/* シンプルリスト（アカウント） */
+.pnx-profile-list--simple .pnx-profile-list__row {
+  justify-content: space-between;
+}
+.pnx-profile-list--simple .pnx-profile-list__label {
+  flex: 1 1 auto;
+}
+
+/* ログアウト */
+.pnx-profile-list__row--danger .pnx-profile-list__label {
+  color: var(--pnx-danger);
+}
+
+/* ---------------- 余白 ---------------- */
+.pnx-profile-bottomSpacer {
+  height: 32px;
+}
+
+/* ---------------- レスポンシブ調整 ---------------- */
+@media (max-width: 400px) {
+  .pnx-profile-main { padding: 12px 14px 0; gap: 12px; }
+  .pnx-profile-userCard { padding: 18px 16px 14px; }
+  .pnx-profile-avatar { width: 76px; height: 76px; }
+  .pnx-profile-avatar svg { width: 52px; height: 52px; }
+  .pnx-profile-userCard__name { font-size: 20px; }
+  .pnx-profile-userCard__email { font-size: 13px; }
+  .pnx-profile-listCard { padding: 14px 16px 4px; }
+  .pnx-profile-list__label,
+  .pnx-profile-list__value { font-size: 14px; }
+  .pnx-profile-planCard { padding: 12px 14px; gap: 12px; }
+  .pnx-profile-planCard__iconWrap { width: 40px; height: 40px; }
+  .pnx-profile-planCard__cta { padding: 9px 14px; font-size: 12px; }
+}
+
+@media (max-width: 360px) {
+  .pnx-profile-userCard__top { gap: 14px; }
+  .pnx-profile-avatar { width: 68px; height: 68px; }
+  .pnx-profile-avatar svg { width: 46px; height: 46px; }
+  .pnx-profile-userCard__name { font-size: 18px; }
+  .pnx-profile-outlineBtn { padding: 9px 16px; font-size: 13px; }
+}
+
+
+/* =========================================================
+   STEP182: iframe integration patch
+   ========================================================= */
+html.profile-embed,
+body.profile-embed{
+  width:100%;
+  height:100%;
+  min-height:0;
+  overflow:hidden;
+  background:#F4F6FA;
+}
+
+body.profile-embed{
+  display:block;
+  justify-content:initial;
+}
+
+body.profile-embed .pnx-profile-screen{
+  width:100%;
+  max-width:430px;
+  min-height:100%;
+  height:100%;
+  margin:0 auto;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:calc(18px + env(safe-area-inset-bottom));
+}
+
+.pnx-profile-header{
+  position:sticky;
+  top:0;
+  z-index:30;
+}

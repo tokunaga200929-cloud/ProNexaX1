@@ -4,7 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
-  <title>ProNexaX Calendar v2</title>
+  <meta name="application-name" content="ProNexaX">
+  <meta name="apple-mobile-web-app-title" content="ProNexaX">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+  <title>ProNexaX</title>
   <link rel="stylesheet" href="calendar.css?v=real-today-20260525">
   <style>
     /* 単体プレビュー用。本体統合時はこの style と body/html は使わない */
@@ -395,7 +403,7 @@
         <div class="pnx-cal-detail-handle" aria-hidden="true"></div>
         <div class="pnx-cal-detail-head">
           <button class="pnx-cal-detail-close" type="button" data-pnx-action="close-detail">閉じる</button>
-          <h2 id="pnx-detail-title">予定の詳細</h2>
+          <h2 id="pnx-detail-title" data-pnx-detail-heading>予定の詳細</h2>
           <span aria-hidden="true"></span>
         </div>
 
@@ -427,6 +435,48 @@
           </div>
         </div>
 
+        <div class="pnx-cal-tournament-detail" data-pnx-tournament-detail hidden>
+          <div class="pnx-cal-tournament-hero">
+            <span class="pnx-cal-tournament-badge">試合検索から追加</span>
+            <strong data-pnx-tournament-title>大会予定</strong>
+            <span data-pnx-tournament-place>会場未設定</span>
+          </div>
+          <div class="pnx-cal-tournament-grid">
+            <div class="pnx-cal-tournament-item">
+              <span>開催日</span>
+              <strong data-pnx-tournament-date>未設定</strong>
+            </div>
+            <div class="pnx-cal-tournament-item">
+              <span>主催</span>
+              <strong data-pnx-tournament-organizer>不明</strong>
+            </div>
+            <div class="pnx-cal-tournament-item">
+              <span>賞金</span>
+              <strong data-pnx-tournament-prize>不明</strong>
+            </div>
+            <div class="pnx-cal-tournament-item">
+              <span>エントリー締切</span>
+              <strong data-pnx-tournament-deadline>不明</strong>
+            </div>
+            <div class="pnx-cal-tournament-item">
+              <span>エントリー費</span>
+              <strong data-pnx-tournament-fee>不明</strong>
+            </div>
+            <div class="pnx-cal-tournament-item">
+              <span>カテゴリ</span>
+              <strong data-pnx-tournament-category>試合</strong>
+            </div>
+            <div class="pnx-cal-tournament-item">
+              <span>状態</span>
+              <strong data-pnx-tournament-status>追加済み</strong>
+            </div>
+            <div class="pnx-cal-tournament-item is-wide">
+              <span>補足</span>
+              <strong data-pnx-tournament-note>試合検索から追加された大会予定です。</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="pnx-cal-detail-actions">
           <button class="pnx-cal-detail-action is-edit" type="button" data-pnx-action="edit-detail">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 19.5L8.2 18.8L19.1 7.9C19.9 7.1 19.9 5.9 19.1 5.1C18.3 4.3 17.1 4.3 16.3 5.1L5.4 16L4.5 19.5Z"/><path d="M14.8 6.6L17.6 9.4"/></svg>
@@ -434,7 +484,7 @@
           </button>
           <button class="pnx-cal-detail-action is-delete" type="button" data-pnx-action="delete-detail">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7H19"/><path d="M9 7V5.2C9 4.5 9.5 4 10.2 4H13.8C14.5 4 15 4.5 15 5.2V7"/><path d="M8 10V18.2C8 19.2 8.8 20 9.8 20H14.2C15.2 20 16 19.2 16 18.2V10"/><path d="M10.5 11.5V17"/><path d="M13.5 11.5V17"/></svg>
-            <span>削除</span>
+            <span data-pnx-detail-delete-label>削除</span>
           </button>
         </div>
       </section>
@@ -484,7 +534,7 @@
   </div>
 </section>
 
-<script src="calendar.js?v=real-today-20260525" charset="UTF-8"></script>
+<script src="calendar.js?v=step203-calendar-link" charset="UTF-8"></script>
 <script>
   if (window.initProNexaCalendarV2) window.initProNexaCalendarV2();
 </script>
