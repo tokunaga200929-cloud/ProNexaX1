@@ -4342,3 +4342,156 @@
     min-height: 0;
   }
 }
+
+
+/* ---------- STEP206 tournament URL buttons ---------- */
+.pnx-calendar-v2 .pnx-cal-tournament-links[hidden],
+.pnx-calendar-v2 .pnx-cal-tournament-link[hidden] {
+  display: none !important;
+}
+.pnx-calendar-v2 .pnx-cal-tournament-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.pnx-calendar-v2 .pnx-cal-tournament-link {
+  min-width: 0;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  padding: 0 10px;
+  background: rgba(10, 116, 255, .09);
+  border: 1px solid rgba(10, 116, 255, .13);
+  color: #0a74ff;
+  text-decoration: none;
+  font-size: 12.5px;
+  line-height: 1.1;
+  font-weight: 760;
+  letter-spacing: -.035em;
+  white-space: nowrap;
+}
+.pnx-calendar-v2 .pnx-cal-tournament-link:active {
+  opacity: .72;
+  transform: scale(.98);
+}
+@media (max-width: 390px) {
+  .pnx-calendar-v2 .pnx-cal-tournament-links {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   STEP207 — Single-day chip color/readability fix
+   - 1日だけの予定チップにも背景色を付ける
+   - スマホ月表示で最低5文字前後が見えるように横幅を稼ぐ
+   - 複数日チップの既存レイアウトは触らない
+   ========================================================= */
+.pnx-calendar-v2 .pnx-cal-chip {
+  background: var(--pnx-chip-bg, rgba(10, 116, 255, .10)) !important;
+  border-color: var(--pnx-chip-border, rgba(10, 116, 255, .22)) !important;
+  color: #0f172a !important;
+  padding: 0 1px 0 5px !important;
+  font-size: 8.6px !important;
+  letter-spacing: -0.075em !important;
+  box-sizing: border-box !important;
+}
+.pnx-calendar-v2 .pnx-cal-chip::before {
+  width: 2px !important;
+  background: var(--pnx-chip-color, #0a74ff) !important;
+}
+.pnx-calendar-v2 .pnx-cal-chip-line {
+  width: 118% !important;
+  max-width: none !important;
+  transform: scaleX(.86) !important;
+  transform-origin: left center !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+@supports (background: color-mix(in srgb, red 10%, white)) {
+  .pnx-calendar-v2 .pnx-cal-chip {
+    background: color-mix(in srgb, var(--pnx-chip-color, #0a74ff) 13%, #ffffff) !important;
+    border-color: color-mix(in srgb, var(--pnx-chip-color, #0a74ff) 27%, #ffffff) !important;
+  }
+}
+@media (max-width: 360px) {
+  .pnx-calendar-v2 .pnx-cal-chip {
+    font-size: 8.2px !important;
+    letter-spacing: -0.09em !important;
+    padding-left: 5px !important;
+    padding-right: 0 !important;
+  }
+  .pnx-calendar-v2 .pnx-cal-chip-line {
+    width: 124% !important;
+    transform: scaleX(.82) !important;
+  }
+}
+
+/* =========================================================
+   STEP209 — Month swipe transition tuning
+   左右スワイプ/月ナビで月が切り替わった感を出すため、
+   旧月と新月を横スライドで入れ替える。
+   カレンダー本体のセル・チップ描画ロジックは変更しない。
+   ========================================================= */
+.pnx-calendar-v2 .pnx-cal-grid.is-month-sliding {
+  overflow: hidden !important;
+  pointer-events: none;
+  touch-action: none;
+}
+
+.pnx-calendar-v2 .pnx-cal-month-slide {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: repeat(6, 1fr);
+  z-index: 5;
+  min-width: 100%;
+  min-height: 100%;
+  will-change: transform, opacity;
+  transition:
+    transform 380ms cubic-bezier(.22, .74, .22, 1),
+    opacity 380ms cubic-bezier(.22, .74, .22, 1);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.pnx-calendar-v2 .pnx-cal-month-slide-old {
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
+}
+
+.pnx-calendar-v2 .pnx-cal-month-slide-new {
+  transform: translate3d(var(--pnx-month-enter-x, 100%), 0, 0);
+  opacity: .96;
+}
+
+.pnx-calendar-v2 .pnx-cal-grid.is-month-slide-running .pnx-cal-month-slide-old {
+  transform: translate3d(var(--pnx-month-exit-x, -100%), 0, 0);
+  opacity: .86;
+}
+
+.pnx-calendar-v2 .pnx-cal-grid.is-month-slide-running .pnx-cal-month-slide-new {
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
+}
+
+.pnx-calendar-v2.is-month-switching .pnx-cal-month-label {
+  animation: pnxMonthLabelSettle 380ms cubic-bezier(.22, .74, .22, 1) both;
+}
+
+@keyframes pnxMonthLabelSettle {
+  0% { opacity: .72; transform: translateY(1px) scale(.985); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pnx-calendar-v2 .pnx-cal-month-slide,
+  .pnx-calendar-v2.is-month-switching .pnx-cal-month-label {
+    transition: none !important;
+    animation: none !important;
+  }
+}

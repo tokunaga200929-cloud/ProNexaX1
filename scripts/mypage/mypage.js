@@ -97,24 +97,28 @@
 
 
 /* ================================================================
-   STEP180i: MyPage green theme inline style patch
+   STEP208: MyPage blue theme inline style patch
    ================================================================ */
 (function(){
-  if (window.__PNX_STEP180I_MYPAGE_GREEN_THEME__) return;
-  window.__PNX_STEP180I_MYPAGE_GREEN_THEME__ = true;
+  if (window.__PNX_STEP208_MYPAGE_BLUE_THEME__) return;
+  window.__PNX_STEP208_MYPAGE_BLUE_THEME__ = true;
 
-  function greenifyInlineStyles(){
+  function blueifyInlineStyles(){
     const root = document.getElementById("mypage-root");
     if (!root) return false;
 
     const map = [
-      ["#2563EB", "#10B981"],
-      ["#3478F6", "#34D399"],
-      ["rgb(37, 99, 235)", "rgb(16,185,129)"],
-      ["rgb(52, 120, 246)", "rgb(52,211,153)"],
-      ["rgba(37, 99, 235", "rgba(16, 185, 129"],
-      ["#EEF4FF", "#E8FFF6"],
-      ["#F8FAFF", "#F7FFFB"]
+      ["#10B981", "#0A74FF"],
+      ["#34D399", "#4DA1FF"],
+      ["#0F8A63", "#1366E8"],
+      ["rgb(16,185,129)", "rgb(10,116,255)"],
+      ["rgb(16, 185, 129)", "rgb(10, 116, 255)"],
+      ["rgb(52,211,153)", "rgb(77,161,255)"],
+      ["rgb(52, 211, 153)", "rgb(77, 161, 255)"],
+      ["rgba(16,185,129", "rgba(10,116,255"],
+      ["rgba(16, 185, 129", "rgba(10, 116, 255"],
+      ["#E8FFF6", "#F0F7FF"],
+      ["#F4FFF9", "#F4F9FF"]
     ];
 
     root.querySelectorAll("[style]").forEach(el => {
@@ -124,25 +128,30 @@
       if (s !== before) el.setAttribute("style", s);
     });
 
-    root.classList.add("pnx-step180i-green-theme");
-    window.__PNX_STEP180I_GREEN_THEME_LAST_APPLY__ = new Date().toISOString();
+    root.classList.remove("pnx-step180i-green-theme");
+    root.classList.add("pnx-step208-blue-theme");
+    window.__PNX_STEP208_BLUE_THEME_LAST_APPLY__ = new Date().toISOString();
     return true;
   }
 
-  document.addEventListener("DOMContentLoaded", greenifyInlineStyles);
-  setTimeout(greenifyInlineStyles, 300);
-  setTimeout(greenifyInlineStyles, 1000);
+  document.addEventListener("DOMContentLoaded", blueifyInlineStyles);
+  setTimeout(blueifyInlineStyles, 300);
+  setTimeout(blueifyInlineStyles, 1000);
 
-  window.PNXStep180iApplyMyPageGreenTheme = greenifyInlineStyles;
-  window.PNXStep180iMyPageGreenThemeStatus = function(){
+  window.PNXStep208ApplyMyPageBlueTheme = blueifyInlineStyles;
+  window.PNXStep208MyPageBlueThemeStatus = function(){
     return {
-      step:"180i",
+      step:"208",
       root:!!document.getElementById("mypage-root"),
-      applied:document.getElementById("mypage-root")?.classList.contains("pnx-step180i-green-theme") || false,
-      lastApply:window.__PNX_STEP180I_GREEN_THEME_LAST_APPLY__ || null,
-      note:"マイページの青アクセントをカレンダー寄りの緑へ変更"
+      applied:document.getElementById("mypage-root")?.classList.contains("pnx-step208-blue-theme") || false,
+      lastApply:window.__PNX_STEP208_BLUE_THEME_LAST_APPLY__ || null,
+      note:"マイページの緑アクセントをカレンダー画面寄りの青へ統一"
     };
   };
+
+  // 旧チェック名を参照している場合でも落ちないように互換だけ残す。
+  window.PNXStep180iApplyMyPageGreenTheme = blueifyInlineStyles;
+  window.PNXStep180iMyPageGreenThemeStatus = window.PNXStep208MyPageBlueThemeStatus;
 })();
 
 

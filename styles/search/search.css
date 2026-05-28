@@ -2084,3 +2084,193 @@ body.pnx-search-embed .pnx-search-placeholder p{
   font-size:13px;
   line-height:1.5;
 }
+
+
+/* ================================================================
+   STEP206: tournament logo / URL / hero image polish
+   ================================================================ */
+.tc-brand-col.pnx-visual-brand{
+  position:relative;
+  overflow:hidden;
+}
+.tc-brand-col.pnx-visual-brand::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 26% 14%, rgba(255,255,255,.22), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.10));
+  pointer-events:none;
+  z-index:0;
+}
+.tc-brand-col.pnx-visual-brand .tc-brand-inner,
+.tc-brand-col.pnx-visual-brand .tc-brand-badges{
+  position:relative;
+  z-index:1;
+}
+.tc-brand-logo-wrap{
+  width:58px;
+  height:58px;
+  max-width:76%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 6px;
+  border-radius:18px;
+  background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
+  overflow:hidden;
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+}
+.tc-brand-logo-img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  padding:8px;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.20));
+}
+.tc-brand-logo-fallback{
+  display:none;
+  padding:6px;
+  color:#fff;
+  font-size:12px;
+  line-height:1.05;
+  font-weight:900;
+  text-align:center;
+  letter-spacing:.015em;
+  text-transform:uppercase;
+  word-break:break-word;
+}
+.tc-brand-logo-wrap.is-logo-missing .tc-brand-logo-fallback{ display:block; }
+.tc-brand-col.has-logo .tc-brand-abbr{
+  font-size:12.5px;
+  max-width:82px;
+  margin:0 auto;
+  text-align:center;
+  line-height:1.05;
+  overflow-wrap:anywhere;
+}
+.tc-brand-col.has-text-logo .tc-brand-abbr{
+  display:block;
+  max-width:84px;
+  margin:0 auto;
+  text-align:center;
+  line-height:1.05;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  font-size:clamp(12px, 3.4vw, 18px);
+}
+.tc-brand-sub{
+  max-width:84px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.tc-brand-col.visual-theme-premium{ background:linear-gradient(155deg,#20160A 0%,#6F4A12 52%,#B9892C 100%) !important; }
+.tc-brand-col.visual-theme-mini{ background:linear-gradient(155deg,#17171B 0%,#282832 50%,#3C3C48 100%) !important; }
+.tc-brand-col.visual-theme-open{ background:linear-gradient(155deg,#6E1010 0%,#A21818 52%,#D33232 100%) !important; }
+.tc-brand-col.visual-theme-jgto{ background:linear-gradient(155deg,#080B08 0%,#182316 52%,#2A351B 100%) !important; }
+.tc-brand-col.visual-theme-jlpga{ background:linear-gradient(155deg,#091426 0%,#10284F 52%,#183A70 100%) !important; }
+.tc-brand-col.visual-theme-overseas{ background:linear-gradient(155deg,#031126 0%,#082A4D 52%,#104F7D 100%) !important; }
+.tc-brand-col.visual-theme-default{ background:linear-gradient(155deg,#1E1E22 0%,#2E2E34 50%,#3C3C44 100%) !important; }
+.tc-brand-col.has-bg-image{
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.50)),
+    var(--pnx-card-bg-image) !important;
+  background-size:cover !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+}
+.tc-brand-col.has-bg-image .tc-brand-logo-wrap{
+  background:rgba(255,255,255,.18);
+  border-color:rgba(255,255,255,.30);
+}
+.tc-brand-col.has-bg-image .tc-brand-sub,
+.tc-brand-col.has-bg-image .tc-brand-abbr,
+.tc-brand-col.has-bg-image .tc-brand-logo-fallback{
+  text-shadow:0 2px 12px rgba(0,0,0,.48);
+}
+.tc-url-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:26px;
+  padding:0 9px;
+  border-radius:999px;
+  color:#0A74FF;
+  background:rgba(10,116,255,.10);
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.bs-hero-wrap.has-hero-image{ background:#0b1220; }
+.bs-hero-media-img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:0;
+  transform:scale(1.01);
+}
+.bs-hero-wrap.has-hero-image::before{
+  background:linear-gradient(to bottom, rgba(0,0,0,.12) 0%, rgba(0,0,0,.22) 34%, rgba(0,0,0,.78) 100%);
+}
+.bs-tour-logo{
+  width:42px;
+  height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:14px;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.22);
+  overflow:hidden;
+  margin-bottom:3px;
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+}
+.bs-tour-logo img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  padding:6px;
+}
+.bs-url-actions{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:8px;
+  margin-bottom:10px;
+}
+.bs-url-action{
+  min-width:0;
+  height:42px;
+  border:1px solid rgba(10,116,255,.12);
+  border-radius:14px;
+  background:rgba(10,116,255,.08);
+  color:#0A74FF;
+  font-size:12.5px;
+  font-weight:780;
+  letter-spacing:-.03em;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  cursor:pointer;
+  touch-action:manipulation;
+  font-family:inherit;
+}
+.bs-url-action:active{ opacity:.72; transform:scale(.97); }
+.bs-cta-detail.is-disabled{
+  opacity:.48;
+  color:rgba(60,60,67,.44);
+}
+@media (max-width:390px){
+  .tc-brand-logo-wrap{ width:52px; height:52px; border-radius:16px; }
+  .tc-brand-logo-fallback{ font-size:11px; }
+  .bs-url-actions{ grid-template-columns:1fr; }
+  .bs-url-action{ height:40px; }
+}

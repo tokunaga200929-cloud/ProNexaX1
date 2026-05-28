@@ -70,11 +70,11 @@ body {
   --pnx-mypage-line:         #EEF1F6;
   --pnx-mypage-line-strong:  #E4E9F2;
 
-  --pnx-mypage-blue:         #10B981;
-  --pnx-mypage-blue-deep:    #1D4ED8;
-  --pnx-mypage-blue-soft:    #DBEAFE;
-  --pnx-mypage-blue-ghost:   #E8FFF6;
-  --pnx-mypage-blue-border:  #C7DBFE;
+  --pnx-mypage-blue:         #0A74FF;
+  --pnx-mypage-blue-deep:    #1366E8;
+  --pnx-mypage-blue-soft:    #EAF4FF;
+  --pnx-mypage-blue-ghost:   #F0F7FF;
+  --pnx-mypage-blue-border:  #CFE4FF;
 
   --pnx-mypage-danger:       #EA580C;
 
@@ -552,27 +552,36 @@ nav.bottom-nav,
 
 
 /* ================================================================
-   STEP180i: MyPage green theme
-   - カレンダー画面のProNexaXグリーンに寄せる
-   - マイページ内の青アクセントのみ変更
+   STEP208: MyPage blue theme
+   - マイページ内に残っていた緑アクセントをカレンダー画面の青へ統一
+   - 本体カレンダー・試合検索・収支には触らず、#mypage-root 内だけに限定
    ================================================================ */
 
 #mypage-root{
-  --mp-green:#34D399;
-  --mp-green-strong:#10B981;
-  --mp-green-deep:#0F8A63;
-  --mp-green-soft:#E8FFF6;
-  --mp-green-pale:#F4FFF9;
-  --mp-green-shadow:rgba(16,185,129,.22);
+  --mp-blue:#0A74FF;
+  --mp-blue-strong:#0A74FF;
+  --mp-blue-deep:#1366E8;
+  --mp-blue-soft:#EAF4FF;
+  --mp-blue-pale:#F4F9FF;
+  --mp-blue-border:#CFE4FF;
+  --mp-blue-shadow:rgba(10,116,255,.22);
 }
 
 /* 主要アクセント */
+#mypage-root .pnx-mypage-badge--free,
+#mypage-root .pnx-mypage-row-icon--pro,
+#mypage-root .pnx-mypage-pro-label,
+#mypage-root .pnx-mypage-logo-x,
+#mypage-root .pnx-mypage-tab--active,
+#mypage-root .pnx-mypage-tab--active .pnx-mypage-tab-label,
 #mypage-root .mp180-kicker,
 #mypage-root .mp180-edit-btn,
 #mypage-root .mp180-action-grid b,
-#mypage-root [style*="#2563EB"],
-#mypage-root [style*="rgb(37, 99, 235)"]{
-  color:var(--mp-green-strong) !important;
+#mypage-root [style*="#10B981"],
+#mypage-root [style*="#34D399"],
+#mypage-root [style*="rgb(16, 185, 129)"],
+#mypage-root [style*="rgb(52, 211, 153)"]{
+  color:var(--mp-blue-strong) !important;
 }
 
 /* アバター・メインボタン・丸アイコン */
@@ -584,12 +593,13 @@ nav.bottom-nav,
 #mypage-root .icon-primary,
 #mypage-root .primary-icon,
 #mypage-root .main-icon{
-  background:linear-gradient(180deg, var(--mp-green) 0%, var(--mp-green-strong) 100%) !important;
+  background:linear-gradient(180deg, #4DA1FF 0%, var(--mp-blue-strong) 100%) !important;
   color:#fff !important;
-  box-shadow:0 12px 24px var(--mp-green-shadow) !important;
+  box-shadow:0 12px 24px var(--mp-blue-shadow) !important;
 }
 
-/* 薄い青カード/ボタンを薄い緑へ */
+/* 薄い緑カード/ボタンを薄い青へ */
+#mypage-root .pnx-mypage-badge--free,
 #mypage-root .mp180-edit-btn,
 #mypage-root .mp180-action-grid button,
 #mypage-root .quick-action,
@@ -597,10 +607,17 @@ nav.bottom-nav,
 #mypage-root .setting-card.is-accent,
 #mypage-root .pro-card,
 #mypage-root .plan-card{
-  background:var(--mp-green-pale) !important;
+  background:var(--mp-blue-pale) !important;
+}
+
+#mypage-root .pnx-mypage-badge--free{
+  color:var(--mp-blue-deep) !important;
+  border-color:var(--mp-blue-border) !important;
 }
 
 /* CTA系 */
+#mypage-root .pnx-mypage-pro-cta,
+#mypage-root .pnx-mypage-tab-center-btn,
 #mypage-root .primary,
 #mypage-root .primary-btn,
 #mypage-root .cta,
@@ -608,10 +625,16 @@ nav.bottom-nav,
 #mypage-root button.primary,
 #mypage-root button[class*="primary"],
 #mypage-root a[class*="primary"]{
-  background:linear-gradient(180deg, var(--mp-green) 0%, var(--mp-green-strong) 100%) !important;
+  background:linear-gradient(180deg, #4DA1FF 0%, var(--mp-blue-strong) 100%) !important;
   color:#fff !important;
-  box-shadow:0 12px 24px var(--mp-green-shadow) !important;
-  border-color:rgba(16,185,129,.28) !important;
+  box-shadow:0 12px 24px var(--mp-blue-shadow) !important;
+  border-color:rgba(10,116,255,.28) !important;
+}
+
+#mypage-root .pnx-mypage-pro{
+  border-color:var(--mp-blue-border) !important;
+  box-shadow:0 1px 4px rgba(10,116,255,.06),
+             0 8px 22px rgba(10,116,255,.08) !important;
 }
 
 /* ボーダー/バッジ/ステータス */
@@ -620,7 +643,7 @@ nav.bottom-nav,
 #mypage-root .tag,
 #mypage-root .pill,
 #mypage-root .chip{
-  border-color:rgba(16,185,129,.18) !important;
+  border-color:rgba(10,116,255,.18) !important;
 }
 
 #mypage-root .badge.active,
@@ -628,19 +651,23 @@ nav.bottom-nav,
 #mypage-root .tag.active,
 #mypage-root .pill.active,
 #mypage-root .chip.active{
-  background:var(--mp-green-soft) !important;
-  color:var(--mp-green-deep) !important;
+  background:var(--mp-blue-soft) !important;
+  color:var(--mp-blue-deep) !important;
 }
 
 /* SVG/アイコン色 */
+#mypage-root svg[stroke="#10B981"],
+#mypage-root svg[stroke="#34D399"],
 #mypage-root svg[stroke="#2563EB"],
 #mypage-root svg[stroke="#3478F6"]{
-  stroke:var(--mp-green-strong) !important;
+  stroke:var(--mp-blue-strong) !important;
 }
 
+#mypage-root svg[fill="#10B981"],
+#mypage-root svg[fill="#34D399"],
 #mypage-root svg[fill="#2563EB"],
 #mypage-root svg[fill="#3478F6"]{
-  fill:var(--mp-green-strong) !important;
+  fill:var(--mp-blue-strong) !important;
 }
 
 /* focusやリンク */
@@ -648,14 +675,14 @@ nav.bottom-nav,
 #mypage-root .link,
 #mypage-root .text-blue,
 #mypage-root .accent{
-  color:var(--mp-green-strong) !important;
+  color:var(--mp-blue-strong) !important;
 }
 
 #mypage-root input:focus,
 #mypage-root select:focus,
 #mypage-root textarea:focus{
-  border-color:var(--mp-green) !important;
-  box-shadow:0 0 0 3px rgba(16,185,129,.14) !important;
+  border-color:var(--mp-blue-strong) !important;
+  box-shadow:0 0 0 3px rgba(10,116,255,.14) !important;
 }
 
 

@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <title>ProNexaX</title>
-  <link rel="stylesheet" href="calendar.css?v=real-today-20260525">
+  <link rel="stylesheet" href="calendar.css?v=step209-month-swipe">
   <style>
     /* 単体プレビュー用。本体統合時はこの style と body/html は使わない */
     html, body {
@@ -441,6 +441,12 @@
             <strong data-pnx-tournament-title>大会予定</strong>
             <span data-pnx-tournament-place>会場未設定</span>
           </div>
+
+          <div class="pnx-cal-tournament-links" data-pnx-tournament-links hidden>
+            <a class="pnx-cal-tournament-link is-entry" data-pnx-tournament-link="entry" href="#" target="_blank" rel="noopener noreferrer" hidden>エントリー</a>
+            <a class="pnx-cal-tournament-link is-official" data-pnx-tournament-link="official" href="#" target="_blank" rel="noopener noreferrer" hidden>公式サイト</a>
+            <a class="pnx-cal-tournament-link is-instagram" data-pnx-tournament-link="instagram" href="#" target="_blank" rel="noopener noreferrer" hidden>Instagram</a>
+          </div>
           <div class="pnx-cal-tournament-grid">
             <div class="pnx-cal-tournament-item">
               <span>開催日</span>
@@ -534,7 +540,7 @@
   </div>
 </section>
 
-<script src="calendar.js?v=step203-calendar-link" charset="UTF-8"></script>
+<script src="calendar.js?v=step209-month-swipe" charset="UTF-8"></script>
 <script>
   if (window.initProNexaCalendarV2) window.initProNexaCalendarV2();
 </script>

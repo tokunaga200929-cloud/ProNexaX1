@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <title>ProNexaX</title>
-  <link rel="stylesheet" href="calendar.css?v=real-today-20260525">
+  <link rel="stylesheet" href="calendar.css?v=step209-month-swipe">
   <style>
     /* 単体プレビュー用。本体統合時はこの style と body/html は使わない */
     html, body {
@@ -441,6 +441,12 @@
             <strong data-pnx-tournament-title>大会予定</strong>
             <span data-pnx-tournament-place>会場未設定</span>
           </div>
+
+          <div class="pnx-cal-tournament-links" data-pnx-tournament-links hidden>
+            <a class="pnx-cal-tournament-link is-entry" data-pnx-tournament-link="entry" href="#" target="_blank" rel="noopener noreferrer" hidden>エントリー</a>
+            <a class="pnx-cal-tournament-link is-official" data-pnx-tournament-link="official" href="#" target="_blank" rel="noopener noreferrer" hidden>公式サイト</a>
+            <a class="pnx-cal-tournament-link is-instagram" data-pnx-tournament-link="instagram" href="#" target="_blank" rel="noopener noreferrer" hidden>Instagram</a>
+          </div>
           <div class="pnx-cal-tournament-grid">
             <div class="pnx-cal-tournament-item">
               <span>開催日</span>
@@ -495,7 +501,7 @@
     <!-- STEP200 INTEGRATION MODULE LAYER START -->
     <div class="pnx-module-layer" id="pnx-module-layer" aria-hidden="true">
       <div class="pnx-module-page" id="pnx-module-search" data-pnx-module-page="search" aria-hidden="true">
-        <iframe id="search-module-frame" class="pnx-module-frame" data-src="pages/search/embed.html?v=step203-calendar-link" title="試合検索" loading="lazy"></iframe>
+        <iframe id="search-module-frame" class="pnx-module-frame" data-src="pages/search/embed.html?v=step206-logo-url-visuals" title="試合検索" loading="lazy"></iframe>
       </div>
       <div class="pnx-module-page" id="pnx-module-featured" data-pnx-module-page="featured" aria-hidden="true">
         <iframe id="featured-module-frame" class="pnx-module-frame" data-src="pages/featured/embed.html?v=step202-search-fit" title="広告・注目" loading="lazy"></iframe>
@@ -555,7 +561,7 @@
   </div>
 </section>
 
-<script src="calendar.js?v=step203-calendar-link" charset="UTF-8"></script>
+<script src="calendar.js?v=step209-month-swipe" charset="UTF-8"></script>
 <script>
   if (window.initProNexaCalendarV2) window.initProNexaCalendarV2();
 </script>
@@ -634,7 +640,7 @@ body.pnx-module-active .pnx-cal-month-popover{
 
   var MODULE_ROUTES = {
     calendar: { type:"native", label:"カレンダー" },
-    search: { type:"iframe", pageId:"pnx-module-search", frameId:"search-module-frame", src:"pages/search/embed.html?v=step203-calendar-link", label:"試合検索" },
+    search: { type:"iframe", pageId:"pnx-module-search", frameId:"search-module-frame", src:"pages/search/embed.html?v=step206-logo-url-visuals", label:"試合検索" },
     featured: { type:"iframe", pageId:"pnx-module-featured", frameId:"featured-module-frame", src:"pages/featured/embed.html?v=step202-search-fit", label:"広告・注目" },
     finance: { type:"iframe", pageId:"pnx-module-finance", frameId:"finance-module-frame", src:"pages/finance/embed.html?v=step202-search-fit", label:"収支" },
     mypage: { type:"iframe", pageId:"pnx-module-mypage", frameId:"mypage-frame", src:"pages/mypage/embed.html?v=step202-search-fit", label:"マイページ" },
@@ -881,7 +887,7 @@ body:not(.pnx-step201-module-active) .pnx-module-layer{
   if (window.__PNX_STEP201_NAV_STABILITY__) return;
   window.__PNX_STEP201_NAV_STABILITY__ = true;
 
-  var CACHE = "step203-calendar-link";
+  var CACHE = "step206-logo-url-visuals";
 
   var ROUTES = {
     calendar: {
@@ -1235,7 +1241,7 @@ body.pnx-step202-search-active #pnx-module-search{
   if (window.__PNX_STEP202_SEARCH_PARENT_FIT__) return;
   window.__PNX_STEP202_SEARCH_PARENT_FIT__ = true;
 
-  var SEARCH_SRC = "pages/search/embed.html?v=step203-calendar-link";
+  var SEARCH_SRC = "pages/search/embed.html?v=step206-logo-url-visuals";
 
   function ensureSearchFrame(){
     var frame = document.getElementById("search-module-frame");

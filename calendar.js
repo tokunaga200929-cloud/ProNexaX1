@@ -146,6 +146,7 @@
       tracking: false,
       canceled: false
     },
+    monthAnimating: false,
     addDraft: {
       start: { y: DEMO_TODAY.y, m: DEMO_TODAY.m, d: DEMO_TODAY.d },
       end: { y: DEMO_TODAY.y, m: DEMO_TODAY.m, d: DEMO_TODAY.d },
@@ -187,6 +188,28 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  // STEP207: 単日予定チップにも薄い背景色を付けるための安全な色変換。
+  // CSS color-mix 非対応端末でも、少なくとも背景色が出るように inline CSS 変数へ渡す。
+  function normalizeHexColor(value) {
+    const text = String(value || '').trim();
+    const short = text.match(/^#([0-9a-fA-F]{3})$/);
+    if (short) {
+      return '#' + short[1].split('').map(function (c) { return c + c; }).join('').toLowerCase();
+    }
+    const full = text.match(/^#([0-9a-fA-F]{6})$/);
+    if (full) return '#' + full[1].toLowerCase();
+    return null;
+  }
+
+  function rgbaFromHex(value, alpha) {
+    const hex = normalizeHexColor(value);
+    if (!hex) return '';
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
   }
 
   function createEventId() {
@@ -549,15 +572,10 @@
     }
   }
 
-  function renderGrid() {
-    const grid = state.root.querySelector('[data-pnx-grid]');
-    if (!grid) return;
-
+  function buildMonthGridHtml() {
     const cells = buildCells(state.viewYear, state.viewMonth);
     const spanRender = renderMultiDaySpanChips(cells);
     const rowSpanLanes = spanRender.rowSpanLanes || [0, 0, 0, 0, 0, 0];
-    grid.style.gridTemplateRows = '';
-    grid.style.height = '';
 
     const cellHtml = cells.map(function (cell, index) {
       const dow = index % 7;
@@ -586,7 +604,9 @@
       const chips = visibleEvents.slice(0, maxVisible).map(function (event) {
         const chipText = event.chipLabel || (Array.isArray(event.chipLines) && event.chipLines.length ? event.chipLines.join(" ") : event.title);
         const color = COLOR[event.color] || event.color || "#0a74ff";
-        return '<div class="pnx-cal-chip" data-pnx-event-chip="1" data-pnx-event-id="' + escapeHtml(event.id) + '" style="--pnx-chip-color:' + escapeHtml(color) + '"><span class="pnx-cal-chip-line">' + escapeHtml(chipText) + '</span></div>';
+        const chipBg = rgbaFromHex(color, 0.115) || 'rgba(10, 116, 255, 0.10)';
+        const chipBorder = rgbaFromHex(color, 0.24) || 'rgba(10, 116, 255, 0.22)';
+        return '<div class="pnx-cal-chip" data-pnx-event-chip="1" data-pnx-event-id="' + escapeHtml(event.id) + '" style="--pnx-chip-color:' + escapeHtml(color) + ';--pnx-chip-bg:' + escapeHtml(chipBg) + ';--pnx-chip-border:' + escapeHtml(chipBorder) + '"><span class="pnx-cal-chip-line">' + escapeHtml(chipText) + '</span></div>';
       }).join("");
       const more = visibleEvents.length > maxVisible ? '<div class="pnx-cal-more">+' + (visibleEvents.length - maxVisible) + '</div>' : '';
 
@@ -597,7 +617,16 @@
         '</button>';
     }).join('');
 
-    grid.innerHTML = cellHtml + spanRender.html;
+    return cellHtml + spanRender.html;
+  }
+
+  function renderGrid() {
+    const grid = state.root.querySelector('[data-pnx-grid]');
+    if (!grid) return;
+    grid.classList.remove('is-month-sliding', 'is-month-slide-running');
+    grid.style.gridTemplateRows = '';
+    grid.style.height = '';
+    grid.innerHTML = buildMonthGridHtml();
   }
 
   function renderMultiDaySpanChips(cells) {
@@ -784,6 +813,42 @@
     return course;
   }
 
+
+  function safeTournamentExternalUrl(value) {
+    const url = firstValue(value);
+    if (!url) return '';
+    if (/^(https?:\/\/|mailto:|tel:|\/|\.\/|\.\.\/)/i.test(url)) return url;
+    return '';
+  }
+
+  function setTournamentUrlLink(selector, url) {
+    if (!state.root) return false;
+    const link = state.root.querySelector(selector);
+    if (!link) return false;
+    const safe = safeTournamentExternalUrl(url);
+    link.hidden = !safe;
+    if (safe) {
+      link.href = safe;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.setAttribute('aria-hidden', 'false');
+      return true;
+    }
+    link.removeAttribute('href');
+    link.setAttribute('aria-hidden', 'true');
+    return false;
+  }
+
+  function syncTournamentUrlLinks(event) {
+    if (!state.root || !event) return;
+    const raw = event.rawTournament || {};
+    const hasEntry = setTournamentUrlLink('[data-pnx-tournament-link="entry"]', firstValue(event.entryUrl, raw.entryUrl, raw.applyUrl, raw.applicationUrl));
+    const hasOfficial = setTournamentUrlLink('[data-pnx-tournament-link="official"]', firstValue(event.officialUrl, raw.officialUrl, raw.homepage, raw.website, raw.url));
+    const hasInstagram = setTournamentUrlLink('[data-pnx-tournament-link="instagram"]', firstValue(event.instagramUrl, raw.instagramUrl, raw.instagram));
+    const wrap = state.root.querySelector('[data-pnx-tournament-links]');
+    if (wrap) wrap.hidden = !(hasEntry || hasOfficial || hasInstagram);
+  }
+
   function setTournamentDetailVisible(visible) {
     if (!state.root) return;
     const section = state.root.querySelector('[data-pnx-tournament-detail]');
@@ -809,6 +874,7 @@
     setDetailText('[data-pnx-tournament-category]', category + (gender ? ' / ' + gender : '') + (area ? ' / ' + area : ''));
     setDetailText('[data-pnx-tournament-status]', status || '追加済み');
     setDetailText('[data-pnx-tournament-note]', firstValue(raw.qualification, event.qualification, raw.entryMethod, event.desc, '試合検索から追加された大会予定です。'));
+    syncTournamentUrlLinks(event);
   }
 
   function renderDetail(event) {
@@ -895,8 +961,7 @@
     renderAll();
   }
 
-  function moveMonth(delta) {
-    closeMonthPicker();
+  function applyMonthDelta(delta) {
     const moved = addMonths(state.viewYear, state.viewMonth, delta);
     state.viewYear = moved.y;
     state.viewMonth = moved.m;
@@ -904,7 +969,72 @@
     const maxDay = daysInMonth(state.viewYear, state.viewMonth);
     const selectedDay = Math.min(state.selected ? state.selected.d : 1, maxDay);
     state.selected = { y: state.viewYear, m: state.viewMonth, d: selectedDay };
-    renderAll();
+  }
+
+  function finishMonthSlide(grid, nextHtml) {
+    if (!grid) return;
+    grid.classList.remove('is-month-sliding', 'is-month-slide-running');
+    grid.style.removeProperty('--pnx-month-enter-x');
+    grid.style.removeProperty('--pnx-month-exit-x');
+    grid.innerHTML = nextHtml;
+    state.monthAnimating = false;
+    if (state.root) state.root.classList.remove('is-month-switching');
+  }
+
+  function moveMonth(delta) {
+    closeMonthPicker();
+    if (state.monthAnimating) return;
+
+    const grid = state.root ? state.root.querySelector('[data-pnx-grid]') : null;
+    const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    if (!grid || reduceMotion) {
+      applyMonthDelta(delta);
+      renderAll();
+      return;
+    }
+
+    const currentHtml = grid.innerHTML;
+    const direction = delta > 0 ? 1 : -1;
+
+    state.monthAnimating = true;
+    applyMonthDelta(delta);
+    renderMonthLabel();
+    renderMonthPicker();
+    renderSheet();
+
+    grid.style.gridTemplateRows = '';
+    grid.style.height = '';
+    const nextHtml = buildMonthGridHtml();
+
+    grid.style.setProperty('--pnx-month-enter-x', direction > 0 ? '100%' : '-100%');
+    grid.style.setProperty('--pnx-month-exit-x', direction > 0 ? '-100%' : '100%');
+    grid.classList.add('is-month-sliding');
+    if (state.root) state.root.classList.add('is-month-switching');
+
+    grid.innerHTML = '' +
+      '<div class="pnx-cal-month-slide pnx-cal-month-slide-old" aria-hidden="true">' + currentHtml + '</div>' +
+      '<div class="pnx-cal-month-slide pnx-cal-month-slide-new" aria-hidden="true">' + nextHtml + '</div>';
+
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(function () {
+        grid.classList.add('is-month-slide-running');
+      });
+    });
+
+    let finished = false;
+    function done() {
+      if (finished) return;
+      finished = true;
+      finishMonthSlide(grid, nextHtml);
+    }
+
+    const newSlide = grid.querySelector('.pnx-cal-month-slide-new');
+    if (newSlide) {
+      newSlide.addEventListener('transitionend', function (event) {
+        if (event.propertyName === 'transform') done();
+      }, { once: true });
+    }
+    window.setTimeout(done, 520);
   }
 
   function isMonthPickerOpen() {
@@ -1236,6 +1366,7 @@
   }
 
   function canStartMonthSwipe(event) {
+    if (state.monthAnimating) return false;
     if (!state.root || isAnyCalendarOverlayOpen()) return false;
     if (state.drag.active || state.drag.pointerId != null) return false;
     if (state.rangeSelect.active || state.rangeSelect.pointerId != null) return false;
@@ -2145,6 +2276,16 @@
       entryDeadline: entryDeadline,
       prize: prize,
       entryFee: entryFee,
+      officialUrl: tournament.officialUrl || tournament.url || '',
+      entryUrl: tournament.entryUrl || '',
+      instagramUrl: tournament.instagramUrl || '',
+      tournamentLogoUrl: tournament.tournamentLogoUrl || tournament.logoUrl || '',
+      organizerLogoUrl: tournament.organizerLogoUrl || '',
+      logoUrl: tournament.logoUrl || tournament.tournamentLogoUrl || tournament.organizerLogoUrl || '',
+      venueImageUrl: tournament.venueImageUrl || tournament.imageUrl || '',
+      imageUrl: tournament.imageUrl || tournament.venueImageUrl || '',
+      imageAlt: tournament.imageAlt || '',
+      memo: tournament.memo || tournament.note || '',
       rawTournament: Object.assign({}, tournament)
     };
   }

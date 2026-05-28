@@ -1811,13 +1811,15 @@ function pnxStep205NormalizeCmsTournament(raw) {
     organizer: pnxStep205Text(raw.organizer || raw.host || raw.company) || '—',
     status,
     emoji: '⛳',
-    organizerLogoUrl: raw.organizerLogoUrl || raw.logoUrl || null,
-    tournamentLogoUrl: raw.tournamentLogoUrl || raw.logoUrl || null,
-    venueImageUrl: raw.venueImageUrl || raw.imageUrl || null,
+    organizerLogoUrl: raw.organizerLogoUrl || raw.hostLogoUrl || raw.companyLogoUrl || raw.logoUrl || raw.organizerLogo || null,
+    tournamentLogoUrl: raw.tournamentLogoUrl || raw.tourLogoUrl || raw.eventLogoUrl || raw.seriesLogoUrl || raw.logoUrl || null,
+    logoUrl: raw.logoUrl || raw.tournamentLogoUrl || raw.tourLogoUrl || raw.eventLogoUrl || raw.seriesLogoUrl || raw.organizerLogoUrl || null,
+    venueImageUrl: raw.venueImageUrl || raw.courseImageUrl || raw.heroImageUrl || raw.coverImageUrl || raw.imageUrl || null,
+    imageUrl: raw.imageUrl || raw.venueImageUrl || raw.courseImageUrl || raw.heroImageUrl || raw.coverImageUrl || null,
     imageAlt: `${title} ${venue}`,
-    officialUrl: raw.officialUrl || raw.url || '',
-    instagramUrl: raw.instagramUrl || '',
-    entryUrl: raw.entryUrl || '',
+    officialUrl: raw.officialUrl || raw.officialURL || raw.homepage || raw.website || raw.webUrl || raw.url || '',
+    instagramUrl: raw.instagramUrl || raw.instagramURL || raw.instagram || raw.igUrl || '',
+    entryUrl: raw.entryUrl || raw.applyUrl || raw.applicationUrl || raw.applicationFormUrl || raw.formUrl || raw.googleFormUrl || '',
     memo: raw.memo || raw.note || '',
     tags,
     source: 'cms',
@@ -2347,6 +2349,17 @@ function buildCalendarAddPayload(t) {
       capacity: t.capacity || '',
       entryMethod: t.entryMethod || '',
       status: t.status || '',
+      officialUrl: t.officialUrl || t.url || '',
+      entryUrl: t.entryUrl || '',
+      instagramUrl: t.instagramUrl || '',
+      url: t.url || t.officialUrl || '',
+      tournamentLogoUrl: t.tournamentLogoUrl || t.logoUrl || '',
+      organizerLogoUrl: t.organizerLogoUrl || '',
+      logoUrl: t.logoUrl || t.tournamentLogoUrl || t.organizerLogoUrl || '',
+      venueImageUrl: t.venueImageUrl || t.imageUrl || '',
+      imageUrl: t.imageUrl || t.venueImageUrl || '',
+      imageAlt: t.imageAlt || '',
+      memo: t.memo || t.note || '',
       tags: Array.isArray(t.tags) ? t.tags.slice() : []
     }
   };
@@ -3756,6 +3769,357 @@ if (document.readyState === 'loading') {
       lastInit:window.__PNX_STEP202_SEARCH_LAST_INIT__ || null,
       lastScrollReset:window.__PNX_STEP202_SEARCH_LAST_SCROLL_RESET__ || null,
       note:"v4.23新本体に合わせた試合検索iframe調整"
+    };
+  };
+})();
+
+
+/* ================================================================
+   STEP206: Logo / venue image / URL rendering
+   ─ CMSで登録した大会ロゴ・会場画像・公式/申込/Instagram URLを
+     試合検索カード、Bottom Sheet、カレンダー追加payloadへ反映する。
+   ─ 既存の検索/フィルター/カレンダー追加ロジックは作り直さず、表示層だけ安全に上書き。
+   ================================================================ */
+(function(){
+  if (window.__PNX_STEP206_VISUAL_URLS__) return;
+  window.__PNX_STEP206_VISUAL_URLS__ = true;
+
+  function text(v){ return String(v == null ? '' : v).trim(); }
+  function esc(v){
+    return text(v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+  }
+  function safeUrl(v){
+    const u = text(v);
+    if (!u) return '';
+    if (/^(https?:\/\/|mailto:|tel:|\/|\.\/|\.\.\/|data:image\/)/i.test(u)) return u;
+    return '';
+  }
+  function logoUrl(t){
+    return safeUrl(t && (t.tournamentLogoUrl || t.logoUrl || t.eventLogoUrl || t.seriesLogoUrl || t.organizerLogoUrl || t.organizerLogo || t.hostLogoUrl));
+  }
+  function heroImageUrl(t){
+    return safeUrl(t && (t.venueImageUrl || t.courseImageUrl || t.heroImageUrl || t.coverImageUrl || t.imageUrl || t.image));
+  }
+  function bestPrimaryUrl(t){
+    return safeUrl(t && (t.entryUrl || t.applyUrl || t.applicationUrl)) ||
+           safeUrl(t && (t.officialUrl || t.homepage || t.website || t.url)) ||
+           safeUrl(t && (t.instagramUrl || t.instagram));
+  }
+  function urlItems(t){
+    const items = [];
+    const entry = safeUrl(t && (t.entryUrl || t.applyUrl || t.applicationUrl));
+    const official = safeUrl(t && (t.officialUrl || t.homepage || t.website || t.url));
+    const insta = safeUrl(t && (t.instagramUrl || t.instagram));
+    if (entry) items.push({ key:'entry', label:'エントリー', icon:'↗', url:entry });
+    if (official && official !== entry) items.push({ key:'official', label:'公式サイト', icon:'↗', url:official });
+    if (insta && insta !== entry && insta !== official) items.push({ key:'instagram', label:'Instagram', icon:'◎', url:insta });
+    return items;
+  }
+  function visualTheme(t){
+    const c = text(t && t.cat).toLowerCase();
+    if (c === 'jgto') return 'visual-theme-jgto';
+    if (c === 'lpga') return 'visual-theme-jlpga';
+    if (c === 'open') return 'visual-theme-open';
+    if (c === 'mini' || c === 'other') return 'visual-theme-mini';
+    if (c === 'abroad' || c === 'asian' || c === 'pga') return 'visual-theme-overseas';
+    if (c === 'qt') return 'visual-theme-premium';
+    return 'visual-theme-default';
+  }
+  function compactLabel(t, brand){
+    return text(t && (t.shortName || t.logoText || t.tourName || t.organizerShortName)) || text(brand && brand.label) || text(t && t.name).slice(0, 10) || 'TOUR';
+  }
+  function brandSub(t, brand){
+    return text(t && (t.organizer || t.rawCategory)) || text(brand && brand.sub) || catLabel(t && t.cat);
+  }
+  function brandVisualHTML(t, brand){
+    const logo = logoUrl(t);
+    const bg = heroImageUrl(t);
+    const label = compactLabel(t, brand);
+    const sub = brandSub(t, brand);
+    const classes = [
+      'tc-brand-col', brand.cls || '', 'pnx-visual-brand', visualTheme(t),
+      logo ? 'has-logo' : 'has-text-logo', bg ? 'has-bg-image' : ''
+    ].filter(Boolean).join(' ');
+    const style = bg ? ` style="--pnx-card-bg-image:url('${esc(bg)}')"` : '';
+    const logoBlock = logo
+      ? `<div class="tc-brand-logo-wrap"><img class="tc-brand-logo-img" src="${esc(logo)}" alt="${esc(t.name || label)} ロゴ" loading="lazy" onerror="this.closest('.tc-brand-logo-wrap').classList.add('is-logo-missing');this.remove();"><span class="tc-brand-logo-fallback">${esc(label)}</span></div>`
+      : '';
+    return `
+      <div class="${classes}"${style}>
+        <div class="tc-brand-inner">
+          ${logoBlock}
+          <span class="tc-brand-abbr">${esc(label)}</span>
+          <span class="tc-brand-sub">${esc(sub)}</span>
+        </div>
+        <div class="tc-brand-badges">
+          <span class="tc-badge badge-cat">${esc(catLabel(t.cat))}</span>
+          ${genderBadgeHTML(t.gender)}
+        </div>
+      </div>`;
+  }
+
+  tournamentCardHTML = function(t) {
+    const urgencyClass = deadlineUrgencyClass(t.entryDeadline);
+    const daysLabel    = daysUntilDeadline(t.entryDeadline);
+    const dlIcon       = deadlineIcon(urgencyClass);
+    const brand        = catBrandConfig(t.cat);
+    const hasUrl       = !!bestPrimaryUrl(t);
+
+    return `
+      <article
+        class="s-tournament-card ${t.cmsTournament || t.source === 'cms' ? 'pnx-cms-tournament-card' : ''}"
+        data-id="${esc(t.id)}"
+        data-cms-tournament="${t.cmsTournament || t.source === 'cms' ? '1' : '0'}"
+        role="button"
+        tabindex="0"
+        aria-label="${esc(t.name)} 詳細を見る"
+      >
+        ${brandVisualHTML(t, brand)}
+
+        <div class="tc-info-col">
+          <div class="tc-deadline-strip ${urgencyClass}">
+            <div class="tc-dl-left">
+              <span class="tc-dl-icon">${dlIcon}</span>
+              <span class="tc-dl-date ${urgencyClass}">締切 ${esc(fmtDateWithDay(t.entryDeadline))}</span>
+            </div>
+            <span class="tc-dl-days ${urgencyClass}">${esc(daysLabel)}</span>
+          </div>
+
+          <div class="tc-date-bar">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            </svg>
+            ${esc(fmtDateWithDay(t.start))} 〜 ${esc(fmtDateWithDay(t.end))}
+          </div>
+
+          <h3 class="tc-name">${esc(t.name)}</h3>
+
+          <div class="tc-venue-line">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            ${esc(t.course || '会場未定')}
+          </div>
+
+          <div class="tc-info-grid">
+            <div class="tc-info-item"><span class="tc-info-label">賞金総額</span><span class="tc-info-value">${esc(t.prize || '—')}</span></div>
+            <div class="tc-info-item"><span class="tc-info-label">エントリー費</span><span class="tc-info-value">${esc(t.entryFee || '—')}</span></div>
+            <div class="tc-info-item"><span class="tc-info-label">出場資格</span><span class="tc-info-value tc-info-value--wrap">${esc(t.qualification || '—')}</span></div>
+            <div class="tc-info-item"><span class="tc-info-label">募集人数</span><span class="tc-info-value">${esc(t.capacity || '—')}</span></div>
+          </div>
+
+          <div class="tc-card-footer">
+            ${statusPillHTML(t)}
+            ${hasUrl ? `<span class="tc-url-pill">URLあり</span>` : ''}
+            <button
+              class="tc-btn tc-btn-add${t.addedToCalendar ? ' added' : ''}"
+              data-id="${esc(t.id)}"
+              onclick="event.stopPropagation(); handleCalendarAdd(this.dataset.id)"
+              aria-label="カレンダーに追加"
+            >
+              ${t.addedToCalendar
+                ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>追加済み`
+                : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>カレンダーに追加`
+              }
+            </button>
+          </div>
+        </div>
+
+        <button class="tc-fav-btn${t.favorited ? ' active' : ''}" data-id="${esc(t.id)}" aria-label="${t.favorited ? 'お気に入り解除' : 'お気に入り登録'}" onclick="event.stopPropagation(); toggleFav(this.dataset.id)">
+          ${t.favorited
+            ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="#FF3B30" stroke="#FF3B30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`
+            : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`
+          }
+        </button>
+      </article>`;
+  };
+
+  function urlActionsHTML(t){
+    const items = urlItems(t);
+    if (!items.length) return '';
+    return `<div class="bs-url-actions" aria-label="大会リンク">${items.map(item => `
+      <button class="bs-url-action bs-url-${esc(item.key)}" type="button" data-url="${esc(item.url)}" onclick="window.PNXStep206OpenTournamentUrl(this.dataset.url)">
+        <span>${esc(item.icon)}</span>${esc(item.label)}
+      </button>`).join('')}</div>`;
+  }
+
+  renderBottomSheetContent = function(t) {
+    const bsBody = document.getElementById('bs-body');
+    if (!bsBody) return;
+    const headerTitle = document.getElementById('bs-header-title');
+    if (headerTitle) headerTitle.textContent = '大会詳細';
+
+    const urgencyClass = deadlineUrgencyClass(t.entryDeadline);
+    const daysLabel    = daysUntilDeadline(t.entryDeadline);
+    const dlIcon       = deadlineIcon(urgencyClass);
+    const brand        = catBrandConfig(t.cat);
+    const heroImg      = heroImageUrl(t);
+    const logo         = logoUrl(t);
+    const deadlineValueClass = urgencyClass === 'deadline-urgent' ? 'urgent' : (urgencyClass === 'deadline-warning' ? 'warning' : '');
+    const schedItems = [
+      { date: t.entryDeadline,  label: 'エントリー締切', cls: 'date-deadline' },
+      { date: t.cancelDeadline, label: 'キャンセル締切', cls: 'date-cancel' },
+      { date: t.start,          label: '競技開始', cls: '' },
+      { date: t.end,            label: '競技最終日', cls: '' },
+    ];
+
+    bsBody.innerHTML = `
+      <div class="bs-hero-wrap ${brand.cls} ${heroImg ? 'has-hero-image' : ''} ${logo ? 'has-hero-logo' : ''}">
+        ${heroImg ? `<img class="bs-hero-media-img" src="${esc(heroImg)}" alt="${esc(t.imageAlt || t.name || '大会画像')}" loading="lazy">` : ''}
+        <div class="bs-img-urgency-badge ${urgencyClass}">${dlIcon} ${esc(daysLabel)}</div>
+        <div class="bs-tour-brand">
+          ${logo ? `<span class="bs-tour-logo"><img src="${esc(logo)}" alt="${esc(t.name || '大会')} ロゴ" loading="lazy" onerror="this.closest('.bs-tour-logo').remove();"></span>` : ''}
+          <span class="bs-tour-brand-label">${esc(compactLabel(t, brand))}</span>
+          <span class="bs-tour-brand-sub">${esc(brandSub(t, brand))}</span>
+        </div>
+        <div class="bs-hero-info">
+          <div class="bs-hero-badges"><span class="tc-badge badge-cat">${esc(catLabel(t.cat))}</span>${genderBadgeHTML(t.gender)}${statusBadgeHTML(t)}</div>
+          <h2 class="bs-hero-name">${esc(t.name)}</h2>
+          <p class="bs-hero-meta">${esc(fmtDateWithDay(t.start))} 〜 ${esc(fmtDateWithDay(t.end))}　📍 ${esc(t.course || '会場未定')}</p>
+        </div>
+      </div>
+
+      <div class="bs-scroll-content">
+        ${urlActionsHTML(t)}
+
+        <div class="bs-deadline-strip ${urgencyClass}">
+          <div class="bs-dl-left"><span class="bs-dl-icon">${dlIcon}</span><span class="bs-dl-date ${urgencyClass}">締切 ${esc(fmtDateWithDay(t.entryDeadline))}</span></div>
+          <span class="bs-dl-days ${urgencyClass}">${esc(daysLabel)}</span>
+        </div>
+
+        <div class="bs-info-card">
+          <p class="bs-info-card-title">📅 基本情報</p>
+          <div class="bs-card-item"><p class="bs-card-label">開催期間</p><p class="bs-card-value highlight">${esc(fmtDateWithDay(t.start))} 〜 ${esc(fmtDateWithDay(t.end))}</p></div>
+          <div class="bs-card-item border-top"><p class="bs-card-label">エントリー締切</p><p class="bs-card-value${deadlineValueClass ? ' ' + deadlineValueClass : ''}">${esc(fmtDateWithDay(t.entryDeadline))}</p></div>
+          <div class="bs-card-item border-top"><p class="bs-card-label">会場</p><p class="bs-card-value">${esc(t.course || '会場未定')}</p></div>
+          <div class="bs-card-item border-top"><p class="bs-card-label">開催地</p><p class="bs-card-value">${esc(areaLabelFromKey(t.area))}</p></div>
+        </div>
+
+        <div class="bs-info-card">
+          <p class="bs-info-card-title">🏆 賞金情報</p>
+          <div class="bs-info-card-grid"><div class="bs-card-item"><p class="bs-card-label">賞金総額</p><p class="bs-card-value highlight">${esc(t.prize || '—')}</p></div><div class="bs-card-item"><p class="bs-card-label">優勝賞金</p><p class="bs-card-value highlight">${esc(t.prizeWinner || '—')}</p></div></div>
+        </div>
+
+        <div class="bs-info-card">
+          <p class="bs-info-card-title">💴 費用情報</p>
+          <div class="bs-info-card-grid"><div class="bs-card-item"><p class="bs-card-label">エントリー費</p><p class="bs-card-value">${esc(t.entryFee || '—')}</p></div><div class="bs-card-item"><p class="bs-card-label">プレーフィー</p><p class="bs-card-value">${esc(t.practiceRoundFee || '—')}</p></div></div>
+        </div>
+
+        <div class="bs-info-card">
+          <p class="bs-info-card-title">📋 出場条件</p>
+          <div class="bs-card-item"><p class="bs-card-label">出場資格</p><p class="bs-card-value sm">${esc(t.qualification || '—')}</p></div>
+          <div class="bs-card-item border-top"><p class="bs-card-label">募集人数</p><p class="bs-card-value">${esc(t.capacity || '—')}</p></div>
+        </div>
+
+        <div class="bs-info-card">
+          <p class="bs-info-card-title">🏢 運営情報</p>
+          <div class="bs-card-item"><p class="bs-card-label">主催</p><p class="bs-card-value sm">${esc(t.organizer || '—')}</p></div>
+          <div class="bs-card-item border-top"><p class="bs-card-label">申込方法</p><p class="bs-card-value sm">${esc(t.entryMethod || 'CMS登録情報を確認')}</p></div>
+        </div>
+
+        <p class="bs-section-title">スケジュール</p>
+        <div class="bs-info-card">${schedItems.map(item => `<div class="bs-schedule-item"><span class="bs-sched-date${item.cls ? ' ' + item.cls : ''}">${esc(fmtDateWithDay(item.date))}</span><span class="bs-sched-label">${esc(item.label)}</span></div>`).join('')}</div>
+        <div style="height:6px;"></div>
+      </div>`;
+
+    bsBody.scrollTop = 0;
+    _syncBSAddBtn(t);
+    _syncBSFavBtn(t);
+    bindFooterUrlButton();
+    updateFooterUrlButton(t);
+
+    const bsFavBtn = document.getElementById('bs-fav-btn');
+    if (bsFavBtn) {
+      const newHandler = () => toggleFav(t.id);
+      bsFavBtn.replaceWith(bsFavBtn.cloneNode(true));
+      const freshBtn = document.getElementById('bs-fav-btn');
+      _syncBSFavBtn(t);
+      if (freshBtn) freshBtn.addEventListener('click', newHandler);
+    }
+  };
+
+  function selectedTournament(){
+    const id = APP_STATE && APP_STATE.selectedTournamentId;
+    return (Array.isArray(DUMMY_TOURNAMENTS) ? DUMMY_TOURNAMENTS : []).find(x => x && x.id === id);
+  }
+  function footerLabel(t){
+    if (safeUrl(t && (t.entryUrl || t.applyUrl || t.applicationUrl))) return '申込';
+    if (safeUrl(t && (t.officialUrl || t.homepage || t.website || t.url))) return '公式';
+    if (safeUrl(t && (t.instagramUrl || t.instagram))) return 'Instagram';
+    return 'URLなし';
+  }
+  function bindFooterUrlButton(){
+    const btn = document.getElementById('bs-cta-detail');
+    if (!btn || btn.dataset.step206Bound === '1') return;
+    const clone = btn.cloneNode(true);
+    clone.dataset.step206Bound = '1';
+    btn.replaceWith(clone);
+    clone.addEventListener('click', function(){
+      const t = selectedTournament();
+      const url = bestPrimaryUrl(t);
+      if (!url) {
+        showToast('この大会にはURLが登録されていません');
+        return;
+      }
+      window.PNXStep206OpenTournamentUrl(url);
+    });
+  }
+  function updateFooterUrlButton(t){
+    const btn = document.getElementById('bs-cta-detail');
+    if (!btn) return;
+    const url = bestPrimaryUrl(t);
+    btn.classList.toggle('is-disabled', !url);
+    btn.disabled = !url;
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>${esc(footerLabel(t))}`;
+  }
+
+  window.PNXStep206OpenTournamentUrl = function(url){
+    const u = safeUrl(url);
+    if (!u) return false;
+    try { window.open(u, '_blank', 'noopener,noreferrer'); return true; }
+    catch(e) { location.href = u; return true; }
+  };
+
+  // buildCalendarAddPayload をSTEP206版へ差し替え（URL/画像/ロゴを親カレンダーへ渡す）
+  buildCalendarAddPayload = function(t) {
+    if (!t) return null;
+    return {
+      type: 'PNX_ADD_TOURNAMENT_TO_CALENDAR',
+      source: 'search-module',
+      step: '206',
+      at: new Date().toISOString(),
+      tournament: {
+        id: t.id, name: t.name, title: t.title || t.name,
+        start: t.start, end: t.end || t.start,
+        course: t.course || '', venue: t.venue || t.course || '', prefecture: t.prefecture || '', area: t.area || '',
+        organizer: t.organizer || '', cat: t.cat || '', gender: t.gender || '', region: t.region || '',
+        prize: t.prize || '', prizeWinner: t.prizeWinner || '', entryDeadline: t.entryDeadline || '', cancelDeadline: t.cancelDeadline || '',
+        entryFee: t.entryFee || '', practiceRoundFee: t.practiceRoundFee || '', qualification: t.qualification || '', capacity: t.capacity || '',
+        entryMethod: t.entryMethod || '', status: t.status || '', memo: t.memo || t.note || '',
+        officialUrl: t.officialUrl || t.url || '', entryUrl: t.entryUrl || '', instagramUrl: t.instagramUrl || '', url: t.url || t.officialUrl || '',
+        tournamentLogoUrl: t.tournamentLogoUrl || t.logoUrl || '', organizerLogoUrl: t.organizerLogoUrl || '', logoUrl: t.logoUrl || t.tournamentLogoUrl || t.organizerLogoUrl || '',
+        venueImageUrl: t.venueImageUrl || t.imageUrl || '', imageUrl: t.imageUrl || t.venueImageUrl || '', imageAlt: t.imageAlt || '',
+        tags: Array.isArray(t.tags) ? t.tags.slice() : []
+      }
+    };
+  };
+
+  bindFooterUrlButton();
+  // 初回描画済みの場合はロゴ/URL対応HTMLで再描画
+  setTimeout(function(){ try { applyFiltersAndRender(); } catch(e) {} }, 0);
+
+  window.PNXStep206VisualUrlStatus = function(){
+    return {
+      step:206,
+      cards:document.querySelectorAll('.s-tournament-card').length,
+      logoCards:document.querySelectorAll('.tc-brand-col.has-logo').length,
+      urlPills:document.querySelectorAll('.tc-url-pill').length,
+      selected:APP_STATE && APP_STATE.selectedTournamentId || null
     };
   };
 })();
