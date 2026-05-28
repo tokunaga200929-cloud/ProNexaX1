@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <title>ProNexaX</title>
-  <link rel="stylesheet" href="calendar.css?v=step209-month-swipe">
+  <link rel="stylesheet" href="calendar.css?v=step211-color-palette">
   <style>
     /* 単体プレビュー用。本体統合時はこの style と body/html は使わない */
     html, body {
@@ -283,7 +283,7 @@
               <button type="button" class="pnx-cal-type-chip" data-pnx-type="試合" data-color="blue">試合</button>
               <button type="button" class="pnx-cal-type-chip" data-pnx-type="移動" data-color="orange">移動</button>
               <button type="button" class="pnx-cal-type-chip" data-pnx-type="締切" data-color="red">締切</button>
-              <button type="button" class="pnx-cal-type-chip" data-pnx-type="その他" data-color="blue">その他</button>
+              <button type="button" class="pnx-cal-type-chip" data-pnx-type="その他" data-color="gray">その他</button>
             </div>
 
             <button class="pnx-cal-add-row" type="button" data-pnx-action="open-date-range">
@@ -333,10 +333,22 @@
             <div class="pnx-cal-color-options" data-pnx-color-options>
               <button type="button" class="pnx-cal-color-dot is-selected" data-pnx-color="blue" aria-label="ブルー"><span></span></button>
               <button type="button" class="pnx-cal-color-dot" data-pnx-color="green" aria-label="グリーン"><span></span></button>
-              <button type="button" class="pnx-cal-color-dot" data-pnx-color="purple" aria-label="パープル"><span></span></button>
               <button type="button" class="pnx-cal-color-dot" data-pnx-color="orange" aria-label="オレンジ"><span></span></button>
+              <button type="button" class="pnx-cal-color-dot" data-pnx-color="purple" aria-label="パープル"><span></span></button>
               <button type="button" class="pnx-cal-color-dot" data-pnx-color="red" aria-label="レッド"><span></span></button>
               <button type="button" class="pnx-cal-color-dot" data-pnx-color="gray" aria-label="グレー"><span></span></button>
+            </div>
+            <button type="button" class="pnx-cal-color-more-btn" data-pnx-color-more-toggle aria-expanded="false">
+              <span class="pnx-cal-color-more-symbol" data-pnx-color-more-symbol>＋</span>
+              <span class="pnx-cal-color-more-text" data-pnx-color-more-label>さらに6色を表示</span>
+            </button>
+            <div class="pnx-cal-color-options pnx-cal-color-options--extra" data-pnx-color-extra-group hidden>
+              <button type="button" class="pnx-cal-color-dot" data-pnx-color="mint" aria-label="ミント"><span></span></button>
+              <button type="button" class="pnx-cal-color-dot" data-pnx-color="lime" aria-label="ライム"><span></span></button>
+              <button type="button" class="pnx-cal-color-dot" data-pnx-color="navy" aria-label="ネイビー"><span></span></button>
+              <button type="button" class="pnx-cal-color-dot" data-pnx-color="pink" aria-label="ピンク"><span></span></button>
+              <button type="button" class="pnx-cal-color-dot" data-pnx-color="yellow" aria-label="イエロー"><span></span></button>
+              <button type="button" class="pnx-cal-color-dot" data-pnx-color="brown" aria-label="ブラウン"><span></span></button>
             </div>
             <div class="pnx-cal-color-preview">
               <span class="pnx-cal-color-preview-label">表示プレビュー</span>
@@ -561,7 +573,7 @@
   </div>
 </section>
 
-<script src="calendar.js?v=step209-month-swipe" charset="UTF-8"></script>
+<script src="calendar.js?v=step211-color-palette" charset="UTF-8"></script>
 <script>
   if (window.initProNexaCalendarV2) window.initProNexaCalendarV2();
 </script>
