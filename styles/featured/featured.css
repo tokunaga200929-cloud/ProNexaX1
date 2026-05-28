@@ -102,16 +102,23 @@ img { display: block; max-width: 100%; }
 .app-wrapper {
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  overflow: hidden;
 }
 
 .scroll-content {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  /* tab-h + safe-area + 中央タブ突出(7px) + 余白(32px) */
-  padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + 39px);
+  touch-action: pan-y;
+  /* 本体統合時は下部ナビがiframe外にあるため、iframe内は自然な余白だけ残す */
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ================================================================

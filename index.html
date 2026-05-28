@@ -504,7 +504,7 @@
         <iframe id="search-module-frame" class="pnx-module-frame" data-src="pages/search/embed.html?v=step206-logo-url-visuals" title="試合検索" loading="lazy"></iframe>
       </div>
       <div class="pnx-module-page" id="pnx-module-featured" data-pnx-module-page="featured" aria-hidden="true">
-        <iframe id="featured-module-frame" class="pnx-module-frame" data-src="pages/featured/embed.html?v=step202-search-fit" title="広告・注目" loading="lazy"></iframe>
+        <iframe id="featured-module-frame" class="pnx-module-frame" data-src="pages/featured/embed.html?v=step210-featured-scroll" title="広告・注目" loading="lazy"></iframe>
       </div>
       <div class="pnx-module-page" id="pnx-module-finance" data-pnx-module-page="finance" aria-hidden="true">
         <iframe id="finance-module-frame" class="pnx-module-frame" data-src="pages/finance/embed.html?v=step202-search-fit" title="収支" loading="lazy"></iframe>
@@ -641,7 +641,7 @@ body.pnx-module-active .pnx-cal-month-popover{
   var MODULE_ROUTES = {
     calendar: { type:"native", label:"カレンダー" },
     search: { type:"iframe", pageId:"pnx-module-search", frameId:"search-module-frame", src:"pages/search/embed.html?v=step206-logo-url-visuals", label:"試合検索" },
-    featured: { type:"iframe", pageId:"pnx-module-featured", frameId:"featured-module-frame", src:"pages/featured/embed.html?v=step202-search-fit", label:"広告・注目" },
+    featured: { type:"iframe", pageId:"pnx-module-featured", frameId:"featured-module-frame", src:"pages/featured/embed.html?v=step210-featured-scroll", label:"広告・注目" },
     finance: { type:"iframe", pageId:"pnx-module-finance", frameId:"finance-module-frame", src:"pages/finance/embed.html?v=step202-search-fit", label:"収支" },
     mypage: { type:"iframe", pageId:"pnx-module-mypage", frameId:"mypage-frame", src:"pages/mypage/embed.html?v=step202-search-fit", label:"マイページ" },
     profile: { type:"iframe", pageId:"pnx-module-profile", frameId:"profile-frame", src:"pages/profile/embed.html?v=step202-search-fit", label:"プロフィール" }
@@ -887,7 +887,7 @@ body:not(.pnx-step201-module-active) .pnx-module-layer{
   if (window.__PNX_STEP201_NAV_STABILITY__) return;
   window.__PNX_STEP201_NAV_STABILITY__ = true;
 
-  var CACHE = "step206-logo-url-visuals";
+  var CACHE = "step210-featured-scroll";
 
   var ROUTES = {
     calendar: {
