@@ -95,11 +95,22 @@
   const COLOR = {
     blue: '#0a74ff',
     green: '#34c759',
+    teal: '#00a884',
+    cyan: '#32ade6',
+    indigo: '#5856d6',
+    mint: '#00c7a5',
+    lime: '#8ac926',
+    navy: '#2346b7',
     purple: '#9c42d2',
+    pink: '#ff4fa3',
     orange: '#ff8a00',
+    yellow: '#f4c430',
     red: '#ff2d55',
+    brown: '#8b5e3c',
     gray: '#8e8e93'
   };
+
+  const EXTRA_ADD_COLORS = ['mint', 'lime', 'navy', 'pink', 'yellow', 'brown'];
 
   const state = {
     root: null,
@@ -153,7 +164,8 @@
       activeRangeField: 'start',
       pickerYear: DEMO_TODAY.y,
       pickerMonth: DEMO_TODAY.m,
-      color: 'blue'
+      color: 'blue',
+      colorPaletteExpanded: false
     }
   };
 
@@ -210,6 +222,11 @@
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
     return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
+  }
+
+  function isOtherMonthCell(cell) {
+    if (!cell) return false;
+    return cell.getAttribute('data-other') === '1';
   }
 
   function createEventId() {
@@ -1119,9 +1136,18 @@
     const names = {
       blue: 'ブルー',
       green: 'グリーン',
+      teal: 'ティール',
+      cyan: 'シアン',
+      indigo: 'インディゴ',
+      mint: 'ミント',
+      lime: 'ライム',
+      navy: 'ネイビー',
       purple: 'パープル',
+      pink: 'ピンク',
       orange: 'オレンジ',
+      yellow: 'イエロー',
       red: 'レッド',
+      brown: 'ブラウン',
       gray: 'グレー'
     };
     return names[color] || 'ブルー';
@@ -1129,6 +1155,31 @@
 
   function selectedAddColor() {
     return state.addDraft.color || 'blue';
+  }
+
+  function isExtraAddColor(color) {
+    return EXTRA_ADD_COLORS.indexOf(color) !== -1;
+  }
+
+  function updateColorPaletteVisibility() {
+    if (!state.root) return;
+
+    // STEP212-B:
+    // 初期表示は必ず基本6色のみ。
+    // 残り6色は「＋」を押した時だけ表示する。
+    const expanded = !!state.addDraft.colorPaletteExpanded;
+    const extraGroup = state.root.querySelector('[data-pnx-color-extra-group]');
+    const toggle = state.root.querySelector('[data-pnx-color-more-toggle]');
+    const label = state.root.querySelector('[data-pnx-color-more-label]');
+    const symbol = state.root.querySelector('[data-pnx-color-more-symbol]');
+
+    if (extraGroup) extraGroup.hidden = !expanded;
+    if (toggle) {
+      toggle.classList.toggle('is-expanded', expanded);
+      toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    }
+    if (label) label.textContent = expanded ? 'カラーを閉じる' : 'さらに6色を表示';
+    if (symbol) symbol.textContent = expanded ? '−' : '＋';
   }
 
   function updateColorPreview() {
@@ -1147,6 +1198,7 @@
     if (nameEl) nameEl.textContent = colorName(color);
     if (preview) preview.style.setProperty('--pnx-chip-color', hex);
     if (previewTitle) previewTitle.textContent = titleText;
+    updateColorPaletteVisibility();
 
     state.root.querySelectorAll('[data-pnx-color]').forEach(function (btn) {
       btn.classList.toggle('is-selected', btn.getAttribute('data-pnx-color') === color);
@@ -1173,6 +1225,7 @@
     state.addDraft.pickerYear = base.y;
     state.addDraft.pickerMonth = base.m;
     state.addDraft.color = editing && editEvent.color ? editEvent.color : 'blue';
+    state.addDraft.colorPaletteExpanded = false;
     updateAddDateText();
     state.root.classList.add('is-add-open');
     layer.classList.add('is-open');
@@ -1228,6 +1281,11 @@
     const label = state.root.querySelector('[data-pnx-add-type-label]');
     state.root.querySelectorAll('.pnx-cal-type-chip').forEach(function (item) { item.classList.toggle('is-selected', item === chip); });
     if (label) label.textContent = type;
+
+    const typeColor = chip.getAttribute('data-color');
+    if (typeColor && COLOR[typeColor]) {
+      state.addDraft.color = typeColor;
+    }
     updateColorPreview();
 
     const title = state.root.querySelector('[data-pnx-add-title]');
@@ -1535,6 +1593,7 @@
       if (event.target.closest('[data-pnx-event-chip]')) return;
       const cell = event.target.closest('.pnx-cal-cell');
       if (!cell || !state.root.contains(cell)) return;
+      if (isOtherMonthCell(cell)) return;
       if (event.button !== undefined && event.button !== 0) return;
       const y = Number(cell.getAttribute('data-y'));
       const m = Number(cell.getAttribute('data-m'));
@@ -1671,6 +1730,13 @@
         return;
       }
 
+      const colorMoreToggle = event.target.closest('[data-pnx-color-more-toggle]');
+      if (colorMoreToggle && state.root.contains(colorMoreToggle)) {
+        state.addDraft.colorPaletteExpanded = !state.addDraft.colorPaletteExpanded;
+        updateColorPaletteVisibility();
+        return;
+      }
+
       const colorDot = event.target.closest('[data-pnx-color]');
       if (colorDot && state.root.contains(colorDot)) {
         selectAddColor(colorDot.getAttribute('data-pnx-color'));
@@ -1719,6 +1785,7 @@
 
       const cell = event.target.closest('.pnx-cal-cell');
       if (!cell || !state.root.contains(cell)) return;
+      if (isOtherMonthCell(cell)) return;
       const y = Number(cell.getAttribute('data-y'));
       const m = Number(cell.getAttribute('data-m'));
       const d = Number(cell.getAttribute('data-d'));
@@ -1835,6 +1902,7 @@
     state.addDraft.pickerYear = base.y;
     state.addDraft.pickerMonth = base.m;
     state.addDraft.color = editing && editEvent.color ? editEvent.color : 'blue';
+    state.addDraft.colorPaletteExpanded = false;
     state.addDraft.startTime = editing ? normalizeTimeString(editEvent.time || '09:00', '09:00') : '09:00';
     state.addDraft.endTime = editing ? normalizeTimeString(editEvent.endTime || '10:00', '10:00') : '10:00';
     state.addDraft.allDay = editing ? !!editEvent.allDay : false;
