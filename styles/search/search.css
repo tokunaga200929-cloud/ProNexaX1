@@ -2274,3 +2274,193 @@ body.pnx-search-embed .pnx-search-placeholder p{
   .bs-url-actions{ grid-template-columns:1fr; }
   .bs-url-action{ height:40px; }
 }
+
+
+/* ================================================================
+   STEP249: CMS保存済み大会画像 → 試合検索カード反映
+   ================================================================ */
+.s-tournament-card {
+  overflow: hidden;
+}
+.tc-cms-visual {
+  grid-column: 1 / -1;
+  min-height: 118px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 12px;
+  background:
+    linear-gradient(135deg, rgba(8,42,104,.90), rgba(10,116,255,.56)),
+    radial-gradient(circle at top right, rgba(255,255,255,.22), transparent 38%);
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+}
+.tc-cms-visual__logo {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background-size: cover;
+  background-position: center;
+  background-color: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.25);
+  box-shadow: 0 10px 24px rgba(0,0,0,.13);
+}
+.tc-cms-visual__logo.is-text {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+.tc-cms-visual__text {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.tc-cms-visual__text span {
+  width: fit-content;
+  min-height: 21px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.24);
+  color: rgba(255,255,255,.92);
+  font-size: 10px;
+  font-weight: 700;
+}
+.tc-cms-visual__text strong {
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: 800;
+}
+.tc-cms-visual__text small {
+  color: rgba(255,255,255,.84);
+  font-size: 11px;
+}
+.bs-cms-logo {
+  position: absolute;
+  left: 16px;
+  top: 52px;
+  width: 48px;
+  height: 48px;
+  z-index: 3;
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  background-color: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.24);
+  box-shadow: 0 12px 28px rgba(0,0,0,.16);
+}
+
+
+/* ================================================================
+   STEP253: 公式/エントリーボタンを緑系で分かりやすく
+   ================================================================ */
+.bs-footer {
+  gap: 10px;
+}
+.bs-cta-btn.bs-cta-detail,
+.bs-cta-btn.has-url {
+  background: linear-gradient(180deg, #22C55E, #16A34A) !important;
+  border: 1px solid rgba(22, 163, 74, .35) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 26px rgba(22, 163, 74, .22) !important;
+}
+.bs-cta-btn.bs-cta-detail:not(.has-url) {
+  background: #EEF7F1 !important;
+  color: #178A44 !important;
+  border-color: rgba(22, 163, 74, .18) !important;
+  box-shadow: none !important;
+}
+.tc-cms-visual__text span,
+.tc-btn,
+.tc-btn-add {
+  border-color: rgba(22, 163, 74, .18);
+}
+
+
+/* ================================================================
+   STEP254: CMS大会画像表示キー修正 + 再描画パチパチ抑制
+   ================================================================ */
+.s-tournament-card .tc-cms-visual.has-image {
+  background-size: cover !important;
+  background-position: center !important;
+}
+.bs-cta-btn.bs-cta-detail,
+.bs-cta-btn.has-url {
+  background: linear-gradient(180deg, #22C55E, #16A34A) !important;
+  color: #fff !important;
+  border: 1px solid rgba(22,163,74,.28) !important;
+  box-shadow: 0 12px 26px rgba(22,163,74,.20) !important;
+}
+
+/* ================================================================
+   STEP255: カード詳細の写真エリアをグリーン寄りに調整
+   ================================================================ */
+.bs-hero-wrap {
+  background: linear-gradient(135deg, #0F6A3C 0%, #179B54 58%, #5ED38E 100%);
+}
+.bs-hero-wrap::before {
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 92, 44, .06) 0%,
+    rgba(8, 92, 44, .02) 22%,
+    rgba(7, 72, 35, .66) 100%
+  );
+}
+.bs-hero-wrap::after {
+  background: linear-gradient(to bottom, rgba(255,255,255,.08) 0%, rgba(173,255,210,.03) 30%, transparent 100%);
+}
+.bs-tour-brand-label,
+.bs-tour-brand-sub,
+.bs-hero-title,
+.bs-hero-course,
+.bs-hero-meta,
+.bs-hero-date,
+.bs-hero-prize {
+  text-shadow: 0 2px 14px rgba(4,46,22,.26);
+}
+.bs-cms-logo {
+  box-shadow: 0 12px 28px rgba(7,72,35,.20);
+}
+
+
+/* ================================================================
+   STEP256: 試合ロゴ自動フィット修正
+   ロゴ画像を切らずに正方形ガラス枠へ中央配置する
+   ================================================================ */
+.tc-cms-visual__logo,
+.bs-cms-logo {
+  display: grid !important;
+  place-items: center !important;
+  padding: 7px !important;
+  background: rgba(255,255,255,.86) !important;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
+.tc-cms-visual__logo img,
+.bs-cms-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 8px;
+}
+.tc-cms-visual__logo.is-text {
+  padding: 0 !important;
+  background: rgba(255,255,255,.18) !important;
+}
+.bs-cms-logo {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 17px !important;
+}

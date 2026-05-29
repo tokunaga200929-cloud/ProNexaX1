@@ -1,3 +1,9 @@
+
+/* STEP219: CMS表示設定で非表示にした注目ページセクション */
+[data-pnx-feature-section][hidden] {
+  display: none !important;
+}
+
 /* ================================================================
    ProNexaX — 注目（feature）ページ  style.css
    iOS ネイティブ UI / モバイル専用
@@ -25,22 +31,22 @@
    CSS Variables
    ---------------------------------------------------------------- */
 :root {
-  /* Brand colors */
-  --green-main:  #1AAF7A;
-  --green-dark:  #0D8C60;
-  --green-deep:  #083d24;
-  --green-pale:  #E8F5EF;
-  --green-tint:  rgba(26,175,122,0.12);
+  /* Brand colors — STEP216: 注目/広告ページをProNexaXブルー寄りに調整 */
+  --green-main:  #0A74FF;
+  --green-dark:  #0A58D0;
+  --green-deep:  #082A68;
+  --green-pale:  #EEF4FF;
+  --green-tint:  rgba(10,116,255,0.12);
 
   /* Surface */
-  --bg:          #F2F4F3;
+  --bg:          #F2F4F8;
   --card-bg:     #FFFFFF;
-  --nav-bg:      rgba(250,252,251,0.88);
+  --nav-bg:      rgba(250,252,255,0.90);
 
   /* Text */
-  --t1: #0F1E18;
-  --t2: #4A6059;
-  --t3: #94B4AA;
+  --t1: #0F172B;
+  --t2: #4E5F82;
+  --t3: #9AA8C2;
 
   /* Borders */
   --sep:         rgba(0,0,0,0.07);
@@ -227,18 +233,18 @@ img { display: block; max-width: 100%; }
 .banner-bg-1 {
   background-image:
     url('../../assets/images/feature-hero-1.jpg'),
-    linear-gradient(145deg, #0d4a2e 0%, #1a6840 40%, #2fa06a 80%, #30b87a 100%);
+    linear-gradient(145deg, #0A2F74 0%, #0E54B9 42%, #0A74FF 78%, #46A0FF 100%);
 }
 .banner-bg-2 {
   background-image:
     url('../../assets/images/feature-hero-2.jpg'),
-    linear-gradient(145deg, #1a2c1e 0%, #2a4f35 45%, #3a7050 80%, #3d7a52 100%);
+    linear-gradient(145deg, #132A5D 0%, #1B4A9B 45%, #2372D4 80%, #4F95F7 100%);
   opacity: 0;
 }
 .banner-bg-3 {
   background-image:
     url('../../assets/images/feature-hero-3.jpg'),
-    linear-gradient(145deg, #0a3d2a 0%, #1a6848 45%, #22845e 80%, #2fa06a 100%);
+    linear-gradient(145deg, #082A68 0%, #0A58D0 45%, #1984FF 80%, #62B0FF 100%);
   opacity: 0;
 }
 
@@ -366,6 +372,157 @@ img { display: block; max-width: 100%; }
 }
 .section-more:active { opacity: .55; }
 
+.cat-card:first-child {
+  border: 1px solid rgba(10,116,255,0.16);
+  box-shadow: 0 8px 20px rgba(10,116,255,0.08), var(--sh1);
+}
+.cat-card:first-child .cat-icon {
+  background: linear-gradient(135deg, rgba(10,116,255,0.16), rgba(10,116,255,0.06));
+}
+.article-card, .promo-card {
+  border: 1px solid rgba(10,116,255,0.06);
+}
+.banner-card {
+  border: 1px solid rgba(10,116,255,0.08);
+}
+
+/* ================================================================
+   WEAR FEATURE
+   ================================================================ */
+.wear-section-header {
+  align-items: flex-start;
+}
+.wear-section-sub {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--t2);
+  letter-spacing: -0.12px;
+}
+.wear-chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 0 -16px 14px;
+  padding: 0 16px;
+}
+.wear-chip-row::-webkit-scrollbar { display: none; }
+.wear-chip {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(10,116,255,0.06);
+  border: 1px solid rgba(10,116,255,0.10);
+  color: var(--green-dark);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.15px;
+}
+.wear-chip.is-active {
+  background: linear-gradient(135deg, #0A74FF, #3A94FF);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(10,116,255,0.18);
+}
+.wear-feature-grid {
+  display: grid;
+  grid-template-columns: 1.12fr 0.88fr;
+  gap: 10px;
+}
+.wear-side-stack {
+  display: grid;
+  gap: 10px;
+}
+.wear-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  min-height: 140px;
+  text-align: left;
+  box-shadow: var(--sh1);
+  border: 1px solid rgba(10,116,255,0.06);
+  background: linear-gradient(135deg, #0E3B8A 0%, #0A58D0 54%, #51A2FF 100%);
+  transition: transform .15s var(--spring), opacity .12s ease;
+}
+.wear-card:active {
+  transform: scale(.98);
+  opacity: .88;
+}
+.wear-card-main {
+  min-height: 292px;
+  background: linear-gradient(155deg, #082A68 0%, #0A58D0 45%, #0A74FF 100%);
+}
+.wear-card-uv {
+  background: linear-gradient(155deg, #2D5CC4 0%, #4A8DFF 55%, #83C5FF 100%);
+}
+.wear-card-rain {
+  background: linear-gradient(155deg, #12305F 0%, #285C9C 50%, #4B86C5 100%);
+}
+.wear-card-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,0.22), transparent 35%),
+    linear-gradient(to top, rgba(7,18,45,0.58), rgba(7,18,45,0.10) 55%, rgba(7,18,45,0.04));
+}
+.wear-card-body {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: 16px 15px;
+}
+.wear-card-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 9px;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  border: 1px solid rgba(255,255,255,0.24);
+  color: rgba(255,255,255,0.92);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.1px;
+}
+.wear-card-title {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.28;
+  letter-spacing: -0.35px;
+}
+.wear-card-sub .wear-card-title {
+  font-size: 15px;
+}
+.wear-card-desc {
+  margin-top: 5px;
+  color: rgba(255,255,255,0.82);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: -0.08px;
+}
+.wear-card-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  margin-top: 11px;
+  padding: 0 13px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  border: 1px solid rgba(255,255,255,0.24);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 /* ================================================================
    CATEGORY
    ================================================================ */
@@ -430,6 +587,132 @@ img { display: block; max-width: 100%; }
 }
 
 /* ================================================================
+   SPONSOR / PR
+   ================================================================ */
+.sponsor-section-header {
+  align-items: flex-start;
+}
+.sponsor-section-sub {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--t2);
+  letter-spacing: -0.12px;
+}
+.sponsor-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 0 -16px;
+  padding: 0 16px;
+}
+.sponsor-scroll-wrap::-webkit-scrollbar { display: none; }
+.sponsor-row {
+  display: flex;
+  gap: 12px;
+}
+.sponsor-card {
+  position: relative;
+  flex: 0 0 258px;
+  min-height: 174px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  border-radius: 18px;
+  padding: 16px 15px 14px;
+  border: 1px solid rgba(10,116,255,0.08);
+  box-shadow: var(--sh1);
+  color: #fff;
+  overflow: hidden;
+  transition: transform .15s var(--spring), opacity .12s ease;
+}
+.sponsor-card:active {
+  transform: scale(.98);
+  opacity: .88;
+}
+.sponsor-card--brand {
+  background: linear-gradient(155deg, #082A68 0%, #0A58D0 52%, #0A74FF 100%);
+}
+.sponsor-card-lesson {
+  background: linear-gradient(155deg, #1E4C88 0%, #3A7BD5 52%, #65A8FF 100%);
+}
+.sponsor-card-travel {
+  background: linear-gradient(155deg, #12305F 0%, #2B5D98 48%, #5D93D1 100%);
+}
+.sponsor-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  border: 1px solid rgba(255,255,255,0.24);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .8px;
+}
+.sponsor-card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.sponsor-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sponsor-card-brand-name {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.72);
+}
+.sponsor-card-title {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.34;
+  letter-spacing: -0.3px;
+  color: #fff;
+}
+.sponsor-card-desc {
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.52;
+  color: rgba(255,255,255,0.82);
+}
+.sponsor-card-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  min-height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  border: 1px solid rgba(255,255,255,0.24);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
+
+/* ================================================================
    ARTICLES
    ================================================================ */
 .article-list {
@@ -475,12 +758,12 @@ img { display: block; max-width: 100%; }
 .article-thumb-1 {
   background-image:
     url('../../assets/images/article-driver.jpg'),
-    linear-gradient(135deg, #1a3a2a 0%, #2d6645 55%, #3d8a5a 100%);
+    linear-gradient(135deg, #133979 0%, #245CB1 55%, #4E8EE8 100%);
 }
 .article-thumb-2 {
   background-image:
     url('../../assets/images/article-course.jpg'),
-    linear-gradient(135deg, #1e3a18 0%, #3a6030 55%, #4d8040 100%);
+    linear-gradient(135deg, #173A6B 0%, #325F9B 55%, #5A8FD0 100%);
 }
 .article-thumb-3 {
   background-image:
@@ -555,10 +838,10 @@ img { display: block; max-width: 100%; }
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  background: linear-gradient(118deg, #062a17 0%, #0d6644 55%, #1AAF7A 100%);
+  background: linear-gradient(118deg, #082A68 0%, #0A58D0 55%, #0A74FF 100%);
   border-radius: var(--r3);
   padding: 20px 18px;
-  box-shadow: 0 4px 18px rgba(6,42,23,0.25), 0 1px 4px rgba(6,42,23,0.14);
+  box-shadow: 0 6px 20px rgba(8,42,104,0.24), 0 1px 4px rgba(8,42,104,0.14);
   transition: transform .15s var(--spring), opacity .12s ease;
   width: 100%;
   text-align: left;
@@ -764,6 +1047,17 @@ img { display: block; max-width: 100%; }
   .promo-title      { font-size: 14px; }
   .promo-sub        { font-size: 10.5px; }
   .promo-action-btn { font-size: 11.5px; padding: 8px 12px; }
+  .wear-chip-row    { margin-left: -14px; margin-right: -14px; padding-left: 14px; padding-right: 14px; }
+  .wear-feature-grid { grid-template-columns: 1fr; }
+  .wear-card-main   { min-height: 220px; }
+  .wear-side-stack  { grid-template-columns: 1fr 1fr; }
+  .wear-card-sub    { min-height: 148px; }
+  .wear-card-title  { font-size: 17px; }
+  .wear-card-sub .wear-card-title { font-size: 14px; }
+  .sponsor-scroll-wrap { margin-left: -14px; margin-right: -14px; padding-left: 14px; padding-right: 14px; }
+  .sponsor-card { flex-basis: 228px; min-height: 164px; padding: 15px 14px 13px; }
+  .sponsor-card-title { font-size: 16px; }
+  .sponsor-card-desc { font-size: 10.5px; }
   .bnav-label  { font-size: 9.5px; }
   /* Pロゴを56pxに縮小して左右タブに余裕を持たせる */
   .bnav-btn.center-tab { flex: 0 0 56px; width: 56px; height: 56px; transform: translateY(-6px); }
@@ -777,4 +1071,124 @@ img { display: block; max-width: 100%; }
   .promo-section  { padding-top: 28px; }
   .banner-title   { font-size: 20px; }
   .article-card   { gap: 14px; }
+  .wear-card-main { min-height: 310px; }
+}
+
+
+/* STEP220: CMSで非公開にしたPRカード */
+.sponsor-card[hidden] {
+  display: none !important;
+}
+.sponsor-row.is-empty {
+  display: none !important;
+}
+
+
+/* STEP221: CMSで非公開にしたウェア特集カード */
+.wear-card[hidden] {
+  display: none !important;
+}
+.wear-feature-grid.is-main-hidden {
+  grid-template-columns: 1fr;
+}
+.wear-feature-grid.is-main-hidden .wear-side-stack {
+  grid-template-columns: 1fr 1fr;
+}
+.wear-feature-grid.is-empty {
+  display: none !important;
+}
+
+
+/* STEP226: CMSで非公開にした記事カード */
+.article-card[hidden] {
+  display: none !important;
+}
+.article-list.is-empty {
+  display: none !important;
+}
+
+
+/* STEP227: URLが設定されているカードは押せる導線として軽く強調 */
+.article-card.has-link,
+.wear-card.has-link,
+.sponsor-card.has-link {
+  cursor: pointer;
+}
+.article-card.has-link .article-arrow {
+  color: var(--green-main);
+}
+
+
+/* STEP228: CMS画像URL対応 */
+.banner-bg.has-cms-image,
+.wear-card.has-cms-image,
+.sponsor-card.has-cms-image {
+  background-size: cover, cover !important;
+  background-position: center, center !important;
+  background-repeat: no-repeat, no-repeat !important;
+}
+.sponsor-card.has-cms-image::before,
+.wear-card.has-cms-image::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(7,18,45,.72), rgba(7,18,45,.18) 58%, rgba(7,18,45,.08));
+  z-index: 0;
+}
+.sponsor-card.has-cms-image > *,
+.wear-card.has-cms-image > * {
+  position: relative;
+  z-index: 1;
+}
+.sponsor-card-visual-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,.24);
+  background: rgba(255,255,255,.14);
+}
+.article-thumb-img.has-cms-image {
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+
+/* STEP238: CMSプレビュークリック編集モード */
+body.is-cms-click-edit-preview [data-pnx-feature-section] {
+  position: relative;
+  cursor: pointer;
+}
+body.is-cms-click-edit-preview [data-pnx-feature-section]::after {
+  content: "クリックで編集";
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.88);
+  color: #0A74FF;
+  border: 1px solid rgba(10,116,255,.12);
+  box-shadow: 0 6px 18px rgba(20,40,80,.10);
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity .14s ease, transform .14s ease;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+body.is-cms-click-edit-preview [data-pnx-feature-section]:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+body.is-cms-click-edit-preview [data-pnx-feature-section]:hover {
+  outline: 2px solid rgba(10,116,255,.18);
+  outline-offset: -2px;
 }

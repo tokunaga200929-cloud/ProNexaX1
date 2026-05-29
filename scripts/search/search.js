@@ -1134,6 +1134,88 @@ function areaLabelFromKey(key) {
   return r ? r.label : key;
 }
 
+/* ================================================================
+   STEP270: 開催地はエリア名ではなく県名を優先表示
+   ================================================================ */
+const PNX_STEP270_PREF_LABELS = {
+  hokkaido:'北海道', aomori:'青森', iwate:'岩手', miyagi:'宮城', akita:'秋田', yamagata:'山形', fukushima:'福島',
+  ibaraki:'茨城', tochigi:'栃木', gunma:'群馬', saitama:'埼玉', chiba:'千葉', tokyo:'東京', kanagawa:'神奈川',
+  niigata:'新潟', toyama:'富山', ishikawa:'石川', fukui:'福井', yamanashi:'山梨', nagano:'長野', gifu:'岐阜', shizuoka:'静岡', aichi:'愛知', mie:'三重',
+  shiga:'滋賀', kyoto:'京都', osaka:'大阪', hyogo:'兵庫', nara:'奈良', wakayama:'和歌山',
+  tottori:'鳥取', shimane:'島根', okayama:'岡山', hiroshima:'広島', yamaguchi:'山口',
+  tokushima:'徳島', kagawa:'香川', ehime:'愛媛', kochi:'高知',
+  fukuoka:'福岡', saga:'佐賀', nagasaki:'長崎', kumamoto:'熊本', oita:'大分', miyazaki:'宮崎', kagoshima:'鹿児島', okinawa:'沖縄',
+  overseas:'海外'
+};
+
+const PNX_STEP270_PREF_JA = Object.values(PNX_STEP270_PREF_LABELS).filter(v => v !== '海外');
+
+const PNX_STEP271_VENUE_PREF_HINTS = [
+  ['南茂原', '千葉'], ['茂原', '千葉'], ['富士市原', '千葉'], ['市原', '千葉'],
+  ['霞ヶ関', '埼玉'], ['霞ケ関', '埼玉'], ['宍戸ヒルズ', '茨城'],
+  ['太平洋クラブ成田', '千葉'], ['成田', '千葉'], ['裾野', '静岡'],
+  ['オーク・ヒルズ', '千葉'], ['オークヒルズ', '千葉'],
+  ['西那須野', '栃木'], ['ホウライ', '栃木'], ['プレステージ', '栃木']
+];
+
+function pnxStep271PrefFromVenueName(text) {
+  const hay = String(text || '');
+  if (!hay) return '';
+  const hit = PNX_STEP271_VENUE_PREF_HINTS.find(([key]) => hay.includes(key));
+  return hit ? hit[1] : '';
+}
+
+function pnxStep270PrefLabelFromKey(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const compact = raw.replace(/[都道府県]/g, '');
+  if (/^(kanto|kansai|kinki|chubu|tokai|kyushu|okinawa|hokkaido|overseas|abroad|domestic|all)$/i.test(raw) && !PNX_STEP270_PREF_LABELS[raw.toLowerCase()]) {
+    return '';
+  }
+  if (PNX_STEP270_PREF_LABELS[raw.toLowerCase()]) return PNX_STEP270_PREF_LABELS[raw.toLowerCase()];
+  if (PNX_STEP270_PREF_JA.includes(compact)) return compact;
+  if (raw === '東京都') return '東京';
+  if (raw === '京都府') return '京都';
+  if (raw === '大阪府') return '大阪';
+  if (raw === '北海道') return '北海道';
+  return raw;
+}
+
+function pnxStep270ExtractPrefFromText(text) {
+  const hay = String(text || '');
+  if (!hay) return '';
+  const keys = ['北海道','東京都','京都府','大阪府', ...PNX_STEP270_PREF_JA.map(p => `${p}県`), ...PNX_STEP270_PREF_JA];
+  const found = keys.find(pref => hay.includes(pref));
+  return found ? found.replace(/[都道府県]/g, '') || found : '';
+}
+
+function pnxStep270TournamentLocationLabel(t) {
+  const pref = pnxStep270PrefLabelFromKey(t && (t.prefecture || t.pref || t.state || t.prefectureLabel));
+  if (pref) return pref;
+  const sourceText = [
+    t && (t.venue || t.course || t.place || t.location),
+    t && (t.title || t.name),
+    t && t.imageAlt
+  ].filter(Boolean).join(' ');
+  const extracted = pnxStep270ExtractPrefFromText(sourceText);
+  if (extracted) return extracted;
+  const venueHint = pnxStep271PrefFromVenueName(sourceText);
+  if (venueHint) return venueHint;
+  const displayLocation = pnxStep270PrefLabelFromKey(t && t.displayLocation);
+  if (displayLocation) return displayLocation;
+  const area = t && (t.area || t.region);
+  const areaLabel = areaLabelFromKey(area);
+  return areaLabel && areaLabel !== '—' ? areaLabel : '開催地未設定';
+}
+
+function pnxStep270VenueWithPref(t) {
+  const loc = pnxStep270TournamentLocationLabel(t);
+  const venue = (t && (t.course || t.venue || t.place)) || '会場未定';
+  if (!loc || loc === '開催地未設定') return venue;
+  if (String(venue).includes(loc)) return venue;
+  return `${loc}・${venue}`;
+}
+
 /**
  * 日付フォーマット (YYYY-MM-DD → M/D)
  */
@@ -1263,11 +1345,59 @@ function deadlineIcon(urgencyClass) {
  *  ④ 開催地   → tc-venue-line
  *  ⑤ 募集状況 + カレンダー → tc-card-footer（フッター固定）
  */
+function pnxStep249ImageUrl(value) {
+  return String(value || "").replace(/"/g, '&quot;');
+}
+
+function pnxStep250ResolveMediaUrl(value) {
+  const raw = String(value || "");
+  if (!raw) return "";
+  if (!raw.startsWith("pnx-media:")) return raw;
+  const id = raw.replace("pnx-media:", "");
+  try {
+    const mediaA = JSON.parse(localStorage.getItem("PNX_CMS_MEDIA") || "[]");
+    const mediaB = JSON.parse(localStorage.getItem("PNX_CMS_MEDIA_ASSETS") || "[]");
+    const list = []
+      .concat(Array.isArray(mediaA) ? mediaA : [])
+      .concat(Array.isArray(mediaB) ? mediaB : []);
+    const asset = list.find(a => String(a.id || a.assetId) === String(id));
+    return (asset && (asset.dataUrl || asset.url || asset.imageUrl || asset.src)) || "";
+  } catch(e) {
+    return "";
+  }
+}
+
+function pnxStep249TournamentVisualHTML(t) {
+  const venueImage = pnxStep250ResolveMediaUrl(t.venueImageUrl || t.imageUrl || t.coverImageUrl || "");
+  const logoImage = pnxStep250ResolveMediaUrl(t.logoUrl || t.tournamentLogoUrl || t.organizerLogoUrl || "");
+  if (!venueImage && !logoImage) return "";
+
+  const bgStyle = venueImage
+    ? ` style="background-image:linear-gradient(90deg, rgba(8,42,104,.72), rgba(8,42,104,.16)), url(&quot;${pnxStep249ImageUrl(venueImage)}&quot;)"`
+    : "";
+
+  const logo = logoImage
+    ? `<span class="tc-cms-visual__logo has-logo"><img src="${pnxStep249ImageUrl(logoImage)}" alt="${pnxStep249ImageUrl(t.name || '大会ロゴ')}" loading="lazy"></span>`
+    : `<span class="tc-cms-visual__logo is-text">${catLabel(t.cat).slice(0, 2)}</span>`;
+
+  return `
+    <div class="tc-cms-visual${venueImage ? " has-image" : ""}"${bgStyle}>
+      ${logo}
+      <div class="tc-cms-visual__text">
+        <span>${catLabel(t.cat)}</span>
+        <strong>${t.name}</strong>
+        <small>${pnxStep270VenueWithPref(t)}</small>
+      </div>
+    </div>
+  `;
+}
+
 function tournamentCardHTML(t) {
   const urgencyClass = deadlineUrgencyClass(t.entryDeadline);
   const daysLabel    = daysUntilDeadline(t.entryDeadline);
   const dlIcon       = deadlineIcon(urgencyClass);
   const brand        = catBrandConfig(t.cat);
+  const visualHTML   = pnxStep249TournamentVisualHTML(t);
 
   return `
     <article
@@ -1277,6 +1407,7 @@ function tournamentCardHTML(t) {
       tabindex="0"
       aria-label="${t.name} 詳細を見る"
     >
+      ${visualHTML}
       <!-- ── ブランドカラム（左） ── -->
       <div class="tc-brand-col ${brand.cls}">
         <div class="tc-brand-inner">
@@ -1321,7 +1452,7 @@ function tournamentCardHTML(t) {
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
             <circle cx="12" cy="10" r="3"/>
           </svg>
-          ${t.course}
+          ${pnxStep270VenueWithPref(t)}
         </div>
 
         <!-- ⑤ 情報グリッド（賞金・費用・資格・人数） -->
@@ -1774,7 +1905,8 @@ function pnxStep205NormalizeCmsTournament(raw) {
   const deadline = pnxStep205ToIsoDate(raw.entryDeadline || raw.deadline || raw.applyDeadline || raw.applicationDeadline);
   const venue = pnxStep205Text(raw.course || raw.venue || raw.place || raw.location || raw.golfCourse) || '会場未定';
   const categoryKey = pnxStep205NormalizeCategory(raw.cat || raw.category || raw.categoryName || raw.tour || raw.tourName);
-  const prefKey = pnxStep205PrefKey(raw.prefecture || raw.pref || raw.state);
+  const prefSourceText = [raw.venue, raw.course, raw.place, raw.location, raw.title, raw.name].filter(Boolean).join(' ');
+  const prefKey = pnxStep205PrefKey(raw.prefecture || raw.pref || raw.state || pnxStep270ExtractPrefFromText(prefSourceText) || pnxStep271PrefFromVenueName(prefSourceText));
   const areaKey = pnxStep205AreaFromPref(prefKey, raw.area, raw.region, categoryKey);
   const id = pnxStep205SafeId(raw, title, start, venue);
   const status = pnxStep205NormalizeStatus(raw.status || raw.publicStatus, deadline);
@@ -1795,6 +1927,8 @@ function pnxStep205NormalizeCmsTournament(raw) {
     region: areaKey === 'overseas' || ['abroad', 'asian', 'pga'].includes(categoryKey) ? 'overseas' : 'domestic',
     area: areaKey,
     prefecture: prefKey,
+    prefectureLabel: pnxStep270PrefLabelFromKey(prefKey),
+    displayLocation: pnxStep270PrefLabelFromKey(prefKey) || pnxStep270TournamentLocationLabel({ area: areaKey, course: venue, name: title }),
     course: venue,
     venue,
     start,
@@ -1811,11 +1945,11 @@ function pnxStep205NormalizeCmsTournament(raw) {
     organizer: pnxStep205Text(raw.organizer || raw.host || raw.company) || '—',
     status,
     emoji: '⛳',
-    organizerLogoUrl: raw.organizerLogoUrl || raw.hostLogoUrl || raw.companyLogoUrl || raw.logoUrl || raw.organizerLogo || null,
-    tournamentLogoUrl: raw.tournamentLogoUrl || raw.tourLogoUrl || raw.eventLogoUrl || raw.seriesLogoUrl || raw.logoUrl || null,
-    logoUrl: raw.logoUrl || raw.tournamentLogoUrl || raw.tourLogoUrl || raw.eventLogoUrl || raw.seriesLogoUrl || raw.organizerLogoUrl || null,
-    venueImageUrl: raw.venueImageUrl || raw.courseImageUrl || raw.heroImageUrl || raw.coverImageUrl || raw.imageUrl || null,
-    imageUrl: raw.imageUrl || raw.venueImageUrl || raw.courseImageUrl || raw.heroImageUrl || raw.coverImageUrl || null,
+    organizerLogoUrl: pnxStep250ResolveMediaUrl(raw.organizerLogoUrl || raw.hostLogoUrl || raw.companyLogoUrl || raw.logoUrl || raw.organizerLogo || null),
+    tournamentLogoUrl: pnxStep250ResolveMediaUrl(raw.tournamentLogoUrl || raw.tourLogoUrl || raw.eventLogoUrl || raw.seriesLogoUrl || raw.logoUrl || null),
+    logoUrl: pnxStep250ResolveMediaUrl(raw.logoUrl || raw.tournamentLogoUrl || raw.tourLogoUrl || raw.eventLogoUrl || raw.seriesLogoUrl || raw.organizerLogoUrl || null),
+    venueImageUrl: pnxStep250ResolveMediaUrl(raw.venueImageUrl || raw.courseImageUrl || raw.heroImageUrl || raw.coverImageUrl || raw.imageUrl || null),
+    imageUrl: pnxStep250ResolveMediaUrl(raw.imageUrl || raw.venueImageUrl || raw.courseImageUrl || raw.heroImageUrl || raw.coverImageUrl || null),
     imageAlt: `${title} ${venue}`,
     officialUrl: raw.officialUrl || raw.officialURL || raw.homepage || raw.website || raw.webUrl || raw.url || '',
     instagramUrl: raw.instagramUrl || raw.instagramURL || raw.instagram || raw.igUrl || '',
@@ -1887,11 +2021,23 @@ function PNXStep205MergeCmsTournaments(options = {}) {
 }
 
 function PNXStep205RefreshCmsTournaments(reason = 'refresh') {
+  const now = Date.now();
+  const prev = window.__PNX_STEP254_LAST_SEARCH_REFRESH_AT__ || 0;
+  const last = window.__PNX_STEP254_LAST_SEARCH_REFRESH_RESULT__ || null;
+
+  // CMSプレビューや本体iframeに同じ通知が連続で飛ぶと、カード一覧がパチパチ再描画される。
+  // 700ms以内の重複更新は前回結果を返して、操作中のスクロール/タップを邪魔しない。
+  if (last && now - prev < 700 && !String(reason || '').includes('manual')) {
+    return last;
+  }
+
+  window.__PNX_STEP254_LAST_SEARCH_REFRESH_AT__ = now;
   const result = PNXStep205MergeCmsTournaments({ reason });
   try { renderCategoryChips(); } catch (e) {}
   try { renderQuickCards(); } catch (e) {}
   try { renderCalendarSection(); } catch (e) {}
   try { applyFiltersAndRender(); } catch (e) {}
+  window.__PNX_STEP254_LAST_SEARCH_REFRESH_RESULT__ = result;
   return result;
 }
 
@@ -1928,6 +2074,39 @@ window.addEventListener('message', function(e) {
     setTimeout(() => PNXStep205RefreshCmsTournaments('message:' + type), 80);
   }
 });
+
+
+/* STEP252: CMSが同一タブ/別タブから反映した時も即更新 */
+(function(){
+  if (window.__PNX_STEP252_SEARCH_SYNC_LISTENERS__) return;
+  window.__PNX_STEP252_SEARCH_SYNC_LISTENERS__ = true;
+
+  const types = [
+    'PNX_STEP129_SAFE_PUBLISH_TO_APP',
+    'PNX_CMS_SEARCH_SNAPSHOT_UPDATED',
+    'PNX_CMS_FINAL_SEARCH_SYNC_PUBLISHED',
+    'PNX_SEARCH_FORCE_RENDER_CMS_TOURNAMENTS'
+  ];
+
+  types.forEach(type => {
+    window.addEventListener(type, function(){
+      setTimeout(() => PNXStep205RefreshCmsTournaments('custom:' + type), 60);
+    });
+  });
+
+  try {
+    if (window.BroadcastChannel) {
+      const channel = new BroadcastChannel('pronexax-cms-search-sync');
+      channel.onmessage = function(event){
+        const type = event && event.data && event.data.type;
+        if (types.includes(type)) {
+          setTimeout(() => PNXStep205RefreshCmsTournaments('broadcast:' + type), 60);
+        }
+      };
+      window.__PNX_STEP252_SEARCH_BROADCAST__ = channel;
+    }
+  } catch(e) {}
+})();
 
 /* ================================================================
    § 7  Bottom Sheet 開閉制御
@@ -2117,7 +2296,9 @@ function renderBottomSheetContent(t) {
   bsBody.innerHTML = `
 
     <!-- ▌ヒーローエリア: Apple TV / App Store スタイル -->
-    <div class="bs-hero-wrap ${brand.cls}">
+    <div class="bs-hero-wrap ${brand.cls}"${(t.venueImageUrl || t.imageUrl || t.coverImageUrl) ? ` style="background-image:linear-gradient(180deg, rgba(34,197,94,.18), rgba(22,163,74,.74)), url(&quot;${pnxStep249ImageUrl(pnxStep250ResolveMediaUrl(t.venueImageUrl || t.imageUrl || t.coverImageUrl))}&quot;); background-size:cover; background-position:center;"` : ""}>
+
+      ${(t.logoUrl || t.tournamentLogoUrl) ? `<span class="bs-cms-logo has-logo"><img src="${pnxStep249ImageUrl(pnxStep250ResolveMediaUrl(t.logoUrl || t.tournamentLogoUrl))}" alt="${pnxStep249ImageUrl(t.name || '大会ロゴ')}" loading="lazy"></span>` : ""}
 
       <!-- 右上: 締切urgencyバッジ -->
       <div class="bs-img-urgency-badge ${urgencyClass}">
@@ -2138,7 +2319,7 @@ function renderBottomSheetContent(t) {
           ${statusBadgeHTML(t)}
         </div>
         <h2 class="bs-hero-name">${t.name}</h2>
-        <p class="bs-hero-meta">${fmtDateWithDay(t.start)} 〜 ${fmtDateWithDay(t.end)}　📍 ${t.course}</p>
+        <p class="bs-hero-meta">${fmtDateWithDay(t.start)} 〜 ${fmtDateWithDay(t.end)}　📍 ${pnxStep270VenueWithPref(t)}</p>
       </div>
     </div>
 
@@ -2171,7 +2352,7 @@ function renderBottomSheetContent(t) {
         </div>
         <div class="bs-card-item border-top">
           <p class="bs-card-label">開催地</p>
-          <p class="bs-card-value">${areaLabelFromKey(t.area)}</p>
+          <p class="bs-card-value">${pnxStep270TournamentLocationLabel(t)}</p>
         </div>
       </div>
 
@@ -2271,7 +2452,23 @@ function renderBottomSheetContent(t) {
  * 固定フッターの「カレンダーに追加」ボタン状態を同期
  * （innerHTML書き換え後でもフッターは DOM固定なので安全）
  */
+function _syncBSLinkBtn(t) {
+  const detailBtn = document.getElementById('bs-cta-detail');
+  if (!detailBtn) return;
+  const hasEntry = !!(t && t.entryUrl);
+  const hasOfficial = !!(t && (t.officialUrl || t.url));
+  detailBtn.classList.toggle('has-url', hasEntry || hasOfficial);
+  detailBtn.innerHTML = `
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    ${hasEntry ? 'エントリーへ' : (hasOfficial ? '公式サイト' : 'URL未登録')}
+  `;
+}
+
 function _syncBSAddBtn(t) {
+  _syncBSLinkBtn(t);
   const addBtn = document.getElementById('bs-cta-add');
   if (!addBtn) return;
   if (t && t.addedToCalendar) {
@@ -2296,12 +2493,16 @@ function _syncBSAddBtn(t) {
   }
 }
 
-// BS フッター「詳細を見る」ボタン
-// STEP2: t.officialUrl などを用意し、window.open(t.officialUrl, '_blank') に差し替える
+// BS フッター「公式サイト / エントリー」ボタン
 document.getElementById('bs-cta-detail').addEventListener('click', () => {
   const t = DUMMY_TOURNAMENTS.find(x => x.id === APP_STATE.selectedTournamentId);
   if (!t) return;
-  alert(`「${t.name}」の公式サイト連携は STEP2 で実装予定です。`);
+  const url = t.entryUrl || t.officialUrl || t.url || "";
+  if (url) {
+    window.open(url, "_blank", "noopener,noreferrer");
+    return;
+  }
+  alert(`「${t.name}」の公式サイトURL・エントリーURLが未登録です。`);
 });
 
 document.getElementById('bs-cta-add').addEventListener('click', () => {
@@ -3193,7 +3394,7 @@ function _dayMiniCardHTML(t, ds) {
       <div class="day-card-info">
         <div class="day-card-tags">${tags}</div>
         <p class="day-card-name">${t.name}</p>
-        <p class="day-card-meta">${t.course} · ${areaLabelFromKey(t.area)}</p>
+        <p class="day-card-meta">${pnxStep270VenueWithPref(t)}</p>
       </div>
       <div class="day-card-actions">
         <button class="day-fav-btn${t.favorited ? ' active' : ''}"
@@ -3903,7 +4104,7 @@ if (document.readyState === 'loading') {
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
             </svg>
-            ${esc(t.course || '会場未定')}
+            ${esc(pnxStep270VenueWithPref(t))}
           </div>
 
           <div class="tc-info-grid">
@@ -3997,7 +4198,7 @@ if (document.readyState === 'loading') {
           <div class="bs-card-item"><p class="bs-card-label">開催期間</p><p class="bs-card-value highlight">${esc(fmtDateWithDay(t.start))} 〜 ${esc(fmtDateWithDay(t.end))}</p></div>
           <div class="bs-card-item border-top"><p class="bs-card-label">エントリー締切</p><p class="bs-card-value${deadlineValueClass ? ' ' + deadlineValueClass : ''}">${esc(fmtDateWithDay(t.entryDeadline))}</p></div>
           <div class="bs-card-item border-top"><p class="bs-card-label">会場</p><p class="bs-card-value">${esc(t.course || '会場未定')}</p></div>
-          <div class="bs-card-item border-top"><p class="bs-card-label">開催地</p><p class="bs-card-value">${esc(areaLabelFromKey(t.area))}</p></div>
+          <div class="bs-card-item border-top"><p class="bs-card-label">開催地</p><p class="bs-card-value">${esc(pnxStep270TournamentLocationLabel(t))}</p></div>
         </div>
 
         <div class="bs-info-card">
@@ -4122,4 +4323,62 @@ if (document.readyState === 'loading') {
       selected:APP_STATE && APP_STATE.selectedTournamentId || null
     };
   };
+})();
+
+
+/* ================================================================
+   STEP253: CMS反映を本体試合検索へ確実に反映
+   ================================================================ */
+(function(){
+  if (window.__PNX_STEP253_FORCE_CMS_SEARCH_REFRESH__) return;
+  window.__PNX_STEP253_FORCE_CMS_SEARCH_REFRESH__ = true;
+
+  function refresh(reason){
+    try {
+      if (typeof PNXStep205RefreshCmsTournaments === "function") {
+        PNXStep205RefreshCmsTournaments("step253:" + reason);
+      } else if (typeof PNXStep205MergeCmsTournaments === "function") {
+        PNXStep205MergeCmsTournaments({ reason:"step253:" + reason });
+        if (typeof applyFiltersAndRender === "function") applyFiltersAndRender();
+      }
+    } catch(e) {
+      console.warn("[ProNexaX STEP253] CMS大会再描画に失敗", reason, e);
+    }
+  }
+
+  var isCmsPreview = /[?&]cmsPreview=1/.test(location.search || "");
+  if (!isCmsPreview) {
+    ["focus", "pageshow", "visibilitychange"].forEach(function(type){
+      window.addEventListener(type, function(){
+        if (type === "visibilitychange" && document.visibilityState !== "visible") return;
+        setTimeout(function(){ refresh(type); }, 120);
+      });
+    });
+  }
+
+  window.addEventListener("message", function(event){
+    var data = event && event.data || {};
+    var type = data.type || data.event || "";
+    if ([
+      "PNX_CMS_SEARCH_SNAPSHOT_UPDATED",
+      "PNX_CMS_FINAL_SEARCH_SYNC_PUBLISHED",
+      "PNX_SEARCH_FORCE_RENDER_CMS_TOURNAMENTS",
+      "PNX_STEP129_SAFE_PUBLISH_TO_APP"
+    ].indexOf(type) !== -1) {
+      setTimeout(function(){ refresh("message:" + type); }, 80);
+    }
+  });
+
+  try {
+    if (window.BroadcastChannel) {
+      var ch = new BroadcastChannel("pronexax-cms-search-sync");
+      ch.onmessage = function(event){
+        var data = event && event.data || {};
+        setTimeout(function(){ refresh("broadcast:" + (data.type || "cms")); }, 80);
+      };
+      window.__PNX_STEP253_SEARCH_REFRESH_CHANNEL__ = ch;
+    }
+  } catch(e) {}
+
+  setTimeout(function(){ refresh("initial"); }, 250);
 })();

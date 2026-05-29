@@ -35,7 +35,17 @@
   }
 
   function writeJson(key, value){
-    localStorage.setItem(key, JSON.stringify(value));
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch(e) {
+      console.warn("[ProNexaX CMS] localStorage save failed", key, e);
+      try {
+        window.dispatchEvent(new CustomEvent("pnx:cms-final:storage-error", {
+          detail:{ key, message: e && e.message ? e.message : String(e) }
+        }));
+      } catch(_) {}
+      throw e;
+    }
     return value;
   }
 
@@ -71,6 +81,8 @@
       gender: t.gender || "",
       area: t.area || "",
       prefecture: t.prefecture || "",
+      prefectureLabel: t.prefectureLabel || "",
+      displayLocation: t.displayLocation || t.prefecture || "",
       venue: t.venue || t.course || t.place || "",
       startDate: t.startDate || t.start || t.date || "",
       endDate: t.endDate || t.end || t.startDate || t.date || "",
@@ -84,6 +96,14 @@
       entryUrl: t.entryUrl || t.url || "",
       officialUrl: t.officialUrl || "",
       instagramUrl: t.instagramUrl || "",
+      logoUrl: t.logoUrl || t.tournamentLogoUrl || "",
+      tournamentLogoUrl: t.tournamentLogoUrl || t.logoUrl || "",
+      venueImageUrl: t.venueImageUrl || t.imageUrl || t.coverImageUrl || "",
+      imageUrl: t.imageUrl || t.venueImageUrl || t.coverImageUrl || "",
+      coverImageUrl: t.coverImageUrl || t.venueImageUrl || t.imageUrl || "",
+      imageAssetId: t.imageAssetId || "",
+      logoAssetId: t.logoAssetId || "",
+      imageAlt: t.imageAlt || t.venue || t.title || "",
       memo: t.memo || "",
       updatedAt: now(),
       createdAt: t.createdAt || now(),
@@ -743,8 +763,19 @@
     });
   }
 
+  function normalizeSearchImageFields(t){
+    const item = Object.assign({}, t || {});
+    item.logoUrl = item.logoUrl || item.tournamentLogoUrl || "";
+    item.tournamentLogoUrl = item.tournamentLogoUrl || item.logoUrl || "";
+    item.venueImageUrl = item.venueImageUrl || item.imageUrl || item.coverImageUrl || "";
+    item.imageUrl = item.imageUrl || item.venueImageUrl || item.coverImageUrl || "";
+    item.coverImageUrl = item.coverImageUrl || item.venueImageUrl || item.imageUrl || "";
+    item.imageAlt = item.imageAlt || item.venue || item.course || item.title || item.name || "";
+    return item;
+  }
+
   bridge.createSearchSnapshot = function(){
-    const tournaments = publicList();
+    const tournaments = publicList().map(normalizeSearchImageFields);
     const meta = {
       version: "step68",
       createdAt: now(),
@@ -1674,6 +1705,19 @@
     );
   }
 
+  function step271PrefFromVenue(textValue){
+    const hay = String(textValue || "");
+    const hints = [
+      ["南茂原", "千葉"], ["茂原", "千葉"], ["富士市原", "千葉"], ["市原", "千葉"],
+      ["霞ヶ関", "埼玉"], ["霞ケ関", "埼玉"], ["宍戸ヒルズ", "茨城"],
+      ["太平洋クラブ成田", "千葉"], ["成田", "千葉"], ["裾野", "静岡"],
+      ["オーク・ヒルズ", "千葉"], ["オークヒルズ", "千葉"],
+      ["西那須野", "栃木"], ["ホウライ", "栃木"], ["プレステージ", "栃木"]
+    ];
+    const hit = hints.find(function(item){ return hay.indexOf(item[0]) !== -1; });
+    return hit ? hit[1] : "";
+  }
+
   function normalizeForSearch(t, index){
     const id = text(t.id || t.tournamentId) || ("cms_step85_" + Date.now() + "_" + index);
     const title = text(t.title || t.name) || "CMS登録大会";
@@ -1681,6 +1725,7 @@
     const end = text(t.endDate || t.end || t.startDate || t.start || t.date) || start;
     const venue = text(t.venue || t.course || t.place) || "会場未定";
     const category = text(t.category || t.cat) || "未分類";
+    const pref = text(t.prefecture || t.pref || t.prefectureLabel) || step271PrefFromVenue([venue, title].join(" "));
 
     return Object.assign({}, t, {
       id,
@@ -1695,7 +1740,9 @@
       course: venue,
       category,
       cat: category,
-      prefecture: text(t.prefecture || t.pref),
+      prefecture: pref,
+      prefectureLabel: text(t.prefectureLabel || t.displayLocation || pref),
+      displayLocation: text(t.displayLocation || t.prefectureLabel || pref || t.area),
       area: text(t.area),
       entryDeadline: text(t.entryDeadline || t.deadline),
       entryFee: text(t.entryFee || t.fee),
@@ -1705,6 +1752,14 @@
       eligibility: text(t.eligibility || t.qualification),
       qualification: text(t.qualification || t.eligibility),
       organizer: text(t.organizer),
+      logoUrl: text(t.logoUrl || t.tournamentLogoUrl),
+      tournamentLogoUrl: text(t.tournamentLogoUrl || t.logoUrl),
+      venueImageUrl: text(t.venueImageUrl || t.imageUrl || t.coverImageUrl),
+      imageUrl: text(t.imageUrl || t.venueImageUrl || t.coverImageUrl),
+      coverImageUrl: text(t.coverImageUrl || t.venueImageUrl || t.imageUrl),
+      imageAssetId: text(t.imageAssetId),
+      logoAssetId: text(t.logoAssetId),
+      imageAlt: text(t.imageAlt || t.venue || t.title || t.name),
       status: text(t.status || "open"),
       published: true,
       source: "cms",

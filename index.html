@@ -514,7 +514,7 @@
     <!-- STEP200 INTEGRATION MODULE LAYER START -->
     <div class="pnx-module-layer" id="pnx-module-layer" aria-hidden="true">
       <div class="pnx-module-page" id="pnx-module-search" data-pnx-module-page="search" aria-hidden="true">
-        <iframe id="search-module-frame" class="pnx-module-frame" data-src="pages/search/embed.html?v=step206-logo-url-visuals" title="試合検索" loading="lazy"></iframe>
+        <iframe id="search-module-frame" class="pnx-module-frame" data-src="pages/search/embed.html?v=step254-media-flicker-fix" title="試合検索" loading="lazy"></iframe>
       </div>
       <div class="pnx-module-page" id="pnx-module-featured" data-pnx-module-page="featured" aria-hidden="true">
         <iframe id="featured-module-frame" class="pnx-module-frame" data-src="pages/featured/embed.html?v=step210-featured-scroll" title="広告・注目" loading="lazy"></iframe>
@@ -1404,6 +1404,99 @@ body.pnx-step202-search-active #pnx-module-search{
       note:"試合検索iframeから本体カレンダーへ大会予定を追加する連携"
     };
   };
+})();
+</script>
+
+
+<script id="pnx-step252-cms-search-forwarder">
+(function(){
+  if (window.__PNX_STEP252_CMS_SEARCH_FORWARDER__) return;
+  window.__PNX_STEP252_CMS_SEARCH_FORWARDER__ = true;
+
+  var TYPES = [
+    "PNX_CMS_SEARCH_SNAPSHOT_UPDATED",
+    "PNX_CMS_FINAL_SEARCH_SYNC_PUBLISHED",
+    "PNX_SEARCH_FORCE_RENDER_CMS_TOURNAMENTS",
+    "PNX_STEP129_SAFE_PUBLISH_TO_APP"
+  ];
+
+  function forward(type, payload){
+    try {
+      var frame = document.getElementById("search-module-frame");
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage({ type:type, payload:payload || {} }, "*");
+      }
+    } catch(e) {}
+  }
+
+  window.addEventListener("message", function(event){
+    var data = event && event.data || {};
+    var type = data.type || data.event || "";
+    if (TYPES.indexOf(type) === -1) return;
+    forward(type, data.payload || data.detail || {});
+  });
+
+  TYPES.forEach(function(type){
+    window.addEventListener(type, function(event){
+      forward(type, event && event.detail || {});
+    });
+  });
+})();
+</script>
+
+
+<script id="pnx-step253-search-sync-forwarder">
+(function(){
+  if (window.__PNX_STEP253_SEARCH_SYNC_FORWARDER__) return;
+  window.__PNX_STEP253_SEARCH_SYNC_FORWARDER__ = true;
+
+  var TYPES = [
+    "PNX_CMS_SEARCH_SNAPSHOT_UPDATED",
+    "PNX_CMS_FINAL_SEARCH_SYNC_PUBLISHED",
+    "PNX_SEARCH_FORCE_RENDER_CMS_TOURNAMENTS",
+    "PNX_STEP129_SAFE_PUBLISH_TO_APP"
+  ];
+
+  function forward(type, payload){
+    try {
+      var frame = document.getElementById("search-module-frame");
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage({ type:type, payload:payload || {} }, "*");
+      }
+    } catch(e) {}
+  }
+
+  function forwardAll(payload){
+    TYPES.forEach(function(type){ forward(type, payload || {}); });
+  }
+
+  try {
+    if (window.BroadcastChannel) {
+      var ch = new BroadcastChannel("pronexax-cms-search-sync");
+      ch.onmessage = function(event){
+        var data = event && event.data || {};
+        var type = data.type || "PNX_CMS_SEARCH_SNAPSHOT_UPDATED";
+        if (TYPES.indexOf(type) !== -1) forward(type, data.payload || data);
+      };
+      window.__PNX_STEP253_SEARCH_BROADCAST__ = ch;
+    }
+  } catch(e) {}
+
+  window.addEventListener("storage", function(event){
+    if (!event || [
+      "PNX_CMS_PUBLIC_TOURNAMENTS_FOR_SEARCH",
+      "PNX_CMS_TOURNAMENTS",
+      "PNX_CMS_TOURNAMENTS_UPDATED_AT",
+      "PNX_STEP85_HARD_SEARCH_SNAPSHOT"
+    ].indexOf(event.key) === -1) return;
+    forwardAll({ source:"storage", key:event.key });
+  });
+
+  window.addEventListener("message", function(event){
+    var data = event && event.data || {};
+    var type = data.type || data.event || "";
+    if (TYPES.indexOf(type) !== -1) forward(type, data.payload || data);
+  });
 })();
 </script>
 

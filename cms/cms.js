@@ -374,7 +374,7 @@ window.Sidebar = Sidebar;
    topbar.jsx
    ============================================================ */
 
-function Topbar({ crumbs = ["コンテンツ管理"], saveState = "saved", onPreviewRefresh }) {
+function Topbar({ crumbs = ["コンテンツ管理"], saveState = "saved", onPreviewRefresh, previewCollapsed, onTogglePreview }) {
   return (
     <header className="top">
       <div className="top__crumbs">
@@ -395,6 +395,10 @@ function Topbar({ crumbs = ["コンテンツ管理"], saveState = "saved", onPre
 
       <button className="top__btn" onClick={onPreviewRefresh}>
         <I.Refresh size={14}/> プレビュー更新
+      </button>
+
+      <button className={`top__btn pnx-step231-preview-toggle ${previewCollapsed ? "is-collapsed" : ""}`} onClick={onTogglePreview}>
+        <I.Eye size={14}/> {previewCollapsed ? "開く" : "閉じる"}
       </button>
 
       <button className="top__bell" aria-label="通知">
@@ -439,7 +443,7 @@ function Segmented({ options, value, onChange }) {
   );
 }
 
-function PickupBannerEditor({ banner, onChange, onSave }) {
+function PickupBannerEditor({ banner, onChange, onSave, onPickImage }) {
   const b = banner;
   const set = (k, v) => onChange({ ...b, [k]: v });
 
@@ -489,6 +493,18 @@ function PickupBannerEditor({ banner, onChange, onSave }) {
               <label className="field__label">リンク先</label>
               <input className="input mono" value={b.link}
                      onChange={e => set("link", e.target.value)}/>
+            </div>
+            <div className="field">
+              <label className="field__label">画像URL</label>
+              <div className="pnx-step239-image-field">
+                <input className="input mono" value={b.imageUrl || ""}
+                       placeholder="https://example.com/banner.jpg"
+                       onChange={e => set("imageUrl", e.target.value)}/>
+                <button className="btn btn--ghost btn--sm" type="button"
+                        onClick={() => onPickImage && onPickImage("PICK UP画像を選択", "banners", url => set("imageUrl", url))}>
+                  画像を選ぶ
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -626,7 +642,7 @@ window.CategoryCards = CategoryCards;
    articles.jsx
    ============================================================ */
 
-function ArticlesTable({ rows, onChange }) {
+function ArticlesTable({ rows, onChange, onPickImage }) {
   const set = (i, patch) => {
     const next = rows.slice();
     next[i] = { ...next[i], ...patch };
@@ -717,6 +733,10 @@ function ArticlesTable({ rows, onChange }) {
                 </td>
                 <td>
                   <div className="tbl__actions">
+                    <button className="btn btn--ghost btn--xs"
+                            onClick={() => onPickImage && onPickImage("記事サムネイルを選択", "articles", url => set(i, { imageUrl:url }))}>
+                      画像
+                    </button>
                     <button className="btn btn--ghost btn--xs"><I.Pencil size={11}/> 編集</button>
                     <button className="btn btn--danger-ghost btn--xs"><I.Trash size={11}/> 削除</button>
                   </div>
@@ -858,11 +878,11 @@ function PhoneHome({ banner, cats, articles = [] }) {
 }
 
 function PhoneMatch({ tournaments = [] }) {
-  const list = (tournaments || []).slice(0, 5);
+  const list = (tournaments || []).slice(0, 8);
   const main = list[0];
 
   return (
-    <div className="ph">
+    <div className="ph ph-match-live">
       <div className="ph__h">
         <h2>試合検索</h2>
         <div className="ph__h-icons"><I.Filter size={16}/></div>
@@ -875,38 +895,46 @@ function PhoneMatch({ tournaments = [] }) {
         <span className="ph-tab">海外</span>
       </div>
 
-      <div className="ph-tour">
-        <Photo tone="tour" imageUrl={main && (main.venueImageUrl || main.imageUrl)}/>
-        <div className="ph-tour__overlay">
-          <div className="ph-tour__title">{main ? main.title || main.name : "公開大会プレビュー"}</div>
-          <div className="ph-tour__sub">{main ? `${main.venue || main.course || "会場未定"} · ${main.startDate || main.start || ""}` : "CMSで公開した大会がここに表示されます"}</div>
-          <div className="ph-tour__bottom">{main ? (main.category || "大会") : "公開対象の大会"}</div>
-          <div className="ph-tour__cta">詳細を見る <I.ChevronR size={9}/></div>
+      {!list.length && (
+        <div className="ph-match-empty">
+          <strong>公開大会はまだありません</strong>
+          <p>大会を「募集中」にして保存すると、ここに表示されます。</p>
         </div>
-      </div>
+      )}
 
-      <div style={{ marginTop: 10 }}>
-        {list.length === 0 && (
-          <div className="ph-art">
-            <div className="ph-art__th"><Photo tone="slate"/></div>
-            <div className="ph-art__body">
-              <span className="ph-art__tag">CMS</span>
-              <div className="ph-art__title">公開大会はまだありません</div>
-              <div className="ph-art__meta">下書きを募集中に変更すると表示されます</div>
-            </div>
+      {main && (
+        <div className="ph-tour ph-tour-live">
+          <Photo tone="tour" imageUrl={pnxStep250ResolveMediaUrl(main.venueImageUrl || main.imageUrl || main.coverImageUrl)}/>
+          {(main.logoUrl || main.tournamentLogoUrl) && (
+            <span className="ph-tour__logo has-logo"><img src={pnxStep250ResolveMediaUrl(main.logoUrl || main.tournamentLogoUrl)} alt={`${main.title || main.name || "大会"} ロゴ`} loading="lazy"/></span>
+          )}
+          <div className="ph-tour__overlay">
+            <div className="ph-tour__title">{main.title || main.name}</div>
+            <div className="ph-tour__sub">{main.venue || main.course || "会場未定"} · {main.startDate || main.start || "日付未定"}</div>
+            <div className="ph-tour__bottom">{main.category || main.cat || "大会"} / {pnxStep270CmsLocationLabel(main)}</div>
+            <div className="ph-tour__cta">{main.entryUrl ? "エントリーへ" : "詳細を見る"} <I.ChevronR size={9}/></div>
           </div>
-        )}
+        </div>
+      )}
 
-        {list.slice(0, 3).map((t, i) => (
-          <div className="ph-art" key={t.id || t.tournamentId || i}>
-            <div className="ph-art__th"><Photo tone={i === 0 ? "amber" : i === 1 ? "deep" : "sky"} imageUrl={t.venueImageUrl || t.imageUrl}/></div>
-            <div className="ph-art__body">
-              <span className="ph-art__tag">{t.startDate || t.start || "日付未定"}</span>
-              <div className="ph-art__title">{t.title || t.name}</div>
-              <div className="ph-art__meta">{t.venue || t.course || "会場未定"} · {t.status === "open" ? "募集中" : t.status || "公開"}</div>
+      <div className="ph-match-list">
+        {list.slice(0, 6).map((t, i) => {
+          const image = pnxStep250ResolveMediaUrl(t.venueImageUrl || t.imageUrl || t.coverImageUrl);
+          const logo = pnxStep250ResolveMediaUrl(t.logoUrl || t.tournamentLogoUrl);
+          return (
+            <div className="ph-match-card" key={t.id || t.tournamentId || i}>
+              <div className="ph-match-card__thumb">
+                <Photo tone={i === 0 ? "amber" : i === 1 ? "deep" : "sky"} imageUrl={image}/>
+                {logo && <span className="ph-art__logo has-logo"><img src={logo} alt={`${t.title || t.name || "大会"} ロゴ`} loading="lazy"/></span>}
+              </div>
+              <div className="ph-match-card__body">
+                <span>{t.startDate || t.start || "日付未定"}</span>
+                <strong>{t.title || t.name}</strong>
+                <small>{pnxStep270CmsVenueWithPref(t)} · {t.status === "open" ? "募集中" : t.status || "公開"}</small>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -1032,7 +1060,128 @@ function PhoneMyPage() {
   );
 }
 
-function PhonePreviewRail({ banner, cats, articles = [], tournaments = [], syncMeta, device, onDeviceChange }) {
+
+/* ============================================================
+   STEP223: CMS right live preview helpers
+   編集中のPICK UP/ウェア/PR/表示設定を右側iframeプレビューへ即時反映する
+   ============================================================ */
+function pnxStep223WriteFeaturedPreviewDraft({ banner, featuredVisibility, prCards, wearCards, articles }) {
+  try {
+    if (banner) {
+      localStorage.setItem("PNX_CMS_PREVIEW_PICKUP_BANNER", JSON.stringify({
+        label: "PICK UP",
+        title: banner.title || "",
+        subtitle: banner.subtitle || "",
+        cta: banner.cta || "",
+        link: banner.link || "",
+        imageUrl: banner.imageUrl || banner.image || "",
+        published: banner.published !== false,
+        order: Number(banner.order || 1),
+      }));
+    }
+    if (featuredVisibility) {
+      localStorage.setItem("PNX_CMS_PREVIEW_FEATURED_VISIBILITY", JSON.stringify(featuredVisibility));
+    }
+    if (prCards) {
+      localStorage.setItem("PNX_CMS_PREVIEW_PR_CARDS", JSON.stringify(prCards));
+    }
+    if (wearCards) {
+      localStorage.setItem("PNX_CMS_PREVIEW_WEAR_CARDS", JSON.stringify(wearCards));
+    }
+    if (articles) {
+      localStorage.setItem("PNX_CMS_PREVIEW_ARTICLES", JSON.stringify(articles));
+    }
+    window.dispatchEvent(new CustomEvent("pnx:cms-preview-draft-updated"));
+  } catch(e) {}
+}
+
+function FeaturedRealPreviewFrame({ refreshKey, onRefresh, focus }) {
+  const focusParam = focus ? `&focus=${encodeURIComponent(focus)}` : '';
+  const src = `../pages/featured/embed.html?cmsPreview=1&previewKey=${refreshKey || 0}${focusParam}`;
+  return (
+    <div className="pnx-step223-real-preview">
+      <div className="pnx-step223-real-preview__top">
+        <span>公開前プレビュー</span>
+        <button className="preview-block__refresh" onClick={onRefresh}>
+          <I.Refresh size={10}/> 更新
+        </button>
+      </div>
+      <div className="pnx-step223-phone-shell">
+        <div className="pnx-step223-phone-status">
+          <span>9:41</span>
+          <span>ProNexaX</span>
+        </div>
+        <iframe
+          className="pnx-step223-featured-iframe"
+          title="注目ページ公開前プレビュー"
+          src={src}
+        />
+      </div>
+      <p className="pnx-step223-preview-note">
+        CMSで編集中の内容を反映したプレビューです。編集したい場所をクリックすると、その編集画面へ移動できます。
+      </p>
+    </div>
+  );
+}
+
+
+
+/* ============================================================
+   STEP252: 右側プレビューを実際の試合検索iframeに変更
+   静止モックではなく pages/search/embed.html を読み込み、検索・カードタップ・Bottom Sheet を確認できるようにする
+   ============================================================ */
+function MatchRealPreviewFrame({ refreshKey, onRefresh }) {
+  const src = "../pages/search/embed.html?cmsPreview=1&stable=1";
+  const frameRef = React.useRef(null);
+
+  const sendRefresh = () => {
+    try {
+      const win = frameRef.current && frameRef.current.contentWindow;
+      if (win) {
+        win.postMessage({ type:"PNX_SEARCH_FORCE_RENDER_CMS_TOURNAMENTS", payload:{ source:"cms-preview-manual-refresh" } }, "*");
+      }
+    } catch(e) {}
+  };
+
+  return (
+    <div className="pnx-step252-real-search-preview">
+      <div className="pnx-step223-real-preview__top">
+        <span>実画面プレビュー</span>
+        <button className="preview-block__refresh" onClick={() => { onRefresh && onRefresh(); setTimeout(sendRefresh, 80); }}>
+          <I.Refresh size={10}/> 更新
+        </button>
+      </div>
+      <div className="pnx-step252-phone-shell">
+        <iframe
+          ref={frameRef}
+          className="pnx-step252-search-iframe"
+          title="試合検索 実画面プレビュー"
+          src={src}
+        />
+      </div>
+      <p className="pnx-step223-preview-note">
+        実際の試合検索画面です。自動再読み込みを止めているので、スクロール・カードタップ・詳細Bottom Sheetを確認できます。
+      </p>
+    </div>
+  );
+}
+
+function PhonePreviewRail({ banner, cats, articles = [], tournaments = [], syncMeta, device, onDeviceChange, previewRefreshKey, onPreviewRefresh, activeNav }) {
+  const nav = activeNav || "home";
+  const isFeaturedNav = ["home", "banner", "news", "ads"].includes(nav);
+  const isMatchNav = ["match", "tournament", "details"].includes(nav);
+  const isCalendarNav = nav === "calendar";
+  const isMyPageNav = nav === "mypage";
+  const showAll = !isFeaturedNav && !isMatchNav && !isCalendarNav && !isMyPageNav;
+  const featuredFocus = nav === "ads" ? "sponsor" : (nav === "news" ? "articles" : "");
+
+  const previewTitle =
+    isFeaturedNav ? (nav === "ads" ? "注目ページ / PR枠" : nav === "news" ? "ニュース・記事プレビュー" : "注目ページ") :
+    isMatchNav ? "試合検索ページ" :
+    isCalendarNav ? "カレンダーページ" :
+    isMyPageNav ? "マイページ" :
+    "アプリ全体";
+
   return (
     <aside className="rail">
       <div className="rail__head">
@@ -1041,7 +1190,7 @@ function PhonePreviewRail({ banner, cats, articles = [], tournaments = [], syncM
         <span className="pill"><span className="dot"/>ライブ</span>
       </div>
       <div className="pnx-step69-rail-meta">
-        {syncMeta ? `公開大会 ${syncMeta.count || 0}件 · ${String(syncMeta.createdAt || "").slice(5,16)}` : "CMS実データ待機中"}
+        {previewTitle} · {syncMeta ? `公開大会 ${syncMeta.count || 0}件` : "CMS実データ待機中"}
       </div>
 
       <div className="rail__inner">
@@ -1050,45 +1199,49 @@ function PhonePreviewRail({ banner, cats, articles = [], tournaments = [], syncM
           <button className={device === "android" ? "is-active" : ""} onClick={() => onDeviceChange("android")}>Android</button>
         </div>
 
-        <div className="preview-block">
-          <div className="preview-block__head">
-            <h4>注目ページ</h4>
-            <button className="preview-block__refresh"><I.Refresh size={10}/> 更新</button>
+        {(isFeaturedNav || showAll) && (
+          <div className="preview-block">
+            <div className="preview-block__head">
+              <h4>{previewTitle}</h4>
+              <span className="pnx-step223-preview-badge">実画面</span>
+            </div>
+            <FeaturedRealPreviewFrame refreshKey={previewRefreshKey} onRefresh={onPreviewRefresh} focus={featuredFocus}/>
           </div>
-          <IphoneFrame>
-            <PhoneHome banner={banner} cats={cats} articles={articles}/>
-          </IphoneFrame>
-        </div>
+        )}
 
-        <div className="preview-block">
-          <div className="preview-block__head">
-            <h4>試合検索ページ</h4>
-            <button className="preview-block__refresh"><I.Refresh size={10}/> 更新</button>
+        {(isMatchNav || showAll) && (
+          <div className="preview-block">
+            <div className="preview-block__head">
+              <h4>試合検索ページ</h4>
+              <span className="pnx-step223-preview-badge">実画面</span>
+            </div>
+            <MatchRealPreviewFrame refreshKey={previewRefreshKey} onRefresh={onPreviewRefresh}/>
           </div>
-          <IphoneFrame>
-            <PhoneMatch tournaments={tournaments}/>
-          </IphoneFrame>
-        </div>
+        )}
 
-        <div className="preview-block">
-          <div className="preview-block__head">
-            <h4>カレンダーページ</h4>
-            <button className="preview-block__refresh"><I.Refresh size={10}/> 更新</button>
+        {(isCalendarNav || showAll) && (
+          <div className="preview-block">
+            <div className="preview-block__head">
+              <h4>カレンダーページ</h4>
+              <button className="preview-block__refresh" onClick={onPreviewRefresh}><I.Refresh size={10}/> 更新</button>
+            </div>
+            <IphoneFrame>
+              <PhoneCalendar tournaments={tournaments}/>
+            </IphoneFrame>
           </div>
-          <IphoneFrame>
-            <PhoneCalendar tournaments={tournaments}/>
-          </IphoneFrame>
-        </div>
+        )}
 
-        <div className="preview-block">
-          <div className="preview-block__head">
-            <h4>マイページ</h4>
-            <button className="preview-block__refresh"><I.Refresh size={10}/> 更新</button>
+        {(isMyPageNav || showAll) && (
+          <div className="preview-block">
+            <div className="preview-block__head">
+              <h4>マイページ</h4>
+              <button className="preview-block__refresh" onClick={onPreviewRefresh}><I.Refresh size={10}/> 更新</button>
+            </div>
+            <IphoneFrame>
+              <PhoneMyPage/>
+            </IphoneFrame>
           </div>
-          <IphoneFrame>
-            <PhoneMyPage/>
-          </IphoneFrame>
-        </div>
+        )}
       </div>
     </aside>
   );
@@ -1105,7 +1258,7 @@ const { useState, useEffect } = React;
 
 /* ============================================================
    STEP62: featured / pickup bridge helpers
-   最終CMSデザインのPICK UP・カテゴリ・記事をBridge保存へ接続
+   最終CMSデザインのPICK UP・カテゴリ・記事を下書き保存へ接続
    ============================================================ */
 function PNXStep62BridgeStatus({ message }) {
   return (
@@ -1120,7 +1273,7 @@ function PNXStep62SaveButtons({ onSaveFeatured, onPublish }) {
   return (
     <div className="pnx-step62-actions">
       <button className="btn btn--ghost btn--sm" onClick={onSaveFeatured}>
-        <I.Save size={13}/> Bridge保存
+        <I.Save size={13}/> 下書き保存
       </button>
       <button className="btn btn--primary btn--sm" onClick={onPublish}>
         <I.Refresh size={13}/> 本体へ反映準備
@@ -1141,6 +1294,10 @@ function pnxStep62ArticleToFeatured(row, index) {
     published: row.published !== false,
     isNew: !!row.isNew,
     startDate: row.date || "",
+    link: row.link || row.url || "",
+    url: row.link || row.url || "",
+    imageUrl: row.imageUrl || row.image || row.thumbnailUrl || "",
+    thumbnailUrl: row.imageUrl || row.image || row.thumbnailUrl || "",
     imageTone: row.tone || "",
     source: "cms-final-article"
   };
@@ -1154,6 +1311,7 @@ function pnxStep62BannerToFeatured(banner) {
     subtitle: banner.subtitle,
     cta: banner.cta,
     link: banner.link,
+    imageUrl: banner.imageUrl || banner.image || "",
     startDate: banner.startDate,
     endDate: banner.endDate,
     order: Number(banner.order || 1),
@@ -1165,8 +1323,8 @@ function pnxStep62BannerToFeatured(banner) {
 
 
 /* ============================================================
-   STEP63: Claude Console Bulk Tournament Registration
-   整理済みテキスト → Claude Console → JSON貼り戻し → 仮登録 → 一括保存
+   STEP63: AI Console Bulk Tournament Registration
+   整理済みテキスト → AI Console → JSON貼り戻し → 仮登録 → 一括保存
    ============================================================ */
 
 /* ============================================================
@@ -1255,15 +1413,67 @@ function pnxStep128CmsActionToast(message, type = "ok") {
       document.body.appendChild(box);
     }
 
+    const label = type === "ng" ? "エラー" : type === "pending" ? "処理中" : "完了";
     box.className = `pnx-step128-action-toast is-${type}`;
-    box.textContent = message;
+    box.innerHTML = `<span>${label}</span><strong>${String(message || "").replace(/[<>&]/g, s => ({ "<":"&lt;", ">":"&gt;", "&":"&amp;" }[s]))}</strong>`;
     box.dataset.visible = "1";
 
     clearTimeout(window.__PNX_STEP128_TOAST_TIMER__);
     window.__PNX_STEP128_TOAST_TIMER__ = setTimeout(() => {
       box.dataset.visible = "0";
-    }, 2200);
+    }, 3200);
   } catch(e) {}
+}
+
+function pnxStep267ActionMessageFromButton(button) {
+  const text = String(button && button.textContent || "").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+
+  if (/保存/.test(text)) return "保存しました";
+  if (/本体.*反映|反映/.test(text)) return "本体へ反映しました";
+  if (/再読み込み|更新|同期チェック/.test(text)) return "更新しました";
+  if (/チェック実行|チェック済み/.test(text)) return "チェックを実行しました";
+  if (/新規大会/.test(text)) return "新規大会を作成しました";
+  if (/画像を選ぶ|ファイルを選ぶ|ロゴを選ぶ|会場画像を選ぶ/.test(text)) return "画像選択を開きました";
+  if (/募集中にする/.test(text)) return "選択した大会を募集中に変更しました";
+  if (/下書き/.test(text)) return "下書きに変更しました";
+  if (/締切/.test(text)) return "締切に変更しました";
+  if (/終了/.test(text)) return "終了に変更しました";
+  if (/このカテゴリを選択/.test(text)) return "カテゴリ内の大会を選択しました";
+  if (/このカテゴリを解除/.test(text)) return "カテゴリ内の選択を解除しました";
+  if (/選択解除|解除/.test(text)) return "選択を解除しました";
+  if (/選択中/.test(text)) return "選択を解除しました";
+  if (/選択/.test(text)) return "選択しました";
+  if (/閉じる/.test(text)) return "閉じました";
+  if (/削除/.test(text)) return "削除を実行しました";
+  return "";
+}
+
+function pnxStep267InstallButtonFeedback() {
+  if (window.__PNX_STEP267_BUTTON_FEEDBACK__) return;
+  window.__PNX_STEP267_BUTTON_FEEDBACK__ = true;
+
+  document.addEventListener("click", (event) => {
+    const button = event.target && event.target.closest
+      ? event.target.closest("button, label.btn")
+      : null;
+    if (!button) return;
+    if (button.disabled || button.dataset.pnxNoFeedback === "1") return;
+
+    const message = button.dataset.feedback || pnxStep267ActionMessageFromButton(button);
+    if (!message) return;
+
+    clearTimeout(window.__PNX_STEP267_BUTTON_FEEDBACK_TIMER__);
+    window.__PNX_STEP267_BUTTON_FEEDBACK_TIMER__ = setTimeout(() => {
+      pnxStep128CmsActionToast(message, /エラー|失敗/.test(message) ? "ng" : "ok");
+    }, 80);
+  }, true);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", pnxStep267InstallButtonFeedback);
+} else {
+  pnxStep267InstallButtonFeedback();
 }
 
 /* ============================================================
@@ -1308,6 +1518,7 @@ function pnxStep129NormalizeForSearch(t) {
   const endDate = pnxStep129Text(t.endDate || t.end || startDate) || startDate;
   const venue = pnxStep129Text(t.venue || t.course || t.place || t.location);
   const category = pnxStep129Text(t.category || t.cat) || "その他";
+  const displayPref = pnxStep270CmsPrefLabel(t.prefecture || t.pref) || pnxStep270CmsExtractPref([venue, title].join(" ")) || pnxStep271CmsPrefFromVenueName([venue, title].join(" "));
 
   return {
     ...t,
@@ -1324,7 +1535,9 @@ function pnxStep129NormalizeForSearch(t) {
     place: venue,
     category,
     cat: category,
-    prefecture: pnxStep129Text(t.prefecture || t.pref),
+    prefecture: pnxStep129Text(t.prefecture || t.pref || displayPref),
+    prefectureLabel: displayPref,
+    displayLocation: displayPref || pnxStep270CmsAreaLabel(t.area || t.region),
     entryDeadline: pnxStep129Text(t.entryDeadline || t.deadline),
     entryFee: pnxStep129Text(t.entryFee || t.fee),
     prize: pnxStep128NormalizePrizeText(t.prize || t.totalPrize || ""),
@@ -1332,6 +1545,14 @@ function pnxStep129NormalizeForSearch(t) {
     eligibility: pnxStep129Text(t.eligibility || t.qualification),
     qualification: pnxStep129Text(t.qualification || t.eligibility),
     organizer: pnxStep129Text(t.organizer),
+    logoUrl: pnxStep129Text(t.logoUrl || t.tournamentLogoUrl),
+    tournamentLogoUrl: pnxStep129Text(t.tournamentLogoUrl || t.logoUrl),
+    venueImageUrl: pnxStep129Text(t.venueImageUrl || t.imageUrl || t.coverImageUrl),
+    imageUrl: pnxStep129Text(t.imageUrl || t.venueImageUrl || t.coverImageUrl),
+    coverImageUrl: pnxStep129Text(t.coverImageUrl || t.venueImageUrl || t.imageUrl),
+    imageAssetId: pnxStep129Text(t.imageAssetId),
+    logoAssetId: pnxStep129Text(t.logoAssetId),
+    imageAlt: pnxStep129Text(t.imageAlt || t.venue || t.title || t.name),
     status: pnxStep129Text(t.status || "open"),
     published: true,
     source: "cms",
@@ -1395,11 +1616,27 @@ function pnxStep129SafePublishToApp(event, options = {}) {
   pnxStep129WriteJson("PNX_STEP85_HARD_SEARCH_SNAPSHOT", { meta, tournaments: publicItems });
   try { localStorage.setItem("PNX_CMS_TOURNAMENTS_UPDATED_AT", meta.createdAt); } catch(e) {}
 
-  // local event only. Do not postMessage to parent, because parent may switch away from CMS.
+  // STEP252: 同一画面・別タブ・本体iframeへ反映通知を送る。
   try {
-    window.dispatchEvent(new CustomEvent("PNX_STEP129_SAFE_PUBLISH_TO_APP", {
-      detail: payload
-    }));
+    window.dispatchEvent(new CustomEvent("PNX_STEP129_SAFE_PUBLISH_TO_APP", { detail: payload }));
+    window.dispatchEvent(new CustomEvent("PNX_CMS_SEARCH_SNAPSHOT_UPDATED", { detail: payload }));
+    window.dispatchEvent(new CustomEvent("PNX_SEARCH_FORCE_RENDER_CMS_TOURNAMENTS", { detail: payload }));
+  } catch(e) {}
+
+  try {
+    ["PNX_CMS_SEARCH_SNAPSHOT_UPDATED", "PNX_CMS_FINAL_SEARCH_SYNC_PUBLISHED", "PNX_SEARCH_FORCE_RENDER_CMS_TOURNAMENTS"].forEach(type => {
+      window.postMessage({ type, payload }, "*");
+      if (window.opener && !window.opener.closed) window.opener.postMessage({ type, payload }, "*");
+      if (window.parent && window.parent !== window) window.parent.postMessage({ type, payload }, "*");
+    });
+  } catch(e) {}
+
+  try {
+    if (window.BroadcastChannel) {
+      const channel = new BroadcastChannel("pronexax-cms-search-sync");
+      channel.postMessage({ type:"PNX_CMS_SEARCH_SNAPSHOT_UPDATED", payload });
+      setTimeout(() => channel.close(), 250);
+    }
   } catch(e) {}
 
   const message = options.message || `反映しました：公開対象 ${publicItems.length}件`;
@@ -1520,6 +1757,41 @@ function pnxStep80ExtractUrl(block, keyword) {
   }
 
   return urls[0] || "";
+}
+
+/* ============================================================
+   STEP272: ChatGPT整理テキストから画像URL / pnx-media を読み取る
+   ============================================================ */
+function pnxStep272CleanUrlValue(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^[\"'「『【\[]+/, "")
+    .replace(/[\"'」』】\]]+$/, "")
+    .replace(/[、。,.]+$/, "")
+    .trim();
+}
+
+function pnxStep272ExtractUrlOrMediaRef(block, labels) {
+  const value = pnxStep80GetLabeledValue(block, labels);
+  const searchText = value || String(block || "");
+  const media = String(searchText).match(/pnx-media:[a-zA-Z0-9_-]+/);
+  if (media) return pnxStep272CleanUrlValue(media[0]);
+
+  const url = String(searchText).match(/https?:\/\/[^\s　)）】]+/);
+  if (url) return pnxStep272CleanUrlValue(url[0]);
+
+  return "";
+}
+
+function pnxStep272NormalizeStatus(raw, fallback = "draft") {
+  const s = String(raw || "").trim().toLowerCase();
+  if (!s) return fallback;
+  if (/open|募集中|公開可|公開対象/.test(s)) return "open";
+  if (/draft|下書き|非公開/.test(s)) return "draft";
+  if (/closed|締切|締切済/.test(s)) return "closed";
+  if (/ongoing|開催中|live/.test(s)) return "ongoing";
+  if (/finished|終了/.test(s)) return "finished";
+  return fallback;
 }
 
 function pnxStep80InferCategory(text) {
@@ -1651,7 +1923,13 @@ function pnxStep80ParseOrganizedTournamentText(text) {
       officialUrl: pnxStep80ExtractUrl(block, "公式"),
       instagramUrl: pnxStep80ExtractUrl(block, "instagram"),
       entryUrl: pnxStep80ExtractUrl(block, "エントリー") || pnxStep80ExtractUrl(block, "申込"),
-      status: "draft",
+      logoUrl: pnxStep272ExtractUrlOrMediaRef(block, ["大会ロゴURL", "大会ロゴ", "ロゴURL", "ロゴ画像URL", "logoUrl", "tournamentLogoUrl", "seriesLogoUrl"]),
+      tournamentLogoUrl: pnxStep272ExtractUrlOrMediaRef(block, ["大会ロゴURL", "大会ロゴ", "ロゴURL", "ロゴ画像URL", "logoUrl", "tournamentLogoUrl", "seriesLogoUrl"]),
+      venueImageUrl: pnxStep272ExtractUrlOrMediaRef(block, ["会場画像URL", "会場画像", "コース画像URL", "ゴルフ場画像URL", "メイン画像URL", "venueImageUrl", "imageUrl", "coverImageUrl", "venueImageCandidateUrl"]),
+      imageUrl: pnxStep272ExtractUrlOrMediaRef(block, ["会場画像URL", "会場画像", "コース画像URL", "ゴルフ場画像URL", "メイン画像URL", "venueImageUrl", "imageUrl", "coverImageUrl", "venueImageCandidateUrl"]),
+      coverImageUrl: pnxStep272ExtractUrlOrMediaRef(block, ["会場画像URL", "会場画像", "コース画像URL", "ゴルフ場画像URL", "メイン画像URL", "venueImageUrl", "imageUrl", "coverImageUrl", "venueImageCandidateUrl"]),
+      status: pnxStep272NormalizeStatus(pnxStep80GetLabeledValue(block, ["ステータス", "公開可否", "公開状態", "status"]), "draft"),
+      published: pnxStep272NormalizeStatus(pnxStep80GetLabeledValue(block, ["ステータス", "公開可否", "公開状態", "status"]), "draft") !== "draft",
       confidence: Math.max(0.35, Math.min(0.98, 1 - warnings.length * 0.14)),
       warnings,
       sourceText: block,
@@ -1765,13 +2043,38 @@ function pnxStep81GetValue(block, labels) {
 
 function pnxStep81ExtractUrls(block) {
   const urls = String(block || "").match(/https?:\/\/[^\s　)）】]+/g) || [];
-  const result = { officialUrl: "", instagramUrl: "", entryUrl: "", urls };
+  const result = {
+    officialUrl: "",
+    instagramUrl: "",
+    entryUrl: "",
+    logoUrl: pnxStep272ExtractUrlOrMediaRef(block, [
+      "大会ロゴURL", "大会ロゴ", "ロゴURL", "ロゴ画像URL", "シリーズロゴURL",
+      "logoUrl", "tournamentLogoUrl", "seriesLogoUrl"
+    ]),
+    venueImageUrl: pnxStep272ExtractUrlOrMediaRef(block, [
+      "会場画像URL", "会場画像", "コース画像URL", "ゴルフ場画像URL", "メイン画像URL",
+      "venueImageUrl", "imageUrl", "coverImageUrl", "venueImageCandidateUrl"
+    ]),
+    urls
+  };
 
   const lines = String(block || "").split(/\n/);
   for (const line of lines) {
     const url = (line.match(/https?:\/\/[^\s　)）】]+/) || [])[0];
-    if (!url) continue;
+    const media = (line.match(/pnx-media:[a-zA-Z0-9_-]+/) || [])[0];
     const lower = line.toLowerCase();
+
+    if (media && /ロゴ|logo|tournamentlogo|serieslogo/.test(lower)) {
+      result.logoUrl = result.logoUrl || media;
+      continue;
+    }
+
+    if (url && /会場画像|コース画像|ゴルフ場画像|メイン画像|venueimage|coverimage|imageurl|画像url/.test(lower)) {
+      result.venueImageUrl = result.venueImageUrl || url;
+      continue;
+    }
+
+    if (!url) continue;
 
     if (/instagram|インスタ|ig/.test(lower)) result.instagramUrl = result.instagramUrl || url;
     else if (/entry|エントリー|申込|申し込み|応募|googleフォーム|form/.test(lower)) result.entryUrl = result.entryUrl || url;
@@ -1784,8 +2087,23 @@ function pnxStep81ExtractUrls(block) {
     if (!result.entryUrl && /(forms\.gle|docs\.google\.com\/forms|form|entry)/.test(lower)) result.entryUrl = url;
   }
 
-  if (!result.officialUrl) result.officialUrl = urls.find(u => u !== result.entryUrl && u !== result.instagramUrl) || "";
-  if (!result.entryUrl) result.entryUrl = urls.find(u => u !== result.officialUrl && u !== result.instagramUrl) || "";
+  if (!result.officialUrl) {
+    result.officialUrl = urls.find(u =>
+      u !== result.entryUrl &&
+      u !== result.instagramUrl &&
+      u !== result.venueImageUrl &&
+      !/\.(jpg|jpeg|png|webp|gif|svg)(?:\?|$)/i.test(u)
+    ) || "";
+  }
+
+  if (!result.entryUrl) {
+    result.entryUrl = urls.find(u =>
+      u !== result.officialUrl &&
+      u !== result.instagramUrl &&
+      u !== result.venueImageUrl &&
+      !/\.(jpg|jpeg|png|webp|gif|svg)(?:\?|$)/i.test(u)
+    ) || "";
+  }
 
   return result;
 }
@@ -1918,6 +2236,7 @@ function pnxStep81ParseOrganizedTournamentText(text) {
     const genderRaw = pnxStep81GetValue(block, ["男女", "性別", "対象", "男子女子"]);
     const deadlineText = pnxStep81GetValue(block, ["エントリー締切", "申込締切", "募集締切", "締切", "〆切", "締め切り"]);
     const urls = pnxStep81ExtractUrls(block);
+    const statusText = pnxStep81GetValue(block, ["ステータス", "公開可否", "公開状態", "status"]);
 
     const warnings = [];
     if (!title || title === "大会名未設定") warnings.push("大会名が読み取れませんでした");
@@ -1954,7 +2273,13 @@ function pnxStep81ParseOrganizedTournamentText(text) {
       officialUrl: urls.officialUrl,
       instagramUrl: urls.instagramUrl,
       entryUrl: urls.entryUrl,
-      status: "draft",
+      logoUrl: urls.logoUrl,
+      tournamentLogoUrl: urls.logoUrl,
+      venueImageUrl: urls.venueImageUrl,
+      imageUrl: urls.venueImageUrl,
+      coverImageUrl: urls.venueImageUrl,
+      status: pnxStep272NormalizeStatus(statusText, "draft"),
+      published: pnxStep272NormalizeStatus(statusText, "draft") !== "draft",
       confidence,
       warnings: Array.from(new Set(warnings)),
       sourceText: block,
@@ -2050,7 +2375,161 @@ function pnxStep83History() {
   return window.PNXCmsFinalDesignBridge.getBulkImportHistory();
 }
 
-function ClaudeBulkTournamentPanel() {
+
+/* ============================================================
+   STEP241: 試合検索CMS 第一ステップ 導線整理
+   ChatGPT整理テキストを貼って登録する流れを、CMSの最初に明確化する
+   ============================================================ */
+function MatchCmsFlowGuide() {
+  const [open, setOpen] = useState(false);
+  const steps = [
+    {
+      no: "1",
+      title: "ChatGPTで整理",
+      desc: "大会URL・PDF・Instagram・募集要項をChatGPTに送り、ProNexaX登録用フォーマットにまとめます。"
+    },
+    {
+      no: "2",
+      title: "CMSに貼り付け",
+      desc: "整理済みテキストを「ChatGPT整理テキストから登録」に貼り付けます。"
+    },
+    {
+      no: "3",
+      title: "読み取り・仮登録",
+      desc: "CMSが大会名、日付、会場、締切、賞金、URLなどを読み取って仮登録します。"
+    },
+    {
+      no: "4",
+      title: "確認・編集",
+      desc: "不足や要確認の項目を編集し、試合検索カードとして見える内容に整えます。"
+    },
+    {
+      no: "5",
+      title: "下書き保存",
+      desc: "まだ本体に出さない大会は下書きとして保存します。"
+    },
+    {
+      no: "6",
+      title: "公開する",
+      desc: "公開してよい大会だけ、募集中などのステータスで本体へ反映します。"
+    }
+  ];
+
+  return (
+    <section className={`card pnx-step241-match-guide pnx-step268-flow-guide ${open ? "is-open" : "is-collapsed"}`}>
+      <header className="card__head">
+        <div>
+          <h2 className="card__title">試合登録の基本フロー</h2>
+          <p className="pnx-step241-match-guide__sub">
+            普段は大会一覧と編集フォームを中心に使います。流れを確認したい時だけ開いてください。
+          </p>
+        </div>
+        <button
+          className="btn btn--ghost btn--sm pnx-step268-flow-toggle"
+          onClick={() => setOpen(v => !v)}
+          type="button"
+        >
+          {open ? "使い方を閉じる" : "使い方を見る"}
+        </button>
+      </header>
+
+      {!open && (
+        <div className="pnx-step268-flow-summary">
+          <span>基本運用</span>
+          <strong>ChatGPTで整理 → CMSに貼り付け → 確認して公開</strong>
+        </div>
+      )}
+
+      {open && (
+        <div className="card__body">
+          <div className="pnx-step241-match-guide__route">
+            <strong>基本運用</strong>
+            <span>大会URL / PDF / Instagram / 募集要項</span>
+            <i>→</i>
+            <span>ChatGPTで整理</span>
+            <i>→</i>
+            <span>CMSに貼り付け</span>
+            <i>→</i>
+            <span>確認して公開</span>
+          </div>
+
+          <div className="pnx-step241-match-guide__grid">
+            {steps.map(step => (
+              <div className="pnx-step241-match-guide__step" key={step.no}>
+                <span>{step.no}</span>
+                <strong>{step.title}</strong>
+                <p>{step.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="pnx-step241-match-guide__note">
+            AI一括登録は便利機能ですが、CMSの中心は「大会一覧を確認し、必要な大会だけ編集・公開する」流れです。
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+
+/* ============================================================
+   STEP243: 仮登録プレビューを試合検索カード風に整理
+   保存前の大会を、本体の試合検索カードに近い形で確認する
+   ============================================================ */
+function DraftTournamentSearchPreview({ tournament, quality, statusLabel }) {
+  const t = tournament || {};
+  const title = t.title || t.name || "大会名未設定";
+  const venue = t.venue || t.course || "会場未設定";
+  const date = t.startDate || t.date || "日付未設定";
+  const category = t.category || "カテゴリ未設定";
+  const status = t.status || "draft";
+  const img = pnxStep250ResolveMediaUrl(t.venueImageUrl || t.imageUrl || t.coverImageUrl || "");
+  const logo = pnxStep250ResolveMediaUrl(t.logoUrl || t.tournamentLogoUrl || "");
+  const publishable = quality && quality.publishable;
+
+  return (
+    <div className={`pnx-step243-draft-preview ${publishable ? "is-ok" : "is-ng"}`}>
+      <div
+        className={`pnx-step243-draft-preview__visual ${img ? "has-image" : ""}`}
+        style={img ? { backgroundImage:`linear-gradient(90deg, rgba(8,42,104,.74), rgba(8,42,104,.16)), url("${String(img).replace(/"/g, '\\"')}")` } : {}}
+      >
+        {logo ? (
+          <span className="pnx-step243-draft-preview__logo" style={{ backgroundImage:`url("${String(logo).replace(/"/g, '\\"')}")` }}/>
+        ) : (
+          <span className="pnx-step243-draft-preview__logo is-text">{String(category).slice(0, 2)}</span>
+        )}
+        <div className="pnx-step243-draft-preview__main">
+          <span className="pnx-step243-draft-preview__category">{category}</span>
+          <strong>{title}</strong>
+          <small>{venue} · {date}</small>
+        </div>
+        <span className={`pnx-step243-draft-preview__judge ${publishable ? "is-ok" : "is-ng"}`}>
+          {publishable ? "公開OK" : "要修正"}
+        </span>
+      </div>
+
+      <div className="pnx-step243-draft-preview__body">
+        <div className="pnx-step243-draft-preview__chips">
+          <span>{t.prefecture || "県未設定"}</span>
+          <span>{statusLabel ? statusLabel(status) : status}</span>
+          {t.entryDeadline && <span>締切 {t.entryDeadline}</span>}
+          {t.prize && <span>賞金 {t.prize}</span>}
+        </div>
+
+        <div className="pnx-step243-draft-preview__checks">
+          <span className={t.officialUrl ? "is-ok" : ""}>公式URL</span>
+          <span className={t.entryUrl ? "is-ok" : ""}>エントリーURL</span>
+          <span className={logo ? "is-ok" : ""}>大会ロゴ</span>
+          <span className={img ? "is-ok" : ""}>会場画像</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function AIBulkTournamentPanel({ onPickImage }) {
   const sampleText = `【大会情報まとめ】
 
 1. 埼玉オープンゴルフ選手権
@@ -2077,9 +2556,9 @@ function ClaudeBulkTournamentPanel() {
 Instagram：https://instagram.com/exampletour`;
 
   const [sourceText, setSourceText] = useState("");
-  const [claudeJson, setClaudeJson] = useState("");
+  const [claudeJson, setAIJson] = useState("");
   const [drafts, setDrafts] = useState([]);
-  const [status, setStatus] = useState("ChatGPTで整理した大会情報を貼って、CMSで文章を読み取れます。");
+  const [status, setStatus] = useState("ChatGPTで整理した大会情報を貼って、仮登録プレビューを作成します。");
   const [flowStep, setFlowStep] = useState("paste");
   const [reflectionCheck, setReflectionCheck] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -2087,6 +2566,7 @@ Instagram：https://instagram.com/exampletour`;
   const [duplicateReport, setDuplicateReport] = useState({ total: 0, duplicated: 0, rows: [] });
   const [lastImport, setLastImport] = useState(null);
   const [skipDuplicates, setSkipDuplicates] = useState(true);
+  const [expandedDrafts, setExpandedDrafts] = useState({});
 
   const refreshStep83Reports = () => {
     setDuplicateReport(pnxStep83GetDuplicateReport(drafts));
@@ -2106,6 +2586,11 @@ Instagram：https://instagram.com/exampletour`;
   };
 
   const prevLabel = (nextStatus) => pnxStep82StatusLabel(nextStatus);
+
+  const isDraftExpanded = (key) => expandedDrafts[key] === true;
+  const toggleDraftExpanded = (key) => {
+    setExpandedDrafts(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
 
   useEffect(() => {
@@ -2141,6 +2626,11 @@ Instagram：https://instagram.com/exampletour`;
         officialUrl: "公式URL",
         instagramUrl: "Instagram URL",
         entryUrl: "エントリーURL",
+        logoUrl: "大会ロゴURL。pnx-media:形式も可",
+        tournamentLogoUrl: "大会ロゴURL。logoUrlと同じ値で可",
+        venueImageUrl: "会場画像URL。https画像URLまたはpnx-media形式",
+        imageUrl: "会場画像URL。venueImageUrlと同じ値で可",
+        coverImageUrl: "会場画像URL。venueImageUrlと同じ値で可",
         status: "draft / open / closed / ongoing / finished",
         confidence: 0.0,
         warnings: ["不足・曖昧な項目"]
@@ -2148,7 +2638,7 @@ Instagram：https://instagram.com/exampletour`;
     ]
   };
 
-  const makeClaudePrompt = () => {
+  const makeAIPrompt = () => {
     return `あなたはProNexaXというプロゴルファー・研修生・競技アマ向け試合検索アプリの大会データ整理AIです。
 
 以下の整理済み大会情報から、大会情報をJSON形式で抽出してください。
@@ -2177,11 +2667,11 @@ ${sourceText || sampleText}`;
   };
 
   const copyPrompt = async () => {
-    const prompt = makeClaudePrompt();
+    const prompt = makeAIPrompt();
     try {
       await navigator.clipboard.writeText(prompt);
       setCopied(true);
-      setStatus("Claude Console用プロンプトをコピーしました。Claudeに貼ってJSONを作成してください。");
+      setStatus("予備AI用プロンプトをコピーしました。必要な場合だけAIに貼ってJSONを作成してください。");
       setTimeout(() => setCopied(false), 1600);
     } catch (e) {
       setStatus("コピーできませんでした。下のプロンプトを手動でコピーしてください。");
@@ -2204,6 +2694,7 @@ ${sourceText || sampleText}`;
     }
 
     setDrafts(parsed);
+    setExpandedDrafts({});
     setFlowStep("preview");
     setReflectionCheck(null);
     setStatus(`${parsed.length}件の大会をCMSが文章から高精度読み取りし、仮登録リストに変換しました。確認して一括保存してください。`);
@@ -2214,7 +2705,7 @@ ${sourceText || sampleText}`;
     try {
       const raw = claudeJson.trim();
       if (!raw) {
-        setStatus("ClaudeのJSON結果を貼ってください。");
+        setStatus("AIのJSON結果を貼ってください。");
         return;
       }
 
@@ -2254,6 +2745,11 @@ ${sourceText || sampleText}`;
         officialUrl: t.officialUrl || "",
         instagramUrl: t.instagramUrl || "",
         entryUrl: t.entryUrl || "",
+        logoUrl: t.logoUrl || t.tournamentLogoUrl || "",
+        tournamentLogoUrl: t.tournamentLogoUrl || t.logoUrl || "",
+        venueImageUrl: t.venueImageUrl || t.imageUrl || t.coverImageUrl || "",
+        imageUrl: t.imageUrl || t.venueImageUrl || t.coverImageUrl || "",
+        coverImageUrl: t.coverImageUrl || t.venueImageUrl || t.imageUrl || "",
         status: t.status || "draft",
         confidence: typeof t.confidence === "number" ? t.confidence : 0,
         warnings: Array.isArray(t.warnings) ? t.warnings : [],
@@ -2276,6 +2772,10 @@ ${sourceText || sampleText}`;
       const next = prev.slice();
       next[index] = { ...next[index], [key]: value };
       if (key === "title") next[index].name = value;
+      if (key === "logoUrl") next[index].tournamentLogoUrl = value;
+      if (key === "tournamentLogoUrl") next[index].logoUrl = value;
+      if (key === "venueImageUrl") next[index].imageUrl = value;
+      if (key === "imageUrl") next[index].venueImageUrl = value;
       if (key === "startDate" && !next[index].endDate) next[index].endDate = value;
       return next;
     });
@@ -2389,7 +2889,7 @@ ${sourceText || sampleText}`;
 
   const resetStep126Flow = () => {
     setSourceText("");
-    setClaudeJson("");
+    setAIJson("");
     setDrafts([]);
     setReflectionCheck(null);
     setFlowStep("paste");
@@ -2459,25 +2959,25 @@ ${sourceText || sampleText}`;
 
   const saveAll = () => saveAllWithStatus(null);
 
-  const promptPreview = makeClaudePrompt();
+  const promptPreview = makeAIPrompt();
 
   return (
     <section className="card pnx-step63-card">
       <header className="card__head">
-        <h2 className="card__title">整理済み大会テキスト 一括登録</h2>
+        <h2 className="card__title">ChatGPT整理テキストから大会登録</h2>
         <I.Info size={13} className="card__hint"/>
         <div className="card__head-r">
           <button className="btn btn--ghost btn--sm" onClick={() => setSourceText(sampleText)}>
             サンプル入力
           </button>
           <button className="btn btn--primary btn--sm" onClick={runStep126PasteToPreview}>
-            高精度読み取りで仮登録
+            読み取って仮登録
           </button>
           <button className="btn btn--primary btn--sm pnx-step126-mainbtn" onClick={(e) => runStep126SaveOpenAndReflect(e)} disabled={!drafts.length || previewStats.blocked > 0}>
-            公開保存→本体反映確認
+            公開して反映確認
           </button>
           <button className="btn btn--ghost btn--sm" onClick={copyPrompt}>
-            <I.Save size={13}/> {copied ? "コピー済み" : "Claude用プロンプト"}
+            <I.Save size={13}/> {copied ? "コピー済み" : "予備AIプロンプト"}
           </button>
         </div>
       </header>
@@ -2487,14 +2987,16 @@ ${sourceText || sampleText}`;
 
         <div className="pnx-step126-flow">
           <div className="pnx-step126-flow__head">
-            <strong>CMS大会登録フロー</strong>
+            <strong>ChatGPT整理テキスト登録フロー</strong>
             <span>{step126FlowLabel()}</span>
           </div>
           <div className="pnx-step126-steps">
-            <span className={flowStep === "paste" ? "is-current" : (sourceText || drafts.length) ? "is-done" : ""}>1 貼る</span>
-            <span className={flowStep === "preview" ? "is-current" : drafts.length ? "is-done" : ""}>2 仮登録</span>
-            <span className={flowStep === "save" ? "is-current" : lastImport ? "is-done" : ""}>3 保存</span>
-            <span className={flowStep === "reflect" ? "is-current" : reflectionCheck && reflectionCheck.ok ? "is-done" : ""}>4 反映</span>
+            <span className={flowStep === "paste" ? "is-current" : (sourceText || drafts.length) ? "is-done" : ""}>1 貼り付け</span>
+            <span className={flowStep === "preview" ? "is-current" : drafts.length ? "is-done" : ""}>2 読み取り</span>
+            <span className={drafts.length ? "is-current" : ""}>3 確認編集</span>
+            <span className={flowStep === "save" ? "is-current" : lastImport ? "is-done" : ""}>4 下書き保存</span>
+            <span className={flowStep === "reflect" ? "is-current" : reflectionCheck && reflectionCheck.ok ? "is-done" : ""}>5 公開</span>
+            <span className={reflectionCheck && reflectionCheck.ok ? "is-done" : ""}>6 反映確認</span>
           </div>
           <div className="pnx-step126-actions">
             <button className="btn btn--ghost btn--xs" onClick={runStep126PasteToPreview}>文章を読み取る</button>
@@ -2528,8 +3030,8 @@ ${sourceText || sampleText}`;
 
           <div className="pnx-step63-box">
             <div className="pnx-step63-box__head">
-              <strong>2. 予備：Claude Console用プロンプト</strong>
-              <span>CMS読み取りで足りない場合だけ、Claude Console用に使えます。</span>
+              <strong>2. 予備：予備AI用プロンプト</strong>
+              <span>CMS読み取りで足りない場合だけ、AI Console用に使えます。</span>
             </div>
             <textarea
               className="textarea pnx-step63-textarea is-prompt"
@@ -2542,12 +3044,12 @@ ${sourceText || sampleText}`;
         <div className="pnx-step63-box pnx-step63-json">
           <div className="pnx-step63-box__head">
             <strong>3. 予備：JSON貼り戻し</strong>
-            <span>ClaudeなどでJSON化した場合だけ、ここに貼って仮登録へ変換します。</span>
+            <span>AIなどでJSON化した場合だけ、ここに貼って仮登録へ変換します。</span>
           </div>
           <textarea
             className="textarea pnx-step63-jsonarea"
             value={claudeJson}
-            onChange={e => setClaudeJson(e.target.value)}
+            onChange={e => setAIJson(e.target.value)}
             placeholder='{"tournaments":[{"title":"茨城オープン","startDate":"2026-06-12"}]}'
           />
           <div className="pnx-step63-row">
@@ -2604,8 +3106,10 @@ ${sourceText || sampleText}`;
 
           {drafts.map((t, index) => {
             const quality = pnxStep82DraftIssues(t);
+            const draftKey = t.id || `draft-${index}`;
+            const expanded = isDraftExpanded(draftKey);
             return (
-            <div className={`pnx-step63-draft ${quality.publishable ? "is-publishable" : "is-blocked"}`} key={t.id || index}>
+            <div className={`pnx-step63-draft ${quality.publishable ? "is-publishable" : "is-blocked"} ${expanded ? "is-expanded" : "is-collapsed"}`} key={draftKey}>
               <div className="pnx-step63-draft__top">
                 <strong>{t.title}</strong>
                 <div className="pnx-step82-cardbadges">
@@ -2629,6 +3133,24 @@ ${sourceText || sampleText}`;
                 })()}
               </div>
 
+              <DraftTournamentSearchPreview tournament={t} quality={quality} statusLabel={pnxStep82StatusLabel}/>
+
+              <div className="pnx-step243-draft-toggle-row">
+                <button className="btn btn--ghost btn--xs" onClick={() => toggleDraftExpanded(draftKey)}>
+                  {expanded ? "編集を閉じる" : "編集して修正"}
+                </button>
+                <button className="btn btn--ghost btn--xs" type="button"
+                        onClick={() => onPickImage && onPickImage("大会ロゴを選択", "tournaments", url => updateDraft(index, "logoUrl", url))}>
+                  ロゴを選ぶ
+                </button>
+                <button className="btn btn--ghost btn--xs" type="button"
+                        onClick={() => onPickImage && onPickImage("会場画像を選択", "tournaments", url => updateDraft(index, "venueImageUrl", url))}>
+                  会場画像を選ぶ
+                </button>
+                <span>{expanded ? "詳細項目を編集中です" : "必要な時だけ編集欄を開けます"}</span>
+              </div>
+
+              {expanded && (
               <div className="pnx-step63-draft__form">
                 <label>大会名<input className="input" value={t.title} onChange={e => updateDraft(index, "title", e.target.value)}/></label>
                 <label>カテゴリ<input className="input" value={t.category} onChange={e => updateDraft(index, "category", e.target.value)}/></label>
@@ -2638,6 +3160,27 @@ ${sourceText || sampleText}`;
                 <label>会場<input className="input" value={t.venue} onChange={e => updateDraft(index, "venue", e.target.value)}/></label>
                 <label>締切<input className="input mono" value={t.entryDeadline} onChange={e => updateDraft(index, "entryDeadline", e.target.value)}/></label>
                 <label>参加費<input className="input" value={t.entryFee} onChange={e => updateDraft(index, "entryFee", e.target.value)}/></label>
+                <label>賞金総額<input className="input" value={t.prize || ""} onChange={e => updateDraft(index, "prize", e.target.value)}/></label>
+                <label>公式URL<input className="input mono" value={t.officialUrl || ""} onChange={e => updateDraft(index, "officialUrl", e.target.value)}/></label>
+                <label>エントリーURL<input className="input mono" value={t.entryUrl || ""} onChange={e => updateDraft(index, "entryUrl", e.target.value)}/></label>
+                <label>大会ロゴURL
+                  <div className="pnx-step244-image-field">
+                    <input className="input mono" value={t.logoUrl || ""} onChange={e => updateDraft(index, "logoUrl", e.target.value)}/>
+                    <button className="btn btn--ghost btn--xs" type="button"
+                            onClick={() => onPickImage && onPickImage("大会ロゴを選択", "tournaments", url => updateDraft(index, "logoUrl", url))}>
+                      画像を選ぶ
+                    </button>
+                  </div>
+                </label>
+                <label>会場画像URL
+                  <div className="pnx-step244-image-field">
+                    <input className="input mono" value={t.venueImageUrl || ""} onChange={e => updateDraft(index, "venueImageUrl", e.target.value)}/>
+                    <button className="btn btn--ghost btn--xs" type="button"
+                            onClick={() => onPickImage && onPickImage("会場画像を選択", "tournaments", url => updateDraft(index, "venueImageUrl", url))}>
+                      画像を選ぶ
+                    </button>
+                  </div>
+                </label>
                 <label>ステータス
                   <select className="select" value={t.status} onChange={e => updateDraft(index, "status", e.target.value)}>
                     <option value="draft">下書き</option>
@@ -2648,6 +3191,7 @@ ${sourceText || sampleText}`;
                   </select>
                 </label>
               </div>
+              )}
 
               {!!t.warnings.length && (
                 <div className="pnx-step63-warnings">
@@ -2656,6 +3200,9 @@ ${sourceText || sampleText}`;
               )}
 
               <div className="pnx-step63-draft__actions">
+                <button className="btn btn--ghost btn--xs" onClick={() => toggleDraftExpanded(draftKey)}>
+                  {expanded ? "編集を閉じる" : "編集"}
+                </button>
                 <button className="btn btn--ghost btn--xs" onClick={() => updateDraft(index, "status", "draft")}>
                   下書き
                 </button>
@@ -2702,11 +3249,143 @@ ${sourceText || sampleText}`;
    STEP66: CMS Tournament Manage UI
    登録済み大会の編集・削除・公開状態管理
    ============================================================ */
-function CmsTournamentManagePanel() {
+
+/* ============================================================
+   STEP242: 試合検索カードプレビュー強化
+   CMSで選択中の大会が、本体の試合検索カードでどう見えるか確認する
+   ============================================================ */
+function TournamentSearchCardPreview({ tournament, statusLabel }) {
+  const t = tournament || {};
+  const title = t.title || t.name || "大会名未設定";
+  const venue = t.venue || t.course || "会場未設定";
+  const date = t.startDate || t.date || "日付未設定";
+  const category = t.category || "カテゴリ未設定";
+  const status = t.status || "draft";
+  const img = pnxStep250ResolveMediaUrl(t.venueImageUrl || t.imageUrl || t.coverImageUrl || "");
+  const logo = pnxStep250ResolveMediaUrl(t.logoUrl || t.tournamentLogoUrl || "");
+
+  return (
+    <div className="pnx-step242-preview">
+      <div className="pnx-step242-preview__head">
+        <strong>試合検索カードプレビュー</strong>
+        <span className={`pnx-step242-preview__status is-${status}`}>
+          {statusLabel ? statusLabel(status) : status}
+        </span>
+      </div>
+
+      <div className="pnx-step242-card">
+        <div
+          className={`pnx-step242-card__visual ${img ? "has-image" : ""}`}
+          style={img ? { backgroundImage:`linear-gradient(90deg, rgba(8,42,104,.72), rgba(8,42,104,.16)), url("${String(img).replace(/"/g, '\\"')}")` } : {}}
+        >
+          {logo ? (
+            <span className="pnx-step242-card__logo has-logo"><img src={logo} alt={`${title} ロゴ`} loading="lazy"/></span>
+          ) : (
+            <span className="pnx-step242-card__logo is-text">{String(category).slice(0, 2)}</span>
+          )}
+          <div className="pnx-step242-card__visual-text">
+            <em>{category}</em>
+            <strong>{title}</strong>
+            <small>{venue} · {date}</small>
+          </div>
+        </div>
+
+        <div className="pnx-step242-card__body">
+          <div className="pnx-step242-card__chips">
+            <span>{t.prefecture || "県未設定"}</span>
+            <span>{status === "draft" ? "本体非表示" : "本体表示対象"}</span>
+            {t.entryDeadline && <span>締切 {t.entryDeadline}</span>}
+          </div>
+
+          <div className="pnx-step242-card__meta">
+            <div><span>賞金</span><strong>{t.prize || "未設定"}</strong></div>
+            <div><span>参加費</span><strong>{t.entryFee || "未設定"}</strong></div>
+          </div>
+
+          <div className="pnx-step242-card__links">
+            <span className={t.officialUrl ? "is-ok" : ""}>公式URL</span>
+            <span className={t.entryUrl ? "is-ok" : ""}>エントリーURL</span>
+            <span className={logo ? "is-ok" : ""}>大会ロゴ</span>
+            <span className={img ? "is-ok" : ""}>会場画像</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+/* ============================================================
+   STEP248: 大会保存時の画像保存チェックアラート
+   保存ボタンを押した直後に、画像が本当に保存されたか確認する
+   ============================================================ */
+function pnxStep248ShortImageState(value) {
+  const text = String(value || "");
+  if (!text) return "なし";
+  if (text.startsWith("data:image")) return `あり / DataURL ${Math.round(text.length / 1024)}KB`;
+  return `あり / URL ${text.slice(0, 42)}${text.length > 42 ? "..." : ""}`;
+}
+
+function pnxStep248VerifyTournamentSaved(id) {
+  try {
+    if (!window.PNXCmsFinalDesignBridge || !window.PNXCmsFinalDesignBridge.getTournaments) return null;
+    const list = window.PNXCmsFinalDesignBridge.getTournaments() || [];
+    return list.find(t => String(t.id || t.tournamentId) === String(id)) || null;
+  } catch(e) {
+    return null;
+  }
+}
+
+function pnxStep248ShowSaveAlert({ before, saved, readback, error }) {
+  if (error) {
+    window.alert(
+      "保存エラー\\n\\n" +
+      "大会データの保存に失敗しました。\\n" +
+      "画像が大きすぎる、またはブラウザ保存容量が足りない可能性があります。\\n\\n" +
+      String(error && error.message ? error.message : error)
+    );
+    return;
+  }
+
+  const beforeLogo = before && (before.logoUrl || before.tournamentLogoUrl);
+  const beforeVenue = before && (before.venueImageUrl || before.imageUrl || before.coverImageUrl);
+  const savedLogo = saved && (saved.logoUrl || saved.tournamentLogoUrl);
+  const savedVenue = saved && (saved.venueImageUrl || saved.imageUrl || saved.coverImageUrl);
+  const readLogo = readback && (readback.logoUrl || readback.tournamentLogoUrl);
+  const readVenue = readback && (readback.venueImageUrl || readback.imageUrl || readback.coverImageUrl);
+
+  const logoOk = !!beforeLogo ? !!readLogo : true;
+  const venueOk = !!beforeVenue ? !!readVenue : true;
+  const ok = logoOk && venueOk && !!readback;
+
+  window.alert(
+    (ok ? "保存確認OK" : "保存確認：要確認") + "\\n\\n" +
+    `大会名：${(saved && (saved.title || saved.name)) || (before && (before.title || before.name)) || "未設定"}\\n\\n` +
+    "【保存前】\\n" +
+    `大会ロゴ：${pnxStep248ShortImageState(beforeLogo)}\\n` +
+    `会場画像：${pnxStep248ShortImageState(beforeVenue)}\\n\\n` +
+    "【保存直後】\\n" +
+    `大会ロゴ：${pnxStep248ShortImageState(savedLogo)}\\n` +
+    `会場画像：${pnxStep248ShortImageState(savedVenue)}\\n\\n` +
+    "【保存データ再読み込み確認】\\n" +
+    `大会ロゴ：${pnxStep248ShortImageState(readLogo)}\\n` +
+    `会場画像：${pnxStep248ShortImageState(readVenue)}\\n\\n` +
+    (ok
+      ? "画像フィールドは保存データに残っています。"
+      : "画像が保存データに残っていない可能性があります。")
+  );
+}
+
+
+function CmsTournamentManagePanel({ onPickImage }) {
   const [rows, setRows] = useState([]);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedId, setSelectedId] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+  const [isDirty, setIsDirty] = useState(false);
   const [notice, setNotice] = useState("登録済み大会を読み込み中...");
 
   const statusOptions = [
@@ -2751,6 +3430,14 @@ function CmsTournamentManagePanel() {
         officialUrl: t.officialUrl || "",
         instagramUrl: t.instagramUrl || "",
         entryUrl: t.entryUrl || "",
+        logoUrl: t.logoUrl || t.tournamentLogoUrl || "",
+        tournamentLogoUrl: t.tournamentLogoUrl || t.logoUrl || "",
+        venueImageUrl: t.venueImageUrl || t.imageUrl || t.coverImageUrl || "",
+        imageUrl: t.imageUrl || t.venueImageUrl || t.coverImageUrl || "",
+        coverImageUrl: t.coverImageUrl || t.venueImageUrl || t.imageUrl || "",
+        imageAssetId: t.imageAssetId || "",
+        logoAssetId: t.logoAssetId || "",
+        imageAlt: t.imageAlt || "",
         status: t.status || "draft",
         published: t.published !== false,
         warnings: Array.isArray(t.warnings) ? t.warnings : [],
@@ -2766,6 +3453,7 @@ function CmsTournamentManagePanel() {
       });
 
     setRows(list);
+    setSelectedIds(prev => prev.filter(id => list.some(row => String(row.id) === String(id))));
     if (!selectedId && list[0]) setSelectedId(list[0].id);
     setNotice(`${list.length}件の登録済み大会を読み込みました。`);
   };
@@ -2800,12 +3488,125 @@ function CmsTournamentManagePanel() {
     return acc;
   }, { total: 0, public: 0, draft: 0, open: 0, closed: 0, ongoing: 0, finished: 0 });
 
+  const rowLogoUrl = (row) => pnxStep250ResolveMediaUrl(row.logoUrl || row.tournamentLogoUrl || "");
+  const rowImageUrl = (row) => pnxStep250ResolveMediaUrl(row.venueImageUrl || row.imageUrl || row.coverImageUrl || "");
+  const rowInitial = (row) => {
+    const source = String(row.category || row.title || "大");
+    return source.replace(/\s+/g, "").slice(0, 2).toUpperCase();
+  };
+  const rowChecklist = (row) => {
+    const logo = !!rowLogoUrl(row);
+    const image = !!rowImageUrl(row);
+    const official = !!row.officialUrl;
+    const entry = !!row.entryUrl;
+    const visible = row.status !== "draft" && row.published !== false;
+    const issues = [!logo, !image, !official, !entry].filter(Boolean).length;
+    return { logo, image, official, entry, visible, issues };
+  };
+
+  const categoryLabel = (row) => String(row.category || "未分類").trim() || "未分類";
+  const groupedRowsMap = filtered.reduce((acc, row) => {
+    const key = categoryLabel(row);
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(row);
+    return acc;
+  }, {});
+  const groupedRows = Object.entries(groupedRowsMap).map(([category, items]) => ({ category, items }));
+
+  const toggleRowSelected = (rowId) => {
+    setSelectedIds(prev => prev.some(id => String(id) === String(rowId))
+      ? prev.filter(id => String(id) !== String(rowId))
+      : [...prev, rowId]
+    );
+  };
+
+  const toggleGroupCollapsed = (category) => {
+    setCollapsedGroups(prev => ({ ...prev, [category]: !prev[category] }));
+  };
+
+  const groupSelectionState = (items) => {
+    const ids = items.map(item => String(item.id));
+    const selectedCount = ids.filter(id => selectedIds.some(sid => String(sid) === id)).length;
+    return {
+      total: ids.length,
+      selected: selectedCount,
+      allSelected: ids.length > 0 && selectedCount === ids.length,
+      hasSelected: selectedCount > 0,
+    };
+  };
+
+  const toggleGroupSelected = (items) => {
+    const ids = items.map(item => String(item.id));
+    const state = groupSelectionState(items);
+    setSelectedIds(prev => {
+      const prevSet = new Set(prev.map(String));
+      if (state.allSelected) {
+        ids.forEach(id => prevSet.delete(id));
+      } else {
+        ids.forEach(id => prevSet.add(id));
+      }
+      return Array.from(prevSet);
+    });
+  };
+
+  const selectedRows = rows.filter(row => selectedIds.some(id => String(id) === String(row.id)));
+  const bulkStatusLabel = (status) => {
+    const found = statusOptions.find(item => item.value === status);
+    return found ? found.label : status;
+  };
+
+  const bulkUpdateStatus = (status) => {
+    if (!window.PNXCmsFinalDesignBridge || !selectedRows.length) return;
+
+    const ok = window.confirm(`${selectedRows.length}件を「${bulkStatusLabel(status)}」に変更しますか？`);
+    if (!ok) return;
+
+    const savedRows = selectedRows.map(row => {
+      return window.PNXCmsFinalDesignBridge.saveTournament({
+        ...row,
+        status,
+        published: status !== "draft",
+        source: row.source || "cms-final-bulk"
+      });
+    });
+
+    setRows(prev => prev.map(row => {
+      const saved = savedRows.find(item => String(item.id || item.tournamentId) === String(row.id));
+      if (!saved) return row;
+      return {
+        ...row,
+        ...saved,
+        status,
+        published: status !== "draft",
+        updatedAt: saved.updatedAt || row.updatedAt
+      };
+    }));
+
+    setNotice(`${selectedRows.length}件を「${bulkStatusLabel(status)}」に変更しました。`);
+    pnxStep128CmsActionToast(`${selectedRows.length}件を${bulkStatusLabel(status)}に変更しました`, "ok");
+  };
+
+  const bulkPublishToApp = () => {
+    if (!window.PNXCmsFinalDesignBridge) return;
+    const payload = pnxStep129SafePublishToApp(null, { message:`選択中 ${selectedRows.length}件を含めて本体へ反映しました` });
+    const n = payload.publicTournamentCount != null
+      ? payload.publicTournamentCount
+      : (payload.tournaments || []).length;
+    setNotice(`本体へ再反映しました：公開対象 ${n}件。`);
+    pnxStep128CmsActionToast(`本体へ再反映しました：${n}件`, "ok");
+  };
+
   const updateLocalSelected = (key, value) => {
     if (!selected) return;
+    setIsDirty(true);
     setRows(prev => prev.map(r => {
       if (r.id !== selected.id) return r;
       const next = { ...r, [key]: value };
       if (key === "title") next.name = value;
+      if (key === "logoUrl") next.tournamentLogoUrl = value;
+      if (key === "tournamentLogoUrl") next.logoUrl = value;
+      if (key === "venueImageUrl") next.imageUrl = value;
+      if (key === "imageUrl") next.venueImageUrl = value;
       if (key === "id") {
         next.tournamentId = value;
       }
@@ -2816,19 +3617,58 @@ function CmsTournamentManagePanel() {
   const saveSelected = () => {
     if (!selected || !window.PNXCmsFinalDesignBridge) return;
 
-    const saved = window.PNXCmsFinalDesignBridge.saveTournament({
-      ...selected,
-      prize: pnxStep128NormalizePrizeText(selected.prize),
-      winnerPrize: pnxStep128NormalizePrizeText(selected.winnerPrize),
-      name: selected.title,
-      tournamentId: selected.tournamentId || selected.id,
-      published: selected.status !== "draft",
-      source: selected.source || "cms-final-manage"
-    });
+    try {
+      const beforeSave = { ...selected };
+      const saved = window.PNXCmsFinalDesignBridge.saveTournament({
+        ...selected,
+        prize: pnxStep128NormalizePrizeText(selected.prize),
+        winnerPrize: pnxStep128NormalizePrizeText(selected.winnerPrize),
+        logoUrl: selected.logoUrl || selected.tournamentLogoUrl || "",
+        tournamentLogoUrl: selected.tournamentLogoUrl || selected.logoUrl || "",
+        venueImageUrl: selected.venueImageUrl || selected.imageUrl || selected.coverImageUrl || "",
+        imageUrl: selected.imageUrl || selected.venueImageUrl || selected.coverImageUrl || "",
+        coverImageUrl: selected.coverImageUrl || selected.venueImageUrl || selected.imageUrl || "",
+        imageAssetId: selected.imageAssetId || "",
+        logoAssetId: selected.logoAssetId || "",
+        imageAlt: selected.imageAlt || selected.venue || selected.title || "",
+        name: selected.title,
+        tournamentId: selected.tournamentId || selected.id,
+        published: selected.status !== "draft",
+        source: selected.source || "cms-final-manage"
+      });
 
-    setNotice(`保存しました：${saved.title || saved.name}`);
-    pnxStep128CmsActionToast(`保存しました：${saved.title || saved.name}`, "ok");
-    loadRows();
+      let snapshot = null;
+      try {
+        if (saved.status !== "draft") {
+          if (typeof pnxStep129SafePublishToApp === "function") {
+            snapshot = pnxStep129SafePublishToApp(null, { message:"保存して本体へ反映しました" });
+          } else if (window.PNXCmsFinalDesignBridge.createSearchSnapshot) {
+            snapshot = window.PNXCmsFinalDesignBridge.createSearchSnapshot();
+          }
+          if (window.PNXCmsFinalDesignBridge.createHardSearchSnapshot) {
+            window.PNXCmsFinalDesignBridge.createHardSearchSnapshot();
+          }
+        }
+      } catch(e) {}
+
+      const readback = pnxStep248VerifyTournamentSaved(saved.tournamentId || saved.id || selected.id);
+      pnxStep248ShowSaveAlert({ before: beforeSave, saved, readback });
+
+      try {
+        window.dispatchEvent(new CustomEvent("PNX_CMS_SEARCH_SNAPSHOT_UPDATED", { detail: snapshot || {} }));
+      } catch(e) {}
+
+      setRows(prev => prev.map(r => String(r.id) === String(selected.id) ? { ...r, ...saved } : r));
+      setIsDirty(false);
+      setNotice(`保存しました：${saved.title || saved.name}`);
+      pnxStep128CmsActionToast(`保存しました：${saved.title || saved.name}`, "ok");
+      try { setTimeout(() => window.dispatchEvent(new Event("storage")), 80); } catch(e) {}
+      // STEP251: 保存直後の入力欄リセットを避けるため、画面状態はsavedで更新し、再読み込みは手動/イベントに任せる
+    } catch (e) {
+      pnxStep248ShowSaveAlert({ before: selected, error: e });
+      setNotice("保存できませんでした。画像が大きすぎる可能性があります。今回の版では画像を自動軽量化します。もう一度画像を選び直してください。");
+      pnxStep128CmsActionToast("保存できませんでした：画像を選び直してください", "ng");
+    }
   };
 
   const changeStatus = (id, status) => {
@@ -2844,6 +3684,7 @@ function CmsTournamentManagePanel() {
     });
 
     setRows(prev => prev.map(r => r.id === id ? { ...r, status, published: status !== "draft", updatedAt: saved.updatedAt } : r));
+    if (selected && String(selected.id) === String(id)) setIsDirty(false);
     setNotice(`公開状態を変更しました：${target.title} → ${statusLabel(status)}`);
     pnxStep128CmsActionToast(`公開状態を変更しました：${statusLabel(status)}`, "ok");
   };
@@ -2933,23 +3774,119 @@ function CmsTournamentManagePanel() {
           </select>
         </div>
 
+        <div className="pnx-step66-filter-meta">
+          <span>表示中 <strong>{filtered.length}</strong> 件 / カテゴリ <strong>{groupedRows.length}</strong> 件</span>
+          <small>一覧から大会を押すと、右側の編集欄にすぐ反映されます。</small>
+        </div>
+
+        {!!selectedIds.length && (
+          <div className="pnx-step262-selection-bar pnx-step263-bulkbar">
+            <div className="pnx-step263-bulkbar__info">
+              <strong>{selectedIds.length}件選択中</strong>
+              <span>選択した大会をまとめてステータス変更・本体反映できます。</span>
+            </div>
+
+            <div className="pnx-step263-bulkbar__actions">
+              <button className="pnx-step263-bulkbtn is-open" onClick={() => bulkUpdateStatus("open")}>募集中にする</button>
+              <button className="pnx-step263-bulkbtn" onClick={() => bulkUpdateStatus("draft")}>下書き</button>
+              <button className="pnx-step263-bulkbtn" onClick={() => bulkUpdateStatus("closed")}>締切</button>
+              <button className="pnx-step263-bulkbtn" onClick={() => bulkUpdateStatus("finished")}>終了</button>
+              <button className="pnx-step263-bulkbtn is-primary" onClick={bulkPublishToApp}>本体へ反映</button>
+              <button className="pnx-step262-clear-btn" onClick={() => setSelectedIds([])}>解除</button>
+            </div>
+          </div>
+        )}
+
         <div className="pnx-step66-layout">
           <div className="pnx-step66-list">
             {!filtered.length && <div className="pnx-step66-empty">登録済み大会がありません。</div>}
 
-            {filtered.map(row => (
-              <button
-                key={row.id}
-                className={`pnx-step66-row ${selected && selected.id === row.id ? "is-active" : ""}`}
-                onClick={() => setSelectedId(row.id)}
-              >
-                <span className={`pnx-step66-status is-${row.status || "draft"}`}>{statusLabel(row.status)}</span>
-                <strong>{row.title}</strong>
-                <small>{row.startDate || "日付未設定"} / {row.venue || "会場未設定"}</small>
-                {row.status === "draft" && <em>本体非表示</em>}
-              </button>
-            ))}
-          </div>
+            {groupedRows.map(group => {
+              const groupState = groupSelectionState(group.items);
+              const isCollapsed = !!collapsedGroups[group.category];
+              return (
+                <section key={group.category} className="pnx-step262-group">
+                  <div className="pnx-step262-group__header">
+                    <div className="pnx-step262-group__left">
+                      <button className={`pnx-step262-group__toggle ${isCollapsed ? 'is-collapsed' : ''}`} onClick={() => toggleGroupCollapsed(group.category)}>
+                        <span>{group.category}</span>
+                        <small>{group.items.length}件</small>
+                      </button>
+                    </div>
+                    <div className="pnx-step262-group__actions">
+                      <button
+                        className={`pnx-step262-group__select ${groupState.allSelected ? 'is-active' : ''}`}
+                        onClick={() => toggleGroupSelected(group.items)}
+                      >
+                        {groupState.allSelected ? 'このカテゴリを解除' : 'このカテゴリを選択'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {!isCollapsed && (
+                    <div className="pnx-step262-group__list">
+                      {group.items.map(row => {
+                        const checks = rowChecklist(row);
+                        const logoUrl = rowLogoUrl(row);
+                        const imageUrl = rowImageUrl(row);
+                        const isPicked = selectedIds.some(id => String(id) === String(row.id));
+                        return (
+                          <button
+                            key={row.id}
+                            className={`pnx-step66-row ${selected && selected.id === row.id ? "is-active" : ""} ${isPicked ? 'is-picked' : ''}`}
+                            onClick={() => { setSelectedId(row.id); setIsDirty(false); }}
+                          >
+                            <div className="pnx-step66-row__top">
+                              <div className="pnx-step262-row__meta-left">
+                                <button
+                                  className={`pnx-step262-row__pick ${isPicked ? 'is-active' : ''}`}
+                                  onClick={(e) => { e.stopPropagation(); toggleRowSelected(row.id); }}
+                                >
+                                  {isPicked ? '選択中' : '選択'}
+                                </button>
+                                <span className={`pnx-step66-status is-${row.status || "draft"}`}>{statusLabel(row.status)}</span>
+                              </div>
+                              <div className="pnx-step66-row__pills">
+                                <span className={`pnx-step66-pill ${checks.visible ? 'is-green' : 'is-amber'}`}>{checks.visible ? '本体表示' : '本体非表示'}</span>
+                                {!!checks.issues && <span className="pnx-step66-pill is-red">要修正 {checks.issues}</span>}
+                              </div>
+                            </div>
+
+                            <div className="pnx-step66-row__main">
+                              <div className={`pnx-step66-row__thumb ${imageUrl ? 'has-image' : ''}`} style={imageUrl ? { backgroundImage:`linear-gradient(180deg, rgba(7,44,25,.06), rgba(7,44,25,.42)), url("${String(imageUrl).replace(/"/g, '\"')}")` } : undefined}>
+                                <span className="pnx-step66-row__logo">
+                                  {logoUrl ? <img src={logoUrl} alt=""/> : <b>{rowInitial(row)}</b>}
+                                </span>
+                              </div>
+
+                              <div className="pnx-step66-row__body">
+                                <strong>{row.title}</strong>
+                                <small>{row.startDate || "日付未設定"}{row.endDate && row.endDate !== row.startDate ? ` 〜 ${row.endDate}` : ""}</small>
+                                <small>{pnxStep270CmsVenueWithPref(row)}</small>
+                                <div className="pnx-step66-row__subchips">
+                                  <span>{row.category || '未分類'}</span>
+                                  <span>{row.gender || '不明'}</span>
+                                  {row.organizer && <span>{row.organizer}</span>}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="pnx-step66-row__checks">
+                              <span className={`pnx-step66-check ${checks.logo ? 'is-ok' : ''}`}>ロゴ</span>
+                              <span className={`pnx-step66-check ${checks.image ? 'is-ok' : ''}`}>会場画像</span>
+                              <span className={`pnx-step66-check ${checks.official ? 'is-ok' : ''}`}>公式URL</span>
+                              <span className={`pnx-step66-check ${checks.entry ? 'is-ok' : ''}`}>エントリーURL</span>
+                            </div>
+
+                            {row.status === "draft" && <em>下書きのため本体にはまだ出ません</em>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              );
+            })}          </div>
 
           <div className="pnx-step66-editor">
             {!selected && (
@@ -2962,30 +3899,127 @@ function CmsTournamentManagePanel() {
                   <div>
                     <strong>{selected.title}</strong>
                     <span>{selected.status === "draft" ? "下書きのため本体には表示されません" : "本体アプリ公開対象です"}</span>
+                    <div className="pnx-step66-editor__audit">
+                      {(() => {
+                        const checks = rowChecklist(selected);
+                        return (
+                          <>
+                            <span className={`pnx-step66-check ${checks.logo ? 'is-ok' : ''}`}>ロゴ</span>
+                            <span className={`pnx-step66-check ${checks.image ? 'is-ok' : ''}`}>会場画像</span>
+                            <span className={`pnx-step66-check ${checks.official ? 'is-ok' : ''}`}>公式URL</span>
+                            <span className={`pnx-step66-check ${checks.entry ? 'is-ok' : ''}`}>エントリーURL</span>
+                          </>
+                        );
+                      })()}
+                    </div>
                   </div>
                   <select className="select" value={selected.status} onChange={e => changeStatus(selected.id, e.target.value)}>
                     {statusOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
                 </div>
 
-                <div className="pnx-step66-form">
-                  <label>大会名<input className="input" value={selected.title} onChange={e => updateLocalSelected("title", e.target.value)}/></label>
-                  <label>カテゴリ<input className="input" value={selected.category} onChange={e => updateLocalSelected("category", e.target.value)}/></label>
-                  <label>性別<input className="input" value={selected.gender} onChange={e => updateLocalSelected("gender", e.target.value)}/></label>
-                  <label>開始日<input className="input mono" value={selected.startDate} onChange={e => updateLocalSelected("startDate", e.target.value)}/></label>
-                  <label>終了日<input className="input mono" value={selected.endDate} onChange={e => updateLocalSelected("endDate", e.target.value)}/></label>
-                  <label>都道府県<input className="input" value={selected.prefecture} onChange={e => updateLocalSelected("prefecture", e.target.value)}/></label>
-                  <label>エリア<input className="input" value={selected.area} onChange={e => updateLocalSelected("area", e.target.value)}/></label>
-                  <label>会場<input className="input" value={selected.venue} onChange={e => updateLocalSelected("venue", e.target.value)}/></label>
-                  <label>締切<input className="input mono" value={selected.entryDeadline} onChange={e => updateLocalSelected("entryDeadline", e.target.value)}/></label>
-                  <label>参加費<input className="input" value={selected.entryFee} onChange={e => updateLocalSelected("entryFee", e.target.value)}/></label>
-                  <label>賞金総額<input className="input" value={selected.prize} onChange={e => updateLocalSelected("prize", e.target.value)}/></label>
-                  <label>優勝賞金<input className="input" value={selected.winnerPrize} onChange={e => updateLocalSelected("winnerPrize", e.target.value)}/></label>
-                  <label>募集人数<input className="input" value={selected.capacity} onChange={e => updateLocalSelected("capacity", e.target.value)}/></label>
-                  <label>主催<input className="input" value={selected.organizer} onChange={e => updateLocalSelected("organizer", e.target.value)}/></label>
-                  <label className="wide">出場資格<input className="input" value={selected.eligibility} onChange={e => updateLocalSelected("eligibility", e.target.value)}/></label>
-                  <label className="wide">エントリーURL<input className="input mono" value={selected.entryUrl} onChange={e => updateLocalSelected("entryUrl", e.target.value)}/></label>
+                <div className="pnx-step264-form-sections">
+                  <section className="pnx-step264-section">
+                    <div className="pnx-step264-section__head">
+                      <strong>基本情報</strong>
+                      <span>大会名・カテゴリ・開催日・会場などの基本項目です。</span>
+                    </div>
+                    <div className="pnx-step66-form pnx-step264-form-grid">
+                      <label className="wide">大会名<input className="input" value={selected.title} onChange={e => updateLocalSelected("title", e.target.value)}/></label>
+                      <label>カテゴリ<input className="input" value={selected.category} onChange={e => updateLocalSelected("category", e.target.value)}/></label>
+                      <label>性別<input className="input" value={selected.gender} onChange={e => updateLocalSelected("gender", e.target.value)}/></label>
+                      <label>開始日<input className="input mono" value={selected.startDate} onChange={e => updateLocalSelected("startDate", e.target.value)}/></label>
+                      <label>終了日<input className="input mono" value={selected.endDate} onChange={e => updateLocalSelected("endDate", e.target.value)}/></label>
+                      <label>都道府県<input className="input" value={selected.prefecture} onChange={e => updateLocalSelected("prefecture", e.target.value)}/></label>
+                      <label>エリア<input className="input" value={selected.area} onChange={e => updateLocalSelected("area", e.target.value)}/></label>
+                      <label className="wide">会場<input className="input" value={selected.venue} onChange={e => updateLocalSelected("venue", e.target.value)}/></label>
+                    </div>
+                  </section>
+
+                  <section className="pnx-step264-section">
+                    <div className="pnx-step264-section__head">
+                      <strong>公開設定</strong>
+                      <span>本体への表示状態や公開ステータスをここで切り替えます。</span>
+                    </div>
+                    <div className="pnx-step264-status-box">
+                      <label className="wide">
+                        ステータス
+                        <select className="select" value={selected.status} onChange={e => updateLocalSelected("status", e.target.value)}>
+                          {statusOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                        </select>
+                      </label>
+                      <div className="pnx-step264-status-note">
+                        {selected.status === "draft" ? "下書き：本体には表示されません" : "公開対象：保存後に本体反映できます"}
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="pnx-step264-section">
+                    <div className="pnx-step264-section__head">
+                      <strong>画像</strong>
+                      <span>大会ロゴと会場画像を設定します。画像ライブラリからも選べます。</span>
+                    </div>
+                    <div className="pnx-step66-form pnx-step264-form-grid">
+                      <label className="wide">大会ロゴURL
+                        <div className="pnx-step244-image-field">
+                          <input className="input mono" value={selected.logoUrl || ""} onChange={e => updateLocalSelected("logoUrl", e.target.value)}/>
+                          <button className="btn btn--ghost btn--sm" type="button"
+                                  onClick={() => onPickImage && onPickImage("大会ロゴを選択", "tournaments", url => updateLocalSelected("logoUrl", url))}>
+                            画像を選ぶ
+                          </button>
+                        </div>
+                      </label>
+                      <label className="wide">会場画像URL
+                        <div className="pnx-step244-image-field">
+                          <input className="input mono" value={selected.venueImageUrl || ""} onChange={e => updateLocalSelected("venueImageUrl", e.target.value)}/>
+                          <button className="btn btn--ghost btn--sm" type="button"
+                                  onClick={() => onPickImage && onPickImage("会場画像を選択", "tournaments", url => updateLocalSelected("venueImageUrl", url))}>
+                            画像を選ぶ
+                          </button>
+                        </div>
+                      </label>
+                    </div>
+                  </section>
+
+                  <section className="pnx-step264-section">
+                    <div className="pnx-step264-section__head">
+                      <strong>URL</strong>
+                      <span>公式サイト・エントリー導線・Instagramなど、外部リンク情報です。</span>
+                    </div>
+                    <div className="pnx-step66-form pnx-step264-form-grid">
+                      <label className="wide">公式URL<input className="input mono" value={selected.officialUrl || ""} onChange={e => updateLocalSelected("officialUrl", e.target.value)}/></label>
+                      <label className="wide">エントリーURL<input className="input mono" value={selected.entryUrl || ""} onChange={e => updateLocalSelected("entryUrl", e.target.value)}/></label>
+                      <label className="wide">Instagram URL<input className="input mono" value={selected.instagramUrl || ""} onChange={e => updateLocalSelected("instagramUrl", e.target.value)}/></label>
+                    </div>
+                  </section>
+
+                  <section className="pnx-step264-section">
+                    <div className="pnx-step264-section__head">
+                      <strong>お金</strong>
+                      <span>参加費・賞金総額・優勝賞金など、金額情報をまとめています。</span>
+                    </div>
+                    <div className="pnx-step66-form pnx-step264-form-grid">
+                      <label>締切<input className="input mono" value={selected.entryDeadline} onChange={e => updateLocalSelected("entryDeadline", e.target.value)}/></label>
+                      <label>参加費<input className="input" value={selected.entryFee} onChange={e => updateLocalSelected("entryFee", e.target.value)}/></label>
+                      <label>賞金総額<input className="input" value={selected.prize} onChange={e => updateLocalSelected("prize", e.target.value)}/></label>
+                      <label>優勝賞金<input className="input" value={selected.winnerPrize} onChange={e => updateLocalSelected("winnerPrize", e.target.value)}/></label>
+                    </div>
+                  </section>
+
+                  <section className="pnx-step264-section">
+                    <div className="pnx-step264-section__head">
+                      <strong>詳細</strong>
+                      <span>主催・募集人数・出場資格など、補足情報の設定です。</span>
+                    </div>
+                    <div className="pnx-step66-form pnx-step264-form-grid">
+                      <label>募集人数<input className="input" value={selected.capacity} onChange={e => updateLocalSelected("capacity", e.target.value)}/></label>
+                      <label>主催<input className="input" value={selected.organizer} onChange={e => updateLocalSelected("organizer", e.target.value)}/></label>
+                      <label className="wide">出場資格<input className="input" value={selected.eligibility} onChange={e => updateLocalSelected("eligibility", e.target.value)}/></label>
+                    </div>
+                  </section>
                 </div>
+
+                <TournamentSearchCardPreview tournament={selected} statusLabel={statusLabel}/>
 
                 {!!selected.warnings.length && (
                   <div className="pnx-step66-warnings">
@@ -2993,16 +4027,26 @@ function CmsTournamentManagePanel() {
                   </div>
                 )}
 
-                <div className="pnx-step66-editor__actions">
-                  <button className="btn btn--danger-ghost btn--sm" onClick={removeSelected}>
-                    <I.Trash size={13}/> 削除
-                  </button>
-                  <button className="btn btn--ghost btn--sm" onClick={() => changeStatus(selected.id, "draft")}>
-                    下書きに戻す
-                  </button>
-                  <button className="btn btn--primary btn--sm" onClick={saveSelected}>
-                    <I.Save size={13}/> 保存
-                  </button>
+                <div className="pnx-step66-editor__actions pnx-step266-savebar">
+                  <div className="pnx-step266-savebar__state">
+                    <strong>{isDirty ? "未保存の変更があります" : "保存済み"}</strong>
+                    <span>{isDirty ? "保存を押すまで本体には反映されません。" : "必要に応じて本体へ再反映できます。"}</span>
+                  </div>
+
+                  <div className="pnx-step266-savebar__buttons">
+                    <button className="btn btn--danger-ghost btn--sm" onClick={removeSelected}>
+                      <I.Trash size={13}/> 削除
+                    </button>
+                    <button className="btn btn--ghost btn--sm" onClick={() => changeStatus(selected.id, "draft")}>
+                      下書き
+                    </button>
+                    <button className="btn btn--ghost btn--sm" onClick={(e) => publishToApp(e)}>
+                      本体へ反映
+                    </button>
+                    <button className={`btn btn--primary btn--sm ${isDirty ? "is-dirty" : ""}`} onClick={saveSelected}>
+                      <I.Save size={13}/> 保存
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -3019,6 +4063,7 @@ function CmsTournamentManagePanel() {
    重複・不足項目・公開前チェック
    ============================================================ */
 function CmsTournamentValidationPanel() {
+  const [open, setOpen] = useState(false);
   const [report, setReport] = useState(null);
   const [filter, setFilter] = useState("all");
   const [notice, setNotice] = useState("公開前チェックを実行してください。");
@@ -3035,6 +4080,7 @@ function CmsTournamentValidationPanel() {
   };
 
   useEffect(() => {
+    if (!open) return;
     const timer = setTimeout(runCheck, 600);
     const reload = () => setTimeout(runCheck, 160);
     window.addEventListener("pnx:cms-final:tournament-saved", reload);
@@ -3044,7 +4090,7 @@ function CmsTournamentValidationPanel() {
       window.removeEventListener("pnx:cms-final:tournament-saved", reload);
       window.removeEventListener("pnx:cms-final:tournament-removed", reload);
     };
-  }, []);
+  }, [open]);
 
   const fixToDraft = (id) => {
     if (!window.PNXCmsFinalDesignBridge) return;
@@ -3074,95 +4120,112 @@ function CmsTournamentValidationPanel() {
   }) : [];
 
   return (
-    <section className="card pnx-step67-card">
+    <section className={`card pnx-step67-card pnx-step269-diagnostic ${open ? "is-open" : "is-collapsed"}`}>
       <header className="card__head">
-        <h2 className="card__title">公開前チェック・重複チェック</h2>
-        <I.Info size={13} className="card__hint"/>
+        <div>
+          <h2 className="card__title">公開前チェック・重複チェック</h2>
+          <p className="pnx-step269-diagnostic__sub">不足項目・重複候補を確認したい時だけ開きます。</p>
+        </div>
         <div className="card__head-r">
-          <button className="btn btn--ghost btn--sm" onClick={runCheck}>
-            <I.Refresh size={13}/> チェック実行
+          <button className="btn btn--ghost btn--sm" onClick={() => setOpen(v => !v)}>
+            {open ? "チェックを閉じる" : "チェックを開く"}
           </button>
-          <button className="btn btn--primary btn--sm" onClick={(e) => publishToApp(e)}>
-            チェック済みを本体へ反映
-          </button>
+          {open && (
+            <>
+              <button className="btn btn--ghost btn--sm" onClick={runCheck}>
+                <I.Refresh size={13}/> チェック実行
+              </button>
+              <button className="btn btn--primary btn--sm" onClick={(e) => publishToApp(e)}>
+                チェック済みを本体へ反映
+              </button>
+            </>
+          )}
         </div>
       </header>
 
-      <div className="card__body">
-        <div className="pnx-step67-notice">{notice}</div>
-
-        {report && (
-          <div className="pnx-step67-stats">
-            <div><span>全体</span><strong>{report.total}</strong></div>
-            <div><span>公開可能</span><strong className="ok">{report.publishable}</strong></div>
-            <div><span>ブロック</span><strong className="ng">{report.blocked}</strong></div>
-            <div><span>下書き</span><strong>{report.draft}</strong></div>
-            <div><span>警告あり</span><strong className="warn">{report.warnings}</strong></div>
-          </div>
-        )}
-
-        <div className="pnx-step67-filter">
-          <select className="select" value={filter} onChange={e => setFilter(e.target.value)}>
-            <option value="all">すべて</option>
-            <option value="blocked">公開ブロック</option>
-            <option value="warning">警告あり</option>
-            <option value="draft">下書き</option>
-            <option value="publishable">公開可能</option>
-          </select>
+      {!open && (
+        <div className="pnx-step269-diagnostic__summary">
+          <span>通常は閉じています</span>
+          <strong>必要な時だけ公開前チェックを実行</strong>
         </div>
+      )}
 
-        {!report && (
-          <div className="pnx-step67-empty">
-            登録済み大会の不足項目・日付矛盾・重複候補をチェックします。
+      {open && (
+        <div className="card__body">
+          <div className="pnx-step67-notice">{notice}</div>
+
+          {report && (
+            <div className="pnx-step67-stats">
+              <div><span>全体</span><strong>{report.total}</strong></div>
+              <div><span>公開可能</span><strong className="ok">{report.publishable}</strong></div>
+              <div><span>ブロック</span><strong className="ng">{report.blocked}</strong></div>
+              <div><span>下書き</span><strong>{report.draft}</strong></div>
+              <div><span>警告あり</span><strong className="warn">{report.warnings}</strong></div>
+            </div>
+          )}
+
+          <div className="pnx-step67-filter">
+            <select className="select" value={filter} onChange={e => setFilter(e.target.value)}>
+              <option value="all">すべて</option>
+              <option value="blocked">公開ブロック</option>
+              <option value="warning">警告あり</option>
+              <option value="draft">下書き</option>
+              <option value="publishable">公開可能</option>
+            </select>
           </div>
-        )}
 
-        {report && !rows.length && (
-          <div className="pnx-step67-empty">
-            この条件に該当する大会はありません。
+          {!report && (
+            <div className="pnx-step67-empty">
+              登録済み大会の不足項目・日付矛盾・重複候補をチェックします。
+            </div>
+          )}
+
+          {report && !rows.length && (
+            <div className="pnx-step67-empty">
+              この条件に該当する大会はありません。
+            </div>
+          )}
+
+          <div className="pnx-step67-list">
+            {rows.map(r => (
+              <article className={`pnx-step67-row ${r.hasBlockingIssue ? "is-blocked" : r.publishable ? "is-ok" : ""}`} key={r.id}>
+                <div className="pnx-step67-row__top">
+                  <div>
+                    <strong>{r.title}</strong>
+                    <span>{r.publicTarget ? (r.publishable ? "本体公開可能" : "公開前に修正が必要") : "下書き：本体非表示"}</span>
+                  </div>
+                  <div className="pnx-step67-badges">
+                    {r.errorCount > 0 && <b className="ng">エラー {r.errorCount}</b>}
+                    {r.warningCount > 0 && <b className="warn">警告 {r.warningCount}</b>}
+                    {r.publishable && <b className="ok">公開OK</b>}
+                  </div>
+                </div>
+
+                {!!r.issues.length && (
+                  <div className="pnx-step67-issues">
+                    {r.issues.map((issue, i) => (
+                      <span key={i} className={issue.level === "error" ? "is-error" : "is-warning"}>
+                        {issue.level === "error" ? "✕" : "⚠"} {issue.message}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {r.hasBlockingIssue && (
+                  <div className="pnx-step67-actions">
+                    <button className="btn btn--ghost btn--xs" onClick={() => fixToDraft(r.id)}>
+                      下書きに戻す
+                    </button>
+                  </div>
+                )}
+              </article>
+            ))}
           </div>
-        )}
-
-        <div className="pnx-step67-list">
-          {rows.map(r => (
-            <article className={`pnx-step67-row ${r.hasBlockingIssue ? "is-blocked" : r.publishable ? "is-ok" : ""}`} key={r.id}>
-              <div className="pnx-step67-row__top">
-                <div>
-                  <strong>{r.title}</strong>
-                  <span>{r.publicTarget ? (r.publishable ? "本体公開可能" : "公開前に修正が必要") : "下書き：本体非表示"}</span>
-                </div>
-                <div className="pnx-step67-badges">
-                  {r.errorCount > 0 && <b className="ng">エラー {r.errorCount}</b>}
-                  {r.warningCount > 0 && <b className="warn">警告 {r.warningCount}</b>}
-                  {r.publishable && <b className="ok">公開OK</b>}
-                </div>
-              </div>
-
-              {!!r.issues.length && (
-                <div className="pnx-step67-issues">
-                  {r.issues.map((issue, i) => (
-                    <span key={i} className={issue.level === "error" ? "is-error" : "is-warning"}>
-                      {issue.level === "error" ? "✕" : "⚠"} {issue.message}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {r.hasBlockingIssue && (
-                <div className="pnx-step67-actions">
-                  <button className="btn btn--ghost btn--xs" onClick={() => fixToDraft(r.id)}>
-                    下書きに戻す
-                  </button>
-                </div>
-              )}
-            </article>
-          ))}
         </div>
-      </div>
+      )}
     </section>
   );
 }
-
 
 /* ============================================================
    STEP68: CMS → Search Sync Stability Panel
@@ -3190,6 +4253,7 @@ function pnxStep135NormalizeSyncReport(report) {
 }
 
 function CmsSearchSyncStabilityPanel() {
+  const [open, setOpen] = useState(false);
   const [report, setReport] = useState(null);
   const [notice, setNotice] = useState("本体試合検索への反映状態を確認できます。");
 
@@ -3225,9 +4289,10 @@ function CmsSearchSyncStabilityPanel() {
   };
 
   useEffect(() => {
+    if (!open) return;
     const timer = setTimeout(runCheck, 900);
     return () => clearTimeout(timer);
-  }, []);
+  }, [open]);
 
   const safeReport = pnxStep135NormalizeSyncReport(report || {});
   const safeMeta = safeReport.meta || {};
@@ -3235,49 +4300,67 @@ function CmsSearchSyncStabilityPanel() {
   const safeHash = String(safeMeta.hash || "");
 
   return (
-    <section className="card pnx-step68-card">
+    <section className={`card pnx-step68-card pnx-step269-diagnostic ${open ? "is-open" : "is-collapsed"}`}>
       <header className="card__head">
-        <h2 className="card__title">本体試合検索 反映チェック</h2>
-        <I.Info size={13} className="card__hint"/>
+        <div>
+          <h2 className="card__title">本体試合検索 反映チェック</h2>
+          <p className="pnx-step269-diagnostic__sub">本体に大会が出ない時だけ確認する診断パネルです。</p>
+        </div>
         <div className="card__head-r">
-          <button className="btn btn--ghost btn--sm" onClick={runCheck}>
-            <I.Refresh size={13}/> 同期チェック
+          <button className="btn btn--ghost btn--sm" onClick={() => setOpen(v => !v)}>
+            {open ? "診断を閉じる" : "診断を開く"}
           </button>
-          <button className="btn btn--primary btn--sm" onClick={(e) => publish(e)}>
-            本体へ反映
-          </button>
+          {open && (
+            <>
+              <button className="btn btn--ghost btn--sm" onClick={runCheck}>
+                <I.Refresh size={13}/> 同期チェック
+              </button>
+              <button className="btn btn--primary btn--sm" onClick={(e) => publish(e)}>
+                本体へ反映
+              </button>
+            </>
+          )}
         </div>
       </header>
-      <div className="card__body">
-        <div className="pnx-step68-notice">{notice}</div>
 
-        {report && (
-          <>
-            <div className="pnx-step68-stats">
-              <div><span>CMS登録</span><strong>{report.totalCms}</strong></div>
-              <div><span>検索表示対象</span><strong className="ok">{report.publicForSearch}</strong></div>
-              <div><span>非公開/ブロック</span><strong className="warn">{report.draftOrBlocked}</strong></div>
-              <div><span>同期ID</span><strong>{safeIds.length}</strong></div>
-            </div>
+      {!open && (
+        <div className="pnx-step269-diagnostic__summary">
+          <span>開発・不具合確認用</span>
+          <strong>本体反映がおかしい時だけ開く</strong>
+        </div>
+      )}
 
-            <div className="pnx-step68-meta">
-              <strong>Search Snapshot</strong>
-              <span>updated: {safeMeta.createdAt || "未作成"}</span>
-              <span>hash: {safeHash ? safeHash.slice(0, 80) : "empty"}</span>
-            </div>
+      {open && (
+        <div className="card__body">
+          <div className="pnx-step68-notice">{notice}</div>
 
-            {report.validation && report.validation.blocked > 0 && (
-              <div className="pnx-step68-warning">
-                公開前チェックでブロック中の大会が {report.validation.blocked} 件あります。修正または下書きに戻してください。
+          {report && (
+            <>
+              <div className="pnx-step68-stats">
+                <div><span>CMS登録</span><strong>{report.totalCms}</strong></div>
+                <div><span>検索表示対象</span><strong className="ok">{report.publicForSearch}</strong></div>
+                <div><span>非公開/ブロック</span><strong className="warn">{report.draftOrBlocked}</strong></div>
+                <div><span>同期ID</span><strong>{safeIds.length}</strong></div>
               </div>
-            )}
-          </>
-        )}
-      </div>
+
+              <div className="pnx-step68-meta">
+                <strong>Search Snapshot</strong>
+                <span>updated: {safeMeta.createdAt || "未作成"}</span>
+                <span>hash: {safeHash ? safeHash.slice(0, 80) : "empty"}</span>
+              </div>
+
+              {report.validation && report.validation.blocked > 0 && (
+                <div className="pnx-step68-warning">
+                  公開前チェックでブロック中の大会が {report.validation.blocked} 件あります。修正または下書きに戻してください。
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </section>
   );
 }
-
 
 /* ============================================================
    STEP69: CMS Live Preview Real Data Helpers
@@ -3305,8 +4388,24 @@ function pnxStep69NormalizePreviewData(fallbackBanner, fallbackCats, fallbackArt
     ? bridge.getCategories()
     : pnxStep69ReadJson("PNX_CMS_CATEGORIES", []);
 
-  const tournaments = pnxStep69ReadJson("PNX_CMS_PUBLIC_TOURNAMENTS_FOR_SEARCH", []);
-  const syncMeta = pnxStep69ReadJson("PNX_CMS_SEARCH_SYNC_META", null);
+  const snapshotTournaments = pnxStep69ReadJson("PNX_CMS_PUBLIC_TOURNAMENTS_FOR_SEARCH", []);
+  const bridgeTournaments = bridge && bridge.getTournaments
+    ? bridge.getTournaments().filter(t => {
+        const s = String(t.status || "").toLowerCase();
+        if (/draft|下書き/.test(s)) return false;
+        if (t.published === false || t.visible === false || t.isPublished === false) return false;
+        return true;
+      })
+    : [];
+  const snapshotHasImages = Array.isArray(snapshotTournaments) && snapshotTournaments.some(t => t && (t.logoUrl || t.tournamentLogoUrl || t.venueImageUrl || t.imageUrl || t.coverImageUrl));
+  const bridgeHasImages = Array.isArray(bridgeTournaments) && bridgeTournaments.some(t => t && (t.logoUrl || t.tournamentLogoUrl || t.venueImageUrl || t.imageUrl || t.coverImageUrl));
+  const tournaments = bridgeHasImages
+    ? bridgeTournaments
+    : (Array.isArray(snapshotTournaments) && snapshotTournaments.length ? snapshotTournaments : bridgeTournaments);
+  const syncMeta = pnxStep69ReadJson("PNX_CMS_SEARCH_SYNC_META", null) || {
+    count: Array.isArray(tournaments) ? tournaments.length : 0,
+    source: Array.isArray(snapshotTournaments) && snapshotTournaments.length ? "snapshot" : "bridge-live"
+  };
 
   const pickup = (
     (Array.isArray(banners) && banners.find(x => x && x.published !== false)) ||
@@ -3912,10 +5011,10 @@ function pnxStep75GetPageMeta(activeNav) {
   const map = {
     dashboard: { type: "stub", title: "ダッシュボード", sub: "CMS全体の状態や利用状況を確認します。", stub: "ダッシュボードは今後、公開件数・更新履歴・利用状況を表示します。" },
     home: { type: "home", title: "ホーム（注目ページ）管理", sub: "アプリのホーム画面に表示されるコンテンツを管理します。" },
-    match: { type: "match", title: "試合検索・大会登録管理", sub: "整理済み大会情報をClaude ConsoleでJSON化し、一括登録します。" },
+    match: { type: "match", title: "試合検索・大会登録管理", sub: "ChatGPTで整理した大会情報を貼り付け、確認して本体の試合検索へ公開します。" },
     calendar: { type: "stub", title: "カレンダー管理", sub: "カレンダー表示・カテゴリ・イベント連携を管理します。", stub: "カレンダー管理は本体カレンダー連携が固まった後に実装します。" },
     tournament: { type: "match", title: "大会詳細・大会管理", sub: "大会情報の登録・編集・公開状態を管理します。" },
-    news: { type: "home", title: "ニュース・記事管理", sub: "注目記事やニュースコンテンツを管理します。", forceTab: "articles" },
+    news: { type: "news", title: "ニュース・記事管理", sub: "注目ページに表示する記事・ニュースを集中管理します。" },
     lesson: { type: "stub", title: "レッスン動画管理", sub: "レッスン動画コンテンツを管理します。", stub: "レッスン動画の登録・並び替え・公開設定は今後実装します。" },
     notice: { type: "stub", title: "お知らせ管理", sub: "ユーザー向けのお知らせを管理します。", stub: "お知らせ配信・表示期間・通知連携を今後実装します。" },
     mypage: { type: "stub", title: "マイページ管理", sub: "マイページに表示する項目を管理します。", stub: "プロフィール・設定・導線管理は今後実装します。" },
@@ -3925,7 +5024,7 @@ function pnxStep75GetPageMeta(activeNav) {
     menu: { type: "stub", title: "メニュー設定", sub: "アプリ内メニューの表示・並び順を管理します。", stub: "メニュー設定は本体タブ構成確定後に実装します。" },
     text: { type: "stub", title: "テキスト管理", sub: "アプリ内の文言を管理します。", stub: "テキスト管理は多言語/文言CMSとして今後実装します。" },
     "media-all": { type: "media", title: "メディアライブラリ管理", sub: "画像・バナー・大会素材を管理します。" },
-    ads: { type: "stub", title: "広告管理", sub: "広告バナーや掲載枠を管理します。", stub: "広告管理はメディア紐づけと配信設定を統合して今後実装します。" },
+    ads: { type: "ads", title: "広告管理", sub: "注目ページのスポンサー・PRカードを管理します。" },
     segments: { type: "stub", title: "ユーザーセグメント", sub: "表示対象やユーザー分類を管理します。", stub: "ユーザーセグメントは認証/分析連携後に実装します。" },
     analytics: { type: "stub", title: "分析・レポート", sub: "閲覧数や登録数などを確認します。", stub: "分析・レポートはFirebase/Analytics連携後に実装します。" },
     settings: { type: "settings", title: "CMS設定・保存管理", sub: "CMSデータの保存状態、バックアップ、Firestore移行準備を管理します。" },
@@ -3971,21 +5070,1437 @@ function CmsRoutePlaceholder({ nav }) {
   );
 }
 
+
+/* ============================================================
+   STEP219: Featured section visibility helpers
+   注目/広告ページの各セクションをCMSから表示/非表示にする
+   ============================================================ */
+const PNX_STEP219_FEATURED_VISIBILITY_KEY = "PNX_CMS_FEATURED_VISIBILITY";
+const PNX_STEP219_FEATURED_VISIBILITY_DEFAULTS = {
+  pickup: true,
+  categories: true,
+  wear: true,
+  sponsor: true,
+  articles: true,
+  bottomPromo: true,
+};
+
+function pnxStep219ReadFeaturedVisibility() {
+  try {
+    const raw = localStorage.getItem(PNX_STEP219_FEATURED_VISIBILITY_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return { ...PNX_STEP219_FEATURED_VISIBILITY_DEFAULTS, ...(parsed || {}) };
+  } catch (e) {
+    return { ...PNX_STEP219_FEATURED_VISIBILITY_DEFAULTS };
+  }
+}
+
+function pnxStep219WriteFeaturedVisibility(settings) {
+  const merged = { ...PNX_STEP219_FEATURED_VISIBILITY_DEFAULTS, ...(settings || {}) };
+  try {
+    localStorage.setItem(PNX_STEP219_FEATURED_VISIBILITY_KEY, JSON.stringify(merged));
+    window.dispatchEvent(new CustomEvent("pnx:featured-visibility-updated", { detail: merged }));
+  } catch (e) {}
+  return merged;
+}
+
+function FeaturedDisplaySettingsPanel({ settings, onChange }) {
+  const rows = [
+    {
+      key: "pickup",
+      title: "PICK UPバナー",
+      desc: "上部の大きいメインバナー。ウェア特集や注目情報がない時は非表示にできます。"
+    },
+    {
+      key: "categories",
+      title: "カテゴリ",
+      desc: "ウェア・クラブ・ゴルフ場などのカテゴリ導線。"
+    },
+    {
+      key: "wear",
+      title: "ウェア特集",
+      desc: "ウェア素材や特集がある時だけ表示。広告がない時はOFFでOK。"
+    },
+    {
+      key: "sponsor",
+      title: "スポンサー・PR",
+      desc: "PR案件やスポンサー枠。広告が集まっていない時はOFFにできます。"
+    },
+    {
+      key: "articles",
+      title: "ゴルファー向け記事",
+      desc: "記事やお知らせがある時に表示。"
+    },
+    {
+      key: "bottomPromo",
+      title: "下部プロモ",
+      desc: "ページ下部の追加プロモカード。必要な時だけ表示。"
+    },
+  ];
+
+  const setOne = (key, value) => {
+    onChange({ ...(settings || {}), [key]: value });
+  };
+
+  const setAll = (value) => {
+    const next = {};
+    rows.forEach(row => { next[row.key] = value; });
+    onChange(next);
+  };
+
+  return (
+    <section className="card">
+      <header className="card__head">
+        <h2 className="card__title">注目ページ 表示設定</h2>
+        <div className="card__head-r" style={{display:"flex", gap:8}}>
+          <button className="btn btn--ghost btn--sm" onClick={() => setAll(false)}>すべて非表示</button>
+          <button className="btn btn--primary btn--sm" onClick={() => setAll(true)}>すべて表示</button>
+        </div>
+      </header>
+      <div className="card__body">
+        <p style={{margin:"0 0 14px", color:"var(--muted)", fontSize:13, lineHeight:1.8}}>
+          広告やPR素材が揃っていない時は、該当セクションをOFFにできます。
+          OFFにしたセクションは本体の注目ページで表示されません。
+        </p>
+
+        <div style={{display:"grid", gap:10}}>
+          {rows.map(row => {
+            const checked = (settings || {})[row.key] !== false;
+            return (
+              <label key={row.key} style={{
+                display:"flex", alignItems:"center", justifyContent:"space-between", gap:16,
+                padding:"14px 14px", border:"1px solid var(--line)", borderRadius:14,
+                background:"var(--surface-2)"
+              }}>
+                <span style={{display:"grid", gap:4}}>
+                  <strong style={{fontSize:14, color:"var(--text)"}}>{row.title}</strong>
+                  <small style={{fontSize:12, color:"var(--muted)", lineHeight:1.55}}>{row.desc}</small>
+                </span>
+                <span style={{display:"inline-flex", alignItems:"center", gap:8, flexShrink:0}}>
+                  <span style={{fontSize:12, fontWeight:700, color: checked ? "#0A74FF" : "var(--muted-2)"}}>
+                    {checked ? "表示" : "非表示"}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={e => setOne(row.key, e.target.checked)}
+                    style={{width:22, height:22, accentColor:"#0A74FF"}}
+                  />
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+/* ============================================================
+   STEP220: Sponsor / PR cards CMS helpers
+   広告管理メニューからPRカードの文言・公開状態を編集する
+   ============================================================ */
+const PNX_STEP220_PR_CARDS_KEY = "PNX_CMS_FEATURED_PR_CARDS";
+const PNX_STEP220_DEFAULT_PR_CARDS = [
+  {
+    visible: true,
+    icon: "W",
+    brand: "WEAR SELECT",
+    title: "人気ウェアをまとめて比較",
+    desc: "機能性・デザイン・価格帯から今季の注目モデルをチェック",
+    cta: "見る",
+    link: "",
+    imageUrl: "",
+    logoUrl: ""
+  },
+  {
+    visible: true,
+    icon: "L",
+    brand: "LESSON PASS",
+    title: "体験レッスンを探す",
+    desc: "インドア・屋外レッスンをエリア別に比較しやすく紹介",
+    cta: "探す",
+    link: "",
+    imageUrl: "",
+    logoUrl: ""
+  },
+  {
+    visible: true,
+    icon: "T",
+    brand: "TOUR & STAY",
+    title: "遠征・宿泊プラン特集",
+    desc: "試合やラウンド遠征に役立つ移動・宿泊情報をピックアップ",
+    cta: "特集へ",
+    link: "",
+    imageUrl: "",
+    logoUrl: ""
+  }
+];
+
+function pnxStep220ReadPrCards() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PNX_STEP220_PR_CARDS_KEY) || "null");
+    if (!Array.isArray(parsed) || !parsed.length) return PNX_STEP220_DEFAULT_PR_CARDS;
+    return PNX_STEP220_DEFAULT_PR_CARDS.map((fallback, index) => ({ ...fallback, ...(parsed[index] || {}) }));
+  } catch (e) {
+    return PNX_STEP220_DEFAULT_PR_CARDS;
+  }
+}
+
+function pnxStep220WritePrCards(cards) {
+  const normalized = PNX_STEP220_DEFAULT_PR_CARDS.map((fallback, index) => ({ ...fallback, ...((cards || [])[index] || {}) }));
+  try {
+    localStorage.setItem(PNX_STEP220_PR_CARDS_KEY, JSON.stringify(normalized));
+    window.dispatchEvent(new CustomEvent("pnx:featured-pr-cards-updated", { detail: normalized }));
+  } catch (e) {}
+  return normalized;
+}
+
+function SponsorPrCardsPanel({ cards, onChange, onPickImage }) {
+  const updateCard = (index, patch) => {
+    const next = (cards || []).slice();
+    next[index] = { ...(PNX_STEP220_DEFAULT_PR_CARDS[index] || {}), ...(next[index] || {}), ...patch };
+    onChange(next);
+  };
+
+  const resetCards = () => onChange(PNX_STEP220_DEFAULT_PR_CARDS.map(card => ({ ...card })));
+
+  return (
+    <section className="card">
+      <header className="card__head">
+        <h2 className="card__title">スポンサー・PRカード管理</h2>
+        <div className="card__head-r">
+          <button className="btn btn--ghost btn--sm" onClick={resetCards}>
+            初期状態に戻す
+          </button>
+        </div>
+      </header>
+      <div className="card__body">
+        <p style={{ margin:"0 0 14px", color:"var(--muted)", fontSize:13, lineHeight:1.8 }}>
+          注目ページの「スポンサー・PR」に出すカードを編集できます。
+          広告が集まっていない時はカード単位で非公開、または表示設定でセクションごとOFFにできます。
+        </p>
+
+        <div style={{ display:"grid", gap:14 }}>
+          {(cards || PNX_STEP220_DEFAULT_PR_CARDS).map((card, index) => (
+            <div key={index} style={{
+              display:"grid", gap:12, padding:16, border:"1px solid var(--line)",
+              borderRadius:16, background:"var(--surface-2)"
+            }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
+                <strong style={{ fontSize:14 }}>PRカード {index + 1}</strong>
+                <label style={{ display:"inline-flex", alignItems:"center", gap:8, color:"var(--muted)", fontSize:12, fontWeight:700 }}>
+                  {card.visible !== false ? "公開" : "非公開"}
+                  <input
+                    type="checkbox"
+                    checked={card.visible !== false}
+                    onChange={e => updateCard(index, { visible: e.target.checked })}
+                    style={{ width:20, height:20, accentColor:"#0A74FF" }}
+                  />
+                </label>
+              </div>
+
+              <div style={{ display:"grid", gridTemplateColumns:"80px 1fr", gap:10 }}>
+                <label className="field">
+                  <span>アイコン</span>
+                  <input value={card.icon || ""} maxLength={2} onChange={e => updateCard(index, { icon:e.target.value })}/>
+                </label>
+                <label className="field">
+                  <span>ブランド名</span>
+                  <input value={card.brand || ""} onChange={e => updateCard(index, { brand:e.target.value })}/>
+                </label>
+              </div>
+
+              <label className="field">
+                <span>タイトル</span>
+                <input value={card.title || ""} onChange={e => updateCard(index, { title:e.target.value })}/>
+              </label>
+
+              <label className="field">
+                <span>説明文</span>
+                <textarea rows="2" value={card.desc || ""} onChange={e => updateCard(index, { desc:e.target.value })}/>
+              </label>
+
+              <label className="field">
+                <span>ボタン文言</span>
+                <input value={card.cta || ""} onChange={e => updateCard(index, { cta:e.target.value })}/>
+              </label>
+
+              <label className="field">
+                <span>リンクURL</span>
+                <input value={card.link || ""} placeholder="https://example.com" onChange={e => updateCard(index, { link:e.target.value })}/>
+              </label>
+
+              <label className="field">
+                <span>画像URL</span>
+                <div className="pnx-step239-image-field">
+                  <input value={card.imageUrl || ""} placeholder="https://example.com/wear.jpg" onChange={e => updateCard(index, { imageUrl:e.target.value })}/>
+                  <button className="btn btn--ghost btn--sm" type="button"
+                          onClick={() => onPickImage && onPickImage("画像を選択", "ads", url => updateCard(index, { imageUrl:url }))}>
+                    選ぶ
+                  </button>
+                </div>
+              </label>
+
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                <label className="field">
+                  <span>背景画像URL</span>
+                  <div className="pnx-step239-image-field">
+                    <input value={card.imageUrl || ""} placeholder="https://example.com/pr.jpg" onChange={e => updateCard(index, { imageUrl:e.target.value })}/>
+                    <button className="btn btn--ghost btn--sm" type="button"
+                            onClick={() => onPickImage && onPickImage("PR背景画像を選択", "ads", url => updateCard(index, { imageUrl:url }))}>
+                      選ぶ
+                    </button>
+                  </div>
+                </label>
+                <label className="field">
+                  <span>ロゴ画像URL</span>
+                  <div className="pnx-step239-image-field">
+                    <input value={card.logoUrl || ""} placeholder="https://example.com/logo.png" onChange={e => updateCard(index, { logoUrl:e.target.value })}/>
+                    <button className="btn btn--ghost btn--sm" type="button"
+                            onClick={() => onPickImage && onPickImage("PRロゴ画像を選択", "ads", url => updateCard(index, { logoUrl:url }))}>
+                      選ぶ
+                    </button>
+                  </div>
+                </label>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+/* ============================================================
+   STEP221: Wear feature cards CMS helpers
+   ウェア特集カードをCMSから編集する
+   ============================================================ */
+const PNX_STEP221_WEAR_CARDS_KEY = "PNX_CMS_FEATURED_WEAR_CARDS";
+const PNX_STEP221_DEFAULT_WEAR_CARDS = [
+  {
+    visible: true,
+    tag: "MAIN PICK UP",
+    title: "春夏の主役ウェア",
+    desc: "軽さ・通気性・動きやすさで選ぶ今季の注目アイテム",
+    cta: "特集を見る",
+    link: "",
+    imageUrl: ""
+  },
+  {
+    visible: true,
+    tag: "UV CARE",
+    title: "日差し対策",
+    desc: "長袖インナーやアームカバーをチェック",
+    cta: "",
+    link: "",
+    imageUrl: ""
+  },
+  {
+    visible: true,
+    tag: "RAIN ROUND",
+    title: "雨の日ウェア",
+    desc: "撥水アウターや替えアイテムをまとめて確認",
+    cta: "",
+    link: "",
+    imageUrl: ""
+  }
+];
+
+function pnxStep221ReadWearCards() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PNX_STEP221_WEAR_CARDS_KEY) || "null");
+    if (!Array.isArray(parsed) || !parsed.length) return PNX_STEP221_DEFAULT_WEAR_CARDS;
+    return PNX_STEP221_DEFAULT_WEAR_CARDS.map((fallback, index) => ({ ...fallback, ...(parsed[index] || {}) }));
+  } catch (e) {
+    return PNX_STEP221_DEFAULT_WEAR_CARDS;
+  }
+}
+
+function pnxStep221WriteWearCards(cards) {
+  const normalized = PNX_STEP221_DEFAULT_WEAR_CARDS.map((fallback, index) => ({ ...fallback, ...((cards || [])[index] || {}) }));
+  try {
+    localStorage.setItem(PNX_STEP221_WEAR_CARDS_KEY, JSON.stringify(normalized));
+    window.dispatchEvent(new CustomEvent("pnx:featured-wear-cards-updated", { detail: normalized }));
+  } catch (e) {}
+  return normalized;
+}
+
+function WearFeatureCardsPanel({ cards, onChange, onPickImage }) {
+  const updateCard = (index, patch) => {
+    const next = (cards || []).slice();
+    next[index] = { ...(PNX_STEP221_DEFAULT_WEAR_CARDS[index] || {}), ...(next[index] || {}), ...patch };
+    onChange(next);
+  };
+
+  const resetCards = () => onChange(PNX_STEP221_DEFAULT_WEAR_CARDS.map(card => ({ ...card })));
+
+  return (
+    <section className="card">
+      <header className="card__head">
+        <h2 className="card__title">ウェア特集カード管理</h2>
+        <div className="card__head-r">
+          <button className="btn btn--ghost btn--sm" onClick={resetCards}>
+            初期状態に戻す
+          </button>
+        </div>
+      </header>
+      <div className="card__body">
+        <p style={{ margin:"0 0 14px", color:"var(--muted)", fontSize:13, lineHeight:1.8 }}>
+          注目ページの「ウェア特集」に表示するカードを編集できます。
+          ウェア案件や特集素材がない時は、カード単位で非公開にできます。
+        </p>
+
+        <div style={{ display:"grid", gap:14 }}>
+          {(cards || PNX_STEP221_DEFAULT_WEAR_CARDS).map((card, index) => (
+            <div key={index} style={{
+              display:"grid", gap:12, padding:16, border:"1px solid var(--line)",
+              borderRadius:16, background:"var(--surface-2)"
+            }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
+                <strong style={{ fontSize:14 }}>
+                  {index === 0 ? "メインカード" : `サブカード ${index}`}
+                </strong>
+                <label style={{ display:"inline-flex", alignItems:"center", gap:8, color:"var(--muted)", fontSize:12, fontWeight:700 }}>
+                  {card.visible !== false ? "公開" : "非公開"}
+                  <input
+                    type="checkbox"
+                    checked={card.visible !== false}
+                    onChange={e => updateCard(index, { visible: e.target.checked })}
+                    style={{ width:20, height:20, accentColor:"#0A74FF" }}
+                  />
+                </label>
+              </div>
+
+              <label className="field">
+                <span>タグ</span>
+                <input value={card.tag || ""} onChange={e => updateCard(index, { tag:e.target.value })}/>
+              </label>
+
+              <label className="field">
+                <span>タイトル</span>
+                <input value={card.title || ""} onChange={e => updateCard(index, { title:e.target.value })}/>
+              </label>
+
+              <label className="field">
+                <span>説明文</span>
+                <textarea rows="2" value={card.desc || ""} onChange={e => updateCard(index, { desc:e.target.value })}/>
+              </label>
+
+              <label className="field">
+                <span>ボタン文言</span>
+                <input value={card.cta || ""} placeholder="サブカードでは空欄でもOK" onChange={e => updateCard(index, { cta:e.target.value })}/>
+              </label>
+
+              <label className="field">
+                <span>リンクURL</span>
+                <input value={card.link || ""} placeholder="https://example.com" onChange={e => updateCard(index, { link:e.target.value })}/>
+              </label>
+
+              <label className="field">
+                <span>画像URL</span>
+                <div className="pnx-step239-image-field">
+                  <input value={card.imageUrl || ""} placeholder="https://example.com/wear.jpg" onChange={e => updateCard(index, { imageUrl:e.target.value })}/>
+                  <button className="btn btn--ghost btn--sm" type="button"
+                          onClick={() => onPickImage && onPickImage("ウェア画像を選択", "banners", url => updateCard(index, { imageUrl:url }))}>
+                    選ぶ
+                  </button>
+                </div>
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+function PickupBannerCmsNote() {
+  return (
+    <section className="card">
+      <header className="card__head">
+        <h2 className="card__title">PICK UP反映について</h2>
+      </header>
+      <div className="card__body" style={{ color:"var(--muted)", fontSize:13, lineHeight:1.8 }}>
+        ここで編集したタイトル・説明文・ボタン文言・リンクは、本体の注目ページ上部バナーに反映されます。
+        素材がない期間は「表示設定」からPICK UPバナー自体を非表示にできます。
+      </div>
+    </section>
+  );
+}
+
+
+function NewsArticleManagePanel({ rows, onChange, onSave, onPublish, featuredVisibility, setFeaturedVisibility, onPickImage }) {
+  return (
+    <>
+      <section className="card">
+        <header className="card__head">
+          <h2 className="card__title">ニュース・記事の管理</h2>
+          <div className="card__head-r" style={{display:"flex", gap:8}}>
+            <button className="btn btn--ghost btn--sm" onClick={onSave}>
+              <I.Save size={13}/> 下書き保存
+            </button>
+            <button className="btn btn--primary btn--sm" onClick={onPublish}>
+              <I.Refresh size={13}/> 公開する
+            </button>
+          </div>
+        </header>
+        <div className="card__body" style={{ color:"var(--muted)", fontSize:13, lineHeight:1.8 }}>
+          ここでは注目ページに表示する記事だけを管理します。
+          ホーム全体ではなく、記事タイトル・説明文・公開状態の編集に集中できる画面です。
+        </div>
+      </section>
+      <NewsArticleReflectNote/>
+      <ArticlesTable rows={rows} onChange={onChange} onPickImage={onPickImage}/>
+      <FeaturedDisplaySettingsPanel settings={featuredVisibility} onChange={setFeaturedVisibility}/>
+    </>
+  );
+}
+
+
+
+function NewsArticleReflectNote() {
+  return (
+    <section className="card">
+      <header className="card__head">
+        <h2 className="card__title">記事カード反映について</h2>
+      </header>
+      <div className="card__body" style={{ color:"var(--muted)", fontSize:13, lineHeight:1.8 }}>
+        ここで編集した記事は、注目ページの「ゴルファー向け記事」カードに反映されます。
+        公開前の見え方は右側プレビューで確認できます。
+      </div>
+    </section>
+  );
+}
+
+
+
+/* ============================================================
+   STEP229: Draft / Publish separation helpers
+   編集中データは下書きへ、公開ボタンで本体反映用キーへ保存する
+   ============================================================ */
+const PNX_STEP229_FEATURED_DRAFT_KEY = "PNX_CMS_FEATURED_DRAFT_STATE";
+
+function pnxStep229ReadFeaturedDraft() {
+  try {
+    const raw = localStorage.getItem(PNX_STEP229_FEATURED_DRAFT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function pnxStep229WriteFeaturedDraft(payload) {
+  const data = {
+    ...(payload || {}),
+    updatedAt: new Date().toISOString(),
+    status: "draft"
+  };
+  try {
+    localStorage.setItem(PNX_STEP229_FEATURED_DRAFT_KEY, JSON.stringify(data));
+    window.dispatchEvent(new CustomEvent("pnx:cms-featured-draft-saved", { detail: data }));
+  } catch(e) {}
+  return data;
+}
+
+
+/* ============================================================
+   STEP230: Publish state / unpublished changes helpers
+   下書きと公開の状態をCMS上で分かりやすく表示する
+   ============================================================ */
+const PNX_STEP230_PUBLISH_META_KEY = "PNX_CMS_FEATURED_PUBLISH_META";
+
+function pnxStep230ReadPublishMeta() {
+  try {
+    const raw = localStorage.getItem(PNX_STEP230_PUBLISH_META_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) {
+    return {};
+  }
+}
+
+function pnxStep230WritePublishMeta(meta) {
+  const data = { ...(meta || {}) };
+  try {
+    localStorage.setItem(PNX_STEP230_PUBLISH_META_KEY, JSON.stringify(data));
+    window.dispatchEvent(new CustomEvent("pnx:cms-featured-publish-meta-updated", { detail: data }));
+  } catch(e) {}
+  return data;
+}
+
+function pnxStep230FormatMetaTime(value) {
+  if (!value) return "未公開";
+  try {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleString("ja-JP", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  } catch(e) {
+    return String(value);
+  }
+}
+
+function FeaturedPublishStatusPanel({ meta, hasUnpublishedChanges, onDiscardDraft, onPublish }) {
+  const statusText = hasUnpublishedChanges ? "未公開の変更あり" : "公開済み";
+  const statusColor = hasUnpublishedChanges ? "#ff9500" : "#0A74FF";
+  const statusBg = hasUnpublishedChanges ? "rgba(255,149,0,.10)" : "rgba(10,116,255,.08)";
+  const statusBorder = hasUnpublishedChanges ? "rgba(255,149,0,.20)" : "rgba(10,116,255,.16)";
+
+  return (
+    <section className="card pnx-step230-publish-card">
+      <header className="card__head">
+        <h2 className="card__title">公開状態</h2>
+        <div className="card__head-r" style={{display:"flex", gap:8}}>
+          <button className="btn btn--ghost btn--sm" onClick={onDiscardDraft} disabled={!hasUnpublishedChanges}>
+            下書きを破棄
+          </button>
+          <button className="btn btn--primary btn--sm" onClick={onPublish} disabled={!hasUnpublishedChanges}>
+            公開する
+          </button>
+        </div>
+      </header>
+      <div className="card__body">
+        <div style={{
+          display:"grid",
+          gridTemplateColumns:"1fr 1fr 1fr",
+          gap:10
+        }}>
+          <div style={{padding:"12px 13px", border:"1px solid var(--line)", borderRadius:14, background:"var(--surface-2)"}}>
+            <div style={{fontSize:11, color:"var(--muted)", marginBottom:5}}>状態</div>
+            <div style={{
+              display:"inline-flex", alignItems:"center", gap:7,
+              minHeight:28, padding:"0 10px", borderRadius:999,
+              background:statusBg, border:`1px solid ${statusBorder}`,
+              color:statusColor, fontSize:12, fontWeight:800
+            }}>
+              <span style={{width:7, height:7, borderRadius:999, background:statusColor}}/>
+              {statusText}
+            </div>
+          </div>
+          <div style={{padding:"12px 13px", border:"1px solid var(--line)", borderRadius:14, background:"var(--surface-2)"}}>
+            <div style={{fontSize:11, color:"var(--muted)", marginBottom:5}}>下書き更新</div>
+            <strong style={{fontSize:13}}>{pnxStep230FormatMetaTime(meta && meta.draftUpdatedAt)}</strong>
+          </div>
+          <div style={{padding:"12px 13px", border:"1px solid var(--line)", borderRadius:14, background:"var(--surface-2)"}}>
+            <div style={{fontSize:11, color:"var(--muted)", marginBottom:5}}>最終公開</div>
+            <strong style={{fontSize:13}}>{pnxStep230FormatMetaTime(meta && meta.publishedAt)}</strong>
+          </div>
+        </div>
+        <p style={{margin:"12px 0 0", color:"var(--muted)", fontSize:12.5, lineHeight:1.7}}>
+          編集内容はまず下書きとして保存され、右側プレビューで確認できます。
+          本体アプリへ反映するには「公開する」を押してください。
+        </p>
+      </div>
+    </section>
+  );
+}
+
+
+
+function PreviewQuickControl({ collapsed, onToggle, onRefresh }) {
+  return (
+    <section className="pnx-step232-preview-control" aria-label="プレビュー表示切替">
+      <div className="pnx-step232-preview-control__text">
+        <span className={`pnx-step232-preview-control__dot ${collapsed ? "is-off" : ""}`}/>
+        <div>
+          <strong>右側プレビュー</strong>
+          <p>{collapsed ? "現在は非表示です。管理画面を広く使えます。" : "現在表示中です。公開前の見え方を確認できます。"}</p>
+        </div>
+      </div>
+      <div className="pnx-step232-preview-control__actions">
+        {!collapsed && (
+          <button className="btn btn--ghost btn--sm" onClick={onRefresh}>
+            <I.Refresh size={13}/> 更新
+          </button>
+        )}
+        <button className="btn btn--primary btn--sm pnx-step232-preview-control__main" onClick={onToggle}>
+          <I.Eye size={13}/> {collapsed ? "プレビューを開く" : "プレビューを閉じる"}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+
+
+
+
+
+function PublishConfirmModal({ open, onCancel, onConfirm, summary }) {
+  if (!open) return null;
+
+  return (
+    <div className="pnx-step236-modal-backdrop" role="dialog" aria-modal="true">
+      <div className="pnx-step236-modal">
+        <div className="pnx-step236-modal__icon">公開</div>
+        <h2>この内容で公開しますか？</h2>
+        <p>
+          公開すると、右側プレビューで確認している内容が本体の注目ページに反映されます。
+          公開後もCMSから再編集できます。
+        </p>
+
+        <div className="pnx-step236-modal__summary">
+          <div><span>PICK UP</span><strong>{summary.pickup}</strong></div>
+          <div><span>ウェア</span><strong>{summary.wear}</strong></div>
+          <div><span>PR</span><strong>{summary.pr}</strong></div>
+          <div><span>記事</span><strong>{summary.articles}</strong></div>
+        </div>
+
+        <div className="pnx-step236-modal__actions">
+          <button className="btn btn--ghost" onClick={onCancel}>キャンセル</button>
+          <button className="btn btn--primary" onClick={onConfirm}>公開する</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PublishToast({ message, onClose }) {
+  if (!message) return null;
+
+  return (
+    <div className="pnx-step236-toast">
+      <span className="pnx-step236-toast__dot"/>
+      <strong>{message}</strong>
+      <button onClick={onClose}>閉じる</button>
+    </div>
+  );
+}
+
+
+
+/* ============================================================
+   STEP240: CMS安定化・動作確認パネル
+   ここまで追加した注目/広告CMS機能を、管理画面上で確認しやすくする
+   ============================================================ */
+function CmsFeaturedStabilityCheckPanel({
+  banner,
+  cats,
+  articles,
+  visibility,
+  prCards,
+  wearCards,
+  previewCollapsed,
+  publishMeta,
+  onOpenPreview,
+  onOpenSimple
+}) {
+  const visible = (list) => (list || []).filter(item => item && item.visible !== false && item.published !== false);
+  const hasImageValue = (value) => !!String(value || "").trim();
+
+  const rows = [
+    {
+      title: "右側プレビュー",
+      ok: !previewCollapsed,
+      detail: previewCollapsed ? "現在は閉じています。必要な時だけ開けます。" : "表示中です。編集内容の確認に使えます。",
+      action: previewCollapsed ? "開く" : "",
+      onClick: onOpenPreview
+    },
+    {
+      title: "PICK UPバナー",
+      ok: !!(banner && String(banner.title || "").trim()),
+      detail: banner && String(banner.title || "").trim() ? "タイトル設定済み" : "タイトルが未入力です。",
+      action: "編集",
+      onClick: () => onOpenSimple("pickup")
+    },
+    {
+      title: "PICK UP画像",
+      ok: hasImageValue(banner && banner.imageUrl),
+      detail: hasImageValue(banner && banner.imageUrl) ? "画像URL設定済み" : "画像なしでも青グラデーションで表示されます。",
+      action: "画像",
+      onClick: () => onOpenSimple("pickup")
+    },
+    {
+      title: "ウェア特集",
+      ok: visibility && visibility.wear === false ? true : visible(wearCards).length > 0,
+      detail: visibility && visibility.wear === false ? "セクション非表示中" : `${visible(wearCards).length}件表示中`,
+      action: "編集",
+      onClick: () => onOpenSimple("wear")
+    },
+    {
+      title: "スポンサー・PR",
+      ok: visibility && visibility.sponsor === false ? true : visible(prCards).length > 0,
+      detail: visibility && visibility.sponsor === false ? "セクション非表示中" : `${visible(prCards).length}件表示中`,
+      action: "広告",
+      onClick: () => onOpenSimple("ads")
+    },
+    {
+      title: "ニュース・記事",
+      ok: visibility && visibility.articles === false ? true : visible(articles).length > 0,
+      detail: visibility && visibility.articles === false ? "セクション非表示中" : `${visible(articles).length}件表示中`,
+      action: "記事",
+      onClick: () => onOpenSimple("news")
+    },
+    {
+      title: "カテゴリ",
+      ok: visibility && visibility.categories === false ? true : visible(cats).length > 0,
+      detail: visibility && visibility.categories === false ? "セクション非表示中" : `${visible(cats).length}件表示中`,
+      action: "編集",
+      onClick: () => onOpenSimple("category")
+    },
+    {
+      title: "下書き/公開",
+      ok: true,
+      detail: publishMeta && publishMeta.publishedAt ? "公開履歴あり" : "まだ公開履歴はありません。",
+      action: "",
+      onClick: null
+    },
+  ];
+
+  const warnings = rows.filter(row => !row.ok).length;
+
+  return (
+    <section className="card pnx-step240-stability-card">
+      <header className="card__head">
+        <div>
+          <h2 className="card__title">動作確認チェック</h2>
+          <p className="pnx-step240-stability-card__sub">
+            注目/広告CMSの主要機能が使える状態かを確認します。
+          </p>
+        </div>
+        <div className={`pnx-step240-stability-card__badge ${warnings ? "is-warn" : "is-ok"}`}>
+          {warnings ? `${warnings}件確認` : "安定"}
+        </div>
+      </header>
+      <div className="card__body">
+        <div className="pnx-step240-stability-grid">
+          {rows.map((row) => (
+            <button
+              className={`pnx-step240-stability-item ${row.ok ? "is-ok" : "is-warn"}`}
+              key={row.title}
+              onClick={row.onClick || undefined}
+              disabled={!row.onClick}
+            >
+              <span className="pnx-step240-stability-item__dot"/>
+              <span className="pnx-step240-stability-item__body">
+                <strong>{row.title}</strong>
+                <small>{row.detail}</small>
+              </span>
+              {row.action && <span className="pnx-step240-stability-item__action">{row.action}<I.ChevronR size={11}/></span>}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+function FeaturedPublishChecklist({ banner, cats, articles, visibility, prCards, wearCards, onSelectTab, onSelectNav }) {
+  const isVisible = (key) => (visibility || {})[key] !== false;
+  const visibleItems = (list) => (list || []).filter(item => item && item.visible !== false && item.published !== false);
+
+  const checks = [];
+
+  if (isVisible("pickup")) {
+    if (!banner || !String(banner.title || "").trim()) {
+      checks.push({ level:"danger", title:"PICK UPのタイトルが未入力", desc:"上部バナーのタイトルを入れると見栄えが安定します。", action:"PICK UPを編集", go:() => onSelectTab("pickup") });
+    }
+    if (!banner || !String(banner.imageUrl || "").trim()) {
+      checks.push({ level:"warn", title:"PICK UPの画像URLが未入力", desc:"画像がなくても青グラデーションで表示されます。写真を使うと広告・特集感が出ます。", action:"画像を入れる", go:() => onSelectTab("pickup") });
+    }
+  }
+
+  if (isVisible("wear")) {
+    const list = visibleItems(wearCards);
+    if (!list.length) {
+      checks.push({ level:"danger", title:"ウェア特集が表示ONなのに公開カードがありません", desc:"カードを公開するか、表示設定でウェア特集をOFFにしてください。", action:"ウェアを確認", go:() => onSelectTab("wear") });
+    } else if (list.some(card => !String(card.link || "").trim())) {
+      checks.push({ level:"warn", title:"ウェア特集にリンク未入力のカードがあります", desc:"タップして詳細へ飛ばしたい場合はリンクURLを入れてください。", action:"ウェアを編集", go:() => onSelectTab("wear") });
+    }
+  }
+
+  if (isVisible("sponsor")) {
+    const list = visibleItems(prCards);
+    if (!list.length) {
+      checks.push({ level:"danger", title:"スポンサー・PRが表示ONなのに公開カードがありません", desc:"広告が集まっていない時は、広告なしプリセットか表示設定でOFFにできます。", action:"広告管理へ", go:() => onSelectNav("ads") });
+    } else if (list.some(card => !String(card.link || "").trim())) {
+      checks.push({ level:"warn", title:"PRカードにリンク未入力があります", desc:"広告枠として使う場合は、遷移先URLを入れておくと運用しやすいです。", action:"広告管理へ", go:() => onSelectNav("ads") });
+    }
+  }
+
+  if (isVisible("articles")) {
+    const list = visibleItems(articles);
+    if (!list.length) {
+      checks.push({ level:"warn", title:"表示中の記事がありません", desc:"記事を出さない場合は問題ありません。必要なら記事を公開してください。", action:"記事管理へ", go:() => onSelectNav("news") });
+    } else if (list.some(article => !String(article.title || "").trim())) {
+      checks.push({ level:"danger", title:"タイトル未入力の記事があります", desc:"記事カードの見た目が崩れる可能性があります。", action:"記事管理へ", go:() => onSelectNav("news") });
+    }
+  }
+
+  if (isVisible("categories") && !visibleItems(cats).length) {
+    checks.push({ level:"warn", title:"表示中カテゴリがありません", desc:"カテゴリ導線を使う場合は最低1つ以上表示してください。", action:"カテゴリを編集", go:() => onSelectTab("category") });
+  }
+
+  const activeSections = Object.entries(visibility || {}).filter(([, value]) => value !== false).length;
+  if (activeSections === 0) {
+    checks.push({ level:"danger", title:"全セクションが非表示です", desc:"注目ページが空に近くなります。最低でもカテゴリか記事は表示しましょう。", action:"表示設定へ", go:() => onSelectTab("display") });
+  }
+
+  const ok = checks.length === 0;
+
+  return (
+    <section className={`card pnx-step235-checklist ${ok ? "is-ok" : ""}`}>
+      <header className="card__head">
+        <div>
+          <h2 className="card__title">公開前チェック</h2>
+          <p className="pnx-step235-checklist__sub">
+            公開前に、未入力や非表示状態を自動で確認します。
+          </p>
+        </div>
+        <div className={`pnx-step235-checklist__status ${ok ? "is-ok" : "is-warn"}`}>
+          {ok ? "問題なし" : `${checks.length}件確認`}
+        </div>
+      </header>
+      <div className="card__body">
+        {ok ? (
+          <div className="pnx-step235-checklist__ok">
+            <strong>公開しても大丈夫そうです</strong>
+            <p>右側プレビューで見た目を確認してから「公開する」を押してください。</p>
+          </div>
+        ) : (
+          <div className="pnx-step235-checklist__list">
+            {checks.map((check, index) => (
+              <button className={`pnx-step235-check-item is-${check.level}`} key={index} onClick={check.go}>
+                <span className="pnx-step235-check-item__mark"/>
+                <span className="pnx-step235-check-item__body">
+                  <strong>{check.title}</strong>
+                  <small>{check.desc}</small>
+                </span>
+                <span className="pnx-step235-check-item__action">
+                  {check.action}
+                  <I.ChevronR size={12}/>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+
+function SimpleEditHub({
+  banner,
+  cats,
+  articles,
+  visibility,
+  prCards,
+  wearCards,
+  onSelectTab,
+  onSelectNav,
+  onApplyPreset
+}) {
+  const visibleCount = (list) => (list || []).filter(item => item && item.visible !== false && item.published !== false).length;
+  const visibilityOnCount = Object.values(visibility || {}).filter(v => v !== false).length;
+
+  const presets = [
+    {
+      key: "standard",
+      title: "標準表示",
+      desc: "PICK UP・ウェア・PR・記事を全部使う基本形",
+      badge: "おすすめ"
+    },
+    {
+      key: "noAds",
+      title: "広告なし",
+      desc: "スポンサー・PRだけ隠して、通常コンテンツ中心にする",
+      badge: "広告なし"
+    },
+    {
+      key: "wearFocus",
+      title: "ウェア強調",
+      desc: "ウェア特集を残して、PRは控えめにする",
+      badge: "ウェア"
+    },
+    {
+      key: "articleFocus",
+      title: "記事中心",
+      desc: "記事とカテゴリを中心にして、特集枠を軽くする",
+      badge: "記事"
+    },
+    {
+      key: "minimal",
+      title: "最小表示",
+      desc: "素材が少ない時用。カテゴリと記事だけ表示",
+      badge: "最小"
+    },
+  ];
+
+  const cards = [
+    {
+      title: "PICK UPバナー",
+      desc: "一番上の大きいバナーを変更",
+      value: banner && banner.published === false ? "非公開" : "公開中",
+      action: "編集する",
+      onClick: () => onSelectTab("pickup")
+    },
+    {
+      title: "ウェア特集",
+      desc: "ウェアカードの文言・画像・URLを変更",
+      value: `${visibleCount(wearCards)} / 3 表示`,
+      action: "編集する",
+      onClick: () => onSelectTab("wear")
+    },
+    {
+      title: "スポンサー・PR",
+      desc: "広告カードの公開/非公開やリンクを変更",
+      value: `${visibleCount(prCards)} / 3 表示`,
+      action: "広告管理へ",
+      onClick: () => onSelectNav("ads")
+    },
+    {
+      title: "ニュース・記事",
+      desc: "記事カードのタイトル・画像・URLを変更",
+      value: `${visibleCount(articles)}件 表示`,
+      action: "記事管理へ",
+      onClick: () => onSelectNav("news")
+    },
+    {
+      title: "カテゴリ",
+      desc: "ウェア・クラブなどの表示カテゴリを変更",
+      value: `${visibleCount(cats)}件 表示`,
+      action: "編集する",
+      onClick: () => onSelectTab("category")
+    },
+    {
+      title: "表示設定",
+      desc: "素材がない枠をまとめて非表示にする",
+      value: `${visibilityOnCount} / 6 表示`,
+      action: "切り替える",
+      onClick: () => onSelectTab("display")
+    },
+  ];
+
+  return (
+    <section className="card pnx-step233-simple-hub">
+      <header className="card__head">
+        <div>
+          <h2 className="card__title">かんたん編集</h2>
+          <p className="pnx-step233-simple-hub__sub">
+            よく変更する場所だけをまとめました。右側プレビューを押しても編集画面へ移動できます。
+          </p>
+        </div>
+      </header>
+      <div className="card__body">
+        <div className="pnx-step234-preset-box">
+          <div className="pnx-step234-preset-box__head">
+            <div>
+              <strong>かんたん運用プリセット</strong>
+              <p>広告や素材の集まり具合に合わせて、表示構成をワンタップで切り替えます。</p>
+            </div>
+          </div>
+          <div className="pnx-step234-preset-row">
+            {presets.map(preset => (
+              <button
+                key={preset.key}
+                className="pnx-step234-preset-btn"
+                onClick={() => onApplyPreset(preset.key)}
+              >
+                <span>{preset.badge}</span>
+                <strong>{preset.title}</strong>
+                <small>{preset.desc}</small>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="pnx-step233-simple-grid">
+          {cards.map((card) => (
+            <button className="pnx-step233-simple-card" key={card.title} onClick={card.onClick}>
+              <span className="pnx-step233-simple-card__top">
+                <strong>{card.title}</strong>
+                <em>{card.value}</em>
+              </span>
+              <span className="pnx-step233-simple-card__desc">{card.desc}</span>
+              <span className="pnx-step233-simple-card__action">
+                {card.action}
+                <I.ChevronR size={12}/>
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+
+/* ============================================================
+   STEP239: 画像ライブラリから選んで差し替え
+   URL手入力だけでなく、CMSメディアライブラリの画像を選べるようにする
+   ============================================================ */
+function pnxStep239AssetUrl(asset) {
+  if (!asset) return "";
+  return asset.dataUrl || asset.url || asset.imageUrl || "";
+}
+
+function pnxStep250MediaRef(asset) {
+  if (!asset) return "";
+  const id = asset.id || asset.assetId;
+  return id ? `pnx-media:${id}` : pnxStep239AssetUrl(asset);
+}
+
+function pnxStep250ResolveMediaUrl(value) {
+  const raw = String(value || "");
+  if (!raw) return "";
+  if (!raw.startsWith("pnx-media:")) return raw;
+  const id = raw.replace("pnx-media:", "");
+  try {
+    const list = window.PNXCmsFinalDesignBridge && window.PNXCmsFinalDesignBridge.getMediaAssets
+      ? window.PNXCmsFinalDesignBridge.getMediaAssets()
+      : JSON.parse(localStorage.getItem("PNX_CMS_MEDIA") || "[]");
+    const asset = (Array.isArray(list) ? list : []).find(a => String(a.id || a.assetId) === String(id));
+    return pnxStep239AssetUrl(asset);
+  } catch(e) {
+    return "";
+  }
+}
+
+function pnxStep250SelectMediaUrl(asset, fallbackUrl) {
+  const ref = pnxStep250MediaRef(asset);
+  return ref || fallbackUrl || "";
+}
+
+/* ============================================================
+   STEP270: CMS内の開催地表示も県名を優先
+   ============================================================ */
+const PNX_STEP270_CMS_PREF_LABELS = {
+  hokkaido:'北海道', aomori:'青森', iwate:'岩手', miyagi:'宮城', akita:'秋田', yamagata:'山形', fukushima:'福島',
+  ibaraki:'茨城', tochigi:'栃木', gunma:'群馬', saitama:'埼玉', chiba:'千葉', tokyo:'東京', kanagawa:'神奈川',
+  niigata:'新潟', toyama:'富山', ishikawa:'石川', fukui:'福井', yamanashi:'山梨', nagano:'長野', gifu:'岐阜', shizuoka:'静岡', aichi:'愛知', mie:'三重',
+  shiga:'滋賀', kyoto:'京都', osaka:'大阪', hyogo:'兵庫', nara:'奈良', wakayama:'和歌山',
+  tottori:'鳥取', shimane:'島根', okayama:'岡山', hiroshima:'広島', yamaguchi:'山口',
+  tokushima:'徳島', kagawa:'香川', ehime:'愛媛', kochi:'高知',
+  fukuoka:'福岡', saga:'佐賀', nagasaki:'長崎', kumamoto:'熊本', oita:'大分', miyazaki:'宮崎', kagoshima:'鹿児島', okinawa:'沖縄',
+  overseas:'海外'
+};
+const PNX_STEP270_CMS_PREF_JA = Object.values(PNX_STEP270_CMS_PREF_LABELS).filter(v => v !== '海外');
+
+const PNX_STEP271_CMS_VENUE_PREF_HINTS = [
+  ['南茂原', '千葉'], ['茂原', '千葉'], ['富士市原', '千葉'], ['市原', '千葉'],
+  ['霞ヶ関', '埼玉'], ['霞ケ関', '埼玉'], ['宍戸ヒルズ', '茨城'],
+  ['太平洋クラブ成田', '千葉'], ['成田', '千葉'], ['裾野', '静岡'],
+  ['オーク・ヒルズ', '千葉'], ['オークヒルズ', '千葉'],
+  ['西那須野', '栃木'], ['ホウライ', '栃木'], ['プレステージ', '栃木']
+];
+
+function pnxStep271CmsPrefFromVenueName(text) {
+  const hay = String(text || '');
+  if (!hay) return '';
+  const hit = PNX_STEP271_CMS_VENUE_PREF_HINTS.find(([key]) => hay.includes(key));
+  return hit ? hit[1] : '';
+}
+
+function pnxStep270CmsPrefLabel(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const compact = raw.replace(/[都道府県]/g, '');
+  if (/^(kanto|kansai|kinki|chubu|tokai|kyushu|okinawa|hokkaido|overseas|abroad|domestic|all)$/i.test(raw) && !PNX_STEP270_CMS_PREF_LABELS[raw.toLowerCase()]) {
+    return '';
+  }
+  if (PNX_STEP270_CMS_PREF_LABELS[raw.toLowerCase()]) return PNX_STEP270_CMS_PREF_LABELS[raw.toLowerCase()];
+  if (PNX_STEP270_CMS_PREF_JA.includes(compact)) return compact;
+  if (raw === '東京都') return '東京';
+  if (raw === '京都府') return '京都';
+  if (raw === '大阪府') return '大阪';
+  if (raw === '北海道') return '北海道';
+  return raw;
+}
+
+function pnxStep270CmsExtractPref(text) {
+  const hay = String(text || '');
+  if (!hay) return '';
+  const keys = ['北海道','東京都','京都府','大阪府', ...PNX_STEP270_CMS_PREF_JA.map(p => `${p}県`), ...PNX_STEP270_CMS_PREF_JA];
+  const found = keys.find(pref => hay.includes(pref));
+  return found ? found.replace(/[都道府県]/g, '') || found : '';
+}
+
+function pnxStep270CmsAreaLabel(area) {
+  const raw = String(area || '').trim().toLowerCase();
+  if (!raw) return '';
+  if (/kanto|関東/.test(raw)) return '関東';
+  if (/kansai|kinki|関西|近畿/.test(raw)) return '関西';
+  if (/chubu|tokai|中部|東海/.test(raw)) return '中部';
+  if (/kyushu|九州/.test(raw)) return '九州';
+  if (/hokkaido|北海道/.test(raw)) return '北海道';
+  if (/overseas|abroad|海外/.test(raw)) return '海外';
+  return area || '';
+}
+
+function pnxStep270CmsLocationLabel(t) {
+  const pref = pnxStep270CmsPrefLabel(t && (t.prefecture || t.pref || t.state || t.prefectureLabel));
+  if (pref) return pref;
+  const sourceText = [t && (t.venue || t.course || t.place), t && (t.title || t.name), t && t.imageAlt].filter(Boolean).join(' ');
+  const extracted = pnxStep270CmsExtractPref(sourceText);
+  if (extracted) return extracted;
+  const venueHint = pnxStep271CmsPrefFromVenueName(sourceText);
+  if (venueHint) return venueHint;
+  const displayLocation = pnxStep270CmsPrefLabel(t && t.displayLocation);
+  if (displayLocation) return displayLocation;
+  return pnxStep270CmsAreaLabel(t && (t.area || t.region)) || '県未設定';
+}
+
+function pnxStep270CmsVenueWithPref(t) {
+  const loc = pnxStep270CmsLocationLabel(t);
+  const venue = (t && (t.venue || t.course || t.place)) || '会場未定';
+  if (!loc || loc === '県未設定') return venue;
+  if (String(venue).includes(loc)) return venue;
+  return `${loc}・${venue}`;
+}
+
+function ImageLibraryPickerModal({ open, title, folder, onClose, onSelect, onOpenMedia }) {
+  const [assets, setAssets] = useState([]);
+  const [query, setQuery] = useState("");
+  const [manualUrl, setManualUrl] = useState("");
+  const [uploadNotice, setUploadNotice] = useState("");
+
+  const loadAssets = () => {
+    if (!window.PNXCmsFinalDesignBridge || !window.PNXCmsFinalDesignBridge.getMediaAssets) {
+      setAssets([]);
+      return;
+    }
+    const list = window.PNXCmsFinalDesignBridge.getMediaAssets({ kind:"image" }) || [];
+    setAssets(list);
+  };
+
+  const readFileAsDataUrl = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const compressImageFile = async (file) => {
+    const originalDataUrl = await readFileAsDataUrl(file);
+
+    // SVG/GIFなどcanvas圧縮に向かないものはそのまま返す
+    if (/svg|gif/i.test(file.type || "")) {
+      return { dataUrl: originalDataUrl, width: 0, height: 0, compressed: false };
+    }
+
+    const image = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = originalDataUrl;
+    });
+
+    const isLogo = /logo|ロゴ/i.test(title || "") || /logo/i.test(file.name || "");
+    const maxSide = isLogo ? 520 : 1280;
+    const quality = isLogo ? 0.82 : 0.78;
+    const scale = Math.min(1, maxSide / Math.max(image.width || maxSide, image.height || maxSide));
+    const width = Math.max(1, Math.round((image.width || maxSide) * scale));
+    const height = Math.max(1, Math.round((image.height || maxSide) * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(image, 0, 0, width, height);
+
+    const dataUrl = canvas.toDataURL("image/jpeg", quality);
+    return { dataUrl, width, height, compressed: dataUrl.length < originalDataUrl.length };
+  };
+
+  const handleLocalFile = async (event) => {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type || !file.type.startsWith("image/")) {
+      setUploadNotice("画像ファイルを選んでください。");
+      return;
+    }
+
+    try {
+      setUploadNotice("画像を軽量化して読み込み中...");
+      const compressed = await compressImageFile(file);
+      const dataUrl = compressed.dataUrl;
+      let savedUrl = dataUrl;
+
+      if (window.PNXCmsFinalDesignBridge && window.PNXCmsFinalDesignBridge.saveMediaAsset) {
+        const asset = window.PNXCmsFinalDesignBridge.saveMediaAsset({
+          name: file.name,
+          filename: file.name,
+          folder: folder || "tournaments",
+          kind: "image",
+          dataUrl,
+          url: dataUrl,
+          mimeType: "image/jpeg",
+          sizeBytes: Math.round(dataUrl.length * 0.75),
+          width: compressed.width,
+          height: compressed.height,
+          optimized: true,
+          source: "direct-picker-upload-compressed"
+        });
+        savedUrl = pnxStep239AssetUrl(asset) || dataUrl;
+        loadAssets();
+        setUploadNotice(`画像を軽量化して選択しました：${file.name}`);
+        choose(savedUrl, asset);
+        return;
+      }
+
+      setUploadNotice(`画像を軽量化して選択しました：${file.name}`);
+      choose(savedUrl);
+    } catch (e) {
+      setUploadNotice("画像の読み込みに失敗しました。小さい画像でもう一度試してください。");
+    }
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    setUploadNotice("");
+    loadAssets();
+    const onUpdate = () => setTimeout(loadAssets, 80);
+    window.addEventListener("pnx:cms-final:media-updated", onUpdate);
+    window.addEventListener("storage", onUpdate);
+    return () => {
+      window.removeEventListener("pnx:cms-final:media-updated", onUpdate);
+      window.removeEventListener("storage", onUpdate);
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  const filtered = assets.filter(asset => {
+    if (query.trim()) {
+      const q = query.trim().toLowerCase();
+      const hay = [asset.name, asset.filename, asset.folder, asset.alt, ...(asset.tags || [])].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return !!pnxStep239AssetUrl(asset);
+  });
+
+  const tournamentAssets = filtered.filter(asset => {
+    if (!folder || folder === "all") return true;
+    return asset.folder === folder || asset.folder === "tournaments" || asset.folder === "logos" || asset.folder === "general";
+  });
+  const shownAssets = tournamentAssets.length ? tournamentAssets : filtered;
+
+  const choose = (url, asset) => {
+    const chosen = asset ? pnxStep250SelectMediaUrl(asset, url) : url;
+    if (!chosen) return;
+    onSelect && onSelect(chosen, asset || null);
+    onClose && onClose();
+  };
+
+  return (
+    <div className="pnx-step239-picker-backdrop" role="dialog" aria-modal="true">
+      <div className="pnx-step239-picker pnx-step245-picker">
+        <header className="pnx-step239-picker__head">
+          <div>
+            <h2>{title || "画像を選択"}</h2>
+            <p>大会画像ファイルをその場で選ぶ、登録済み画像から選ぶ、URLを直接入力する、の3通りに対応しています。</p>
+          </div>
+          <button className="btn btn--ghost btn--sm" onClick={onClose}>閉じる</button>
+        </header>
+
+        <div className="pnx-step245-local-upload">
+          <div>
+            <strong>大会画像ファイルから選ぶ</strong>
+            <p>PC/スマホ内の画像を選ぶと、自動で軽量化して大会ロゴ・会場画像に反映します。</p>
+            {uploadNotice && <small>{uploadNotice}</small>}
+          </div>
+          <label className="btn btn--primary btn--sm">
+            ファイルを選ぶ
+            <input type="file" accept="image/*" onChange={handleLocalFile}/>
+          </label>
+        </div>
+
+        <div className="pnx-step239-picker__tools">
+          <input
+            className="input"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="登録済み画像を検索"
+          />
+          <button className="btn btn--ghost btn--sm" onClick={loadAssets}>再読み込み</button>
+          <button className="btn btn--ghost btn--sm" onClick={onOpenMedia}>画像管理を開く</button>
+        </div>
+
+        <div className="pnx-step239-picker__manual">
+          <input
+            className="input mono"
+            value={manualUrl}
+            onChange={e => setManualUrl(e.target.value)}
+            placeholder="https://example.com/image.jpg"
+          />
+          <button className="btn btn--primary btn--sm" onClick={() => choose(manualUrl.trim())}>このURLを使う</button>
+        </div>
+
+        {shownAssets.length ? (
+          <div className="pnx-step239-picker__grid">
+            {shownAssets.map(asset => {
+              const url = pnxStep239AssetUrl(asset);
+              return (
+                <button className="pnx-step239-picker__asset" key={asset.id || asset.assetId || url} onClick={() => choose(url, asset)}>
+                  <span className="pnx-step239-picker__thumb" style={{ backgroundImage:`url("${String(url).replace(/"/g, '\\"')}")` }}/>
+                  <span className="pnx-step239-picker__name">{asset.name || asset.filename || "画像"}</span>
+                  <span className="pnx-step239-picker__folder">{asset.folder || "general"}</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="pnx-step239-picker__empty">
+            <strong>登録済み画像はまだありません</strong>
+            <p>上の「ファイルを選ぶ」から直接画像を選べます。選んだ画像はメディアライブラリにも保存されます。</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const featuredDraft = pnxStep229ReadFeaturedDraft();
   const [activeNav, setActiveNav] = useState("home");
-  const [tab, setTab] = useState("pickup");
+  const [tab, setTab] = useState("simple");
   const [device, setDevice] = useState("ios");
+  const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [bridgeStatus, setBridgeStatus] = useState("最終CMS Bridge 読み込み中");
+  const [publishMeta, setPublishMeta] = useState(() => pnxStep230ReadPublishMeta());
+  const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+  const [publishToast, setPublishToast] = useState("");
+  const [imagePicker, setImagePicker] = useState(null);
   const [livePreviewData, setLivePreviewData] = useState(null);
+  const [previewRefreshKey, setPreviewRefreshKey] = useState(1);
+  const [featuredVisibility, setFeaturedVisibility] = useState(() => (featuredDraft && featuredDraft.featuredVisibility) || pnxStep219ReadFeaturedVisibility());
+  const [prCards, setPrCards] = useState(() => (featuredDraft && featuredDraft.prCards) || pnxStep220ReadPrCards());
+  const [wearCards, setWearCards] = useState(() => (featuredDraft && featuredDraft.wearCards) || pnxStep221ReadWearCards());
+
+  useEffect(() => {
+    const draft = pnxStep229WriteFeaturedDraft({ banner, cats, articles, featuredVisibility, prCards, wearCards });
+    setPublishMeta(prev => pnxStep230WritePublishMeta({
+      ...(prev || {}),
+      draftUpdatedAt: draft.updatedAt,
+      status: "draft"
+    }));
+  }, [banner, cats, articles, featuredVisibility, prCards, wearCards]);
+
+  useEffect(() => {
+    pnxStep223WriteFeaturedPreviewDraft({ banner, featuredVisibility, prCards, wearCards, articles });
+    setPreviewRefreshKey(v => v + 1);
+  }, [banner, featuredVisibility, prCards, wearCards, articles]);
 
   useEffect(() => {
     const handleForceNav = (event) => {
       const nav = event && event.detail && event.detail.nav;
       if (!nav) return;
       setActiveNav(nav);
-      if (nav === "home") setTab("pickup");
+      if (nav === "home") setTab("simple");
       if (nav === "banner") setTab("pickup");
-      if (nav === "news") setTab("articles");
       document.body.dataset.cmsActiveNav = nav;
     };
 
@@ -3994,11 +6509,12 @@ function App() {
   }, []);
 
 
-  const [banner, setBanner] = useState({
+  const [banner, setBanner] = useState(() => (featuredDraft && featuredDraft.banner) || {
     title: "春の新作ウェア特集",
     subtitle: "2024年春夏の最新ゴルフウェアをチェックしよう",
     cta: "詳しく見る",
     link: "/special/spring-wear-2024",
+    imageUrl: "",
     startDate: "2024 / 04 / 01",
     endDate: "2024 / 04 / 30",
     order: 1,
@@ -4006,7 +6522,7 @@ function App() {
     published: true,
   });
 
-  const [cats, setCats] = useState([
+  const [cats, setCats] = useState(() => (featuredDraft && featuredDraft.cats) || [
     { id: 1, name: "ウェア", iconKey: "wear", visible: true, order: 1 },
     { id: 2, name: "クラブ", iconKey: "club", visible: true, order: 2 },
     { id: 3, name: "ゴルフ場", iconKey: "course", visible: true, order: 3 },
@@ -4014,7 +6530,7 @@ function App() {
     { id: 5, name: "ニュース", iconKey: "news", visible: true, order: 5 },
   ]);
 
-  const [articles, setArticles] = useState([
+  const [articles, setArticles] = useState(() => (featuredDraft && featuredDraft.articles) || [
     {
       id: 1, tone: "deep", category: "club",
       title: "最新ドライバー徹底比較",
@@ -4047,9 +6563,45 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  const saveFeaturedToBridge = () => {
+  const saveFeaturedDraft = () => {
+    const draft = pnxStep229WriteFeaturedDraft({ banner, cats, articles, featuredVisibility, prCards, wearCards });
+    setPublishMeta(prev => pnxStep230WritePublishMeta({
+      ...(prev || {}),
+      draftUpdatedAt: draft.updatedAt,
+      status: "draft"
+    }));
+    pnxStep223WriteFeaturedPreviewDraft({ banner, featuredVisibility, prCards, wearCards, articles });
+    setBridgeStatus("下書き保存済み · 公開前プレビューに反映中");
+    setTimeout(reloadLivePreviewData, 120);
+    setPreviewRefreshKey(v => v + 1);
+    return draft;
+  };
+
+  const saveFeaturedToBridge = saveFeaturedDraft;
+
+  const openImagePicker = (title, folder, onSelect) => {
+    setImagePicker({ title, folder, onSelect });
+    setPreviewCollapsed(false);
+  };
+
+  const getPublishSummary = () => {
+    const visible = (list) => (list || []).filter(item => item && item.visible !== false && item.published !== false).length;
+    return {
+      pickup: banner && banner.published === false ? "非公開" : "公開",
+      wear: `${visible(wearCards)} / 3`,
+      pr: `${visible(prCards)} / 3`,
+      articles: `${visible(articles)}件`,
+    };
+  };
+
+  const requestPublishFeatured = () => {
+    setPublishConfirmOpen(true);
+  };
+
+  const publishFeaturedToApp = () => {
+    setPublishConfirmOpen(false);
     if (!window.PNXCmsFinalDesignBridge) {
-      setBridgeStatus("Bridge未接続：cms-final-design-bridge.jsを確認してください");
+      setBridgeStatus("Bridge未接続：publishできません");
       return;
     }
 
@@ -4058,24 +6610,33 @@ function App() {
       window.PNXCmsFinalDesignBridge.saveFeaturedContent(pnxStep62ArticleToFeatured(row, index))
     );
     const savedCategories = window.PNXCmsFinalDesignBridge.saveCategories(cats);
+    const savedVisibility = pnxStep219WriteFeaturedVisibility(featuredVisibility);
+    const savedPrCards = pnxStep220WritePrCards(prCards);
+    const savedWearCards = pnxStep221WriteWearCards(wearCards);
+    const publishedAt = new Date().toISOString();
+    const draft = pnxStep229WriteFeaturedDraft({ banner, cats, articles, featuredVisibility, prCards, wearCards, publishedAt });
+    setPublishMeta(pnxStep230WritePublishMeta({
+      draftUpdatedAt: draft.updatedAt,
+      publishedAt,
+      status: "published"
+    }));
 
-    const s = window.PNXCmsFinalDesignBridge.status();
-    setBridgeStatus(`保存完了 · PICK UP 1件 / 記事 ${savedArticles.length}件 / カテゴリ ${savedCategories.length}件`);
+    const payload = pnxStep129SafePublishToApp(null, { message:"本体反映しました" });
+    setBridgeStatus(`公開完了 · PICK UP 1件 / 記事 ${savedArticles.length}件 / カテゴリ ${savedCategories.length}件`);
+    setPublishToast("公開しました。本体の注目ページに反映済みです。");
+    setTimeout(() => setPublishToast(""), 4200);
     setTimeout(reloadLivePreviewData, 120);
-    return { pickup, savedArticles, savedCategories, status: s };
+    setPreviewRefreshKey(v => v + 1);
+    return { pickup, savedArticles, savedCategories, savedVisibility, savedPrCards, savedWearCards, payload };
   };
 
-  const publishFeaturedToApp = () => {
-    if (!window.PNXCmsFinalDesignBridge) {
-      setBridgeStatus("Bridge未接続：publishできません");
-      return;
-    }
-
-    saveFeaturedToBridge();
-    const payload = pnxStep129SafePublishToApp(null, { message:"本体反映しました" });
-    setBridgeStatus(`本体反映イベント送信済み · featured ${payload.featured.length}件`);
-    setTimeout(reloadLivePreviewData, 120);
-    return payload;
+  const discardFeaturedDraft = () => {
+    if (!window.confirm("未公開の下書きを破棄して、最後に公開した状態へ戻しますか？")) return;
+    try {
+      localStorage.removeItem(PNX_STEP229_FEATURED_DRAFT_KEY);
+    } catch(e) {}
+    setBridgeStatus("下書きを破棄しました · 公開済み状態を再読み込みします");
+    setTimeout(() => window.location.reload(), 250);
   };
 
   const reloadLivePreviewData = () => {
@@ -4086,10 +6647,15 @@ function App() {
 
   useEffect(() => {
     const timer = setTimeout(reloadLivePreviewData, 500);
-    const onAnyCmsUpdate = () => setTimeout(reloadLivePreviewData, 120);
+    const onAnyCmsUpdate = () => {
+      setTimeout(reloadLivePreviewData, 120);
+      setTimeout(() => setPreviewRefreshKey(v => v + 1), 160);
+    };
 
     window.addEventListener("pnx:cms-final:featured-saved", onAnyCmsUpdate);
     window.addEventListener("pnx:cms-final:categories-saved", onAnyCmsUpdate);
+    window.addEventListener("pnx:cms-final:tournament-saved", onAnyCmsUpdate);
+    window.addEventListener("pnx:cms-final:tournament-removed", onAnyCmsUpdate);
     window.addEventListener("PNX_CMS_SEARCH_SNAPSHOT_UPDATED", onAnyCmsUpdate);
     window.addEventListener("PNX_CMS_FINAL_SEARCH_SYNC_PUBLISHED", onAnyCmsUpdate);
     window.addEventListener("storage", onAnyCmsUpdate);
@@ -4098,6 +6664,8 @@ function App() {
       clearTimeout(timer);
       window.removeEventListener("pnx:cms-final:featured-saved", onAnyCmsUpdate);
       window.removeEventListener("pnx:cms-final:categories-saved", onAnyCmsUpdate);
+      window.removeEventListener("pnx:cms-final:tournament-saved", onAnyCmsUpdate);
+      window.removeEventListener("pnx:cms-final:tournament-removed", onAnyCmsUpdate);
       window.removeEventListener("PNX_CMS_SEARCH_SNAPSHOT_UPDATED", onAnyCmsUpdate);
       window.removeEventListener("PNX_CMS_FINAL_SEARCH_SYNC_PUBLISHED", onAnyCmsUpdate);
       window.removeEventListener("storage", onAnyCmsUpdate);
@@ -4109,6 +6677,11 @@ function App() {
   const previewArticles = livePreviewData && livePreviewData.articles && livePreviewData.articles.length ? livePreviewData.articles : articles;
   const previewTournaments = livePreviewData && livePreviewData.tournaments ? livePreviewData.tournaments : [];
   const previewSyncMeta = livePreviewData ? livePreviewData.syncMeta : null;
+  const hasUnpublishedChanges = !!(
+    publishMeta &&
+    publishMeta.draftUpdatedAt &&
+    (!publishMeta.publishedAt || String(publishMeta.draftUpdatedAt) > String(publishMeta.publishedAt))
+  );
 
   const folders = [
     { name: "バナー画像", count: 45 },
@@ -4131,23 +6704,125 @@ function App() {
     setActiveNav(key);
     document.body.dataset.cmsActiveNav = key;
     if (meta.forceTab) setTab(meta.forceTab);
-    if (key === "home" || key === "banner") setTab("pickup");
-    if (key === "news") setTab("articles");
+    if (key === "home") setTab("simple");
+    if (key === "banner") setTab("pickup");
+  };
+
+  const openEditorFromPreviewTarget = (target) => {
+    const t = String(target || "");
+    if (!t) return;
+
+    if (t === "pickup") {
+      setActiveNav("home");
+      document.body.dataset.cmsActiveNav = "home";
+      setTab("pickup");
+    } else if (t === "category") {
+      setActiveNav("home");
+      document.body.dataset.cmsActiveNav = "home";
+      setTab("category");
+    } else if (t === "wear") {
+      setActiveNav("home");
+      document.body.dataset.cmsActiveNav = "home";
+      setTab("wear");
+    } else if (t === "sponsor") {
+      handleNavChange("ads");
+    } else if (t === "articles") {
+      handleNavChange("news");
+    } else if (t === "bottom") {
+      setActiveNav("home");
+      document.body.dataset.cmsActiveNav = "home";
+      setTab("bottom");
+    } else if (t === "display") {
+      setActiveNav("home");
+      document.body.dataset.cmsActiveNav = "home";
+      setTab("display");
+    }
+
+    setBridgeStatus(`プレビューから編集画面を開きました · ${t}`);
+    setPreviewCollapsed(false);
+  };
+
+  useEffect(() => {
+    const handlePreviewEditTarget = (event) => {
+      const data = event && event.data;
+      if (!data || data.type !== "PNX_CMS_PREVIEW_EDIT_TARGET") return;
+      openEditorFromPreviewTarget(data.target);
+    };
+    window.addEventListener("message", handlePreviewEditTarget);
+    return () => window.removeEventListener("message", handlePreviewEditTarget);
+  }, [activeNav, tab, previewCollapsed]);
+
+  const applySimpleOperationPreset = (presetKey) => {
+    const baseVisibility = {
+      pickup: true,
+      categories: true,
+      wear: true,
+      sponsor: true,
+      articles: true,
+      bottomPromo: true
+    };
+
+    let nextVisibility = { ...baseVisibility };
+    let nextPrCards = prCards.map(card => ({ ...card }));
+    let nextWearCards = wearCards.map(card => ({ ...card }));
+
+    if (presetKey === "noAds") {
+      nextVisibility.sponsor = false;
+      nextPrCards = nextPrCards.map(card => ({ ...card, visible: false }));
+    }
+
+    if (presetKey === "wearFocus") {
+      nextVisibility.sponsor = false;
+      nextVisibility.wear = true;
+      nextVisibility.bottomPromo = true;
+      nextPrCards = nextPrCards.map(card => ({ ...card, visible: false }));
+      nextWearCards = nextWearCards.map(card => ({ ...card, visible: true }));
+    }
+
+    if (presetKey === "articleFocus") {
+      nextVisibility.pickup = false;
+      nextVisibility.wear = false;
+      nextVisibility.sponsor = false;
+      nextVisibility.articles = true;
+      nextVisibility.categories = true;
+      nextVisibility.bottomPromo = false;
+      nextPrCards = nextPrCards.map(card => ({ ...card, visible: false }));
+    }
+
+    if (presetKey === "minimal") {
+      nextVisibility.pickup = false;
+      nextVisibility.wear = false;
+      nextVisibility.sponsor = false;
+      nextVisibility.bottomPromo = false;
+      nextVisibility.categories = true;
+      nextVisibility.articles = true;
+      nextPrCards = nextPrCards.map(card => ({ ...card, visible: false }));
+      nextWearCards = nextWearCards.map(card => ({ ...card, visible: false }));
+    }
+
+    setFeaturedVisibility(nextVisibility);
+    setPrCards(nextPrCards);
+    setWearCards(nextWearCards);
+    setBridgeStatus(`運用プリセットを適用しました · ${presetKey}`);
+    setTab("display");
+    setPreviewRefreshKey(v => v + 1);
   };
 
   const pageMeta = pnxStep75GetPageMeta(activeNav);
   const showHomeContent = pageMeta.type === "home";
   const showMatchContent = pageMeta.type === "match";
+  const showNewsContent = pageMeta.type === "news";
   const showSettingsContent = pageMeta.type === "settings";
   const showMediaContent = pageMeta.type === "media";
   const showStubContent = pageMeta.type === "stub";
+  const showAdsContent = pageMeta.type === "ads";
 
   return (
-    <div className="app">
+    <div className={`app ${previewCollapsed ? "is-preview-collapsed" : ""}`}>
       <Sidebar active={activeNav} onChange={handleNavChange}/>
 
       <div className="main">
-        <Topbar/>
+        <Topbar previewCollapsed={previewCollapsed} onTogglePreview={() => setPreviewCollapsed(v => !v)} onPreviewRefresh={() => setPreviewRefreshKey(v => v + 1)}/>
         <div className="main__inner">
           <h1 className="page-h">{pageMeta.title}</h1>
           <p className="page-sub">{pageMeta.sub}</p>
@@ -4169,16 +6844,33 @@ function App() {
             </strong>
           </div>
 
+          <PreviewQuickControl
+            collapsed={previewCollapsed}
+            onToggle={() => setPreviewCollapsed(v => !v)}
+            onRefresh={() => setPreviewRefreshKey(v => v + 1)}
+          />
+
           <div className="pnx-step62-bridgebar">
             <PNXStep62BridgeStatus message={bridgeStatus}/>
-            <PNXStep62SaveButtons onSaveFeatured={saveFeaturedToBridge} onPublish={publishFeaturedToApp}/>
+            <PNXStep62SaveButtons onSaveFeatured={saveFeaturedToBridge} onPublish={requestPublishFeatured}/>
           </div>
+
+          {(showHomeContent || showNewsContent || showAdsContent) && (
+            <FeaturedPublishStatusPanel
+              meta={publishMeta}
+              hasUnpublishedChanges={hasUnpublishedChanges}
+              onDiscardDraft={discardFeaturedDraft}
+              onPublish={requestPublishFeatured}
+            />
+          )}
 
           {showHomeContent && (
           <div className="tabs">
             {[
+              { k: "simple", t: "かんたん編集" },
               { k: "pickup", t: "PICK UPバナー" },
               { k: "category", t: "カテゴリ" },
+              { k: "wear", t: "ウェア特集" },
               { k: "articles", t: "注目記事" },
               { k: "bottom", t: "下部バナー" },
               { k: "display", t: "表示設定" },
@@ -4194,11 +6886,24 @@ function App() {
 
           {showMatchContent && (
             <>
-              <ClaudeBulkTournamentPanel/>
-              <CmsTournamentManagePanel/>
+              <MatchCmsFlowGuide/>
+              <CmsTournamentManagePanel onPickImage={openImagePicker}/>
+              <AIBulkTournamentPanel onPickImage={openImagePicker}/>
               <CmsTournamentValidationPanel/>
               <CmsSearchSyncStabilityPanel/>
             </>
+          )}
+
+          {showNewsContent && (
+            <NewsArticleManagePanel
+              rows={articles}
+              onChange={setArticles}
+              onSave={saveFeaturedToBridge}
+              onPublish={requestPublishFeatured}
+              featuredVisibility={featuredVisibility}
+              setFeaturedVisibility={setFeaturedVisibility}
+              onPickImage={openImagePicker}
+            />
           )}
 
           {showSettingsContent && <CmsStorageSettingsPanel/>}
@@ -4208,39 +6913,81 @@ function App() {
             <CmsMediaBindingPanel/>
           </>}
 
+          {showAdsContent && (
+            <>
+              <SponsorPrCardsPanel cards={prCards} onChange={setPrCards} onPickImage={openImagePicker}/>
+              <FeaturedDisplaySettingsPanel settings={featuredVisibility} onChange={setFeaturedVisibility}/>
+            </>
+          )}
+
           {showStubContent && (
             <StubPanel title={pageMeta.title} hint={pageMeta.stub || "このメニューは今後実装します。"}/>
           )}
 
+          {showHomeContent && tab === "simple" && (
+            <>
+              <SimpleEditHub
+                banner={banner}
+                cats={cats}
+                articles={articles}
+                visibility={featuredVisibility}
+                prCards={prCards}
+                wearCards={wearCards}
+                onSelectTab={setTab}
+                onSelectNav={handleNavChange}
+                onApplyPreset={applySimpleOperationPreset}
+              />
+              <FeaturedPublishChecklist
+                banner={banner}
+                cats={cats}
+                articles={articles}
+                visibility={featuredVisibility}
+                prCards={prCards}
+                wearCards={wearCards}
+                onSelectTab={setTab}
+                onSelectNav={handleNavChange}
+              />
+            </>
+          )}
+
           {showHomeContent && tab === "pickup" && (
-            <PickupBannerEditor banner={banner} onChange={setBanner} onSave={saveFeaturedToBridge}/>
+            <>
+              <PickupBannerEditor banner={banner} onChange={setBanner} onSave={saveFeaturedToBridge} onPickImage={openImagePicker}/>
+              <PickupBannerCmsNote/>
+            </>
           )}
           {showHomeContent && tab === "category" && (
             <CategoryCards cats={cats} onChange={setCats} onAdd={addCategory}/>
           )}
+          {showHomeContent && tab === "wear" && (
+            <>
+              <WearFeatureCardsPanel cards={wearCards} onChange={setWearCards} onPickImage={openImagePicker}/>
+              <FeaturedDisplaySettingsPanel settings={featuredVisibility} onChange={setFeaturedVisibility}/>
+            </>
+          )}
           {showHomeContent && tab === "articles" && (
-            <ArticlesTable rows={articles} onChange={setArticles}/>
+            <ArticlesTable rows={articles} onChange={setArticles} onPickImage={openImagePicker}/>
           )}
           {showHomeContent && tab === "bottom" && <StubPanel title="下部バナー" hint="ホーム画面下部のサブバナーをここで管理します。"/>}
-          {showHomeContent && tab === "display" && <StubPanel title="表示設定" hint="セクション順序や表示密度などを切り替えます。"/>}
+          {showHomeContent && tab === "display" && <FeaturedDisplaySettingsPanel settings={featuredVisibility} onChange={setFeaturedVisibility}/>}
 
           {showHomeContent && tab === "pickup" && (
             <>
               <CategoryCards cats={cats} onChange={setCats} onAdd={addCategory}/>
-              <ArticlesTable rows={articles} onChange={setArticles}/>
+              <ArticlesTable rows={articles} onChange={setArticles} onPickImage={openImagePicker}/>
               <MediaLibrary folders={folders}/>
             </>
           )}
 
-          {showHomeContent && (
+          {(showHomeContent || showNewsContent) && (
           <div className="savebar">
             <span style={{ display:"flex", alignItems:"center", gap: 6 }}>
               <span style={{ width: 8, height: 8, borderRadius: 999, background: "#2cc070", boxShadow: "0 0 0 3px rgba(44,192,112,.18)" }}/>
-              <span className="muted">変更は自動保存されました · 14:32</span>
+              <span className="muted">変更は下書き保存 · 公開ボタンで本体反映</span>
             </span>
             <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-              <button className="btn btn--ghost btn--sm" onClick={saveFeaturedToBridge}><I.Eye size={13}/> Bridge保存</button>
-              <button className="btn btn--primary btn--sm" onClick={publishFeaturedToApp}><I.Save size={13}/> 公開する</button>
+              <button className="btn btn--ghost btn--sm" onClick={saveFeaturedToBridge}><I.Eye size={13}/> 下書き保存</button>
+              <button className="btn btn--primary btn--sm" onClick={requestPublishFeatured}><I.Save size={13}/> 公開する</button>
             </span>
           </div>
           )}
@@ -4248,15 +6995,45 @@ function App() {
       </div>
 
 
-          {["dashboard","calendar","details","news","lesson","notice","mypage","banner","icons","colors","menu","text"].includes(activeNav) && (
+          {["dashboard","calendar","details","lesson","notice","mypage","banner","icons","colors","menu","text"].includes(activeNav) && (
             <CmsRoutePlaceholder nav={activeNav}/>
           )}
 
-      <PhonePreviewRail banner={previewBanner} cats={previewCats}
-                        articles={previewArticles}
-                        tournaments={previewTournaments}
-                        syncMeta={previewSyncMeta}
-                        device={device} onDeviceChange={setDevice}/>
+      {!previewCollapsed && (
+        <PhonePreviewRail banner={previewBanner} cats={previewCats}
+                          articles={previewArticles}
+                          tournaments={previewTournaments}
+                          syncMeta={previewSyncMeta}
+                          device={device} onDeviceChange={setDevice}
+                          activeNav={activeNav}
+                          previewRefreshKey={previewRefreshKey}
+                          onPreviewRefresh={() => setPreviewRefreshKey(v => v + 1)}/>
+      )}
+
+      {previewCollapsed && (
+        <button className="pnx-step231-floating-preview-btn" onClick={() => setPreviewCollapsed(false)}>
+          <I.Eye size={14}/> プレビューを開く
+        </button>
+      )}
+
+      <ImageLibraryPickerModal
+        open={!!imagePicker}
+        title={imagePicker && imagePicker.title}
+        folder={imagePicker && imagePicker.folder}
+        onSelect={(url) => imagePicker && imagePicker.onSelect && imagePicker.onSelect(url)}
+        onClose={() => setImagePicker(null)}
+        onOpenMedia={() => {
+          setImagePicker(null);
+          handleNavChange("media-all");
+        }}
+      />
+      <PublishConfirmModal
+        open={publishConfirmOpen}
+        summary={getPublishSummary()}
+        onCancel={() => setPublishConfirmOpen(false)}
+        onConfirm={publishFeaturedToApp}
+      />
+      <PublishToast message={publishToast} onClose={() => setPublishToast("")}/>
     </div>
   );
 }
