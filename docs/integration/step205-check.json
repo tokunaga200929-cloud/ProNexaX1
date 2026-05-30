@@ -1,0 +1,22 @@
+{
+  "step": 205,
+  "name": "CMS tournaments to search sync",
+  "base": "pronexax_step204_tournament_detail_sheet.zip",
+  "status": "implemented",
+  "changedFiles": [
+    "scripts/search/search.js",
+    "pages/search/embed.html",
+    "pages/search/index.html",
+    "pages/search/search.html",
+    "pages/featured/embed.html",
+    "pages/featured/featured.html",
+    "docs/integration/STEP205_cms_to_search_sync.md",
+    "README_STEP205_CMS大会_試合検索反映.md"
+  ],
+  "checks": {
+    "searchJsSyntax": "ok",
+    "calendarJsSyntax": "ok",
+    "cmsBridgeSyntax": "ok",
+    "cmsJsNote": "cms/cms.js contains JSX and is not checked by node --check"
+  }
+}

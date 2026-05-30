@@ -1,0 +1,13 @@
+{
+  "step": "208",
+  "name": "mypage_blue_theme",
+  "base": "pronexax_step207_single_day_chip_fix.zip",
+  "changed": [
+    "styles/mypage/mypage.css",
+    "scripts/mypage/mypage.js",
+    "pages/mypage/embed.html",
+    "pages/mypage/index.html",
+    "pages/mypage/mypage.html"
+  ],
+  "note": "マイページの緑アクセントをカレンダー画面寄りの青に統一"
+}

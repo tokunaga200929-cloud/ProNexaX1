@@ -1,0 +1,18 @@
+{
+  "source": "pronexax_step201_nav_stability_check.zip",
+  "index_html_at_root": true,
+  "calendar_css_preserved": true,
+  "calendar_js_preserved": true,
+  "step201_preserved": true,
+  "step202_parent_css": true,
+  "step202_parent_js": true,
+  "step202_parent_status": true,
+  "search_embed_exists": true,
+  "search_embed_body_class": true,
+  "search_css_step202": true,
+  "search_js_step202": true,
+  "search_internal_bottom_nav_hidden": true,
+  "search_frame_src_bumped": true,
+  "manifest_updated": true,
+  "netlify_toml": true
+}

@@ -1,0 +1,16 @@
+{
+  "step": "206",
+  "base": "pronexax_step205_cms_to_search_sync.zip",
+  "features": [
+    "search card logo rendering",
+    "bottom sheet hero image",
+    "official/entry/instagram URL buttons",
+    "calendar payload URL/logo inheritance",
+    "calendar tournament detail URL buttons"
+  ],
+  "keep": [
+    "calendar existing behavior",
+    "search filters",
+    "new ProNexaX app icon"
+  ]
+}

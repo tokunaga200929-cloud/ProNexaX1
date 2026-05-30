@@ -1,0 +1,12 @@
+{
+  "step": "204",
+  "base": "pronexax_step203_with_new_app_icon.zip",
+  "scope": "tournament detail bottom sheet",
+  "checks": {
+    "calendar_js_syntax": true,
+    "index_detail_markup_updated": true,
+    "calendar_detail_markup_updated": true,
+    "tournament_edit_hidden": true,
+    "monthly_chip_tap_opens_detail": true
+  }
+}

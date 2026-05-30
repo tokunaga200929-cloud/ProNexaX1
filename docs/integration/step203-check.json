@@ -1,0 +1,13 @@
+{
+  "step": 203,
+  "name": "search_to_calendar_link",
+  "status": "implemented",
+  "checks": {
+    "search_post_message": true,
+    "parent_message_listener": true,
+    "calendar_global_add_function": true,
+    "duplicate_prevention": true,
+    "local_storage_persistence": true,
+    "search_duplicate_script_load_fixed": true
+  }
+}
