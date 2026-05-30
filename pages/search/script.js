@@ -10401,3 +10401,16 @@ window.addEventListener("message", function(event){
     };
   };
 })();
+
+
+/* ================================================================
+   STEP273: Firestore tournament loaded → refresh standalone search page
+   ================================================================ */
+window.addEventListener('pnx:firestore:tournaments-loaded', function(){
+  try {
+    if (typeof PNXStep205RefreshCmsTournaments === "function") PNXStep205RefreshCmsTournaments('firestore:tournaments-loaded');
+    else if (typeof applyFiltersAndRender === "function") applyFiltersAndRender();
+  } catch(e) {
+    console.warn('[ProNexaX STEP273] standalone search refresh failed', e);
+  }
+});

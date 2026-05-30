@@ -3,12 +3,13 @@
 <head>
   <!-- STEP91: cache-busted search iframe assets -->
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#ffffff">
   <title>試合検索 — ProNexaX</title>
   <link rel="stylesheet" href="style.css?v=step180-mypage">
+  <script src="../../scripts/disable-zoom.js" defer></script>
 </head>
 
 <body>
@@ -399,6 +400,11 @@
   </div>
 
 </div><!-- /app-shell -->
+<script src="../../scripts/firebase/firebase-sdk-loader.js"></script>
+<script src="../../scripts/firebase/firestore-config.js"></script>
+<script src="../../scripts/firebase/firebase-app.js"></script>
+<script src="../../scripts/firebase/tournament-firestore-sync.js"></script>
+
 <script src="script.js?v=step206-logo-url-visuals"></script>
 
 <script id="pnx-step180h-iframe-nav-bridge">

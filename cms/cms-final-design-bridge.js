@@ -174,6 +174,17 @@
       const list = upsert(this.getTournaments(), item, "tournamentId");
       writeJson(KEYS.tournaments, list);
 
+      if (window.PNXTournamentFirestoreSync && window.PNXTournamentFirestoreSync.saveTournament) {
+        window.PNXTournamentFirestoreSync.saveTournament(item)
+          .then(result => {
+            emit("pnx:cms-final:tournament-firestore-saved", { tournament:item, result });
+          })
+          .catch(error => {
+            console.warn("[ProNexaX CMS] Firestore tournament save failed", error);
+            emit("pnx:cms-final:tournament-firestore-error", { tournament:item, message: error && error.message ? error.message : String(error) });
+          });
+      }
+
       emit("PNX_CMS_TOURNAMENT_SAVED", { tournament:item });
       emit("pnx:cms-final:tournament-saved", { tournament:item });
 
@@ -184,6 +195,15 @@
       const target = String(id || "");
       const list = this.getTournaments().filter(t => String(t.id || t.tournamentId) !== target);
       writeJson(KEYS.tournaments, list);
+
+      if (window.PNXTournamentFirestoreSync && window.PNXTournamentFirestoreSync.deleteTournament) {
+        window.PNXTournamentFirestoreSync.deleteTournament(target)
+          .then(result => emit("pnx:cms-final:tournament-firestore-deleted", { id:target, result }))
+          .catch(error => {
+            console.warn("[ProNexaX CMS] Firestore tournament delete failed", error);
+            emit("pnx:cms-final:tournament-firestore-error", { id:target, message: error && error.message ? error.message : String(error) });
+          });
+      }
 
       emit("pnx:cms-final:tournament-removed", { id:target });
       return true;
@@ -299,7 +319,26 @@
     }
   };
 
-  window.PNXCmsFinalDesignBridge = Bridge;
+  
+  Bridge.loadTournamentsFromFirestore = async function(){
+    if (!window.PNXTournamentFirestoreSync || !window.PNXTournamentFirestoreSync.loadFromFirestoreToLocal) {
+      return { ok:false, message:"PNXTournamentFirestoreSync is not ready" };
+    }
+    const result = await window.PNXTournamentFirestoreSync.loadFromFirestoreToLocal({ reason:"cms-manual-load" });
+    emit("pnx:cms-final:tournaments-firestore-loaded", { result });
+    return result;
+  };
+
+  Bridge.publishTournamentsToFirestore = async function(){
+    if (!window.PNXTournamentFirestoreSync || !window.PNXTournamentFirestoreSync.publishAllLocalToFirestore) {
+      return { ok:false, message:"PNXTournamentFirestoreSync is not ready" };
+    }
+    const result = await window.PNXTournamentFirestoreSync.publishAllLocalToFirestore(this.getTournaments());
+    emit("pnx:cms-final:tournaments-firestore-published", { result });
+    return result;
+  };
+
+window.PNXCmsFinalDesignBridge = Bridge;
 
   document.addEventListener("DOMContentLoaded", function(){
     setTimeout(function(){
@@ -1788,6 +1827,19 @@
     writeJson(META_KEY, meta);
     writeJson(UPDATED_KEY, meta.createdAt);
     writeJson(HARD_SYNC_KEY, { meta, tournaments: publicItems });
+
+    if (window.PNXTournamentFirestoreSync && window.PNXTournamentFirestoreSync.publishAllLocalToFirestore) {
+      const localAll = bridge.getTournaments ? bridge.getTournaments() : readJson(ALL_KEY, []);
+      window.PNXTournamentFirestoreSync.publishAllLocalToFirestore(localAll)
+        .then(result => {
+          try {
+            window.dispatchEvent(new CustomEvent("pnx:cms-final:tournaments-firestore-published", {
+              detail:{ result }
+            }));
+          } catch(e) {}
+        })
+        .catch(error => console.warn("[ProNexaX CMS] Firestore publish failed", error));
+    }
 
     try {
       window.dispatchEvent(new CustomEvent("PNX_STEP85_HARD_SYNC_UPDATED", {

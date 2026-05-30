@@ -2059,6 +2059,14 @@ window.addEventListener('storage', function(e) {
   setTimeout(() => PNXStep205RefreshCmsTournaments('storage:' + e.key), 80);
 });
 
+window.addEventListener('pnx:firestore:tournaments-loaded', function(e) {
+  setTimeout(() => PNXStep205RefreshCmsTournaments('firestore:tournaments-loaded'), 80);
+});
+
+window.addEventListener('pnx:firestore:tournament-sync-status', function(e) {
+  window.__PNX_STEP273_FIRESTORE_SEARCH_STATUS__ = e.detail || null;
+});
+
 window.addEventListener('message', function(e) {
   const data = e && e.data || {};
   const type = data.type || data.event || '';
@@ -3871,6 +3879,12 @@ document.getElementById('cat-sel-done-btn')?.addEventListener('click', closeCate
 function init() {
   const restored = loadStateFromLocalStorage();
   PNXStep205MergeCmsTournaments({ reason: 'init-after-state-restore' });
+
+  if (window.PNXTournamentFirestoreSync && window.PNXTournamentFirestoreSync.loadFromFirestoreToLocal) {
+    window.PNXTournamentFirestoreSync.loadFromFirestoreToLocal({ reason:'search-init' })
+      .then(() => PNXStep205RefreshCmsTournaments('firestore:search-init'))
+      .catch(e => console.warn('[ProNexaX STEP273] Firestore大会読み込み失敗', e));
+  }
 
   if (restored && APP_STATE.searchQuery) {
     const si = document.getElementById('search-input');
