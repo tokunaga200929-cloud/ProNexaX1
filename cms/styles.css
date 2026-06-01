@@ -4091,7 +4091,14 @@ body{--pnx-step165b-tax-documents-review-layout-fix:1;}
   font-weight: 720;
 }
 .pnx-step245-local-upload input[type="file"] {
-  display: none;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0 !important;
+  display: block !important;
+  cursor: pointer !important;
+  font-size: 100px !important;
 }
 .pnx-step245-local-upload .btn {
   flex-shrink: 0;
@@ -5931,5 +5938,291 @@ body{--pnx-step165b-tax-documents-review-layout-fix:1;}
 
   .pnx-step269-diagnostic__summary {
     margin: 0 12px 14px;
+  }
+}
+
+
+/* ============================================================
+   STEP278: 大会管理の手動画像選択を復旧
+   ============================================================ */
+.pnx-step278-image-url-row {
+  display: block;
+}
+.pnx-step278-image-label {
+  display: block;
+  margin: 0 0 7px;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 760;
+}
+.pnx-step278-image-field {
+  grid-template-columns: minmax(0, 1fr) auto auto !important;
+}
+.pnx-step278-file-btn,
+.pnx-step245-local-upload .btn {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+}
+.pnx-step278-file-btn input[type="file"] {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0 !important;
+  display: block !important;
+  cursor: pointer !important;
+  font-size: 100px !important;
+}
+@media (max-width: 760px) {
+  .pnx-step278-image-field {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .pnx-step278-image-field input.input {
+    grid-column: 1 / -1;
+  }
+}
+
+
+/* ============================================================
+   STEP281: 画像容量対策＋使い回しルール
+   ============================================================ */
+.pnx-step281-card {
+  border-color: rgba(10,116,255,.12) !important;
+}
+.pnx-step281-sub {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+.pnx-step281-notice {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(10,116,255,.07);
+  color: #155EEF;
+  font-size: 12.5px;
+  font-weight: 760;
+}
+.pnx-step281-stats {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+.pnx-step281-stats div {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(248,250,252,.92);
+  border: 1px solid rgba(15,23,42,.08);
+}
+.pnx-step281-stats span {
+  display: block;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 760;
+}
+.pnx-step281-stats strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--ink);
+  font-size: 21px;
+  font-weight: 850;
+  letter-spacing: -.04em;
+}
+.pnx-step281-policy {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(15,122,62,.055);
+  border: 1px solid rgba(15,122,62,.10);
+  display: grid;
+  gap: 4px;
+}
+.pnx-step281-policy strong {
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 850;
+}
+.pnx-step281-policy span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 680;
+}
+.pnx-step281-suggestion-box {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(248,250,252,.88);
+  border: 1px solid rgba(15,23,42,.08);
+}
+.pnx-step281-suggestion-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pnx-step281-suggestion-head strong {
+  display: block;
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 850;
+}
+.pnx-step281-suggestion-head span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 650;
+}
+.pnx-step281-suggestion-list {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+.pnx-step281-suggestion {
+  appearance: none;
+  border: 1px solid rgba(15,23,42,.08);
+  background: rgba(255,255,255,.92);
+  border-radius: 14px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+.pnx-step281-suggestion-thumb {
+  width: 54px;
+  height: 42px;
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+  background-color: #EEF4FF;
+}
+.pnx-step281-suggestion strong {
+  display: block;
+  color: var(--ink);
+  font-size: 11.5px;
+  font-weight: 820;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pnx-step281-suggestion small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.35;
+  max-height: 30px;
+  overflow: hidden;
+}
+.pnx-step281-suggestion-empty {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 680;
+}
+@media (max-width: 900px) {
+  .pnx-step281-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pnx-step281-suggestion-list {
+    grid-template-columns: 1fr;
+  }
+  .pnx-step281-suggestion-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+
+/* ============================================================
+   STEP282: 画像動画一覧アップロード復旧＋Storage診断
+   ============================================================ */
+.pnx-step282-storage-panel {
+  margin-top: 12px;
+  padding: 13px 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border-radius: 18px;
+  background: rgba(248,250,252,.94);
+  border: 1px solid rgba(15,23,42,.08);
+}
+.pnx-step282-storage-main {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.pnx-step282-storage-main strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 850;
+}
+.pnx-step282-storage-main small {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 680;
+  line-height: 1.45;
+}
+.pnx-step282-storage-main em {
+  color: #C2410C;
+  font-size: 11.5px;
+  font-style: normal;
+  font-weight: 760;
+}
+.pnx-step282-status {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 850;
+}
+.pnx-step282-status.is-ok {
+  color: #087A39;
+  background: #E8F7EE;
+  border: 1px solid #BCE8CA;
+}
+.pnx-step282-status.is-ng {
+  color: #C2410C;
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
+}
+.pnx-step282-storage-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.pnx-step71-filebtn {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.pnx-step71-filebtn input[type="file"] {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0 !important;
+  display: block !important;
+  cursor: pointer !important;
+  font-size: 100px !important;
+}
+@media (max-width: 820px) {
+  .pnx-step282-storage-panel {
+    grid-template-columns: 1fr;
+  }
+  .pnx-step282-storage-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

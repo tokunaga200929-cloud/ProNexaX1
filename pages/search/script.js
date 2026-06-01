@@ -201,6 +201,106 @@ const DUMMY_TOURNAMENTS = [
 
 
 /* ================================================================
+   STEP286: 試合検索の空表示フェイルセーフ
+   ─ Firestore/CMS/localStorage がまだ空の環境で index.html を直接開くと、
+     DUMMY_TOURNAMENTS が0件のままになり、検索画面が「壊れたように」見える。
+   ─ 実データが読み込まれた場合はこのフォールバックは自動で外す。
+   ================================================================ */
+const PNX_STEP286_FALLBACK_TOURNAMENTS = [
+  {
+    id: 'fallback-chugoku-open-2026',
+    name: '中四国オープンゴルフ選手権',
+    title: '中四国オープンゴルフ選手権',
+    cat: 'open', rawCategory: 'オープン競技', gender: 'mens', region: 'domestic', area: 'hiroshima', prefecture: 'hiroshima', prefectureLabel: '広島', displayLocation: '広島',
+    course: '広島カンツリー倶楽部 八本松コース', venue: '広島カンツリー倶楽部 八本松コース',
+    start: '2026-06-05', end: '2026-06-06', entryDeadline: '2026-05-25', cancelDeadline: '',
+    prize: '賞金総額あり', prizeWinner: '—', entryFee: '20,000円', practiceRoundFee: '要確認',
+    entryMethod: '公式サイト / 主催者案内を確認', qualification: 'プロ・研修生・競技ゴルファー', capacity: '要確認', organizer: '中国ゴルフ連盟',
+    status: 'open', emoji: '⛳', tags: ['オープン競技', '広島'], source: 'fallback', fallbackTournament: true, published: true,
+    officialUrl: '', entryUrl: '', resultUrl: '', leaderboardUrl: '', instagramUrl: '', memo: 'プレビュー用のフォールバック大会です。CMS/Firestoreの大会が読み込まれると自動で置き換わります。',
+    addedToCalendar: false, favorited: false
+  },
+  {
+    id: 'fallback-qt-sano-2026',
+    name: 'ファーストQT① 太平洋クラブ佐野ヒルクレストコース',
+    title: 'ファーストQT① 太平洋クラブ佐野ヒルクレストコース',
+    cat: 'qt', rawCategory: 'QT', gender: 'mens', region: 'domestic', area: 'tochigi', prefecture: 'tochigi', prefectureLabel: '栃木', displayLocation: '栃木',
+    course: '太平洋クラブ 佐野ヒルクレストコース', venue: '太平洋クラブ 佐野ヒルクレストコース',
+    start: '2026-09-01', end: '2026-09-04', entryDeadline: '2026-08-01', cancelDeadline: '',
+    prize: 'なし', prizeWinner: 'なし', entryFee: '220,000円', practiceRoundFee: '要確認',
+    entryMethod: 'JGTO公式情報を確認', qualification: 'QT出場資格者', capacity: '要確認', organizer: '日本ゴルフツアー機構',
+    status: 'open', emoji: '🏌️', tags: ['QT', '栃木'], source: 'fallback', fallbackTournament: true, published: true,
+    officialUrl: '', entryUrl: '', resultUrl: '', leaderboardUrl: '', instagramUrl: '', memo: '',
+    addedToCalendar: false, favorited: false
+  },
+  {
+    id: 'fallback-fj-tour-2026',
+    name: 'FJ TOUR チャレンジカップ',
+    title: 'FJ TOUR チャレンジカップ',
+    cat: 'other', rawCategory: 'ミニツアー', gender: 'mens', region: 'domestic', area: 'kanto', prefecture: 'chiba', prefectureLabel: '千葉', displayLocation: '千葉',
+    course: '関東近郊ゴルフ場', venue: '関東近郊ゴルフ場',
+    start: '2026-06-18', end: '2026-06-18', entryDeadline: '2026-06-10', cancelDeadline: '',
+    prize: '要確認', prizeWinner: '要確認', entryFee: '要確認', practiceRoundFee: '要確認',
+    entryMethod: 'FJ TOURスケジュールを確認', qualification: 'プロ・研修生・アマチュア', capacity: '要確認', organizer: 'FJ TOUR',
+    status: 'near', emoji: '🔥', tags: ['ミニツアー', '締切間近'], source: 'fallback', fallbackTournament: true, published: true,
+    officialUrl: 'https://fj-tour.jp/', entryUrl: 'https://fj-tour.jp/schedule.php', resultUrl: '', leaderboardUrl: '', instagramUrl: '', memo: '',
+    addedToCalendar: false, favorited: false
+  },
+  {
+    id: 'fallback-pa-cup-2026',
+    name: 'P&A CUP 2026',
+    title: 'P&A CUP 2026',
+    cat: 'other', rawCategory: 'ミニツアー', gender: 'mens', region: 'domestic', area: 'kanto', prefecture: 'saitama', prefectureLabel: '埼玉', displayLocation: '埼玉',
+    course: '埼玉県内ゴルフ場', venue: '埼玉県内ゴルフ場',
+    start: '2026-07-10', end: '2026-07-10', entryDeadline: '2026-06-30', cancelDeadline: '',
+    prize: '要確認', prizeWinner: '要確認', entryFee: '要確認', practiceRoundFee: '要確認',
+    entryMethod: '大会公式情報を確認', qualification: 'プロ・研修生・競技アマ', capacity: '要確認', organizer: 'P&A CUP',
+    status: 'open', emoji: '⛳', tags: ['ミニツアー', '埼玉'], source: 'fallback', fallbackTournament: true, published: true,
+    officialUrl: '', entryUrl: '', resultUrl: '', leaderboardUrl: '', instagramUrl: '', memo: '',
+    addedToCalendar: false, favorited: false
+  }
+];
+
+function pnxStep286RemoveFallbackTournaments() {
+  for (let i = DUMMY_TOURNAMENTS.length - 1; i >= 0; i--) {
+    const t = DUMMY_TOURNAMENTS[i];
+    if (t && (t.fallbackTournament === true || t.source === 'fallback')) {
+      DUMMY_TOURNAMENTS.splice(i, 1);
+    }
+  }
+}
+
+function pnxStep286EnsureFallbackTournaments(reason) {
+  if (DUMMY_TOURNAMENTS.length > 0) return false;
+  const fallback = PNX_STEP286_FALLBACK_TOURNAMENTS.map(item => Object.assign({}, item, {
+    addedToCalendar: APP_STATE.addedToCalendar.has(item.id),
+    favorited: APP_STATE.favorites.has(item.id)
+  }));
+  DUMMY_TOURNAMENTS.push(...fallback);
+  window.__PNX_STEP286_SEARCH_FALLBACK__ = {
+    enabled: true,
+    reason: reason || 'empty-search-data',
+    count: fallback.length,
+    at: new Date().toISOString()
+  };
+  console.warn('[ProNexaX STEP286] 試合検索のデータが0件のため、表示確認用フォールバック大会を表示:', window.__PNX_STEP286_SEARCH_FALLBACK__);
+  return true;
+}
+
+function pnxStep286SearchDataHealth(reason) {
+  return {
+    reason: reason || 'manual',
+    total: DUMMY_TOURNAMENTS.length,
+    fallbackCount: DUMMY_TOURNAMENTS.filter(t => t && (t.fallbackTournament === true || t.source === 'fallback')).length,
+    cmsStatus: window.__PNX_STEP205_CMS_SEARCH_SYNC__ || null,
+    firestoreStatus: window.__PNX_STEP273_FIRESTORE_SEARCH_STATUS__ || null
+  };
+}
+
+window.PNXStep286SearchDataHealth = pnxStep286SearchDataHealth;
+
+
+/* ================================================================
    § STATE  アプリ状態管理オブジェクト
    ─ 散在していた let 変数をここに集約。状態の読み書きは必ず
      アクセサー / ミューテーター関数を通して行う。
@@ -10263,3 +10363,86 @@ window.addEventListener('pnx:firestore:tournaments-loaded', function(){
     console.warn('[ProNexaX STEP273] standalone search refresh failed', e);
   }
 });
+
+
+/* ================================================================
+   STEP277: 本体試合検索 Firestore読み込み統一
+   ─ pages/search/embed.html が scripts/search/search.js を読んでも、
+     pages/search/search.html が pages/search/script.js を読んでも同じ動作にする。
+   ================================================================ */
+(function(){
+  if (window.__PNX_STEP277_SEARCH_FIRESTORE_UNIFY__) return;
+  window.__PNX_STEP277_SEARCH_FIRESTORE_UNIFY__ = true;
+
+  function readJson(key, fallback){
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch(e) {
+      return fallback;
+    }
+  }
+
+  function refresh(reason){
+    try {
+      if (typeof PNXStep205RefreshCmsTournaments === "function") {
+        return PNXStep205RefreshCmsTournaments("step277-search:" + reason);
+      }
+      if (typeof PNXStep205MergeCmsTournaments === "function") {
+        const result = PNXStep205MergeCmsTournaments({ reason:"step277-search:" + reason });
+        try { if (typeof renderCalendarSection === "function") renderCalendarSection(); } catch(e) {}
+        try { if (typeof applyFiltersAndRender === "function") applyFiltersAndRender(); } catch(e) {}
+        return result;
+      }
+    } catch(e) {
+      console.warn("[PNX STEP277] refresh failed", e);
+    }
+    return null;
+  }
+
+  async function load(reason){
+    try {
+      if (window.PNXSearchFirestoreUnifiedLoader && window.PNXSearchFirestoreUnifiedLoader.load) {
+        await window.PNXSearchFirestoreUnifiedLoader.load(reason || "search-js");
+      } else if (window.PNXTournamentFirestoreSync && window.PNXTournamentFirestoreSync.loadFromFirestoreToLocal) {
+        await window.PNXTournamentFirestoreSync.loadFromFirestoreToLocal({ reason: reason || "search-js" });
+      }
+      return refresh(reason || "manual");
+    } catch(e) {
+      console.warn("[PNX STEP277] Firestore load failed", e);
+      return null;
+    }
+  }
+
+  window.PNXStep277SearchFirestoreLoad = load;
+  window.PNXStep277SearchFirestoreStatus = function(){
+    const api = window.PNXTournamentFirestoreSync || null;
+    const unified = window.PNXSearchFirestoreUnifiedLoader || null;
+    return {
+      step:"277-search",
+      href:location.href,
+      hasSyncApi:!!api,
+      hasUnifiedLoader:!!unified,
+      hasRealConfig:!!(api && api.hasRealConfig && api.hasRealConfig()),
+      localAllCount:(readJson("PNX_CMS_TOURNAMENTS", []) || []).length,
+      publicCount:(readJson("PNX_CMS_PUBLIC_TOURNAMENTS_FOR_SEARCH", []) || []).length,
+      firestoreStatus:readJson("PNX_FIRESTORE_TOURNAMENT_SYNC_STATUS", null),
+      searchSync:window.__PNX_STEP205_CMS_SEARCH_SYNC__ || null,
+      currentCardCount:Array.isArray(window.DUMMY_TOURNAMENTS) ? window.DUMMY_TOURNAMENTS.length : (typeof DUMMY_TOURNAMENTS !== "undefined" ? DUMMY_TOURNAMENTS.length : null)
+    };
+  };
+
+  window.addEventListener("pnx:firestore:tournaments-loaded", function(){
+    setTimeout(() => refresh("firestore-loaded-event"), 60);
+  });
+
+  window.addEventListener("message", function(e){
+    const data = e && e.data || {};
+    if (data.type === "PNX_STEP277_FORCE_SEARCH_FIRESTORE_LOAD") {
+      load("parent-force-message");
+    }
+  });
+
+  setTimeout(() => load("boot-900ms"), 900);
+  setTimeout(() => load("boot-2500ms"), 2500);
+})();

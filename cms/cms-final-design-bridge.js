@@ -67,44 +67,84 @@
     return payload;
   }
 
+  function pick(){
+    for (let i = 0; i < arguments.length; i++) {
+      const v = arguments[i];
+      const s = String(v == null ? "" : v).trim();
+      if (s && s !== "不明" && s !== "—" && s !== "-") return s;
+    }
+    return "";
+  }
+
   function normalizeTournament(input){
     const t = input || {};
+    const links = t.links || {};
     const id = t.id || t.tournamentId || uid("tour");
-    const title = t.title || t.name || t.tournamentTitle || "新規大会";
+    const title = pick(t.title, t.name, t.tournamentTitle, t.tournamentName) || "新規大会";
+    const startDate = pick(t.startDate, t.start, t.date, t.playDate, t.schedule);
+    const endDate = pick(t.endDate, t.end, t.finishDate, startDate) || startDate;
+    const venue = pick(t.venue, t.course, t.place, t.location, t.golfCourse);
+    const category = pick(t.category, t.cat, t.categoryName, t.tour, t.series) || "未分類";
+    const status = pick(t.status, t.rawStatus, t.publicStatus) || "draft";
+    const officialUrl = pick(t.officialUrl, t.url, t.website, links.website, links.official);
+    const entryUrl = pick(t.entryUrl, t.applyUrl, t.applicationUrl, links.entry);
+    const instagramUrl = pick(t.instagramUrl, t.instagram, links.instagram);
+    const resultUrl = pick(t.resultUrl, links.result);
+    const pairingUrl = pick(t.pairingUrl, t.pairing, links.pairing);
+    const logoUrl = pick(t.logoUrl, t.tournamentLogoUrl, t.seriesLogoUrl, t.logo);
+    const venueImageUrl = pick(t.venueImageUrl, t.imageUrl, t.coverImageUrl, t.mainImageUrl, t.venueImage);
 
     return {
       id,
       tournamentId: id,
       title,
       name: title,
-      category: t.category || t.cat || "未分類",
+      category,
+      cat: category,
       gender: t.gender || "",
       area: t.area || "",
-      prefecture: t.prefecture || "",
-      prefectureLabel: t.prefectureLabel || "",
-      displayLocation: t.displayLocation || t.prefecture || "",
-      venue: t.venue || t.course || t.place || "",
-      startDate: t.startDate || t.start || t.date || "",
-      endDate: t.endDate || t.end || t.startDate || t.date || "",
+      prefecture: t.prefecture || t.pref || "",
+      prefectureLabel: t.prefectureLabel || t.displayLocation || t.prefecture || t.pref || "",
+      displayLocation: t.displayLocation || t.prefectureLabel || t.prefecture || t.pref || "",
+      venue,
+      course: venue,
+      startDate,
+      start: startDate,
+      endDate,
+      end: endDate,
       entryDeadline: t.entryDeadline || t.deadline || "",
-      entryFee: t.entryFee || "",
+      deadline: t.deadline || t.entryDeadline || "",
+      entryFee: t.entryFee || t.fee || "",
       prize: t.prize || t.totalPrize || "",
-      winnerPrize: t.winnerPrize || "",
-      organizer: t.organizer || "",
-      status: t.status || "draft",
-      isPickup: !!t.isPickup,
-      entryUrl: t.entryUrl || t.url || "",
-      officialUrl: t.officialUrl || "",
-      instagramUrl: t.instagramUrl || "",
-      logoUrl: t.logoUrl || t.tournamentLogoUrl || "",
-      tournamentLogoUrl: t.tournamentLogoUrl || t.logoUrl || "",
-      venueImageUrl: t.venueImageUrl || t.imageUrl || t.coverImageUrl || "",
-      imageUrl: t.imageUrl || t.venueImageUrl || t.coverImageUrl || "",
-      coverImageUrl: t.coverImageUrl || t.venueImageUrl || t.imageUrl || "",
-      imageAssetId: t.imageAssetId || "",
-      logoAssetId: t.logoAssetId || "",
-      imageAlt: t.imageAlt || t.venue || t.title || "",
-      memo: t.memo || "",
+      totalPrize: t.totalPrize || t.prize || "",
+      winnerPrize: t.winnerPrize || t.prizeWinner || "",
+      prizeWinner: t.prizeWinner || t.winnerPrize || "",
+      organizer: t.organizer || t.host || "",
+      qualification: t.qualification || t.eligibility || "",
+      eligibility: t.eligibility || t.qualification || "",
+      capacity: t.capacity || t.players || "",
+      officialUrl,
+      entryUrl,
+      instagramUrl,
+      resultUrl,
+      pairingUrl,
+      links: Object.assign({}, links, {
+        website: officialUrl || links.website || "",
+        entry: entryUrl || links.entry || "",
+        instagram: instagramUrl || links.instagram || "",
+        result: resultUrl || links.result || "",
+        pairing: pairingUrl || links.pairing || ""
+      }),
+      logoUrl,
+      tournamentLogoUrl: t.tournamentLogoUrl || logoUrl,
+      seriesLogoUrl: t.seriesLogoUrl || logoUrl,
+      venueImageUrl,
+      imageUrl: t.imageUrl || venueImageUrl,
+      coverImageUrl: t.coverImageUrl || venueImageUrl,
+      status,
+      isPublished: t.isPublished !== false,
+      published: t.published != null ? t.published !== false : status !== "draft",
+      visible: t.visible !== false,
       updatedAt: now(),
       createdAt: t.createdAt || now(),
       source: t.source || "cms-final"
@@ -1202,8 +1242,11 @@ window.PNXCmsFinalDesignBridge = Bridge;
       filename: a.filename || name,
       kind,
       folder,
-      url: a.url || a.src || a.dataUrl || "",
+      url: a.url || a.storageUrl || a.downloadUrl || a.src || a.dataUrl || "",
       dataUrl: a.dataUrl || "",
+      downloadUrl: a.downloadUrl || a.storageUrl || a.url || "",
+      storageUrl: a.storageUrl || a.downloadUrl || a.url || "",
+      storagePath: a.storagePath || a.path || "",
       mimeType: a.mimeType || "",
       sizeBytes: Number(a.sizeBytes || 0),
       width: a.width || "",
@@ -1275,18 +1318,24 @@ window.PNXCmsFinalDesignBridge = Bridge;
     const list = getList();
     const byFolder = {};
     let totalBytes = 0;
+    let storageBacked = 0;
+    let localOnly = 0;
 
     list.forEach(a => {
       const f = a.folder || "general";
       byFolder[f] = (byFolder[f] || 0) + 1;
       totalBytes += Number(a.sizeBytes || 0);
+      if (a.storagePath || (a.storageUrl && /^https?:/i.test(a.storageUrl))) storageBacked += 1;
+      else localOnly += 1;
     });
 
     return {
       checkedAt: now(),
       total: list.length,
       totalBytes,
-      byFolder
+      byFolder,
+      storageBacked,
+      localOnly
     };
   };
 

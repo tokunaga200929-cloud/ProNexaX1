@@ -501,6 +501,10 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 19.5L8.2 18.8L19.1 7.9C19.9 7.1 19.9 5.9 19.1 5.1C18.3 4.3 17.1 4.3 16.3 5.1L5.4 16L4.5 19.5Z"/><path d="M14.8 6.6L17.6 9.4"/></svg>
             <span>編集</span>
           </button>
+          <button class="pnx-cal-detail-action is-expedition" type="button" data-pnx-action="open-expedition-detail" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="17" height="12" rx="2.5"/><path d="M8.5 8V6.5A2.5 2.5 0 0 1 11 4h2a2.5 2.5 0 0 1 2.5 2.5V8M3.5 12.5h17"/></svg>
+            <span>遠征管理</span>
+          </button>
           <button class="pnx-cal-detail-action is-delete" type="button" data-pnx-action="delete-detail">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7H19"/><path d="M9 7V5.2C9 4.5 9.5 4 10.2 4H13.8C14.5 4 15 4.5 15 5.2V7"/><path d="M8 10V18.2C8 19.2 8.8 20 9.8 20H14.2C15.2 20 16 19.2 16 18.2V10"/><path d="M10.5 11.5V17"/><path d="M13.5 11.5V17"/></svg>
             <span data-pnx-detail-delete-label>削除</span>
@@ -514,14 +518,15 @@
     <!-- STEP200 INTEGRATION MODULE LAYER START -->
     <div class="pnx-module-layer" id="pnx-module-layer" aria-hidden="true">
       <div class="pnx-module-page" id="pnx-module-search" data-pnx-module-page="search" aria-hidden="true">
-        <iframe id="search-module-frame" class="pnx-module-frame" data-src="pages/search/embed.html?v=step254-media-flicker-fix" title="試合検索" loading="lazy"></iframe>
+        <iframe id="search-module-frame" class="pnx-module-frame" data-src="pages/search/embed.html?v=step286-search-data-restore" title="試合検索" loading="lazy"></iframe>
       </div>
       <div class="pnx-module-page" id="pnx-module-featured" data-pnx-module-page="featured" aria-hidden="true">
         <iframe id="featured-module-frame" class="pnx-module-frame" data-src="pages/featured/embed.html?v=step210-featured-scroll" title="広告・注目" loading="lazy"></iframe>
       </div>
-      <div class="pnx-module-page" id="pnx-module-finance" data-pnx-module-page="finance" aria-hidden="true">
-        <iframe id="finance-module-frame" class="pnx-module-frame" data-src="pages/finance/embed.html?v=step202-search-fit" title="収支" loading="lazy"></iframe>
+      <div class="pnx-module-page" id="pnx-module-expedition" data-pnx-module-page="expedition" aria-hidden="true">
+        <iframe id="expedition-module-frame" class="pnx-module-frame" data-src="pages/expedition/embed.html?v=step289-expedition-home" title="遠征" loading="lazy"></iframe>
       </div>
+      <!-- Legacy finance module is kept in pages/finance/* and styles/scripts/finance/* for rollback. -->
       <div class="pnx-module-page" id="pnx-module-mypage" data-pnx-module-page="mypage" aria-hidden="true">
         <iframe id="mypage-frame" class="pnx-module-frame" data-src="pages/mypage/embed.html?v=step202-search-fit" title="マイページ" loading="lazy"></iframe>
       </div>
@@ -554,14 +559,14 @@
         </svg>
         <span>広告</span>
       </button>
-      <button class="pnx-cal-nav-item" type="button" data-pnx-nav="finance">
+      <button class="pnx-cal-nav-item" type="button" data-pnx-nav="expedition">
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M5 18.5H19" />
-          <path d="M6.5 16L10.4 12.1L13.2 14.3L18 8" />
-          <path d="M18 8V12" />
-          <path d="M18 8H14" />
+          <rect x="4" y="8" width="16" height="11.5" rx="2.5" />
+          <path d="M8.5 8V6.7C8.5 5.2 9.7 4 11.2 4H12.8C14.3 4 15.5 5.2 15.5 6.7V8" />
+          <path d="M4 12.5H20" />
+          <path d="M9 14.5H15" />
         </svg>
-        <span>収支</span>
+        <span>遠征</span>
       </button>
       <button class="pnx-cal-nav-item" type="button" data-pnx-nav="profile">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -653,9 +658,9 @@ body.pnx-module-active .pnx-cal-month-popover{
 
   var MODULE_ROUTES = {
     calendar: { type:"native", label:"カレンダー" },
-    search: { type:"iframe", pageId:"pnx-module-search", frameId:"search-module-frame", src:"pages/search/embed.html?v=step206-logo-url-visuals", label:"試合検索" },
+    search: { type:"iframe", pageId:"pnx-module-search", frameId:"search-module-frame", src:"pages/search/embed.html?v=step286-search-data-restore", label:"試合検索" },
     featured: { type:"iframe", pageId:"pnx-module-featured", frameId:"featured-module-frame", src:"pages/featured/embed.html?v=step210-featured-scroll", label:"広告・注目" },
-    finance: { type:"iframe", pageId:"pnx-module-finance", frameId:"finance-module-frame", src:"pages/finance/embed.html?v=step202-search-fit", label:"収支" },
+    expedition: { type:"iframe", pageId:"pnx-module-expedition", frameId:"expedition-module-frame", src:"pages/expedition/embed.html?v=step289-expedition-home", label:"遠征" },
     mypage: { type:"iframe", pageId:"pnx-module-mypage", frameId:"mypage-frame", src:"pages/mypage/embed.html?v=step202-search-fit", label:"マイページ" },
     profile: { type:"iframe", pageId:"pnx-module-profile", frameId:"profile-frame", src:"pages/profile/embed.html?v=step202-search-fit", label:"プロフィール" }
   };
@@ -666,6 +671,7 @@ body.pnx-module-active .pnx-cal-month-popover{
     if (page === "profile") return "mypage";
     if (page === "profile-detail") return "profile";
     if (page === "ads" || page === "ad") return "featured";
+    if (page === "finance" || page === "expense" || page === "expenses") return "expedition";
     if (page === "admin" || page === "cms") return "cms";
     return page;
   }
@@ -924,13 +930,13 @@ body:not(.pnx-step201-module-active) .pnx-module-layer{
       src:"pages/featured/embed.html?v=" + CACHE,
       label:"広告・注目"
     },
-    finance: {
+    expedition: {
       type:"iframe",
-      nav:"finance",
-      pageId:"pnx-module-finance",
-      frameId:"finance-module-frame",
-      src:"pages/finance/embed.html?v=" + CACHE,
-      label:"収支"
+      nav:"expedition",
+      pageId:"pnx-module-expedition",
+      frameId:"expedition-module-frame",
+      src:"pages/expedition/embed.html?v=step289-expedition-home",
+      label:"遠征"
     },
     mypage: {
       type:"iframe",
@@ -955,6 +961,7 @@ body:not(.pnx-step201-module-active) .pnx-module-layer{
     if (page === "profile" || page === "mypage" || page === "profile-nav") return "mypage";
     if (page === "profile-detail" || page === "profileDetail") return "profileDetail";
     if (page === "ads" || page === "ad" || page === "pickup") return "featured";
+    if (page === "finance" || page === "expense" || page === "expenses") return "expedition";
     if (page === "admin" || page === "cms") return "cms";
     return page;
   }
@@ -1170,12 +1177,12 @@ body:not(.pnx-step201-module-active) .pnx-module-layer{
       navCalendar:!!document.querySelector('[data-pnx-nav="calendar"]'),
       navSearch:!!document.querySelector('[data-pnx-nav="search"]'),
       navFeatured:!!document.querySelector('[data-pnx-nav="featured"]'),
-      navFinance:!!document.querySelector('[data-pnx-nav="finance"]'),
+      navExpedition:!!document.querySelector('[data-pnx-nav="expedition"]'),
       navProfile:!!document.querySelector('[data-pnx-nav="profile"]'),
       layer:!!document.getElementById("pnx-module-layer"),
       searchFrame:!!document.getElementById("search-module-frame"),
       featuredFrame:!!document.getElementById("featured-module-frame"),
-      financeFrame:!!document.getElementById("finance-module-frame"),
+      expeditionFrame:!!document.getElementById("expedition-module-frame"),
       mypageFrame:!!document.getElementById("mypage-frame"),
       profileFrame:!!document.getElementById("profile-frame")
     };
@@ -1254,7 +1261,7 @@ body.pnx-step202-search-active #pnx-module-search{
   if (window.__PNX_STEP202_SEARCH_PARENT_FIT__) return;
   window.__PNX_STEP202_SEARCH_PARENT_FIT__ = true;
 
-  var SEARCH_SRC = "pages/search/embed.html?v=step206-logo-url-visuals";
+  var SEARCH_SRC = "pages/search/embed.html?v=step286-search-data-restore";
 
   function ensureSearchFrame(){
     var frame = document.getElementById("search-module-frame");
@@ -1496,6 +1503,133 @@ body.pnx-step202-search-active #pnx-module-search{
     var data = event && event.data || {};
     var type = data.type || data.event || "";
     if (TYPES.indexOf(type) !== -1) forward(type, data.payload || data);
+  });
+})();
+</script>
+
+
+<script id="pnx-step277-search-frame-helper">
+(function(){
+  if (window.__PNX_STEP277_SEARCH_FRAME_HELPER__) return;
+  window.__PNX_STEP277_SEARCH_FRAME_HELPER__ = true;
+  window.PNXStep277SearchFrameStatus = function(){
+    const frame = document.getElementById("search-module-frame");
+    const info = {
+      step:"277-parent",
+      frameExists:!!frame,
+      frameDataSrc:frame ? frame.getAttribute("data-src") : null,
+      frameSrc:frame ? frame.getAttribute("src") : null,
+      lastChildStatus:window.__PNX_STEP277_LAST_SEARCH_FRAME_STATUS__ || null
+    };
+    try {
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage({ type:"PNX_STEP277_FORCE_SEARCH_FIRESTORE_LOAD" }, "*");
+      }
+    } catch(e) {}
+    return info;
+  };
+  window.addEventListener("message", function(e){
+    const data = e && e.data || {};
+    if (data.type === "PNX_STEP277_SEARCH_FIRESTORE_STATUS") {
+      window.__PNX_STEP277_LAST_SEARCH_FRAME_STATUS__ = data;
+      console.info("[PNX STEP277] Search iframe Firestore status:", data);
+    }
+  });
+})();
+</script>
+
+
+
+<style id="pnx-step285-search-parent-restore">
+/* STEP285: 試合検索iframeだけを本体モジュール内に安全固定 */
+#pnx-module-search{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  overflow:hidden !important;
+  background:#F2F2F7 !important;
+}
+#search-module-frame{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  min-height:0 !important;
+  max-height:100% !important;
+  border:0 !important;
+  display:block !important;
+  background:#F2F2F7 !important;
+}
+body[data-current-page="search"] #pnx-module-layer,
+body.pnx-step202-search-active #pnx-module-layer{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+body[data-current-page="search"] #pnx-module-search,
+body.pnx-step202-search-active #pnx-module-search{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+</style>
+
+
+
+<!-- STEP287: 遠征iframe READY後もカレンダー連携データを確実に再送する安全ガード -->
+<script id="pnx-step287-expedition-ready-resend">
+(function(){
+  if (window.__PNX_STEP287_EXPEDITION_READY_RESEND__) return;
+  window.__PNX_STEP287_EXPEDITION_READY_RESEND__ = true;
+
+  function getActiveExpeditionData(){
+    if (window.__PNX_EXPEDITION_ACTIVE_DATA__) return window.__PNX_EXPEDITION_ACTIVE_DATA__;
+    try {
+      var raw = localStorage.getItem('pnx-expedition-active-tournament');
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return null;
+  }
+
+  function sendActiveExpeditionData(reason){
+    var data = getActiveExpeditionData();
+    var frame = document.getElementById('expedition-module-frame');
+    if (!data || !frame || !frame.contentWindow) return false;
+    try {
+      frame.contentWindow.postMessage({
+        type: 'PNX_EXPEDITION_LOAD',
+        source: reason || 'step287-parent-resend',
+        data: data
+      }, '*');
+      window.__PNX_STEP287_LAST_EXPEDITION_SEND__ = {
+        at: new Date().toISOString(),
+        reason: reason || 'step287-parent-resend',
+        tournamentId: data.tournamentId || null,
+        tournamentName: data.tournamentName || null
+      };
+      return true;
+    } catch(e) { return false; }
+  }
+
+  window.PNXSendActiveExpeditionData = sendActiveExpeditionData;
+
+  window.addEventListener('message', function(ev){
+    var msg = ev && ev.data || {};
+    if (msg.type === 'PNX_EXPEDITION_READY') {
+      sendActiveExpeditionData('expedition-iframe-ready');
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var frame = document.getElementById('expedition-module-frame');
+    if (!frame) return;
+    frame.addEventListener('load', function(){
+      setTimeout(function(){ sendActiveExpeditionData('expedition-frame-load-120'); }, 120);
+      setTimeout(function(){ sendActiveExpeditionData('expedition-frame-load-500'); }, 500);
+    });
   });
 })();
 </script>

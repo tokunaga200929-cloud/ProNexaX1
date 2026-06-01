@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>遠征 | ProNexaX</title>
+  <link rel="stylesheet" href="../../styles/expedition/expedition.css" />
+</head>
+<body>
+  <!--
+    ProNexaX「遠征」機能 単体モジュール
+    本体統合時は #expedition-root を page-finance / page-expedition と差し替え、
+    initExpeditionPage(rootElement, data) を呼び出してください。
+    CSS は #expedition-root 配下にのみ適用されます。
+  -->
+  <div id="expedition-root" class="expedition--fit-screen" data-screen-label="遠征" data-standalone="true"></div>
+
+  <script src="../../scripts/expedition/expedition.js"></script>
+  <script>
+    // 単体表示用の起動処理。本体側ではこのブロックを使わず、
+    // 本体から initExpeditionPage(root, data, { standalone: false }) を直接呼び出してください。
+    // standalone:true のときだけ、確認用の下部ナビを表示します。
+    document.addEventListener('DOMContentLoaded', function () {
+      var root = document.getElementById('expedition-root');
+      // expeditionData は expedition.js 内で window に公開しているダミーデータ
+      window.initExpeditionPage(root, window.expeditionData, { standalone: true, fitScreen: false, initialView: 'home' });
+    });
+  </script>
+</body>
+</html>

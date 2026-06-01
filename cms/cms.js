@@ -3378,6 +3378,166 @@ function pnxStep248ShowSaveAlert({ before, saved, readback, error }) {
 }
 
 
+
+/* ============================================================
+   STEP281: 画像容量対策＋使い回しルール
+   公式/手動画像を基本にしつつ、同じ会場・カテゴリ・シリーズ画像を使い回す
+   ============================================================ */
+function pnxStep281Text(value) {
+  return String(value == null ? "" : value).replace(/\s+/g, " ").trim();
+}
+
+function pnxStep281ImageOfTournament(t) {
+  return pnxStep281Text(t && (t.venueImageUrl || t.imageUrl || t.coverImageUrl));
+}
+
+function pnxStep281LogoOfTournament(t) {
+  return pnxStep281Text(t && (t.logoUrl || t.tournamentLogoUrl || t.seriesLogoUrl));
+}
+
+function pnxStep281AssetUrl(asset) {
+  if (!asset) return "";
+  return pnxStep281Text(asset.storageUrl || asset.downloadUrl || asset.url || asset.dataUrl || asset.imageUrl);
+}
+
+function pnxStep281NormalizeKey(value) {
+  return pnxStep281Text(value).toLowerCase()
+    .replace(/[ 　・･\/／\-ー_（）()【】\[\]「」]/g, "");
+}
+
+function pnxStep281CategoryGroup(t) {
+  const hay = [
+    t && t.category,
+    t && t.cat,
+    t && t.series,
+    t && t.title,
+    t && t.name,
+    t && t.organizer
+  ].map(pnxStep281Text).join(" ").toLowerCase();
+
+  if (/qt|クォリファイ|qualifying|ファースト|セカンド|サード|ファイナル/.test(hay)) return "QT";
+  if (/プロテスト|資格認定|pgaプロテスト|protest/.test(hay)) return "PGAプロテスト";
+  if (/jgto|日本ゴルフツアー|japan golf tour/.test(hay)) return "JGTO";
+  if (/acn/.test(hay)) return "ACNツアー";
+  if (/fj|fjツアー|fj-tour/.test(hay)) return "FJツアー";
+  if (/p&a|p＆a|pacup|panda/.test(hay)) return "P&A CUP";
+  if (/ミニツアー|minitour|mini tour/.test(hay)) return "ミニツアー";
+  return pnxStep281Text(t && (t.category || t.cat || t.series)) || "未分類";
+}
+
+function pnxStep281ScoreAssetForTarget(asset, target) {
+  const url = pnxStep281AssetUrl(asset);
+  if (!url) return 0;
+
+  const venue = pnxStep281NormalizeKey(target && (target.venue || target.course || target.place));
+  const category = pnxStep281NormalizeKey(pnxStep281CategoryGroup(target));
+  const folder = pnxStep281NormalizeKey(asset.folder);
+  const usage = pnxStep281NormalizeKey(asset.usage);
+  const name = pnxStep281NormalizeKey([asset.name, asset.filename, asset.alt, asset.title, (asset.tags || []).join(" ")].join(" "));
+
+  let score = 0;
+  if (venue && name.includes(venue)) score += 90;
+  if (category && name.includes(category)) score += 60;
+  if (/venues|venue|会場|golfcourse|course/.test(folder + usage)) score += 20;
+  if (/categories|category|共通|series|シリーズ|fallback/.test(folder + usage + name)) score += 12;
+  if (/tournaments|logos/.test(folder)) score += 6;
+
+  // category-specific name hints
+  const group = pnxStep281CategoryGroup(target);
+  if (group === "QT" && /qt|qualifying|予選|共通/.test(name + folder + usage)) score += 70;
+  if (group === "PGAプロテスト" && /pga|プロテスト|資格認定|test|共通/.test(name + folder + usage)) score += 70;
+  if (group === "JGTO" && /jgto|日本ゴルフツアー|tour|共通/.test(name + folder + usage)) score += 55;
+  if (group === "ミニツアー" && /ミニツアー|mini|tour|共通/.test(name + folder + usage)) score += 55;
+
+  return score;
+}
+
+function pnxStep281BuildImageSuggestions(target, tournaments, assets) {
+  const suggestions = [];
+  const targetId = String((target && (target.id || target.tournamentId)) || "");
+  const venueKey = pnxStep281NormalizeKey(target && (target.venue || target.course || target.place));
+  const categoryGroup = pnxStep281CategoryGroup(target);
+  const categoryKey = pnxStep281NormalizeKey(categoryGroup);
+
+  (Array.isArray(tournaments) ? tournaments : []).forEach(t => {
+    if (!t || String(t.id || t.tournamentId || "") === targetId) return;
+    const image = pnxStep281ImageOfTournament(t);
+    if (!image) return;
+
+    const vKey = pnxStep281NormalizeKey(t.venue || t.course || t.place);
+    const cKey = pnxStep281NormalizeKey(pnxStep281CategoryGroup(t));
+
+    if (venueKey && vKey && venueKey === vKey) {
+      suggestions.push({
+        type: "same-venue",
+        label: "同じ会場の登録済み画像",
+        reason: `${t.title || t.name || "別大会"}で使用中`,
+        url: image,
+        score: 100
+      });
+    } else if (categoryKey && cKey && categoryKey === cKey) {
+      suggestions.push({
+        type: "same-category",
+        label: `${categoryGroup}の登録済み画像`,
+        reason: `${t.title || t.name || "別大会"}で使用中`,
+        url: image,
+        score: 55
+      });
+    }
+  });
+
+  (Array.isArray(assets) ? assets : []).forEach(asset => {
+    const url = pnxStep281AssetUrl(asset);
+    const score = pnxStep281ScoreAssetForTarget(asset, target);
+    if (!url || score <= 0) return;
+
+    suggestions.push({
+      type: "media-library",
+      label: score >= 80 ? "メディアライブラリ：会場候補" : "メディアライブラリ：共通候補",
+      reason: asset.name || asset.filename || asset.folder || "保存済み画像",
+      url,
+      asset,
+      score
+    });
+  });
+
+  const seen = new Set();
+  return suggestions
+    .filter(s => {
+      const key = String(s.url || "");
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8);
+}
+
+function pnxStep281MediaCapacitySummary(assets) {
+  const list = Array.isArray(assets) ? assets : [];
+  const groups = {};
+  list.forEach(a => {
+    const url = pnxStep281AssetUrl(a);
+    if (!url) return;
+    groups[url] = groups[url] || [];
+    groups[url].push(a);
+  });
+
+  const duplicateGroups = Object.values(groups).filter(group => group.length > 1);
+  const storageBacked = list.filter(a => a.storagePath || /^https?:/i.test(a.storageUrl || a.downloadUrl || "")).length;
+  const localOnly = list.filter(a => !a.storagePath && !/^https?:/i.test(a.storageUrl || a.downloadUrl || "")).length;
+  const totalBytes = list.reduce((sum, a) => sum + Number(a.sizeBytes || 0), 0);
+
+  return {
+    total: list.length,
+    storageBacked,
+    localOnly,
+    totalBytes,
+    duplicateGroups,
+    duplicateCount: duplicateGroups.reduce((sum, group) => sum + group.length - 1, 0)
+  };
+}
+
 function CmsTournamentManagePanel({ onPickImage }) {
   const [rows, setRows] = useState([]);
   const [query, setQuery] = useState("");
@@ -3605,14 +3765,179 @@ function CmsTournamentManagePanel({ onPickImage }) {
       if (key === "title") next.name = value;
       if (key === "logoUrl") next.tournamentLogoUrl = value;
       if (key === "tournamentLogoUrl") next.logoUrl = value;
-      if (key === "venueImageUrl") next.imageUrl = value;
-      if (key === "imageUrl") next.venueImageUrl = value;
+      if (key === "venueImageUrl") {
+        next.imageUrl = value;
+        next.coverImageUrl = value;
+      }
+      if (key === "imageUrl") {
+        next.venueImageUrl = value;
+        next.coverImageUrl = value;
+      }
+      if (key === "coverImageUrl") {
+        next.venueImageUrl = value;
+        next.imageUrl = value;
+      }
       if (key === "id") {
         next.tournamentId = value;
       }
       return next;
     }));
   };
+
+  const pnxStep278ReadFileAsDataUrl = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const pnxStep278CompressImageFile = async (file, kind) => {
+    const originalDataUrl = await pnxStep278ReadFileAsDataUrl(file);
+    const image = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = originalDataUrl;
+    });
+
+    const isLogo = kind === "logo";
+    const maxSide = isLogo ? 520 : 1280;
+    const quality = isLogo ? 0.84 : 0.78;
+    const scale = Math.min(1, maxSide / Math.max(image.width || maxSide, image.height || maxSide));
+    const width = Math.max(1, Math.round((image.width || maxSide) * scale));
+    const height = Math.max(1, Math.round((image.height || maxSide) * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(image, 0, 0, width, height);
+
+    const dataUrl = canvas.toDataURL("image/jpeg", quality);
+    return { dataUrl, width, height };
+  };
+
+  const pnxStep278ApplyImageToSelected = (kind, value, asset) => {
+    if (!selected || !value) return;
+    const assetId = asset && (asset.id || asset.assetId) || "";
+    setIsDirty(true);
+    setRows(prev => prev.map(r => {
+      if (String(r.id) !== String(selected.id)) return r;
+      const next = { ...r };
+      if (kind === "logo") {
+        next.logoUrl = value;
+        next.tournamentLogoUrl = value;
+        if (assetId) next.logoAssetId = assetId;
+      } else {
+        next.venueImageUrl = value;
+        next.imageUrl = value;
+        next.coverImageUrl = value;
+        if (assetId) next.imageAssetId = assetId;
+      }
+      return next;
+    }));
+  };
+
+  const pnxStep281GetSelectedImageSuggestions = () => {
+    if (!selected) return [];
+    const assets = window.PNXCmsFinalDesignBridge && window.PNXCmsFinalDesignBridge.getMediaAssets
+      ? window.PNXCmsFinalDesignBridge.getMediaAssets()
+      : [];
+    return pnxStep281BuildImageSuggestions(selected, rows, assets);
+  };
+
+  const pnxStep281ApplyBestVenueImage = () => {
+    const suggestions = pnxStep281GetSelectedImageSuggestions();
+    const best = suggestions[0];
+    if (!best || !best.url) {
+      setNotice("使い回し候補が見つかりませんでした。公式URLから取得するか、手動でファイルを入れてください。");
+      pnxStep128CmsActionToast("画像候補がありません", "ng");
+      return;
+    }
+
+    pnxStep278ApplyImageToSelected("venue", best.url, best.asset || null);
+    setNotice(`会場画像に候補を適用しました：${best.label} / ${best.reason}`);
+    pnxStep128CmsActionToast("会場画像候補を適用しました", "ok");
+  };
+
+  const pnxStep278HandleDirectImageFile = async (kind, event) => {
+    const input = event && event.target;
+    const file = input && input.files && input.files[0];
+    if (input) input.value = "";
+    if (!file) return;
+
+    if (!file.type || !file.type.startsWith("image/")) {
+      setNotice("画像ファイルを選んでください。");
+      pnxStep128CmsActionToast("画像ファイルを選んでください", "ng");
+      return;
+    }
+
+    try {
+      const label = kind === "logo" ? "大会ロゴ" : "会場画像";
+      setNotice("画像を読み込み中...");
+      const compressed = await pnxStep278CompressImageFile(file, kind);
+      let chosenUrl = compressed.dataUrl;
+      let savedAsset = null;
+      let uploadedToStorage = false;
+
+      if (window.PNXCmsFinalDesignBridge && window.PNXCmsFinalDesignBridge.saveMediaAsset) {
+        const folder = kind === "logo" ? "logos" : "tournaments";
+        const baseAsset = {
+          name: file.name,
+          filename: file.name,
+          folder,
+          kind: "image",
+          mimeType: "image/jpeg",
+          sizeBytes: Math.round(compressed.dataUrl.length * 0.75),
+          width: compressed.width,
+          height: compressed.height,
+          optimized: true,
+          usage: kind === "logo" ? "tournament-logo" : "venue-image"
+        };
+
+        try {
+          setNotice(`${label}をFirebase Storageへ保存中...`);
+          const upload = await pnxStep280UploadMediaToStorage(compressed.dataUrl, {
+            folder,
+            filename: file.name,
+            contentType: 'image/jpeg',
+            customMetadata: {
+              usage: baseAsset.usage,
+              source: 'step280-direct-tournament-image',
+              fileName: file.name
+            }
+          });
+          uploadedToStorage = true;
+          savedAsset = window.PNXCmsFinalDesignBridge.saveMediaAsset(
+            pnxStep280BuildSavedAsset(baseAsset, upload, { source: 'firebase-storage' })
+          );
+        } catch (storageError) {
+          console.warn('[PNX STEP280] Storage upload failed, fallback to local asset', storageError);
+          savedAsset = window.PNXCmsFinalDesignBridge.saveMediaAsset(Object.assign({}, baseAsset, {
+            dataUrl: compressed.dataUrl,
+            url: compressed.dataUrl,
+            source: 'step280-local-fallback'
+          }));
+        }
+        chosenUrl = pnxStep250SelectMediaUrl(savedAsset, compressed.dataUrl);
+      }
+
+      pnxStep278ApplyImageToSelected(kind, chosenUrl, savedAsset);
+      if (uploadedToStorage) {
+        setNotice(`${label}をFirebase Storageへ保存しました。保存を押すと反映されます。`);
+        pnxStep128CmsActionToast(`${label}をStorage保存しました`, "ok");
+      } else {
+        setNotice(`${label}をローカル保存しました。Firebase Storage未接続時の予備保存です。`);
+        pnxStep128CmsActionToast(`${label}をローカル保存しました`, "ok");
+      }
+    } catch (e) {
+      setNotice("画像の読み込みに失敗しました。別の画像、または少し小さい画像で試してください。");
+      pnxStep128CmsActionToast("画像の読み込みに失敗しました", "ng");
+    }
+  };
+
 
   const saveSelected = () => {
     if (!selected || !window.PNXCmsFinalDesignBridge) return;
@@ -3960,25 +4285,69 @@ function CmsTournamentManagePanel({ onPickImage }) {
                       <span>大会ロゴと会場画像を設定します。画像ライブラリからも選べます。</span>
                     </div>
                     <div className="pnx-step66-form pnx-step264-form-grid">
-                      <label className="wide">大会ロゴURL
-                        <div className="pnx-step244-image-field">
+                      <div className="wide pnx-step278-image-url-row">
+                        <span className="pnx-step278-image-label">大会ロゴURL</span>
+                        <div className="pnx-step244-image-field pnx-step278-image-field">
                           <input className="input mono" value={selected.logoUrl || ""} onChange={e => updateLocalSelected("logoUrl", e.target.value)}/>
                           <button className="btn btn--ghost btn--sm" type="button"
-                                  onClick={() => onPickImage && onPickImage("大会ロゴを選択", "tournaments", url => updateLocalSelected("logoUrl", url))}>
-                            画像を選ぶ
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPickImage && onPickImage("大会ロゴを選択", "logos", url => pnxStep278ApplyImageToSelected("logo", url, null)); }}>
+                            ライブラリ
                           </button>
+                          <label className="btn btn--primary btn--sm pnx-step278-file-btn">
+                            ファイル
+                            <input type="file" accept="image/*" onChange={e => pnxStep278HandleDirectImageFile("logo", e)}/>
+                          </label>
                         </div>
-                      </label>
-                      <label className="wide">会場画像URL
-                        <div className="pnx-step244-image-field">
+                      </div>
+                      <div className="wide pnx-step278-image-url-row">
+                        <span className="pnx-step278-image-label">会場画像URL</span>
+                        <div className="pnx-step244-image-field pnx-step278-image-field">
                           <input className="input mono" value={selected.venueImageUrl || ""} onChange={e => updateLocalSelected("venueImageUrl", e.target.value)}/>
                           <button className="btn btn--ghost btn--sm" type="button"
-                                  onClick={() => onPickImage && onPickImage("会場画像を選択", "tournaments", url => updateLocalSelected("venueImageUrl", url))}>
-                            画像を選ぶ
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPickImage && onPickImage("会場画像を選択", "tournaments", url => pnxStep278ApplyImageToSelected("venue", url, null)); }}>
+                            ライブラリ
                           </button>
+                          <label className="btn btn--primary btn--sm pnx-step278-file-btn">
+                            ファイル
+                            <input type="file" accept="image/*" onChange={e => pnxStep278HandleDirectImageFile("venue", e)}/>
+                          </label>
                         </div>
-                      </label>
+                      </div>
                     </div>
+
+                    {(() => {
+                      const suggestions = pnxStep281GetSelectedImageSuggestions().slice(0, 3);
+                      const hasCurrent = !!(selected.venueImageUrl || selected.imageUrl || selected.coverImageUrl);
+                      return (
+                        <div className="pnx-step281-suggestion-box">
+                          <div className="pnx-step281-suggestion-head">
+                            <div>
+                              <strong>画像使い回し候補</strong>
+                              <span>{hasCurrent ? "現在の画像があります。必要な時だけ候補を適用してください。" : "会場画像が空の場合、過去画像・共通画像から候補を出します。"}</span>
+                            </div>
+                            <button className="btn btn--ghost btn--sm" type="button" onClick={pnxStep281ApplyBestVenueImage}>
+                              最適候補を適用
+                            </button>
+                          </div>
+                          {suggestions.length ? (
+                            <div className="pnx-step281-suggestion-list">
+                              {suggestions.map((s, index) => (
+                                <button className="pnx-step281-suggestion" key={s.url + index} type="button"
+                                        onClick={() => pnxStep278ApplyImageToSelected("venue", s.url, s.asset || null)}>
+                                  <span className="pnx-step281-suggestion-thumb" style={{ backgroundImage:`url("${String(s.url).replace(/"/g, '\"')}")` }}/>
+                                  <span>
+                                    <strong>{s.label}</strong>
+                                    <small>{s.reason}</small>
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="pnx-step281-suggestion-empty">まだ候補がありません。同じ会場やQT共通画像を1枚登録すると、次回から使い回し候補に出ます。</p>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </section>
 
                   <section className="pnx-step264-section">
@@ -4053,6 +4422,132 @@ function CmsTournamentManagePanel({ onPickImage }) {
           </div>
         </div>
       </div>
+    </section>
+  );
+}
+
+
+
+/* ============================================================
+   STEP281: 画像使い回し・容量対策パネル
+   ============================================================ */
+function CmsImageReuseCapacityPanel() {
+  const [open, setOpen] = useState(false);
+  const [notice, setNotice] = useState("画像容量と使い回し状況を確認できます。");
+  const [report, setReport] = useState(null);
+
+  const buildReport = () => {
+    const bridge = window.PNXCmsFinalDesignBridge;
+    if (!bridge || !bridge.getTournaments) {
+      setNotice("Bridge未接続：大会データを読み込めません。");
+      return;
+    }
+
+    const tournaments = bridge.getTournaments() || [];
+    const assets = bridge.getMediaAssets ? bridge.getMediaAssets() : [];
+    const media = pnxStep281MediaCapacitySummary(assets);
+
+    const noImage = tournaments.filter(t => !pnxStep281ImageOfTournament(t));
+    const withSuggestion = noImage.filter(t => pnxStep281BuildImageSuggestions(t, tournaments, assets).length > 0);
+    const venues = {};
+    tournaments.forEach(t => {
+      const key = pnxStep281NormalizeKey(t.venue || t.course || t.place);
+      if (!key) return;
+      venues[key] = venues[key] || { venue: t.venue || t.course || t.place, count: 0, imageCount: 0 };
+      venues[key].count += 1;
+      if (pnxStep281ImageOfTournament(t)) venues[key].imageCount += 1;
+    });
+
+    const reusableVenues = Object.values(venues).filter(v => v.count > 1 && v.imageCount > 0);
+
+    const next = {
+      checkedAt: new Date().toISOString(),
+      tournaments: tournaments.length,
+      noImage: noImage.length,
+      withSuggestion: withSuggestion.length,
+      reusableVenues: reusableVenues.length,
+      media
+    };
+
+    setReport(next);
+    setNotice(`大会 ${next.tournaments}件 / 画像未設定 ${next.noImage}件 / 候補あり ${next.withSuggestion}件 / Storage ${media.storageBacked}件`);
+    return next;
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(buildReport, 300);
+    const reload = () => setTimeout(buildReport, 120);
+    window.addEventListener("pnx:cms-final:tournament-saved", reload);
+    window.addEventListener("pnx:cms-final:media-updated", reload);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("pnx:cms-final:tournament-saved", reload);
+      window.removeEventListener("pnx:cms-final:media-updated", reload);
+    };
+  }, [open]);
+
+  const applySuggestionsToNoImage = () => {
+    const bridge = window.PNXCmsFinalDesignBridge;
+    if (!bridge || !bridge.getTournaments || !bridge.saveTournament) return;
+
+    const tournaments = bridge.getTournaments() || [];
+    const assets = bridge.getMediaAssets ? bridge.getMediaAssets() : [];
+    let applied = 0;
+
+    tournaments.forEach(t => {
+      if (pnxStep281ImageOfTournament(t)) return;
+      const best = pnxStep281BuildImageSuggestions(t, tournaments, assets)[0];
+      if (!best || !best.url) return;
+
+      bridge.saveTournament({
+        ...t,
+        venueImageUrl: best.url,
+        imageUrl: best.url,
+        coverImageUrl: best.url,
+        imageReuseSource: best.label,
+        imageReuseReason: best.reason,
+        source: t.source || "cms-step281-image-reuse"
+      });
+      applied += 1;
+    });
+
+    setNotice(`画像未設定の大会に使い回し候補を適用しました：${applied}件`);
+    pnxStep128CmsActionToast(`画像候補を${applied}件に適用しました`, applied ? "ok" : "ng");
+    setTimeout(buildReport, 180);
+  };
+
+  return (
+    <section className={`card pnx-step281-card ${open ? "is-open" : "is-collapsed"}`}>
+      <header className="card__head">
+        <div>
+          <h2 className="card__title">画像使い回し・容量対策</h2>
+          <p className="pnx-step281-sub">公式/手動画像を基本に、同じ会場・QT共通画像などを使い回して容量を抑えます。</p>
+        </div>
+        <div className="card__head-r">
+          <button className="btn btn--ghost btn--sm" onClick={() => setOpen(v => !v)}>{open ? "たたむ" : "開く"}</button>
+          {open && <button className="btn btn--ghost btn--sm" onClick={buildReport}>再チェック</button>}
+          {open && <button className="btn btn--primary btn--sm" onClick={applySuggestionsToNoImage}>未設定に候補適用</button>}
+        </div>
+      </header>
+
+      {open && (
+        <div className="card__body">
+          <div className="pnx-step281-notice">{notice}</div>
+          <div className="pnx-step281-stats">
+            <div><span>大会数</span><strong>{report ? report.tournaments : "—"}</strong></div>
+            <div><span>画像未設定</span><strong>{report ? report.noImage : "—"}</strong></div>
+            <div><span>候補あり</span><strong>{report ? report.withSuggestion : "—"}</strong></div>
+            <div><span>Storage保存</span><strong>{report ? report.media.storageBacked : "—"}</strong></div>
+            <div><span>ローカル保存</span><strong>{report ? report.media.localOnly : "—"}</strong></div>
+            <div><span>重複候補</span><strong>{report ? report.media.duplicateCount : "—"}</strong></div>
+          </div>
+          <div className="pnx-step281-policy">
+            <strong>画像の優先順位</strong>
+            <span>1. 会場公式写真URL / 2. CMS手動アップロード / 3. 同じ会場の過去画像 / 4. シリーズ共通画像 / 5. カテゴリ共通画像 / 6. 汎用背景</span>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -4597,6 +5092,10 @@ function CmsMediaLibraryManagerPanel() {
   const [query, setQuery] = useState("");
   const [folder, setFolder] = useState("all");
   const [notice, setNotice] = useState("メディアライブラリを読み込み中...");
+  const [uploadMode, setUploadMode] = useState("auto");
+  const [storageDiag, setStorageDiag] = useState(null);
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const [lastUploadError, setLastUploadError] = useState("");
   const [urlInput, setUrlInput] = useState("");
   const [nameInput, setNameInput] = useState("");
   const [folderInput, setFolderInput] = useState("banners");
@@ -4608,6 +5107,7 @@ function CmsMediaLibraryManagerPanel() {
     { value: "articles", label: "記事サムネイル" },
     { value: "icons", label: "アイコン" },
     { value: "ads", label: "広告画像" },
+    { value: "videos", label: "動画" },
     { value: "general", label: "その他" },
   ];
 
@@ -4619,11 +5119,25 @@ function CmsMediaLibraryManagerPanel() {
 
     const list = window.PNXCmsFinalDesignBridge.getMediaAssets();
     setAssets(list);
-    setNotice(`${list.length}件のメディアを読み込みました。`);
+    const stats = window.PNXCmsFinalDesignBridge.getMediaStats ? window.PNXCmsFinalDesignBridge.getMediaStats() : null;
+    if (stats && typeof stats.storageBacked === 'number') {
+      setNotice(`${list.length}件のメディアを読み込みました。Storage保存 ${stats.storageBacked}件 / ローカル保存 ${stats.localOnly}件`);
+    } else {
+      setNotice(`${list.length}件のメディアを読み込みました。`);
+    }
+  };
+
+  const refreshStorageDiag = async () => {
+    const diag = await pnxStep282GetStorageDiagnostic();
+    setStorageDiag(diag);
+    return diag;
   };
 
   useEffect(() => {
-    const timer = setTimeout(loadAssets, 500);
+    const timer = setTimeout(() => {
+      loadAssets();
+      refreshStorageDiag();
+    }, 500);
     const onUpdate = () => setTimeout(loadAssets, 100);
     window.addEventListener("pnx:cms-final:media-updated", onUpdate);
     window.addEventListener("storage", onUpdate);
@@ -4645,29 +5159,111 @@ function CmsMediaLibraryManagerPanel() {
 
   const handleFiles = async (event) => {
     const files = Array.from(event.target.files || []);
+    if (event.target) event.target.value = "";
     if (!files.length || !window.PNXCmsFinalDesignBridge) return;
 
+    setUploadBusy(true);
+    setLastUploadError("");
+
     let saved = 0;
+    let storageSaved = 0;
+    let fallbackSaved = 0;
+    let skippedVideo = 0;
+    let failed = 0;
+    const diag = await refreshStorageDiag();
+
     for (const file of files) {
-      if (!file.type.startsWith("image/")) continue;
-      const dataUrl = await readFileAsDataUrl(file);
-      window.PNXCmsFinalDesignBridge.saveMediaAsset({
+      const isImage = !!(file.type && file.type.startsWith("image/"));
+      const isVideo = !!(file.type && file.type.startsWith("video/"));
+
+      if (!isImage && !isVideo) {
+        failed += 1;
+        setLastUploadError(`${file.name} は画像/動画ファイルではありません。`);
+        continue;
+      }
+
+      const baseAsset = {
         name: file.name,
         filename: file.name,
-        folder: folderInput,
-        kind: "image",
-        dataUrl,
-        url: dataUrl,
+        folder: isVideo ? "videos" : folderInput,
+        kind: isVideo ? "video" : "image",
         mimeType: file.type,
         sizeBytes: file.size,
-        source: "file-upload"
-      });
-      saved += 1;
+        source: "step282-media-upload"
+      };
+
+      const shouldUseStorage = uploadMode !== "local" && diag && diag.storageReady;
+
+      if (shouldUseStorage) {
+        try {
+          const upload = await pnxStep282WithTimeout(
+            pnxStep280UploadMediaToStorage(file, {
+              folder: isVideo ? "videos" : folderInput,
+              filename: file.name,
+              contentType: file.type,
+              customMetadata: {
+                source: "step282-media-library",
+                folder: isVideo ? "videos" : folderInput,
+                fileName: file.name,
+                kind: isVideo ? "video" : "image"
+              }
+            }),
+            isVideo ? 45000 : 25000,
+            "Storage保存"
+          );
+
+          window.PNXCmsFinalDesignBridge.saveMediaAsset(
+            pnxStep280BuildSavedAsset(baseAsset, upload, { source:"firebase-storage" })
+          );
+          storageSaved += 1;
+          saved += 1;
+          continue;
+        } catch (e) {
+          const message = pnxStep282ShortError(e);
+          console.warn("[PNX STEP282] Storage upload failed", e);
+          setLastUploadError(message);
+
+          if (isVideo) {
+            skippedVideo += 1;
+            continue;
+          }
+        }
+      }
+
+      // Storage未接続・失敗時の画像ローカル保存。動画は容量が大きいのでローカル保存しない。
+      if (isImage) {
+        try {
+          const dataUrl = await readFileAsDataUrl(file);
+          window.PNXCmsFinalDesignBridge.saveMediaAsset(Object.assign({}, baseAsset, {
+            dataUrl,
+            url: dataUrl,
+            source: shouldUseStorage ? "step282-local-fallback-after-storage-error" : "step282-local-mode"
+          }));
+          fallbackSaved += 1;
+          saved += 1;
+        } catch(e) {
+          failed += 1;
+          setLastUploadError(pnxStep282ShortError(e));
+        }
+      } else {
+        skippedVideo += 1;
+      }
     }
 
-    event.target.value = "";
-    setNotice(`${saved}件の画像をアップロード保存しました。`);
+    setUploadBusy(false);
+
+    if (storageSaved && !fallbackSaved && !skippedVideo && !failed) {
+      setNotice(`${saved}件をFirebase Storageへ保存しました。`);
+    } else if (storageSaved || fallbackSaved) {
+      setNotice(`保存完了：Storage ${storageSaved}件 / ローカル ${fallbackSaved}件 / 動画未保存 ${skippedVideo}件 / 失敗 ${failed}件`);
+    } else if (skippedVideo) {
+      setNotice("動画はFirebase Storage接続OKの時だけ保存できます。Storageルールを確認してください。");
+    } else {
+      setNotice("保存できませんでした。Storage接続またはファイル形式を確認してください。");
+    }
+
     loadAssets();
+    refreshStorageDiag();
   };
 
   const saveUrlAsset = () => {
@@ -4743,25 +5339,44 @@ function CmsMediaLibraryManagerPanel() {
       <div className="card__body">
         <div className="pnx-step71-notice">{notice}</div>
 
+        <div className="pnx-step282-storage-panel">
+          <div className="pnx-step282-storage-main">
+            <span className={`pnx-step282-status ${storageDiag && storageDiag.storageReady ? "is-ok" : "is-ng"}`}>
+              {storageDiag && storageDiag.storageReady ? "Storage接続OK" : "Storage接続NG"}
+            </span>
+            <strong>画像・動画アップロード診断</strong>
+            <small>{storageDiag ? storageDiag.message : "確認中"}{storageDiag && storageDiag.bucket ? ` / ${storageDiag.bucket}` : ""}</small>
+            {lastUploadError && <em>{lastUploadError}</em>}
+          </div>
+          <div className="pnx-step282-storage-actions">
+            <select className="select" value={uploadMode} onChange={e => setUploadMode(e.target.value)}>
+              <option value="auto">自動：Storage優先</option>
+              <option value="local">今回はローカル保存</option>
+            </select>
+            <button className="btn btn--ghost btn--sm" type="button" onClick={refreshStorageDiag}>Storage再チェック</button>
+          </div>
+        </div>
+
         <div className="pnx-step71-stats">
           <div><span>総素材数</span><strong>{stats.total}</strong></div>
           <div><span>保存サイズ</span><strong>{Math.round(stats.bytes / 1024)}KB</strong></div>
           <div><span>バナー</span><strong>{stats.banners || 0}</strong></div>
           <div><span>大会画像</span><strong>{stats.tournaments || 0}</strong></div>
           <div><span>記事画像</span><strong>{stats.articles || 0}</strong></div>
+          <div><span>動画</span><strong>{stats.videos || 0}</strong></div>
         </div>
 
         <div className="pnx-step71-upload">
           <div className="pnx-step71-upload__box">
-            <strong>画像ファイルをアップロード</strong>
-            <span>バナー・大会画像・記事サムネイルをCMS内に保存します。</span>
+            <strong>画像・動画ファイルをアップロード</strong>
+            <span>画像はStorage優先、失敗時はローカル保存。動画はStorage接続OK時のみ保存します。</span>
             <div className="pnx-step71-upload__row">
               <select className="select" value={folderInput} onChange={e => setFolderInput(e.target.value)}>
                 {folders.filter(f => f.value !== "all").map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
               </select>
               <label className="btn btn--primary btn--sm pnx-step71-filebtn">
-                <I.Upload size={13}/> ファイル選択
-                <input type="file" accept="image/*" multiple onChange={handleFiles}/>
+                <I.Upload size={13}/> {uploadBusy ? "保存中..." : "ファイル選択"}
+                <input type="file" accept="image/*,video/*" multiple onChange={handleFiles}/>
               </label>
             </div>
           </div>
@@ -6141,7 +6756,7 @@ function SimpleEditHub({
    ============================================================ */
 function pnxStep239AssetUrl(asset) {
   if (!asset) return "";
-  return asset.dataUrl || asset.url || asset.imageUrl || "";
+  return asset.storageUrl || asset.downloadUrl || asset.url || asset.dataUrl || asset.imageUrl || "";
 }
 
 function pnxStep250MediaRef(asset) {
@@ -6169,6 +6784,78 @@ function pnxStep250ResolveMediaUrl(value) {
 function pnxStep250SelectMediaUrl(asset, fallbackUrl) {
   const ref = pnxStep250MediaRef(asset);
   return ref || fallbackUrl || "";
+}
+
+function pnxStep280StorageReady() {
+  return !!(window.PNXFirebaseStorageMedia && window.PNXFirebaseStorageMedia.isReady && window.PNXFirebaseStorageMedia.isReady());
+}
+
+async function pnxStep280UploadMediaToStorage(input, options = {}) {
+  if (!window.PNXFirebaseStorageMedia) throw new Error("Firebase Storage helper未接続です");
+
+  if (input && typeof input === "object" && input.type && String(input.type).startsWith("image/")) {
+    return window.PNXFirebaseStorageMedia.uploadFile(input, options);
+  }
+  return window.PNXFirebaseStorageMedia.uploadDataUrl(String(input || ""), options);
+}
+
+function pnxStep280BuildSavedAsset(base, upload, extra = {}) {
+  return Object.assign({}, base, extra, {
+    url: upload && (upload.url || upload.downloadURL) || base.url || base.dataUrl || "",
+    dataUrl: extra.keepDataUrl ? (base.dataUrl || "") : "",
+    downloadUrl: upload && (upload.downloadURL || upload.url) || extra.downloadUrl || "",
+    storageUrl: upload && (upload.url || upload.downloadURL) || extra.storageUrl || "",
+    storagePath: upload && (upload.path || upload.fullPath) || extra.storagePath || "",
+    source: upload ? "firebase-storage" : (extra.source || base.source || "cms-media")
+  });
+}
+
+function pnxStep282WithTimeout(promise, ms, label) {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error((label || "処理") + "がタイムアウトしました")), ms || 15000);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+async function pnxStep282GetStorageDiagnostic() {
+  const result = {
+    checkedAt: new Date().toISOString(),
+    storageHelper: !!window.PNXFirebaseStorageMedia,
+    firebaseApp: !!window.PNXFirebaseApp,
+    hasRealConfig: false,
+    storageReady: false,
+    bucket: "",
+    message: ""
+  };
+
+  try {
+    if (window.PNXFirebaseApp && window.PNXFirebaseApp.hasRealConfig) {
+      result.hasRealConfig = !!window.PNXFirebaseApp.hasRealConfig();
+    }
+    if (window.PNXFirebaseStorageMedia && window.PNXFirebaseStorageMedia.ensure) {
+      await pnxStep282WithTimeout(window.PNXFirebaseStorageMedia.ensure(), 10000, "Storage接続確認");
+    }
+    if (window.PNXFirebaseStorageMedia && window.PNXFirebaseStorageMedia.getStatus) {
+      const s = window.PNXFirebaseStorageMedia.getStatus();
+      result.hasRealConfig = !!s.hasRealConfig;
+      result.storageReady = !!s.hasStorage;
+      result.bucket = s.bucket || "";
+    }
+    result.message = result.storageReady ? "Firebase Storage接続OK" : "Firebase Storage未接続";
+  } catch(e) {
+    result.message = e && e.message ? e.message : String(e);
+  }
+
+  return result;
+}
+
+function pnxStep282ShortError(e) {
+  const msg = e && e.message ? e.message : String(e || "");
+  if (/permission|unauthorized|denied|storage\/unauthorized/i.test(msg)) return "Storage権限エラー。Firebase Storageルールを確認してください。";
+  if (/not found|bucket|storage\/bucket-not-found/i.test(msg)) return "Storageバケット未作成または設定違いです。Firebase Storageを有効化してください。";
+  if (/timeout|タイムアウト/i.test(msg)) return "Storage保存がタイムアウトしました。通信またはStorageルールを確認してください。";
+  return msg || "不明なエラー";
 }
 
 /* ============================================================
@@ -6889,6 +7576,7 @@ function App() {
               <MatchCmsFlowGuide/>
               <CmsTournamentManagePanel onPickImage={openImagePicker}/>
               <AIBulkTournamentPanel onPickImage={openImagePicker}/>
+              <CmsImageReuseCapacityPanel/>
               <CmsTournamentValidationPanel/>
               <CmsSearchSyncStabilityPanel/>
             </>

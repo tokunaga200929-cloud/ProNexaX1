@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#F1F3F6" />
+  <title>遠征 — ProNexaX</title>
+  <link rel="stylesheet" href="../../styles/expedition/expedition.css?v=step289-expedition-home" />
+  <style>
+    html, body {
+      margin: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 100dvh !important;
+      overflow: hidden !important;
+      background: #F1F3F6 !important;
+    }
+    #expedition-root {
+      width: 100% !important;
+      max-width: none !important;
+      min-height: 100dvh !important;
+      height: 100dvh !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    #expedition-root .expedition-bottom-nav {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="expedition-root" data-screen-label="遠征" data-standalone="false"></div>
+  <script src="../../scripts/expedition/expedition.js?v=step289-expedition-home"></script>
+  <script>
+    (function(){
+      var expeditionApi = null;
+      function readActiveExpeditionData(){
+        try {
+          var raw = localStorage.getItem('pnx-expedition-active-tournament');
+          if (raw) return JSON.parse(raw);
+        } catch(e) {}
+        return window.expeditionData;
+      }
+      function notifyReady(){
+        try {
+          parent.postMessage({ type: 'PNX_EXPEDITION_READY', source: 'expedition-embed' }, '*');
+        } catch(e) {}
+      }
+      function boot(){
+        var root = document.getElementById('expedition-root');
+        if (window.initExpeditionPage) {
+          expeditionApi = window.initExpeditionPage(root, readActiveExpeditionData(), {
+            standalone: false,
+            fitScreen: false,
+            initialView: 'home'
+          });
+          window.PNXExpeditionEmbedApi = expeditionApi;
+          setTimeout(notifyReady, 40);
+          setTimeout(notifyReady, 240);
+        }
+      }
+      window.addEventListener('message', function(event){
+        var msg = event && event.data || {};
+        if (msg.type !== 'PNX_EXPEDITION_LOAD' || !msg.data) return;
+        try { localStorage.setItem('pnx-expedition-active-tournament', JSON.stringify(msg.data)); } catch(e) {}
+        window.__PNX_EXPEDITION_ACTIVE_DATA__ = msg.data;
+        var shouldOpenDetail = String(msg.source || '').indexOf('calendar-detail') !== -1;
+        if (expeditionApi && typeof expeditionApi.setData === 'function') {
+          expeditionApi.setData(msg.data, { view: shouldOpenDetail ? 'detail' : 'home' });
+        } else {
+          boot();
+        }
+      });
+      document.addEventListener('DOMContentLoaded', boot);
+    })();
+  </script>
+</body>
+</html>

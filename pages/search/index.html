@@ -43,8 +43,62 @@
     }
   </style>
 
-  <link rel="stylesheet" href="../../styles/search/search.css?v=step206-logo-url-visuals">
+  <link rel="stylesheet" href="../../styles/search/search.css?v=step286-search-data-restore">
+
+  <style id="pnx-step285-search-embed-fit-restore">
+    /* STEP285: 本体iframe内で試合検索が崩れないように、検索画面だけを安全にフィット */
+    html.pnx-search-embed-html,
+    body.pnx-search-embed {
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 100% !important;
+      margin: 0 !important;
+      overflow: hidden !important;
+      background: #F2F2F7 !important;
+    }
+
+    body.pnx-search-embed {
+      --tab-height: 0px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    body.pnx-search-embed #app-shell {
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      max-width: none !important;
+      margin: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      background: #F2F2F7 !important;
+    }
+
+    body.pnx-search-embed .s-header {
+      flex: 0 0 auto !important;
+    }
+
+    body.pnx-search-embed .s-scroll-area {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      height: auto !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    body.pnx-search-embed #tab-bar,
+    body.pnx-search-embed nav#tab-bar,
+    body.pnx-search-embed .bottom-nav {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+  </style>
+
   <script src="../../scripts/disable-zoom.js" defer></script>
+<meta name="STEP277_SEARCH_ENTRY" content="firestore-unified">
 </head>
 
 <body class="pnx-search-embed">
@@ -465,11 +519,12 @@
 })();
 </script>
 
-  <script src="../../scripts/firebase/firebase-sdk-loader.js"></script>
-<script src="../../scripts/firebase/firestore-config.js"></script>
-<script src="../../scripts/firebase/firebase-app.js"></script>
-<script src="../../scripts/firebase/tournament-firestore-sync.js"></script>
+  <script src="../../scripts/firebase/firebase-sdk-loader.js?v=step277"></script>
+<script src="../../scripts/firebase/firestore-config.js?v=step277"></script>
+<script src="../../scripts/firebase/firebase-app.js?v=step277"></script>
+<script src="../../scripts/firebase/tournament-firestore-sync.js?v=step277"></script>
+<script src="../../scripts/firebase/search-firestore-unified-loader.js?v=step277"></script>
 
-<script src="../../scripts/search/search.js?v=step206-logo-url-visuals"></script>
+<script src="../../scripts/search/search.js?v=step286-search-data-restore"></script>
 </body>
 </html>

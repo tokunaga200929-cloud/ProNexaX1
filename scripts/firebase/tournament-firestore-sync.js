@@ -80,16 +80,60 @@
     );
   }
 
+  function pick(){
+    for (let i = 0; i < arguments.length; i++) {
+      const v = arguments[i];
+      if (Array.isArray(v)) {
+        const joined = v.map(text).filter(Boolean).join(" / ");
+        if (joined) return joined;
+      } else {
+        const s = text(v);
+        if (s && s !== "不明" && s !== "—" && s !== "-") return s;
+      }
+    }
+    return "";
+  }
+
+  function toDate(value){
+    const s = text(value);
+    if (!s || s === "不明" || s === "—" || s === "-") return "";
+    const iso = s.match(/(20\d{2})[-/.年]\s*(\d{1,2})[-/.月]\s*(\d{1,2})/);
+    if (iso) return `${iso[1]}-${String(iso[2]).padStart(2,"0")}-${String(iso[3]).padStart(2,"0")}`;
+    if (/^20\d{2}-\d{2}-\d{2}$/.test(s)) return s;
+    return s;
+  }
+
+  function normalizeStatus(raw, publishedValue){
+    const s = text(raw).toLowerCase();
+    if (/open|募集中|公開可|公開対象/.test(s)) return "open";
+    if (/closed|締切|締切済/.test(s)) return "closed";
+    if (/ongoing|開催中|live/.test(s)) return "ongoing";
+    if (/finished|終了/.test(s)) return "finished";
+    if (/draft|下書き|非公開/.test(s)) return "draft";
+    if (publishedValue === true) return "open";
+    return s || "draft";
+  }
+
   function normalize(t){
     const raw = t || {};
-    const id = text(raw.id || raw.tournamentId) || ("tour_" + Date.now() + "_" + Math.random().toString(36).slice(2,8));
-    const title = text(raw.title || raw.name || raw.tournamentTitle) || "CMS登録大会";
-    const startDate = text(raw.startDate || raw.start || raw.date);
-    const endDate = text(raw.endDate || raw.end || startDate) || startDate;
-    const venue = text(raw.venue || raw.course || raw.place || raw.location);
-    const category = text(raw.category || raw.cat) || "未分類";
-    const status = text(raw.status || "draft") || "draft";
+    const links = raw.links || {};
+    const rawId = pick(raw.id, raw.tournamentId, raw.docId);
+    const title = pick(raw.title, raw.name, raw.tournamentTitle, raw.tournamentName, raw.eventName) || "CMS登録大会";
+    const startDate = toDate(pick(raw.startDate, raw.start, raw.date, raw.playDate, raw.schedule, raw.start_date));
+    const endDate = toDate(pick(raw.endDate, raw.end, raw.finishDate, raw.dateEnd, raw.end_date, startDate)) || startDate;
+    const venue = pick(raw.venue, raw.course, raw.place, raw.location, raw.golfCourse, raw.clubName);
+    const category = pick(raw.category, raw.cat, raw.categoryName, raw.tour, raw.tourName, raw.series) || "未分類";
+    const status = normalizeStatus(pick(raw.status, raw.rawStatus, raw.publicStatus, raw.publishStatus), raw.published);
     const published = raw.published != null ? raw.published !== false : status !== "draft";
+    const id = rawId || ("tour_" + Date.now() + "_" + Math.random().toString(36).slice(2,8));
+
+    const officialUrl = pick(raw.officialUrl, raw.url, raw.website, links.website, links.official);
+    const entryUrl = pick(raw.entryUrl, raw.applyUrl, raw.applicationUrl, links.entry);
+    const instagramUrl = pick(raw.instagramUrl, raw.instagram, links.instagram);
+    const resultUrl = pick(raw.resultUrl, links.result);
+    const pairingUrl = pick(raw.pairingUrl, raw.pairing, links.pairing);
+    const logoUrl = pick(raw.logoUrl, raw.tournamentLogoUrl, raw.seriesLogoUrl, raw.logo, raw.logoImageUrl);
+    const venueImageUrl = pick(raw.venueImageUrl, raw.imageUrl, raw.coverImageUrl, raw.mainImageUrl, raw.venueImage, raw.courseImageUrl);
 
     return Object.assign({}, raw, {
       id,
@@ -106,27 +150,37 @@
       cat: category,
       status,
       published,
-      entryDeadline: text(raw.entryDeadline || raw.deadline),
-      entryFee: text(raw.entryFee || raw.fee),
-      prize: text(raw.prize || raw.totalPrize),
-      winnerPrize: text(raw.winnerPrize || raw.prizeWinner),
-      prizeWinner: text(raw.prizeWinner || raw.winnerPrize),
-      eligibility: text(raw.eligibility || raw.qualification),
-      qualification: text(raw.qualification || raw.eligibility),
-      organizer: text(raw.organizer),
-      officialUrl: text(raw.officialUrl || raw.url),
-      entryUrl: text(raw.entryUrl),
-      instagramUrl: text(raw.instagramUrl),
-      logoUrl: text(raw.logoUrl || raw.tournamentLogoUrl),
-      tournamentLogoUrl: text(raw.tournamentLogoUrl || raw.logoUrl),
-      venueImageUrl: text(raw.venueImageUrl || raw.imageUrl || raw.coverImageUrl),
-      imageUrl: text(raw.imageUrl || raw.venueImageUrl || raw.coverImageUrl),
-      coverImageUrl: text(raw.coverImageUrl || raw.venueImageUrl || raw.imageUrl),
-      prefecture: text(raw.prefecture || raw.pref),
-      prefectureLabel: text(raw.prefectureLabel || raw.displayLocation || raw.prefecture || raw.pref),
-      displayLocation: text(raw.displayLocation || raw.prefectureLabel || raw.prefecture || raw.pref || raw.area),
-      area: text(raw.area),
-      source: raw.source || "cms-firestore-step273",
+      entryDeadline: toDate(pick(raw.entryDeadline, raw.deadline, raw.applyDeadline, raw.applicationDeadline)),
+      entryFee: pick(raw.entryFee, raw.fee, raw.applicationFee),
+      prize: pick(raw.prize, raw.totalPrize, raw.prizeMoney),
+      winnerPrize: pick(raw.winnerPrize, raw.prizeWinner, raw.winningPrize),
+      prizeWinner: pick(raw.prizeWinner, raw.winnerPrize, raw.winningPrize),
+      eligibility: pick(raw.eligibility, raw.qualification, raw.requirement),
+      qualification: pick(raw.qualification, raw.eligibility, raw.requirement),
+      capacity: pick(raw.capacity, raw.players, raw.fieldSize),
+      organizer: pick(raw.organizer, raw.host, raw.company),
+      officialUrl,
+      entryUrl,
+      instagramUrl,
+      resultUrl,
+      pairingUrl,
+      links: Object.assign({}, links, {
+        website: officialUrl || links.website || "",
+        entry: entryUrl || links.entry || "",
+        instagram: instagramUrl || links.instagram || "",
+        result: resultUrl || links.result || "",
+        pairing: pairingUrl || links.pairing || ""
+      }),
+      logoUrl,
+      tournamentLogoUrl: pick(raw.tournamentLogoUrl, logoUrl),
+      venueImageUrl,
+      imageUrl: pick(raw.imageUrl, venueImageUrl),
+      coverImageUrl: pick(raw.coverImageUrl, venueImageUrl),
+      prefecture: pick(raw.prefecture, raw.pref, raw.state),
+      prefectureLabel: pick(raw.prefectureLabel, raw.displayLocation, raw.prefecture, raw.pref),
+      displayLocation: pick(raw.displayLocation, raw.prefectureLabel, raw.prefecture, raw.pref, raw.area),
+      area: pick(raw.area, raw.regionArea),
+      source: raw.source || "cms-firestore-step275",
       updatedAt: now(),
       createdAt: raw.createdAt || now()
     });
@@ -183,8 +237,10 @@
       return { ok:false, source:"local", tournaments: local, publicPayload: payload };
     }
 
-    const snap = await db.collection(collectionName()).orderBy("startDate", "asc").get();
-    const list = snap.docs.map(doc => normalize(Object.assign({ id: doc.id, tournamentId: doc.id }, doc.data())));
+    const snap = await db.collection(collectionName()).get();
+    const list = snap.docs
+      .map(doc => normalize(Object.assign({ id: doc.id, tournamentId: doc.id }, doc.data())))
+      .sort((a, b) => String(a.startDate || a.start || "").localeCompare(String(b.startDate || b.start || "")));
     writeJson(KEYS.all, list);
     const payload = publicSnapshotFrom(list);
 
@@ -193,7 +249,8 @@
       lastAction: "loaded-from-firestore",
       total: list.length,
       publicCount: payload.tournaments.length,
-      message: `Firestoreから大会 ${list.length}件を読み込みました。`
+      displayableCount: payload.tournaments.length,
+      message: `Firestoreから大会 ${list.length}件を読み込みました。本体表示対象 ${payload.tournaments.length}件。`
     });
 
     try {
