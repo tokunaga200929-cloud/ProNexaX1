@@ -4538,3 +4538,124 @@
     animation: none !important;
   }
 }
+
+/* STEP284: カレンダー試合詳細 → 遠征管理導線 */
+.pnx-calendar-v2 .pnx-cal-detail-action.is-expedition {
+  color: #0A84FF;
+  border: 1.2px solid rgba(10,132,255,.88);
+  background: linear-gradient(180deg, rgba(255,255,255,.99), rgba(244,249,255,.99));
+}
+.pnx-calendar-v2.is-detail-tournament .pnx-cal-detail-action.is-expedition {
+  display: inline-flex;
+}
+.pnx-calendar-v2 .pnx-cal-detail-action.is-expedition[hidden] {
+  display: none !important;
+}
+
+/* =========================================================================
+   STEP296: カレンダー左右端の縦線だけを除去
+   - 内側のマス目線は維持
+   - 左右端の外枠だけ消して、横幅を少し広く見せる
+   ========================================================================= */
+.pnx-calendar-v2 .pnx-cal-grid {
+  border-left-width: 0 !important;
+  border-right-width: 0 !important;
+  border-top: 1px solid var(--pnx-line);
+  border-bottom: 1px solid var(--pnx-line);
+  border-radius: 0 !important;
+}
+
+/* 右端セルの内側線はこれまで通り出さない */
+.pnx-calendar-v2 .pnx-cal-cell:nth-child(7n) {
+  border-right: 0 !important;
+}
+
+/* =========================================================
+   STEP297 — 月カレンダー1マスの縦幅をほんの少しだけ縮小
+   - 左右線修正（STEP296）は維持
+   - 内側の線・予定チップ・機能は触らない
+   - グリッド全体の高さだけを少し下げて、6行の各セルを約2px前後コンパクトにする
+   ========================================================= */
+.pnx-calendar-v2 .pnx-cal-grid {
+  height: clamp(678px, 173vw, 748px) !important;
+}
+@media (max-width: 390px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: clamp(658px, 171vw, 718px) !important;
+  }
+}
+@media (max-width: 360px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: 648px !important;
+  }
+}
+@media (max-width: 340px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: 628px !important;
+  }
+}
+
+/* =========================================================
+   STEP298 — 予定チップの省略記号を消して表示文字数を優先
+   - text-overflow: ellipsis を使わず、入るところまで文字を表示
+   - チップのサイズ・高さ・機能は変更しない
+   ========================================================= */
+.pnx-calendar-v2 .pnx-cal-chip,
+.pnx-calendar-v2 .pnx-cal-chip-line,
+.pnx-calendar-v2 .pnx-cal-span-chip,
+.pnx-calendar-v2 .pnx-cal-span-chip-line {
+  text-overflow: clip !important;
+}
+
+.pnx-calendar-v2 .pnx-cal-chip-line,
+.pnx-calendar-v2 .pnx-cal-span-chip-line {
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+/* =========================================================
+   STEP299 — 予定チップ内テキストの視認性だけ微調整
+   - チップ本体の高さ・大きさは変更しない
+   - 文字を少し大きく、少し太くして読みやすくする
+   - 省略記号なし（STEP298）は維持
+   ========================================================= */
+.pnx-calendar-v2 .pnx-cal-chip,
+.pnx-calendar-v2 .pnx-cal-chip.is-multiline {
+  font-size: 9.6px !important;
+  font-weight: 620 !important;
+  letter-spacing: -0.055em !important;
+}
+
+.pnx-calendar-v2 .pnx-cal-chip-line {
+  font-weight: 620 !important;
+  transform: scaleX(.88) !important;
+  transform-origin: left center !important;
+  text-overflow: clip !important;
+}
+
+.pnx-calendar-v2 .pnx-cal-span-chip {
+  font-size: 9.6px !important;
+  font-weight: 620 !important;
+  letter-spacing: -0.045em !important;
+}
+
+.pnx-calendar-v2 .pnx-cal-span-chip-line {
+  font-weight: 620 !important;
+  text-overflow: clip !important;
+}
+
+@media (max-width: 360px) {
+  .pnx-calendar-v2 .pnx-cal-chip,
+  .pnx-calendar-v2 .pnx-cal-chip.is-multiline {
+    font-size: 9.2px !important;
+    font-weight: 620 !important;
+    letter-spacing: -0.065em !important;
+  }
+  .pnx-calendar-v2 .pnx-cal-chip-line {
+    transform: scaleX(.86) !important;
+  }
+  .pnx-calendar-v2 .pnx-cal-span-chip {
+    font-size: 9.2px !important;
+    font-weight: 620 !important;
+  }
+}

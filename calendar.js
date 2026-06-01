@@ -894,6 +894,100 @@
     syncTournamentUrlLinks(event);
   }
 
+
+  /* STEP284: カレンダーの試合予定から遠征管理へ渡すデータを作る */
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function formatDateSlash(date) {
+    if (!date) return '';
+    return date.y + '/' + pad2(date.m) + '/' + pad2(date.d);
+  }
+  function normalizeAmountFromText(value) {
+    const raw = firstValue(value);
+    const num = Number(String(raw).replace(/[^0-9]/g, ''));
+    return Number.isFinite(num) ? num : 0;
+  }
+  function buildExpeditionDataFromCalendarEvent(event) {
+    const raw = event && event.rawTournament ? event.rawTournament : {};
+    const start = eventStart(event);
+    const end = eventEnd(event);
+    const tid = firstValue(event && event.tournamentId, raw.id, raw.tournamentId, event && event.id, 'calendar-tournament');
+    const venue = formatTournamentPlace(event);
+    const entryAmount = normalizeAmountFromText(firstValue(event && event.entryFee, raw.entryFee, raw.fee));
+    const title = firstValue(event && event.title, raw.name, raw.title, '大会予定');
+    return {
+      tournamentId: tid,
+      tournamentName: title,
+      venue: venue,
+      startDate: start ? (start.y + '-' + pad2(start.m) + '-' + pad2(start.d)) : '',
+      endDate: end ? (end.y + '-' + pad2(end.m) + '-' + pad2(end.d)) : '',
+      dateRange: formatDateSlash(start) + (compareDate(start, end) !== 0 ? ' - ' + formatDateSlash(end) : ''),
+      linkedCalendar: true,
+      links: {
+        officialUrl: firstValue(event && event.officialUrl, raw.officialUrl, raw.homepage, raw.website, raw.url),
+        pairingsUrl: firstValue(event && event.pairingsUrl, raw.pairingsUrl, raw.pairingUrl, raw.drawUrl),
+        resultUrl: firstValue(event && event.resultUrl, raw.resultUrl),
+        leaderboardUrl: firstValue(event && event.leaderboardUrl, raw.leaderboardUrl)
+      },
+      travel: [
+        { id: 'flight', type: '飛行機', icon: 'plane', main: '未設定', sub: '出発時刻を追加', amount: 0, from: '', to: '', departure: '' },
+        { id: 'highway', type: '高速代', icon: 'car', main: '¥0', sub: 'ETC', amount: 0, memo: 'ETC' },
+        { id: 'gasoline', type: 'ガソリン代', icon: 'fuel', main: '¥0', sub: '未入力', amount: 0, memo: '' }
+      ],
+      hotel: { name: 'ホテル未設定', checkIn: '', checkOut: '', reservationNumber: '', status: '未予約', amount: 0 },
+      checklist: [
+        { id: 'entry', label: 'エントリー確認', checked: !!entryAmount },
+        { id: 'practice', label: '練習ラウンド', checked: false },
+        { id: 'insurance', label: '保険証', checked: false },
+        { id: 'receipt', label: '領収書', checked: false },
+        { id: 'clothes', label: '着替え', checked: false }
+      ],
+      expenses: [
+        { id: 'entryFee', label: 'エントリー費', amount: entryAmount },
+        { id: 'hotelFee', label: '宿泊費', amount: 0 },
+        { id: 'transportation', label: '交通費', amount: 0 },
+        { id: 'other', label: 'その他', amount: 0, memo: '' }
+      ],
+      memo: firstValue(event && event.desc, raw.note, raw.qualification, '受付時間・練習ラウンド・移動メモを追加')
+    };
+  }
+
+  function sendExpeditionDataToFrame(data) {
+    const frame = document.getElementById('expedition-module-frame');
+    if (!frame || !frame.contentWindow) return false;
+    try {
+      frame.contentWindow.postMessage({ type: 'PNX_EXPEDITION_LOAD', source: 'calendar-detail', data: data }, '*');
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function openExpeditionForSelectedEvent() {
+    if (!state.selectedEventId) return;
+    const event = findEventById(state.selectedEventId);
+    if (!event) return;
+    const data = buildExpeditionDataFromCalendarEvent(event);
+    try {
+      localStorage.setItem('pnx-expedition-active-tournament', JSON.stringify(data));
+      localStorage.setItem('pnx-expedition-last-calendar-event-id', String(event.id || ''));
+    } catch (e) {}
+    window.__PNX_EXPEDITION_ACTIVE_DATA__ = data;
+    closeDetailSheet();
+    if (typeof window.switchPage === 'function') window.switchPage('expedition');
+    else if (typeof window.ProNexaXSwitchPage === 'function') window.ProNexaXSwitchPage('expedition');
+    else window.dispatchEvent(new CustomEvent('pronexax:navigate', { detail: { page: 'expedition' } }));
+    setTimeout(function () {
+      if (typeof window.PNXSendActiveExpeditionData === 'function') window.PNXSendActiveExpeditionData('calendar-detail-180');
+      else sendExpeditionDataToFrame(data);
+    }, 180);
+    setTimeout(function () {
+      if (typeof window.PNXSendActiveExpeditionData === 'function') window.PNXSendActiveExpeditionData('calendar-detail-650');
+      else sendExpeditionDataToFrame(data);
+    }, 650);
+    setTimeout(function () {
+      if (typeof window.PNXSendActiveExpeditionData === 'function') window.PNXSendActiveExpeditionData('calendar-detail-1200');
+      else sendExpeditionDataToFrame(data);
+    }, 1200);
+  }
+
   function renderDetail(event) {
     if (!state.root || !event) return;
     const color = COLOR[event.color] || event.color || '#0a74ff';
@@ -912,6 +1006,8 @@
 
     const editBtn = state.root.querySelector('[data-pnx-action="edit-detail"]');
     if (editBtn) editBtn.hidden = isTournament;
+    const expeditionBtn = state.root.querySelector('[data-pnx-action="open-expedition-detail"]');
+    if (expeditionBtn) expeditionBtn.hidden = !isTournament;
     const deleteText = state.root.querySelector('[data-pnx-detail-delete-label]');
     if (deleteText) deleteText.textContent = isTournament ? '大会を削除' : '削除';
 
@@ -1685,6 +1781,7 @@
         if (action === 'save-add') { saveAddEvent(); return; }
         if (action === 'open-detail') { openDetailSheet(actionEl.getAttribute('data-pnx-event-id')); return; }
         if (action === 'close-detail') { closeDetailSheet(); return; }
+        if (action === 'open-expedition-detail') { openExpeditionForSelectedEvent(); return; }
         if (action === 'delete-detail') { deleteSelectedEvent(); return; }
         if (action === 'edit-detail') { openEditSelectedEvent(); return; }
         if (action === 'open-date-range') { openDateRangePicker(); return; }
