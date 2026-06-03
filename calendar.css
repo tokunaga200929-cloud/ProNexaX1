@@ -260,7 +260,7 @@
 /* ---------- Calendar grid ---------- */
 .pnx-calendar-v2 .pnx-cal-grid {
   margin: 0 7px;
-  height: clamp(760px, 190vw, 840px);
+  height: clamp(786px, 196vw, 864px);
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   grid-template-rows: repeat(6, 1fr);
@@ -4730,4 +4730,222 @@
 
 .pnx-calendar-v2 .pnx-cal-event-list + .pnx-cal-weather-component-slot {
   margin-top: 8px;
+}
+
+
+/* =========================================================================
+   STEP351: 予定カードと天気カードの間隔を少しだけ広げる
+   - 近すぎる印象を軽減
+   - 空けすぎないよう +6px 程度の調整
+   ========================================================================= */
+.pnx-calendar-v2 .pnx-cal-event-list + .pnx-cal-weather-component-slot {
+  margin-top: 14px !important;
+}
+
+.pnx-calendar-v2 .pnx-cal-weather-component-slot {
+  margin-top: 14px !important;
+}
+
+
+/* =========================================================================
+   STEP352: 月表示の日付青丸を少し小さくしてチップとの重なりを軽減
+   - 選択日 / 今日表示 の丸サイズを縮小
+   - 位置も少し上寄せ・左寄せにしてイベントチップと干渉しにくくする
+   ========================================================================= */
+.pnx-calendar-v2 .pnx-cal-cell.is-selected .pnx-cal-daynum {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  line-height: 24px !important;
+  left: 5px !important;
+  top: 6px !important;
+  font-size: 14px !important;
+  font-weight: 560 !important;
+}
+
+.pnx-calendar-v2 .pnx-cal-cell.is-today:not(.is-selected) .pnx-cal-daynum {
+  width: 23px !important;
+  height: 23px !important;
+  min-width: 23px !important;
+  line-height: 23px !important;
+  left: 5px !important;
+  top: 6px !important;
+  font-size: 13.5px !important;
+}
+
+
+/* =========================================================================
+   STEP353: 月表示の縦マスを少し短くする
+   - 6行グリッド全体の高さを下げて、各セルを約4〜5px前後コンパクトにする
+   - STEP352の日付青丸縮小は維持
+   - 予定チップの高さ・文字サイズは触らない
+   ========================================================================= */
+.pnx-calendar-v2 .pnx-cal-grid {
+  height: clamp(648px, 166vw, 720px) !important;
+}
+
+@media (max-width: 390px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: clamp(630px, 164vw, 690px) !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: 624px !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: 608px !important;
+  }
+}
+
+
+/* =========================================================================
+   STEP354: Googleカレンダー寄せ 月表示コンパクト版
+   - STEP353よりさらに縦マスを短くする
+   - 390px幅付近で1マス約94〜96pxを目安に調整
+   - 予定チップが潰れない最低限の高さは残す
+   ========================================================================= */
+.pnx-calendar-v2 .pnx-cal-grid {
+  height: clamp(560px, 145vw, 610px) !important;
+}
+
+@media (max-width: 390px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: clamp(548px, 143vw, 575px) !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: 540px !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: 520px !important;
+  }
+}
+
+/* セルが低くなった分、日付とチップの位置もGoogleカレンダー寄りに少し上へ */
+.pnx-calendar-v2 .pnx-cal-daynum {
+  top: 8px !important;
+}
+
+.pnx-calendar-v2 .pnx-cal-cell.is-selected .pnx-cal-daynum {
+  top: 5px !important;
+}
+
+.pnx-calendar-v2 .pnx-cal-cell.is-today:not(.is-selected) .pnx-cal-daynum {
+  top: 5px !important;
+}
+
+/* チップは日付丸の下に自然に入る位置へ */
+.pnx-calendar-v2 .pnx-cal-chips {
+  top: calc(30px + (var(--pnx-span-lanes, 0) * 17px)) !important;
+}
+
+.pnx-calendar-v2 .pnx-cal-cell.is-selected .pnx-cal-chips {
+  top: calc(32px + (var(--pnx-span-lanes, 0) * 17px)) !important;
+}
+
+
+/* =========================================================================
+   STEP355: STEP354から少しだけ高さを戻す
+   - Google寄せは維持しつつ、詰まりすぎを少し緩和
+   ========================================================================= */
+.pnx-calendar-v2 .pnx-cal-grid {
+  height: clamp(572px, 148vw, 622px) !important;
+}
+
+@media (max-width: 390px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: clamp(560px, 146vw, 590px) !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: 552px !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: 534px !important;
+  }
+}
+
+
+/* =========================================================================
+   STEP356: STEP355からさらに少しだけ高さを戻す
+   - 狭すぎず、広すぎない中間値へ微調整
+   ========================================================================= */
+.pnx-calendar-v2 .pnx-cal-grid {
+  height: clamp(584px, 151vw, 636px) !important;
+}
+
+@media (max-width: 390px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: clamp(572px, 149vw, 604px) !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: 564px !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .pnx-calendar-v2 .pnx-cal-grid {
+    height: 546px !important;
+  }
+}
+
+
+/* =========================================================================
+   STEP357: 月スワイプ反応改善
+   - Googleカレンダー寄せで、月切り替えアニメーションを短く軽くする
+   - スワイプ判定はJS側で 72px → 46px に調整
+   ========================================================================= */
+.pnx-calendar-v2 .pnx-cal-month-slide {
+  transition:
+    transform 220ms cubic-bezier(.18, .82, .22, 1),
+    opacity 180ms ease-out !important;
+}
+
+.pnx-calendar-v2.is-month-switching .pnx-cal-month-label {
+  animation: pnxMonthLabelSettleFast 220ms cubic-bezier(.18, .82, .22, 1) both !important;
+}
+
+@keyframes pnxMonthLabelSettleFast {
+  0% { opacity: .82; transform: translateY(.5px) scale(.992); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+
+/* =========================================================================
+   STEP358: 月マスの縦高さを少しだけ上げる
+   - STEP357 のスワイプ改善は維持
+   - Googleカレンダー寄せのコンパクト感を崩さず、1マスを少し呼吸しやすくする
+   - 6行全体で約+26px（1行あたり約+4px）
+   ========================================================================= */
+
+
+/* =========================================================================
+   STEP359: 長押し気味の横スワイプを邪魔しないための補助
+   - 月グリッドは横方向操作を受けやすく
+   - 予定チップは従来通りドラッグ/詳細操作を優先
+   ========================================================================= */
+.pnx-calendar-v2 .pnx-cal-grid {
+  touch-action: pan-y pinch-zoom;
+}
+
+.pnx-calendar-v2 [data-pnx-event-chip] {
+  touch-action: none;
 }

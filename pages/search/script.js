@@ -2486,6 +2486,70 @@ document.getElementById('bs-cta-add').addEventListener('click', () => {
    ─ 状態変更後は setFavorited / setAdded 経由で自動的に localStorage に保存。
    ================================================================ */
 
+
+/* ================================================================
+   STEP350: カレンダー登録用タイトル整形
+   - カード表示名は正式名称のまま
+   - カレンダーに登録する時だけ「第○回」「年度」「Powered by」等を外して見やすくする
+   ================================================================ */
+function pnxBuildCalendarDisplayTitle(t) {
+  const rawName = String((t && (t.calendarTitle || t.displayName || t.name || t.title || t.tournamentName)) || '').trim();
+  const cat = String((t && (t.cat || t.category || t.rawCategory || t.series)) || '').toLowerCase();
+  let name = rawName;
+
+  if (!name) return '大会予定';
+
+  // 後ろに付く協賛・冠表記はカレンダーチップでは長すぎるため削る
+  name = name
+    .replace(/\s*(Powered\s+by|Presented\s+by|Supported\s+by|Sponsored\s+by)\s+.*$/i, '')
+    .replace(/\s*（?(主催|共催|協賛|協力|特別協賛)[:：].*$/i, '')
+    .trim();
+
+  // 先頭に来る回数・年度はチップで「第11回」だけ見える原因なので削る
+  name = name
+    .replace(/^\s*第\s*[0-9０-９一二三四五六七八九十百]+回\s*/u, '')
+    .replace(/^\s*[0-9０-９一二三四五六七八九十百]+回\s*/u, '')
+    .replace(/^\s*(20\d{2}|令和[0-9０-９元]+)\s*年度?\s*/u, '')
+    .replace(/^\s*(20\d{2})\s*年\s*/u, '')
+    .trim();
+
+  // 末尾の年度・年だけは視認性のため削る。ただしQTや地区名は残す
+  name = name
+    .replace(/\s*(20\d{2})\s*年度?\s*$/u, '')
+    .replace(/\s*(20\d{2})\s*年\s*$/u, '')
+    .trim();
+
+  // 長くなりがちな日本語大会表記を少しだけ短くする
+  name = name
+    .replace(/ゴルフ選手権競技/g, '選手権')
+    .replace(/ゴルフ選手権/g, '選手権')
+    .replace(/トーナメント/g, 'Tournament')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // PGAプロテスト系はカテゴリが消えないよう補正
+  const original = rawName;
+  if (/プロテスト|資格認定/i.test(original)) {
+    name = name
+      .replace(/^PGA\s*/i, '')
+      .replace(/^日本プロゴルフ協会\s*/i, '')
+      .trim();
+    if (!/^PGAプロテスト/.test(name) && !/^プロテスト/.test(name)) {
+      name = 'PGAプロテスト ' + name;
+    }
+  }
+
+  // QT系は「QT」「ファーストQT」などを残す
+  if (/qt|クォリファイ|qualifying/i.test(original + ' ' + cat)) {
+    name = name.replace(/^JGTO\s*/i, '').trim();
+  }
+
+  // 空になったら正式名に戻す
+  if (!name) name = rawName;
+
+  return name;
+}
+
 function buildCalendarAddPayload(t) {
   if (!t) return null;
   return {
@@ -2495,7 +2559,10 @@ function buildCalendarAddPayload(t) {
     at: new Date().toISOString(),
     tournament: {
       id: t.id,
-      name: t.name,
+      name: pnxBuildCalendarDisplayTitle(t),
+      calendarTitle: pnxBuildCalendarDisplayTitle(t),
+      officialName: t.name || t.title || '',
+      originalName: t.name || t.title || '',
       start: t.start,
       end: t.end || t.start,
       course: t.course || '',
@@ -10367,7 +10434,7 @@ window.addEventListener("message", function(event){
       step: '206',
       at: new Date().toISOString(),
       tournament: {
-        id: t.id, name: t.name, title: t.title || t.name,
+        id: t.id, name: pnxBuildCalendarDisplayTitle(t), calendarTitle: pnxBuildCalendarDisplayTitle(t), officialName: t.name || t.title || '', originalName: t.name || t.title || '', title: t.title || t.name,
         start: t.start, end: t.end || t.start,
         course: t.course || '', venue: t.venue || t.course || '', prefecture: t.prefecture || '', area: t.area || '',
         organizer: t.organizer || '', cat: t.cat || '', gender: t.gender || '', region: t.region || '',

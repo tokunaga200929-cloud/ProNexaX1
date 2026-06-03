@@ -155,7 +155,8 @@
       currentX: 0,
       currentY: 0,
       tracking: false,
-      canceled: false
+      canceled: false,
+      horizontalLock: false
     },
     monthAnimating: false,
     addDraft: {
@@ -1153,7 +1154,7 @@
         if (event.propertyName === 'transform') done();
       }, { once: true });
     }
-    window.setTimeout(done, 520);
+    window.setTimeout(done, 320);
   }
 
   function isMonthPickerOpen() {
@@ -1545,17 +1546,32 @@
     state.monthSwipe.currentY = 0;
     state.monthSwipe.tracking = false;
     state.monthSwipe.canceled = false;
+    state.monthSwipe.horizontalLock = false;
+  }
+
+
+  function cancelPendingCellRangeSelectForMonthSwipe(pointerId) {
+    if (state.rangeSelect.pointerId !== pointerId) return;
+    if (state.rangeSelect.active) return;
+    clearRangeSelectTimer();
+    state.rangeSelect.pointerId = null;
+    state.rangeSelect.startDate = null;
+    state.rangeSelect.endDate = null;
+    state.rangeSelect.startKey = '';
   }
 
   function commitMonthSwipe(deltaX, deltaY) {
     const absX = Math.abs(deltaX);
     const absY = Math.abs(deltaY);
-    if (absX < 72) return false;
-    if (absY > 46) return false;
-    if (absX < absY * 1.6) return false;
+
+    // STEP357: Googleカレンダー寄せ。少しの横スワイプでも軽く月切り替えする。
+    if (absX < 46) return false;
+    if (absY > 58) return false;
+    if (absX < absY * 1.18) return false;
+
     if (deltaX < 0) moveMonth(1);
     else moveMonth(-1);
-    state.suppressClickUntil = Date.now() + 360;
+    state.suppressClickUntil = Date.now() + 240;
     return true;
   }
 
@@ -1612,7 +1628,18 @@
       state.monthSwipe.currentY = event.clientY;
       const dx = event.clientX - state.monthSwipe.startX;
       const dy = event.clientY - state.monthSwipe.startY;
-      if (Math.abs(dy) > 48 && Math.abs(dy) > Math.abs(dx)) {
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+
+      // STEP359:
+      // 空白セル上では、長押し待機中でも横方向に動いたら月スワイプを優先。
+      // 予定チップ上のドラッグや、すでに始まった範囲選択は邪魔しない。
+      if (!state.monthSwipe.horizontalLock && absX > 18 && absX > absY * 1.18) {
+        state.monthSwipe.horizontalLock = true;
+        cancelPendingCellRangeSelectForMonthSwipe(event.pointerId);
+      }
+
+      if (!state.monthSwipe.horizontalLock && absY > 64 && absY > absX * 1.12) {
         state.monthSwipe.canceled = true;
         resetMonthSwipe();
         return;
@@ -1721,7 +1748,21 @@
       state.rangeSelect.currentX = event.clientX;
       state.rangeSelect.currentY = event.clientY;
       if (!state.rangeSelect.active) {
-        if (Math.abs(event.clientX - state.rangeSelect.startX) > 10 || Math.abs(event.clientY - state.rangeSelect.startY) > 10) {
+        const dx = event.clientX - state.rangeSelect.startX;
+        const dy = event.clientY - state.rangeSelect.startY;
+
+        // STEP359:
+        // 空白セルで横に掴んでいる時は、長押し範囲作成をキャンセルして月スワイプに譲る。
+        if (state.monthSwipe.tracking && state.monthSwipe.pointerId === event.pointerId && state.monthSwipe.horizontalLock) {
+          clearRangeSelectTimer();
+          state.rangeSelect.pointerId = null;
+          state.rangeSelect.startDate = null;
+          state.rangeSelect.endDate = null;
+          state.rangeSelect.startKey = '';
+          return;
+        }
+
+        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
           clearRangeSelectTimer();
           state.rangeSelect.pointerId = null;
           state.rangeSelect.startDate = null;
@@ -2406,13 +2447,15 @@
     let end = parseISODate(tournament.end || tournament.endDate) || cloneDate(start);
     if (compareDate(end, start) < 0) end = cloneDate(start);
 
+    const displayTitle = tournament.calendarTitle || tournament.calendarName || tournament.displayTitle || tournament.name || '大会予定';
+    const officialName = tournament.officialName || tournament.originalName || tournament.title || tournament.name || displayTitle;
     const organizer = tournament.organizer || '不明';
     const entryDeadline = tournament.entryDeadline || '不明';
     const prize = tournament.prize || '不明';
     const entryFee = tournament.entryFee || '不明';
     const qualification = tournament.qualification || '';
     const descLines = [
-      '大会名：' + (tournament.name || '名称未設定'),
+      '大会名：' + (officialName || '名称未設定'),
       '主催：' + organizer,
       'エントリー締切：' + entryDeadline,
       '賞金：' + prize,
@@ -2433,11 +2476,11 @@
       time: '00:00',
       endTime: '00:00',
       allDay: true,
-      title: tournament.name || '大会予定',
+      title: displayTitle,
       type: '試合',
       category: 'tournament',
-      chipLines: [tournament.name || '大会予定'],
-      chipLabel: tournament.name || '大会予定',
+      chipLines: [displayTitle],
+      chipLabel: displayTitle,
       color: 'blue',
       desc: descLines.join('\n'),
       loc: tournament.course || tournament.venue || '',
@@ -2457,6 +2500,8 @@
       imageUrl: tournament.imageUrl || tournament.venueImageUrl || '',
       imageAlt: tournament.imageAlt || '',
       memo: tournament.memo || tournament.note || '',
+      calendarTitle: displayTitle,
+      officialName: officialName,
       rawTournament: Object.assign({}, tournament)
     };
   }

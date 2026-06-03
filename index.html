@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <title>ProNexaX</title>
-  <link rel="stylesheet" href="calendar.css?v=step327-weather-compact-ui">
+  <link rel="stylesheet" href="calendar.css?v=step359-longpress-swipe-safe">
   <style>
     /* 単体プレビュー用。本体統合時はこの style と body/html は使わない */
     html, body {
@@ -522,7 +522,7 @@
     <!-- STEP200 INTEGRATION MODULE LAYER START -->
     <div class="pnx-module-layer" id="pnx-module-layer" aria-hidden="true">
       <div class="pnx-module-page" id="pnx-module-search" data-pnx-module-page="search" aria-hidden="true">
-        <iframe id="search-module-frame" class="pnx-module-frame" data-src="pages/search/embed.html?v=step286-search-data-restore" title="試合検索" loading="lazy"></iframe>
+        <iframe id="search-module-frame" class="pnx-module-frame" data-src="pages/search/embed.html?v=step350-calendar-title-cleanup" title="試合検索" loading="lazy"></iframe>
       </div>
       <div class="pnx-module-page" id="pnx-module-featured" data-pnx-module-page="featured" aria-hidden="true">
         <iframe id="featured-module-frame" class="pnx-module-frame" data-src="pages/featured/embed.html?v=step210-featured-scroll" title="広告・注目" loading="lazy"></iframe>
@@ -583,7 +583,7 @@
   </div>
 </section>
 
-<script src="calendar.js?v=step317-logo-safe" charset="UTF-8"></script>
+<script src="calendar.js?v=step359-longpress-swipe-safe" charset="UTF-8"></script>
 <script>
   if (window.initProNexaCalendarV2) window.initProNexaCalendarV2();
 </script>
@@ -662,7 +662,7 @@ body.pnx-module-active .pnx-cal-month-popover{
 
   var MODULE_ROUTES = {
     calendar: { type:"native", label:"カレンダー" },
-    search: { type:"iframe", pageId:"pnx-module-search", frameId:"search-module-frame", src:"pages/search/embed.html?v=step286-search-data-restore", label:"試合検索" },
+    search: { type:"iframe", pageId:"pnx-module-search", frameId:"search-module-frame", src:"pages/search/embed.html?v=step350-calendar-title-cleanup", label:"試合検索" },
     featured: { type:"iframe", pageId:"pnx-module-featured", frameId:"featured-module-frame", src:"pages/featured/embed.html?v=step210-featured-scroll", label:"広告・注目" },
     expedition: { type:"iframe", pageId:"pnx-module-expedition", frameId:"expedition-module-frame", src:"pages/expedition/embed.html?v=step345-typography-size-fix", label:"遠征" },
     mypage: { type:"iframe", pageId:"pnx-module-mypage", frameId:"mypage-frame", src:"pages/mypage/embed.html?v=step202-search-fit", label:"マイページ" },
@@ -1265,7 +1265,7 @@ body.pnx-step202-search-active #pnx-module-search{
   if (window.__PNX_STEP202_SEARCH_PARENT_FIT__) return;
   window.__PNX_STEP202_SEARCH_PARENT_FIT__ = true;
 
-  var SEARCH_SRC = "pages/search/embed.html?v=step286-search-data-restore";
+  var SEARCH_SRC = "pages/search/embed.html?v=step350-calendar-title-cleanup";
 
   function ensureSearchFrame(){
     var frame = document.getElementById("search-module-frame");
