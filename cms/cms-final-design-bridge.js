@@ -53,6 +53,19 @@
     return prefix + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
   }
 
+  function isDataLikeUrl(value){
+    return /^data:|^blob:/i.test(String(value || ""));
+  }
+
+  function pickSafeMediaUrl(){
+    for (let i = 0; i < arguments.length; i++) {
+      const v = String(arguments[i] || "").trim();
+      if (v && !isDataLikeUrl(v)) return v;
+    }
+    return "";
+  }
+
+
   function emit(type, detail){
     const payload = Object.assign({ emittedAt: now() }, detail || {});
     window.dispatchEvent(new CustomEvent(type, { detail: payload }));
@@ -1227,12 +1240,26 @@ window.PNXCmsFinalDesignBridge = Bridge;
     return prefix + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
   }
 
+  function isDataLikeUrl(value){
+    return /^data:|^blob:/i.test(String(value || ""));
+  }
+
+  function pickSafeMediaUrl(){
+    for (let i = 0; i < arguments.length; i++) {
+      const v = String(arguments[i] || "").trim();
+      if (v && !isDataLikeUrl(v)) return v;
+    }
+    return "";
+  }
+
+
   function normalizeAsset(input){
     const a = input || {};
     const id = a.id || a.assetId || uid("media");
     const name = a.name || a.title || a.filename || "未命名メディア";
     const kind = a.kind || a.type || "image";
     const folder = a.folder || a.category || "general";
+    const safeUrl = pickSafeMediaUrl(a.storageUrl, a.downloadUrl, a.url, a.src, a.imageUrl);
 
     return {
       id,
@@ -1242,10 +1269,11 @@ window.PNXCmsFinalDesignBridge = Bridge;
       filename: a.filename || name,
       kind,
       folder,
-      url: a.url || a.storageUrl || a.downloadUrl || a.src || a.dataUrl || "",
-      dataUrl: a.dataUrl || "",
-      downloadUrl: a.downloadUrl || a.storageUrl || a.url || "",
-      storageUrl: a.storageUrl || a.downloadUrl || a.url || "",
+      // STEP312: localStorageに画像本体 data/blob URL は保存しない。
+      url: safeUrl,
+      dataUrl: "",
+      downloadUrl: pickSafeMediaUrl(a.downloadUrl, a.storageUrl, a.url),
+      storageUrl: pickSafeMediaUrl(a.storageUrl, a.downloadUrl, a.url),
       storagePath: a.storagePath || a.path || "",
       mimeType: a.mimeType || "",
       sizeBytes: Number(a.sizeBytes || 0),
@@ -1254,7 +1282,7 @@ window.PNXCmsFinalDesignBridge = Bridge;
       alt: a.alt || name,
       usage: a.usage || "",
       tags: Array.isArray(a.tags) ? a.tags : [],
-      source: a.source || "cms-media",
+      source: a.source || (safeUrl ? "firebase-storage" : "cms-media-ref"),
       createdAt: a.createdAt || now(),
       updatedAt: now()
     };
@@ -1266,18 +1294,19 @@ window.PNXCmsFinalDesignBridge = Bridge;
   }
 
   function saveList(list){
-    writeJson(MEDIA_KEY, list);
+    const safeList = (Array.isArray(list) ? list : []).map(normalizeAsset);
+    writeJson(MEDIA_KEY, safeList);
     try {
       localStorage.setItem("PNX_CMS_MEDIA_UPDATED_AT", now());
     } catch(e) {}
 
     try {
       window.dispatchEvent(new CustomEvent("pnx:cms-final:media-updated", {
-        detail:{ media:list, updatedAt:now() }
+        detail:{ media:safeList, updatedAt:now() }
       }));
     } catch(e) {}
 
-    return list;
+    return safeList;
   }
 
   bridge.getMediaAssets = function(filter){
@@ -1300,11 +1329,27 @@ window.PNXCmsFinalDesignBridge = Bridge;
     const asset = normalizeAsset(input);
     const list = getList();
     const index = list.findIndex(x => x.id === asset.id || x.assetId === asset.id);
-    if (index >= 0) list[index] = Object.assign({}, list[index], asset, { updatedAt:now() });
+    if (index >= 0) list[index] = normalizeAsset(Object.assign({}, list[index], asset, { updatedAt:now() }));
     else list.unshift(asset);
 
-    saveList(list);
-    return asset;
+    const savedList = saveList(list);
+    return savedList.find(x => x.id === asset.id || x.assetId === asset.id) || asset;
+  };
+
+  bridge.cleanupMediaStorage = function(){
+    const beforeRaw = localStorage.getItem(MEDIA_KEY) || "";
+    const beforeMb = Number((beforeRaw.length / 1024 / 1024).toFixed(3));
+    const cleaned = saveList(getList());
+    const afterRaw = localStorage.getItem(MEDIA_KEY) || "";
+    const afterMb = Number((afterRaw.length / 1024 / 1024).toFixed(3));
+    return {
+      ok: true,
+      beforeMb,
+      afterMb,
+      reducedMb: Number((beforeMb - afterMb).toFixed(3)),
+      total: cleaned.length,
+      cleanedAt: now()
+    };
   };
 
   bridge.removeMediaAsset = function(id){

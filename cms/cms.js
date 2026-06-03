@@ -3914,24 +3914,24 @@ function CmsTournamentManagePanel({ onPickImage }) {
             pnxStep280BuildSavedAsset(baseAsset, upload, { source: 'firebase-storage' })
           );
         } catch (storageError) {
-          console.warn('[PNX STEP280] Storage upload failed, fallback to local asset', storageError);
-          savedAsset = window.PNXCmsFinalDesignBridge.saveMediaAsset(Object.assign({}, baseAsset, {
-            dataUrl: compressed.dataUrl,
-            url: compressed.dataUrl,
-            source: 'step280-local-fallback'
-          }));
+          console.warn('[PNX STEP312] Storage upload failed. localStorageへの画像本体保存は停止しています。', storageError);
+          const msg = pnxStep282ShortError(storageError);
+          setNotice(`${label}のStorage保存に失敗しました：${msg}`);
+          pnxStep128CmsActionToast(`Storage保存に失敗しました`, "ng");
+          return;
         }
-        chosenUrl = pnxStep250SelectMediaUrl(savedAsset, compressed.dataUrl);
+        chosenUrl = pnxStep250SelectMediaUrl(savedAsset, "");
+      }
+
+      if (!uploadedToStorage || !savedAsset) {
+        setNotice(`${label}はFirebase Storage接続後に保存してください。localStorageへの画像本体保存は停止しています。`);
+        pnxStep128CmsActionToast(`Storage接続が必要です`, "ng");
+        return;
       }
 
       pnxStep278ApplyImageToSelected(kind, chosenUrl, savedAsset);
-      if (uploadedToStorage) {
-        setNotice(`${label}をFirebase Storageへ保存しました。保存を押すと反映されます。`);
-        pnxStep128CmsActionToast(`${label}をStorage保存しました`, "ok");
-      } else {
-        setNotice(`${label}をローカル保存しました。Firebase Storage未接続時の予備保存です。`);
-        pnxStep128CmsActionToast(`${label}をローカル保存しました`, "ok");
-      }
+      setNotice(`${label}をFirebase Storageへ保存しました。保存を押すと反映されます。`);
+      pnxStep128CmsActionToast(`${label}をStorage保存しました`, "ok");
     } catch (e) {
       setNotice("画像の読み込みに失敗しました。別の画像、または少し小さい画像で試してください。");
       pnxStep128CmsActionToast("画像の読み込みに失敗しました", "ng");
@@ -6809,6 +6809,25 @@ function pnxStep280BuildSavedAsset(base, upload, extra = {}) {
     source: upload ? "firebase-storage" : (extra.source || base.source || "cms-media")
   });
 }
+
+function pnxStep312CmsMediaStorageSizeMb() {
+  try {
+    return Number((((localStorage.getItem("PNX_CMS_MEDIA") || "").length) / 1024 / 1024).toFixed(3));
+  } catch(e) {
+    return 0;
+  }
+}
+
+function pnxStep312CmsMediaCleanupNotice() {
+  try {
+    const mb = pnxStep312CmsMediaStorageSizeMb();
+    if (mb > 1.0) {
+      console.warn("[PNX STEP312] PNX_CMS_MEDIA is still large:", mb + "MB", "Run PNXCmsFinalDesignBridge.cleanupMediaStorage() if needed.");
+    }
+  } catch(e) {}
+}
+setTimeout(pnxStep312CmsMediaCleanupNotice, 1200);
+
 
 function pnxStep282WithTimeout(promise, ms, label) {
   let timer = null;

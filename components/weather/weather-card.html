@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ProNexaX 天気カード（単体確認）</title>
+  <link rel="stylesheet" href="weather-card.css" />
+  <style>
+    /* === 単体確認用ページのみのスタイル ===
+       本体統合時には不要。グローバルは最小限に留める。 */
+    .pnx-demo-body {
+      margin: 0;
+      min-height: 100vh;
+      background: #EEF2F7; /* カレンダー下部パネルを想定した薄いグレー背景 */
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      color: #0F172B;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 0 48px;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* PC でもスマホ幅で中央表示（360〜430px 想定） */
+    .pnx-demo-phone {
+      width: 100%;
+      max-width: 390px;
+      padding: 0 16px;
+    }
+    .pnx-demo-caption {
+      font-size: 12px;
+      color: #667085;
+      text-align: center;
+      margin: 0 0 16px;
+      letter-spacing: 0.02em;
+    }
+    /* 予定パネルの文脈を再現する簡易チップ（確認用・本体では使わない） */
+    .pnx-demo-panel-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0F172B;
+      margin: 0 2px 8px;
+    }
+    .pnx-demo-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #E3ECF7;
+      border-radius: 12px;
+      padding: 11px 13px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .pnx-demo-chip-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: #0A74FF; flex-shrink: 0;
+    }
+    .pnx-demo-chip-time { color: #667085; margin-left: auto; font-size: 12px; }
+    /* 日付切り替えボタン（ダミーデータの変化確認用） */
+    .pnx-demo-dates {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+    .pnx-demo-date-btn {
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: #0A74FF;
+      background: #fff;
+      border: 1px solid #D8E5F5;
+      border-radius: 999px;
+      padding: 7px 13px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pnx-demo-date-btn:active { background: #E8F1FF; }
+  </style>
+</head>
+<body class="pnx-demo-body">
+
+  <div class="pnx-demo-phone">
+    <p class="pnx-demo-caption">予定パネル内プレビュー（スマホ幅）</p>
+
+    <!-- 予定パネルの文脈（確認用ダミー）。本体統合時はここがカレンダーの予定パネル -->
+    <div class="pnx-demo-panel-label">2026年6月3日（水）</div>
+    <div class="pnx-demo-chip">
+      <span class="pnx-demo-chip-dot"></span>
+      広島カンツリー倶楽部 ラウンド
+      <span class="pnx-demo-chip-time">7:30</span>
+    </div>
+
+    <!-- ★ ここが本体に差し込むルート要素 ★ -->
+    <div id="pnx-weather-card-root"></div>
+
+    <!-- ダミーデータの日付バリエーション確認 -->
+    <div class="pnx-demo-dates">
+      <button class="pnx-demo-date-btn" data-date="2026-06-03">6/3</button>
+      <button class="pnx-demo-date-btn" data-date="2026-06-05">6/5</button>
+      <button class="pnx-demo-date-btn" data-date="2026-06-08">6/8</button>
+      <button class="pnx-demo-date-btn" data-date="2026-06-11">6/11</button>
+      <button class="pnx-demo-date-btn" data-date="2026-06-14">6/14</button>
+    </div>
+  </div>
+
+  <script src="weather-card.js"></script>
+  <script>
+    // 初期描画：6/3 のダミーデータで表示
+    PNXWeatherCard.init({ date: "2026-06-03" });
+
+    // 日付ボタンでダミーデータを切り替え（setData で再描画できることの確認）
+    document.querySelectorAll(".pnx-demo-date-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var d = btn.getAttribute("data-date");
+        PNXWeatherCard.setData(PNXWeatherCard.getDummyData(d));
+      });
+    });
+
+    /* === 本体統合時の使い方（参考） ===
+       // 予定パネルを描画したあと、ルート要素を入れて：
+       PNXWeatherCard.init({ rootId: "pnx-weather-card-root", date: selectedDate });
+       // 天気 API のレスポンスを上記 data 形式に整形して：
+       PNXWeatherCard.setData(apiData);
+    */
+  </script>
+</body>
+</html>

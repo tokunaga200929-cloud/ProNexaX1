@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <title>ProNexaX</title>
-  <link rel="stylesheet" href="calendar.css?v=step211-color-palette">
+  <link rel="stylesheet" href="calendar.css?v=step327-weather-compact-ui">
   <style>
     /* 単体プレビュー用。本体統合時はこの style と body/html は使わない */
     html, body {
@@ -138,6 +138,7 @@
     }
   </style>
   <script src="scripts/disable-zoom.js" defer></script>
+  <link rel="stylesheet" href="styles/weather/weather-card.css?v=step328-api-ready-schema">
 </head>
 <body>
 <!--
@@ -250,6 +251,9 @@
         </div>
       </div>
       <div class="pnx-cal-event-list" data-pnx-sheet-list></div>
+      <div class="pnx-cal-weather-component-slot" data-pnx-weather-slot>
+        <div id="pnx-weather-card-root"></div>
+      </div>
     </section>
 
     <div class="pnx-cal-add-layer" data-pnx-add-layer aria-hidden="true">
@@ -524,7 +528,7 @@
         <iframe id="featured-module-frame" class="pnx-module-frame" data-src="pages/featured/embed.html?v=step210-featured-scroll" title="広告・注目" loading="lazy"></iframe>
       </div>
       <div class="pnx-module-page" id="pnx-module-expedition" data-pnx-module-page="expedition" aria-hidden="true">
-        <iframe id="expedition-module-frame" class="pnx-module-frame" data-src="pages/expedition/embed.html?v=step289-expedition-home" title="遠征" loading="lazy"></iframe>
+        <iframe id="expedition-module-frame" class="pnx-module-frame" data-src="pages/expedition/embed.html?v=step345-typography-size-fix" title="遠征" loading="lazy"></iframe>
       </div>
       <!-- Legacy finance module is kept in pages/finance/* and styles/scripts/finance/* for rollback. -->
       <div class="pnx-module-page" id="pnx-module-mypage" data-pnx-module-page="mypage" aria-hidden="true">
@@ -579,7 +583,7 @@
   </div>
 </section>
 
-<script src="calendar.js?v=step211-color-palette" charset="UTF-8"></script>
+<script src="calendar.js?v=step317-logo-safe" charset="UTF-8"></script>
 <script>
   if (window.initProNexaCalendarV2) window.initProNexaCalendarV2();
 </script>
@@ -660,7 +664,7 @@ body.pnx-module-active .pnx-cal-month-popover{
     calendar: { type:"native", label:"カレンダー" },
     search: { type:"iframe", pageId:"pnx-module-search", frameId:"search-module-frame", src:"pages/search/embed.html?v=step286-search-data-restore", label:"試合検索" },
     featured: { type:"iframe", pageId:"pnx-module-featured", frameId:"featured-module-frame", src:"pages/featured/embed.html?v=step210-featured-scroll", label:"広告・注目" },
-    expedition: { type:"iframe", pageId:"pnx-module-expedition", frameId:"expedition-module-frame", src:"pages/expedition/embed.html?v=step289-expedition-home", label:"遠征" },
+    expedition: { type:"iframe", pageId:"pnx-module-expedition", frameId:"expedition-module-frame", src:"pages/expedition/embed.html?v=step345-typography-size-fix", label:"遠征" },
     mypage: { type:"iframe", pageId:"pnx-module-mypage", frameId:"mypage-frame", src:"pages/mypage/embed.html?v=step202-search-fit", label:"マイページ" },
     profile: { type:"iframe", pageId:"pnx-module-profile", frameId:"profile-frame", src:"pages/profile/embed.html?v=step202-search-fit", label:"プロフィール" }
   };
@@ -935,7 +939,7 @@ body:not(.pnx-step201-module-active) .pnx-module-layer{
       nav:"expedition",
       pageId:"pnx-module-expedition",
       frameId:"expedition-module-frame",
-      src:"pages/expedition/embed.html?v=step289-expedition-home",
+      src:"pages/expedition/embed.html?v=step345-typography-size-fix",
       label:"遠征"
     },
     mypage: {
@@ -1634,5 +1638,7 @@ body.pnx-step202-search-active #pnx-module-search{
 })();
 </script>
 
+  <script src="scripts/weather/weather-card.js?v=step328-api-ready-schema"></script>
+  <script src="scripts/weather/weather-calendar-bridge.js?v=step328-api-ready-schema"></script>
 </body>
 </html>

@@ -4659,3 +4659,75 @@
     font-weight: 620 !important;
   }
 }
+
+/* =========================================================
+   STEP300 — 予定チップ内テキストをさらに少し大きく調整
+   - チップ本体の高さ・大きさは変更しない
+   - 下に残る余白を活かして文字だけ拡大
+   - 省略記号なし（STEP298）は維持
+   ========================================================= */
+.pnx-calendar-v2 .pnx-cal-chip,
+.pnx-calendar-v2 .pnx-cal-chip.is-multiline {
+  font-size: 10.3px !important;
+  font-weight: 650 !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.06em !important;
+}
+
+.pnx-calendar-v2 .pnx-cal-chip-line {
+  font-size: 10.3px !important;
+  font-weight: 650 !important;
+  line-height: 1.04 !important;
+  transform: scaleX(.86) !important;
+  transform-origin: left center !important;
+  text-overflow: clip !important;
+}
+
+.pnx-calendar-v2 .pnx-cal-span-chip {
+  font-size: 10.2px !important;
+  font-weight: 650 !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.052em !important;
+}
+
+.pnx-calendar-v2 .pnx-cal-span-chip-line {
+  font-size: 10.2px !important;
+  font-weight: 650 !important;
+  line-height: 1.04 !important;
+  text-overflow: clip !important;
+}
+
+
+/* =========================================================================
+   STEP324: 天気カードコンポーネント差し込み枠
+   ========================================================================= */
+.pnx-calendar-v2 .pnx-cal-weather-component-slot {
+  margin: 10px 0 0;
+  padding: 0;
+  display: block;
+}
+
+.pnx-calendar-v2 .pnx-cal-weather-component-slot:empty {
+  display: none;
+}
+
+.pnx-calendar-v2 #pnx-weather-card-root {
+  display: block;
+  width: 100%;
+}
+
+.pnx-calendar-v2 #pnx-weather-card-root .pnx-weather-card-card {
+  margin: 0;
+}
+
+
+/* =========================================================================
+   STEP327: 天気カード枠のカレンダー内余白調整
+   ========================================================================= */
+.pnx-calendar-v2 .pnx-cal-weather-component-slot {
+  margin-top: 8px;
+}
+
+.pnx-calendar-v2 .pnx-cal-event-list + .pnx-cal-weather-component-slot {
+  margin-top: 8px;
+}

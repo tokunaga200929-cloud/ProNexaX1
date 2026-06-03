@@ -712,13 +712,67 @@ const CATEGORIES = [
  * ─ 選択するとチップ欄に動的追加される
  */
 const CATEGORY_EXTRA = [
-  { key: 'open',    label: '県オープン',  sub: 'オープン競技',    icon: '⛳' },
-  { key: 'student', label: '学生',        sub: '学生競技',        icon: '🎓' },
-  { key: 'abroad',  label: '海外',        sub: '海外ツアー',      icon: '✈️' },
-  { key: 'asian',   label: 'Asian Tour',  sub: 'アジアツアー',    icon: '🌏' },
-  { key: 'pga',     label: 'PGA TOUR',    sub: 'PGAツアー',       icon: '🇺🇸' },
-  { key: 'other',   label: 'その他',      sub: 'その他の大会',    icon: '📋' },
+  { key: 'open',    label: '県オープン',  sub: 'オープン競技' },
+  { key: 'student', label: '学生',        sub: '学生競技' },
+  { key: 'abroad',  label: '海外',        sub: '海外ツアー' },
+  { key: 'asian',   label: 'Asian Tour',  sub: 'アジアツアー' },
+  { key: 'pga',     label: 'PGA TOUR',    sub: 'PGAツアー' },
+  { key: 'other',   label: 'その他',      sub: 'その他の大会' }
 ];
+
+function getCategorySheetIcon(key) {
+  const icons = {
+    open: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 19V5m0 1.2c2-1.2 3.2-1.2 5.2 0s3.2 1.2 5.2 0l1.6-.9v8.6l-1.6.9c-2 1.2-3.2 1.2-5.2 0S8 13.6 6 14.8"/>
+      </svg>`,
+    student: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 9.5 12 5l9 4.5-9 4.5L3 9.5Z"/>
+        <path d="M7 12.5V16c0 1.1 2.2 2.5 5 2.5s5-1.4 5-2.5v-3.5"/>
+      </svg>`,
+    abroad: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m21 3-8.6 8.6"/>
+        <path d="m10.7 13.3-4.2 7.7-1.7-1.7 3.2-5.2-5-3.2 1.7-1.7 7.7 4.1"/>
+        <path d="m11.4 12.6 1.5-4.8L21 3l-4.8 8.1-4.8 1.5Z"/>
+      </svg>`,
+    asian: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="8"/>
+        <path d="M4 12h16M12 4a12 12 0 0 1 0 16M12 4a12 12 0 0 0 0 16"/>
+      </svg>`,
+    pga: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 5h10v2a4 4 0 0 1-4 4h-2A4 4 0 0 1 7 7V5Z"/>
+        <path d="M9 5V4h6v1"/>
+        <path d="M12 11v5"/>
+        <path d="M9 20h6"/>
+        <path d="M17 6h2a1.8 1.8 0 0 1 0 3.6h-2"/>
+        <path d="M7 6H5a1.8 1.8 0 0 0 0 3.6h2"/>
+      </svg>`,
+    other: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="5" y="5" width="6" height="6" rx="1.6"/>
+        <rect x="13" y="5" width="6" height="6" rx="1.6"/>
+        <rect x="5" y="13" width="6" height="6" rx="1.6"/>
+        <rect x="13" y="13" width="6" height="6" rx="1.6"/>
+      </svg>`
+  };
+  return icons[key] || icons.other;
+}
+
+function getCategorySheetHeartIcon(active) {
+  return active
+    ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3 4.8 13.6a4.7 4.7 0 0 1 6.6-6.7L12 7.6l.6-.7a4.7 4.7 0 1 1 6.6 6.7L12 20.3Z"/></svg>`
+    : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3 4.8 13.6a4.7 4.7 0 0 1 6.6-6.7L12 7.6l.6-.7a4.7 4.7 0 1 1 6.6 6.7L12 20.3Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function getCategorySheetAddButton(isAdded) {
+  return isAdded
+    ? `<span class="cat-sel-row-add-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7.5 12.5 3 3 6-7" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="cat-sel-row-add-label">追加済</span>`
+    : `<span class="cat-sel-row-add-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.15" stroke-linecap="round"/></svg></span><span class="cat-sel-row-add-label">追加</span>`;
+}
 
 /**
  * 条件フィルター定義
@@ -803,7 +857,7 @@ function renderCategoryChips() {
     const isActive = cat.key === APP_STATE.selectedCategory;
     if (cat.key === 'all') {
       return `<button
-        class="s-chip${isActive ? ' active' : ''}"
+        class="s-chip s-chip-all${isActive ? ' active' : ''}"
         data-cat="${cat.key}"
         aria-pressed="${isActive}"
       >${cat.label}</button>`;
@@ -840,7 +894,7 @@ function renderCategoryChips() {
       >${isFav ? '♥' : '♡'}</span></button>`;
   }).join('');
 
-  const plusHTML = `<button class="s-chip s-chip-plus" id="chip-plus" aria-label="カテゴリを追加">＋</button>`;
+  const plusHTML = `<button class="s-chip s-chip-plus" id="chip-plus" aria-label="カテゴリを追加">+</button>`;
 
   container.innerHTML = chipsHTML + extraHTML + plusHTML;
 
@@ -3693,7 +3747,6 @@ function renderCategorySelectList() {
   const body = document.getElementById('cat-sel-body');
   if (!body) return;
 
-  // 件数マップ（現在の性別フィルターを考慮）
   const counts = {};
   DUMMY_TOURNAMENTS.forEach(t => {
     if (APP_STATE.selectedGender !== 'all' && t.gender !== APP_STATE.selectedGender) return;
@@ -3701,41 +3754,37 @@ function renderCategorySelectList() {
   });
 
   body.innerHTML = CATEGORY_EXTRA.map(cat => {
-    const cnt      = counts[cat.key] || 0;
-    const isFav    = isCatFavorited(cat.key);
-    const isAdded  = APP_STATE.extraCategories.has(cat.key);
+    const cnt = counts[cat.key] || 0;
+    const isFav = isCatFavorited(cat.key);
+    const isAdded = APP_STATE.extraCategories.has(cat.key);
     return `
       <div class="cat-sel-row${isAdded ? ' added' : ''}" data-key="${cat.key}" role="button" tabindex="0"
            aria-label="${cat.label}${isAdded ? '（追加済み）' : ''} ${cnt}件">
-        <div class="cat-sel-row-icon">${cat.icon}</div>
+        <div class="cat-sel-row-icon">${getCategorySheetIcon(cat.key)}</div>
         <div class="cat-sel-row-info">
           <span class="cat-sel-row-name">${cat.label}</span>
           <span class="cat-sel-row-sub">${cat.sub}</span>
         </div>
         <div class="cat-sel-row-right">
-          <span class="cat-sel-row-count">${cnt > 0 ? cnt + '件' : '—'}</span>
+          <span class="cat-sel-row-count">${cnt}件</span>
           <button class="cat-sel-row-fav${isFav ? ' active' : ''}"
                   data-key="${cat.key}"
-                  aria-label="${isFav ? 'お気に入り解除' : 'お気に入り登録'}"
-          >${isFav ? '♥' : '♡'}</button>
+                  aria-label="${isFav ? 'お気に入り解除' : 'お気に入り登録'}">${getCategorySheetHeartIcon(isFav)}</button>
           <button class="cat-sel-row-add${isAdded ? ' added' : ''}"
                   data-key="${cat.key}"
-                  aria-label="${isAdded ? 'チップから削除' : 'チップに追加'}"
-          >${isAdded ? '✓' : '＋'}</button>
+                  aria-label="${isAdded ? 'チップから削除' : 'チップに追加'}">${getCategorySheetAddButton(isAdded)}</button>
         </div>
       </div>`;
   }).join('');
 
-  // ── 追加/解除ボタン（＋/✓）タップ ──
   body.querySelectorAll('.cat-sel-row-add').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      const key     = btn.dataset.key;
+      const key = btn.dataset.key;
       const wasAdded = APP_STATE.extraCategories.has(key);
 
       if (wasAdded) {
         APP_STATE.extraCategories.delete(key);
-        // 選択中だった場合はリセット
         if (APP_STATE.selectedCategory === key) APP_STATE.selectedCategory = 'all';
       } else {
         APP_STATE.extraCategories.add(key);
@@ -3745,17 +3794,15 @@ function renderCategorySelectList() {
       renderCategoryChips();
       applyFiltersAndRender();
 
-      // 行の表示を即更新
       const row = btn.closest('.cat-sel-row');
       const isNowAdded = APP_STATE.extraCategories.has(key);
-      btn.textContent = isNowAdded ? '✓' : '＋';
+      btn.innerHTML = getCategorySheetAddButton(isNowAdded);
       btn.classList.toggle('added', isNowAdded);
       btn.setAttribute('aria-label', isNowAdded ? 'チップから削除' : 'チップに追加');
       row.classList.toggle('added', isNowAdded);
     });
   });
 
-  // ── 行タップ（＋/♡ 以外）→ 追加/解除のショートカット ──
   body.querySelectorAll('.cat-sel-row').forEach(row => {
     row.addEventListener('click', e => {
       if (e.target.closest('.cat-sel-row-add') || e.target.closest('.cat-sel-row-fav')) return;
@@ -3766,14 +3813,13 @@ function renderCategorySelectList() {
     });
   });
 
-  // ── ♡ タップ → お気に入りトグル ──
   body.querySelectorAll('.cat-sel-row-fav').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      const key   = btn.dataset.key;
+      const key = btn.dataset.key;
       toggleCatFav(key, true);
       const isNow = isCatFavorited(key);
-      btn.textContent = isNow ? '♥' : '♡';
+      btn.innerHTML = getCategorySheetHeartIcon(isNow);
       btn.classList.toggle('active', isNow);
       btn.setAttribute('aria-label', isNow ? 'お気に入り解除' : 'お気に入り登録');
     });

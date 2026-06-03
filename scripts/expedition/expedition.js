@@ -43,6 +43,12 @@
     endDate: '2026-06-06',
     dateRange: '2026/06/05 - 2026/06/06',
     linkedCalendar: true,
+    tournamentLogoUrl: '',
+    logoUrl: '',
+    seriesLogoUrl: '',
+    organizerLogoUrl: '',
+    venueImageUrl: '',
+    imageUrl: '',
     links: { officialUrl: '', pairingsUrl: '', resultUrl: '', leaderboardUrl: '' },
     travel: [
       { id: 'flight', type: '飛行機', icon: 'plane', main: '羽田 → 広島', sub: '06/04 07:25 発', amount: 0, from: '羽田', to: '広島', departure: '06/04 07:25 発' },
@@ -78,6 +84,8 @@
 
   var STORAGE_ACTIVE_KEY = 'pnx-expedition-active-tournament';
   var STORAGE_INDEX_KEY = 'pnx-expedition-index';
+  var EXPEDITION_SCHEMA_VERSION = 1;
+  var expeditionSyncStatus = { state: 'local', label: '端末保存', lastSyncedAt: '', error: '' };
 
   function clone(obj) { return JSON.parse(JSON.stringify(obj || {})); }
   function yen(n) { return '¥' + Number(n || 0).toLocaleString('ja-JP'); }
@@ -95,6 +103,294 @@
   }
   function findById(arr, id) { return (arr || []).find(function (x) { return x.id === id; }); }
   function storageKey(d) { return 'pnx-expedition-' + (d && d.tournamentId ? d.tournamentId : 'default'); }
+  function saveMetaKey(d) { return storageKey(d) + '-save-meta'; }
+  function makeSaveMeta(record, status, detail) {
+    return {
+      schemaVersion: EXPEDITION_SCHEMA_VERSION,
+      tournamentId: record && record.tournamentId || 'default',
+      tournamentName: record && record.tournamentName || '',
+      userId: record && record.userId || getUserScope(),
+      status: status || 'local',
+      detail: detail || '',
+      updatedAt: nowIso(),
+      localKey: storageKey(record || defaultExpeditionData),
+      firestorePath: record ? ExpeditionRepository.firestorePath(record) : ''
+    };
+  }
+
+  function nowIso() { return new Date().toISOString(); }
+  function getUserScope() {
+    try {
+      return (window.PNXAuthBridge && window.PNXAuthBridge.currentUser && window.PNXAuthBridge.currentUser.uid) ||
+        (window.PNXFirebaseApp && window.PNXFirebaseApp.auth && window.PNXFirebaseApp.auth.currentUser && window.PNXFirebaseApp.auth.currentUser.uid) ||
+        (window.firebase && window.firebase.auth && window.firebase.auth().currentUser && window.firebase.auth().currentUser.uid) ||
+        (window.PNX_AUTH && window.PNX_AUTH.currentUser && window.PNX_AUTH.currentUser.uid) ||
+        (window.PNXCurrentUser && window.PNXCurrentUser.uid) ||
+        'local-user';
+    } catch (err) {
+      return 'local-user';
+    }
+  }
+  function toExpeditionRecord(d) {
+    var normalized = getDefaultData(d || defaultExpeditionData);
+    return {
+      schemaVersion: EXPEDITION_SCHEMA_VERSION,
+      userId: getUserScope(),
+      tournamentId: normalized.tournamentId || 'default',
+      tournamentName: normalized.tournamentName || '',
+      venue: normalized.venue || '',
+      startDate: normalized.startDate || '',
+      endDate: normalized.endDate || '',
+      dateRange: normalized.dateRange || '',
+      linkedCalendar: !!normalized.linkedCalendar,
+      tournamentLogoUrl: normalized.tournamentLogoUrl || '',
+      logoUrl: normalized.logoUrl || normalized.tournamentLogoUrl || '',
+      seriesLogoUrl: normalized.seriesLogoUrl || '',
+      organizerLogoUrl: normalized.organizerLogoUrl || '',
+      venueImageUrl: normalized.venueImageUrl || '',
+      imageUrl: normalized.imageUrl || normalized.venueImageUrl || '',
+      links: Object.assign({}, normalized.links || {}),
+      travel: clone(normalized.travel || []),
+      hotel: clone(normalized.hotel || {}),
+      checklist: clone(normalized.checklist || []),
+      expenses: clone(normalized.expenses || []),
+      receipts: (normalized.receipts || []).map(function(item){
+        return Object.assign({}, item, {
+          imageName: item.imageName || '',
+          // STEP314: 画像本体のdataURLは保存しない。画像はFirebase Storage、データはURLだけ保持。
+          imageDataUrl: '',
+          imageStoragePath: item.imageStoragePath || '',
+          imageDownloadUrl: item.imageDownloadUrl || item.storageUrl || item.downloadUrl || ''
+        });
+      }),
+      memo: normalized.memo || '',
+      updatedAt: normalized.updatedAt || nowIso(),
+      createdAt: normalized.createdAt || normalized.updatedAt || nowIso()
+    };
+  }
+  function fromExpeditionRecord(record, fallback) {
+    var base = getDefaultData(fallback || defaultExpeditionData);
+    if (!record) return base;
+    return getDefaultData(Object.assign({}, base, record, {
+      links: Object.assign({}, base.links || {}, record.links || {}),
+      hotel: Object.assign({}, base.hotel || {}, record.hotel || {}),
+      travel: record.travel || base.travel,
+      checklist: record.checklist || base.checklist,
+      expenses: record.expenses || base.expenses,
+      receipts: record.receipts || base.receipts || []
+    }));
+  }
+  function setSyncStatus(state, label, error, extra) {
+    extra = extra || {};
+    expeditionSyncStatus = {
+      state: state || 'local',
+      label: label || '端末保存',
+      lastSyncedAt: state === 'cloud' ? nowIso() : (expeditionSyncStatus.lastSyncedAt || ''),
+      lastLocalSavedAt: extra.localSavedAt || expeditionSyncStatus.lastLocalSavedAt || '',
+      path: extra.path || expeditionSyncStatus.path || '',
+      tournamentId: extra.tournamentId || expeditionSyncStatus.tournamentId || '',
+      error: error ? String(error.message || error) : ''
+    };
+    try {
+      window.dispatchEvent(new CustomEvent('pnx:expedition-sync-status', { detail: expeditionSyncStatus }));
+    } catch (e) {}
+    return expeditionSyncStatus;
+  }
+  async function ensureExpeditionDb() {
+    try {
+      if (!window.PNXFirebaseApp || !window.PNXFirebaseApp.init) return null;
+      var ready = await window.PNXFirebaseApp.init();
+      return ready && window.PNXFirebaseApp.db ? window.PNXFirebaseApp.db : null;
+    } catch (err) {
+      console.warn('[expedition] Firestore init failed', err);
+      return null;
+    }
+  }
+  function isFirestoreModeEnabled() {
+    try {
+      var c = window.PNX_FIREBASE_CONFIG || {};
+      var hasConfig = !!(c.apiKey && c.apiKey !== 'YOUR_API_KEY' && c.projectId && c.projectId !== 'YOUR_PROJECT_ID');
+      // 遠征機能はSTEP310から、Firestore設定がある場合は常にクラウド保存を試す。
+      // 失敗してもlocalStorage保存は残るため安全。
+      return !!(hasConfig && window.PNXFirebaseApp);
+    } catch (err) {
+      return false;
+    }
+  }
+  function stripPreviewImagePayload(record) {
+    var copy = clone(record || {});
+    copy.receipts = (copy.receipts || []).map(function(item){
+      var next = Object.assign({}, item);
+      // Firestoreのドキュメント肥大化を避けるため、画像本体は保存しない。
+      // 本番ではFirebase Storageへ保存して imageDownloadUrl / imageStoragePath を保持する。
+      if (next.imageDataUrl) {
+        next.imagePreviewSavedLocally = true;
+        delete next.imageDataUrl;
+      }
+      next.imageStoragePath = next.imageStoragePath || '';
+      next.imageDownloadUrl = next.imageDownloadUrl || '';
+      return next;
+    });
+    return copy;
+  }
+  function applyCloudStatusToRoot(root) {
+    if (!root) return;
+    var status = expeditionSyncStatus || { state: 'local', label: '端末保存' };
+    var nodes = root.querySelectorAll('[data-exp-sync-status]');
+    Array.prototype.forEach.call(nodes, function(node){
+      node.textContent = status.label || '端末保存';
+      node.setAttribute('data-sync-state', status.state || 'local');
+      node.setAttribute('title', status.path ? ('保存先: ' + status.path) : (status.error || ''));
+      node.className = 'exp-sync-status exp-sync-status--' + (status.state || 'local');
+    });
+  }
+
+  function renderSaveStatusCard(d) {
+    var status = expeditionSyncStatus || { state: 'local', label: '端末保存' };
+    var record = toExpeditionRecord(d);
+    var c = el('section', 'exp-save-card');
+    var path = ExpeditionRepository.firestorePath(record);
+    c.innerHTML =
+      '<div class="exp-save-card__main">' +
+        '<span class="exp-sync-status exp-sync-status--' + esc(status.state || 'local') + '" data-exp-sync-status data-sync-state="' + esc(status.state || 'local') + '">' + esc(status.label || '端末保存') + '</span>' +
+        '<strong>保存状態</strong>' +
+        '<em>' + esc(status.state === 'cloud' ? 'Firestoreにも同期されています' : '端末保存を優先して安全に保存します') + '</em>' +
+      '</div>' +
+      '<button class="exp-save-card__debug" type="button" data-action="copy-save-path">保存先を確認</button>' +
+      '<code class="exp-save-card__path">' + esc(path) + '</code>';
+    return c;
+  }
+
+  var ExpeditionRepository = {
+    mode: 'localStorage+firestore-ready',
+    makeKey: storageKey,
+    save: function(d) {
+      var record = toExpeditionRecord(d);
+      record.updatedAt = nowIso();
+
+      // まず端末保存。Firestoreが失敗してもアプリは壊さない。
+      var localOk = writeJson(storageKey(record), record);
+      setActiveTournament(record);
+      upsertIndex(record);
+      writeJson(saveMetaKey(record), makeSaveMeta(record, localOk ? 'local' : 'local-error', localOk ? 'localStorage saved' : 'localStorage failed'));
+
+      if (localOk) {
+        setSyncStatus('local', '端末保存', null, {
+          localSavedAt: record.updatedAt,
+          tournamentId: record.tournamentId,
+          path: this.firestorePath(record)
+        });
+        console.info('[expedition] local saved:', storageKey(record), record.tournamentId);
+      } else {
+        setSyncStatus('error', '端末保存失敗', 'localStorage write failed', {
+          tournamentId: record.tournamentId,
+          path: this.firestorePath(record)
+        });
+      }
+
+      // Firestoreへも非同期保存。失敗時は端末保存のまま。
+      this.saveToFirestore(record);
+      return record;
+    },
+    load: function(baseData) {
+      var base = getDefaultData(baseData || defaultExpeditionData);
+      var stored = readJson(storageKey(base), null);
+      return stored ? mergeStoredData(base, fromExpeditionRecord(stored, base)) : base;
+    },
+    loadFromFirestore: async function(baseData) {
+      var base = getDefaultData(baseData || defaultExpeditionData);
+      if (!isFirestoreModeEnabled()) {
+        setSyncStatus('local', '端末保存');
+        return null;
+      }
+      try {
+        var db = await ensureExpeditionDb();
+        if (!db) {
+          setSyncStatus('local', '端末保存');
+          return null;
+        }
+        var record = toExpeditionRecord(base);
+        var snap = await db.collection('users').doc(record.userId).collection('expeditions').doc(record.tournamentId).get();
+        if (!snap || !snap.exists) {
+          setSyncStatus('local', '端末保存');
+          return null;
+        }
+        var cloud = fromExpeditionRecord(Object.assign({ tournamentId: record.tournamentId }, snap.data()), base);
+        var local = readJson(storageKey(base), null);
+        if (!local || String(cloud.updatedAt || '') >= String(local.updatedAt || '')) {
+          writeJson(storageKey(cloud), cloud);
+          setActiveTournament(cloud);
+          upsertIndex(cloud);
+          setSyncStatus('cloud', 'クラウド同期済み', null, { path: this.firestorePath(cloud), tournamentId: cloud.tournamentId });
+          writeJson(saveMetaKey(cloud), makeSaveMeta(toExpeditionRecord(cloud), 'cloud', 'loaded from Firestore'));
+          return cloud;
+        }
+        setSyncStatus('local', '端末保存');
+        return null;
+      } catch (err) {
+        console.warn('[expedition] Firestore load failed', err);
+        setSyncStatus('error', '端末保存のみ', err);
+        return null;
+      }
+    },
+    saveToFirestore: async function(record) {
+      if (!isFirestoreModeEnabled()) {
+        setSyncStatus('local', '端末保存');
+        return false;
+      }
+      try {
+        var db = await ensureExpeditionDb();
+        if (!db) {
+          setSyncStatus('local', '端末保存');
+          return false;
+        }
+        var safeRecord = stripPreviewImagePayload(record);
+        await db.collection('users').doc(safeRecord.userId).collection('expeditions').doc(safeRecord.tournamentId).set(safeRecord, { merge: true });
+        console.info('[expedition] Firestore saved:', 'users/' + safeRecord.userId + '/expeditions/' + safeRecord.tournamentId);
+        setSyncStatus('cloud', 'クラウド同期済み', null, { path: 'users/' + safeRecord.userId + '/expeditions/' + safeRecord.tournamentId, tournamentId: safeRecord.tournamentId });
+        writeJson(saveMetaKey(safeRecord), makeSaveMeta(safeRecord, 'cloud', 'saved to Firestore'));
+        return true;
+      } catch (err) {
+        console.warn('[expedition] Firestore save failed', err);
+        setSyncStatus('error', '端末保存のみ', err, { path: this.firestorePath(record), tournamentId: record.tournamentId });
+        writeJson(saveMetaKey(record), makeSaveMeta(record, 'firestore-error', err && err.message ? err.message : String(err)));
+        return false;
+      }
+    },
+    remove: function(d) {
+      try { localStorage.removeItem(storageKey(d)); } catch (err) {}
+      if (d && d.tournamentId) {
+        writeIndex(readIndex().filter(function(item){ return item && item.tournamentId !== d.tournamentId; }));
+      }
+      this.removeFromFirestore(d);
+    },
+    removeFromFirestore: async function(d) {
+      if (!d || !isFirestoreModeEnabled()) return false;
+      try {
+        var db = await ensureExpeditionDb();
+        if (!db) return false;
+        var record = toExpeditionRecord(d);
+        await db.collection('users').doc(record.userId).collection('expeditions').doc(record.tournamentId).delete();
+        setSyncStatus('cloud', 'クラウド削除済み');
+        return true;
+      } catch (err) {
+        console.warn('[expedition] Firestore delete failed', err);
+        setSyncStatus('error', '端末削除のみ', err);
+        return false;
+      }
+    },
+    list: function() { return readIndex(); },
+    firestorePath: function(d) {
+      var record = toExpeditionRecord(d);
+      return 'users/' + record.userId + '/expeditions/' + record.tournamentId;
+    },
+    storagePathForReceipt: function(d, receipt) {
+      var record = toExpeditionRecord(d);
+      var rid = receipt && receipt.id ? receipt.id : 'receipt';
+      return 'users/' + record.userId + '/expeditions/' + record.tournamentId + '/receipts/' + rid;
+    },
+    status: function() { return expeditionSyncStatus; }
+  };
   function readJson(key, fallback) {
     try {
       var raw = localStorage.getItem(key);
@@ -119,6 +415,10 @@
       tournamentName: d.tournamentName || '大会予定',
       venue: d.venue || '',
       dateRange: d.dateRange || '',
+      tournamentLogoUrl: d.tournamentLogoUrl || d.logoUrl || '',
+      logoUrl: d.logoUrl || d.tournamentLogoUrl || '',
+      seriesLogoUrl: d.seriesLogoUrl || '',
+      organizerLogoUrl: d.organizerLogoUrl || '',
       updatedAt: now,
       storageKey: storageKey(d)
     });
@@ -160,6 +460,12 @@
         d.expenses.push(base);
       }
     });
+    d.tournamentLogoUrl = d.tournamentLogoUrl || d.logoUrl || '';
+    d.logoUrl = d.logoUrl || d.tournamentLogoUrl || d.seriesLogoUrl || d.organizerLogoUrl || '';
+    d.seriesLogoUrl = d.seriesLogoUrl || '';
+    d.organizerLogoUrl = d.organizerLogoUrl || '';
+    d.venueImageUrl = d.venueImageUrl || d.imageUrl || '';
+    d.imageUrl = d.imageUrl || d.venueImageUrl || '';
     d.receipts = Array.isArray(d.receipts) ? d.receipts.map(function (item, idx) {
       return Object.assign({
         id: item && item.id ? item.id : ('receipt-' + idx),
@@ -167,7 +473,10 @@
         category: 'その他',
         amount: 0,
         memo: '',
-        imageName: ''
+        imageName: '',
+        imageDataUrl: '',
+        imageStoragePath: '',
+        imageDownloadUrl: ''
       }, item || {});
     }) : [];
     return d;
@@ -198,34 +507,49 @@
 
     // カレンダー/試合検索から渡された大会情報は最新情報として優先する。
     // 遠征入力（ホテル・移動・費用・メモ）は保存済みを優先する。
-    ['tournamentId', 'tournamentName', 'venue', 'startDate', 'endDate', 'dateRange', 'linkedCalendar'].forEach(function (key) {
+    ['tournamentId', 'tournamentName', 'venue', 'startDate', 'endDate', 'dateRange', 'linkedCalendar', 'tournamentLogoUrl', 'logoUrl', 'seriesLogoUrl', 'organizerLogoUrl', 'venueImageUrl', 'imageUrl'].forEach(function (key) {
       if (base[key] !== undefined && base[key] !== null && String(base[key]) !== '') merged[key] = base[key];
     });
     merged.links = Object.assign({}, stored.links || {}, base.links || {});
     return normalizeData(merged);
   }
   function loadData(data) {
-    var d = getDefaultData(data);
-    var stored = readJson(storageKey(d), null);
-    if (stored) d = mergeStoredData(d, stored);
-    return d;
+    return ExpeditionRepository.load(data);
   }
   function saveData(d) {
-    var normalized = getDefaultData(d || defaultExpeditionData);
-    writeJson(storageKey(normalized), normalized);
-    setActiveTournament(normalized);
-    upsertIndex(normalized);
+    return ExpeditionRepository.save(d || defaultExpeditionData);
   }
   function resetData(d) {
-    try { localStorage.removeItem(storageKey(d)); } catch (err) {}
-    if (d && d.tournamentId) {
-      var list = readIndex().filter(function (item) { return item && item.tournamentId !== d.tournamentId; });
-      writeIndex(list);
-    }
+    ExpeditionRepository.remove(d);
   }
   function syncExpense(d, id, amount) {
     var row = findById(d.expenses, id);
     if (row) row.amount = amount;
+  }
+
+  function makeChecklistId(label) {
+    var base = String(label || 'item').trim().replace(/\s+/g, '-').replace(/[^぀-ヿ㐀-鿿\w-]/g, '');
+    return 'check-' + (base || 'item') + '-' + Date.now().toString(36);
+  }
+  function defaultChecklistTemplate() {
+    return [
+      { id: 'entry', label: 'エントリー確認', checked: true },
+      { id: 'practice', label: '練習ラウンド', checked: true },
+      { id: 'insurance', label: '保険証', checked: true },
+      { id: 'receipt', label: '領収書', checked: false },
+      { id: 'clothes', label: '着替え', checked: false }
+    ];
+  }
+  function renderChecklistEditorItems(d) {
+    var list = Array.isArray(d.checklist) ? d.checklist : [];
+    return '<div class="exp-check-edit-list">' + list.map(function(item, idx){
+      return '<div class="exp-check-edit-row">' +
+        '<input type="hidden" name="checkId_' + idx + '" value="' + esc(item.id || ('check-' + idx)) + '" />' +
+        '<label class="exp-check-edit-row__check"><input type="checkbox" name="checkDone_' + idx + '"' + (item.checked ? ' checked' : '') + ' /><span></span></label>' +
+        '<input class="exp-check-edit-row__label" name="checkLabel_' + idx + '" type="text" value="' + esc(item.label || '') + '" placeholder="持ち物・確認項目" />' +
+        '<label class="exp-check-edit-row__delete"><input type="checkbox" name="checkDelete_' + idx + '" value="1" /><span>削除</span></label>' +
+      '</div>';
+    }).join('') + '</div>';
   }
   function categoryToExpenseId(category) {
     if (category === '宿泊費') return 'hotelFee';
@@ -294,7 +618,7 @@
     var h = el('header', 'exp-header');
     h.innerHTML = '<div class="exp-header__bar">' +
       '<button class="exp-iconbtn exp-iconbtn--menu" aria-label="メニュー" data-action="menu">' + ICONS.menu + '</button>' +
-      '<div class="exp-header__title">遠征</div>' +
+      '<div class="exp-header__title">遠征<span class="exp-sync-status exp-sync-status--' + (expeditionSyncStatus.state || 'local') + '" data-exp-sync-status data-sync-state="' + (expeditionSyncStatus.state || 'local') + '">' + esc(expeditionSyncStatus.label || '端末保存') + '</span></div>' +
       '<div class="exp-header__right">' +
       '<button class="exp-iconbtn" aria-label="初期データに戻す" data-action="reset-data" title="初期データに戻す">' + ICONS.pencil + '</button>' +
       '<button class="exp-iconbtn" aria-label="通知" data-action="notify"><span class="exp-dot"></span>' + ICONS.bell + '</button>' +
@@ -338,7 +662,9 @@
     return c;
   }
   function renderChecklist(d, onToggle) {
-    var c = el('section', 'exp-card');
+    var total = (d.checklist || []).length;
+    var done = (d.checklist || []).filter(function(item){ return item && item.checked; }).length;
+    var c = el('section', 'exp-card exp-check-card');
     var grid = el('div', 'exp-checks');
     d.checklist.forEach(function (item) {
       var row = el('button', 'exp-check' + (item.checked ? ' is-checked' : ''));
@@ -355,7 +681,7 @@
       });
       grid.appendChild(row);
     });
-    c.innerHTML = '<button class="exp-cardhead" data-action="open-checklist" type="button">' + cardHead('clipboard', '持ち物・チェック') + '</button>';
+    c.innerHTML = '<div class="exp-check-card__head"><button class="exp-cardhead" data-action="open-checklist" type="button">' + cardHead('clipboard', '持ち物・チェック') + '</button><button class="exp-check-card__edit" type="button" data-action="open-checklist">' + done + '/' + total + ' 編集</button></div>';
     c.appendChild(grid);
     return c;
   }
@@ -389,9 +715,11 @@
       body = '<div class="exp-receipts__empty">まだ領収書はありません。下の「領収書追加」から登録できます。</div>';
     } else {
       body = '<div class="exp-receipts__list">' + shown.map(function(item){
+        var receiptImageUrl = item.imageDownloadUrl || item.storageUrl || item.imageDataUrl || '';
+        var hasImage = !!(receiptImageUrl || item.imageName || item.imageStoragePath);
         return '<button class="exp-receipt-row" type="button" data-action="open-receipt" data-receipt-id="' + esc(item.id) + '">' +
-          '<div class="exp-receipt-row__ic">' + ICONS.receiptAdd + '</div>' +
-          '<div class="exp-receipt-row__body"><strong>' + esc(item.category || 'その他') + '</strong><em>' + esc(formatReceiptDate(item.date) || '日付未設定') + (item.memo ? ' ・ ' + esc(item.memo) : '') + (item.imageName ? ' ・ 画像あり' : '') + '</em></div>' +
+          '<div class="exp-receipt-row__ic exp-receipt-row__ic--thumb">' + (receiptImageUrl ? '<img src="' + esc(receiptImageUrl) + '" alt="領収書画像" />' : ICONS.receiptAdd) + '</div>' +
+          '<div class="exp-receipt-row__body"><strong>' + esc(item.category || 'その他') + '</strong><em>' + esc(formatReceiptDate(item.date) || '日付未設定') + (item.memo ? ' ・ ' + esc(item.memo) : '') + (hasImage ? ' ・ 画像あり' : '') + '</em></div>' +
           '<div class="exp-receipt-row__amount">' + yen(item.amount) + '</div>' +
           '<span class="exp-receipt-row__chev">' + ICONS.chevron + '</span>' +
         '</button>';
@@ -449,6 +777,38 @@
       '<option value="未予約"' + (value === '未予約' ? ' selected' : '') + '>未予約</option>' +
       '</select></label>';
   }
+  async function ensureReceiptStorageReady() {
+    if (!window.PNXFirebaseStorageMedia || !window.PNXFirebaseStorageMedia.ensure) {
+      throw new Error('Firebase Storage helper未接続です');
+    }
+    var ok = await window.PNXFirebaseStorageMedia.ensure();
+    if (!ok) throw new Error('Firebase Storage未接続です');
+    return true;
+  }
+
+  async function uploadReceiptImageToStorage(file, d, receiptId) {
+    if (!file || !file.name) return null;
+    await ensureReceiptStorageReady();
+    var tournamentId = d && d.tournamentId ? d.tournamentId : 'default';
+    var upload = await window.PNXFirebaseStorageMedia.uploadFile(file, {
+      folder: 'expeditions/' + tournamentId + '/receipts',
+      filename: file.name,
+      contentType: file.type || 'image/jpeg',
+      customMetadata: {
+        usage: 'expedition-receipt',
+        source: 'step314-expedition-receipt',
+        tournamentId: tournamentId,
+        receiptId: receiptId || ''
+      }
+    });
+    return {
+      imageName: file.name || '',
+      imageStoragePath: upload && (upload.path || upload.fullPath) || '',
+      imageDownloadUrl: upload && (upload.downloadURL || upload.url) || '',
+      imageDataUrl: ''
+    };
+  }
+
   function openSheet(root, title, bodyHTML, onSave, options) {
     options = options || {};
     closeSheet(root);
@@ -460,7 +820,7 @@
       '</div>';
     root.appendChild(overlay);
     requestAnimationFrame(function () { overlay.classList.add('is-open'); });
-    overlay.addEventListener('click', function (ev) {
+    overlay.addEventListener('click', async function (ev) {
       if (ev.target === overlay || ev.target.closest('[data-sheet-cancel]')) closeSheet(root);
       if (ev.target.closest('[data-sheet-delete]')) {
         if (!options.confirmDelete || confirm(options.confirmDelete)) {
@@ -470,14 +830,54 @@
         return;
       }
       if (ev.target.closest('[data-sheet-save]')) {
+        var saveBtn = ev.target.closest('[data-sheet-save]');
         var form = overlay.querySelector('form');
         var fd = new FormData(form);
-        var result = onSave(fd);
-        if (result !== false) closeSheet(root);
+        try {
+          if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = '保存中';
+          }
+          var result = onSave(fd, overlay);
+          if (result && typeof result.then === 'function') result = await result;
+          if (result !== false) closeSheet(root);
+        } catch (err) {
+          console.warn('[expedition] sheet save failed', err);
+          alert(err && err.message ? err.message : '保存に失敗しました');
+        } finally {
+          if (saveBtn && root.contains(overlay)) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = '保存';
+          }
+        }
       }
     });
     var first = overlay.querySelector('input:not([type="file"]), textarea, select');
     if (first) setTimeout(function () { first.focus(); }, 180);
+    var receiptFile = overlay.querySelector('.exp-receipt-upload__input');
+    if (receiptFile) {
+      receiptFile.addEventListener('change', function () {
+        var file = receiptFile.files && receiptFile.files[0];
+        if (!file) return;
+        overlay.dataset.receiptImageName = file.name || '';
+        var reader = new FileReader();
+        reader.onload = function () {
+          overlay.dataset.receiptPreviewDataUrl = String(reader.result || '');
+          var box = overlay.querySelector('.exp-receipt-upload__box');
+          if (box) {
+            box.classList.add('has-preview');
+            box.innerHTML = '<span class="exp-receipt-preview"><img src="' + overlay.dataset.receiptPreviewDataUrl + '" alt="領収書プレビュー" /></span>' +
+              '<strong>' + esc(file.name || '領収書画像') + '</strong><em>画像を差し替えるにはもう一度選択</em>';
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    var amountInput = overlay.querySelector('input[name="receiptAmount"]');
+    var amountValue = overlay.querySelector('.exp-input-trailing--value');
+    if (amountInput && amountValue) {
+      amountInput.addEventListener('input', function () { amountValue.textContent = yen(parseAmount(amountInput.value)); });
+    }
   }
   function closeSheet(root) {
     var old = root.querySelector('.exp-sheet-overlay');
@@ -485,34 +885,54 @@
   }
   function openReceiptSheet(root, d, receipt, rerender) {
     var isEdit = !!receipt;
-    var current = receipt || { id: 'receipt-' + Date.now(), date: '', category: '交通費', amount: 0, memo: '', imageName: '' };
+    var current = receipt || { id: 'receipt-' + Date.now(), date: '', category: '交通費', amount: 0, memo: '', imageName: '', imageDataUrl: '', imageStoragePath: '', imageDownloadUrl: '' };
+    var currentImageUrl = current.imageDownloadUrl || current.storageUrl || current.imageDataUrl || '';
+    var hasCurrentImage = !!(currentImageUrl || current.imageName || current.imageStoragePath);
+    var uploadInner = currentImageUrl
+      ? '<span class="exp-receipt-preview"><img src="' + esc(currentImageUrl) + '" alt="領収書プレビュー" /></span><strong>' + esc(current.imageName || '保存済み画像') + '</strong><em>Storage保存済み。差し替えるにはもう一度選択</em>'
+      : '<span class="exp-receipt-upload__icon">' + ICONS.receiptAdd + '<span class="exp-receipt-upload__plus">+</span></span><strong>' + (current.imageName ? esc(current.imageName) : '領収書の写真を追加') + '</strong><em>Firebase Storageへ保存します</em>';
     openSheet(root, isEdit ? '領収書を編集' : '領収書を追加',
       '<div class="exp-receipt-sheet">' +
         '<label class="exp-receipt-upload exp-form-field--full">' +
           '<span class="exp-receipt-upload__label">領収書の写真を追加</span>' +
           '<input class="exp-receipt-upload__input" name="receiptImage" type="file" accept="image/*" />' +
-          '<span class="exp-receipt-upload__box">' +
-            '<span class="exp-receipt-upload__icon">' + ICONS.receiptAdd + '<span class="exp-receipt-upload__plus">+</span></span>' +
-            '<strong>' + (current.imageName ? esc(current.imageName) : '領収書の写真を追加') + '</strong>' +
-            '<em>カメラまたはライブラリから追加</em>' +
-          '</span>' +
+          '<span class="exp-receipt-upload__box' + (currentImageUrl ? ' has-preview' : '') + '">' + uploadInner + '</span>' +
         '</label>' +
+        (isEdit && hasCurrentImage ? '<label class="exp-receipt-remove-image"><input name="removeReceiptImage" type="checkbox" value="1" /><span>画像を削除する</span></label>' : '') +
         '<div class="exp-form-grid exp-receipt-sheet__grid">' +
           '<label class="exp-form-field"><span>利用日</span><div class="exp-input-wrap exp-input-wrap--icon"><input name="receiptDate" type="date" value="' + esc(current.date || '') + '" /><span class="exp-input-trailing exp-input-trailing--icon">' + ICONS.calendar + '</span></div></label>' +
           '<label class="exp-form-field"><span>カテゴリ</span><div class="exp-input-wrap"><select name="receiptCategory">' + receiptCategoryOptions(current.category || '交通費') + '</select></div></label>' +
           '<label class="exp-form-field exp-form-field--full"><span>金額</span><div class="exp-input-wrap exp-input-wrap--amount"><span class="exp-input-leading">¥</span><input name="receiptAmount" type="number" value="' + esc(current.amount || '') + '" placeholder="金額を入力" /><span class="exp-input-trailing exp-input-trailing--value">' + yen(current.amount || 0) + '</span></div></label>' +
           '<label class="exp-form-field exp-form-field--full"><span>メモ</span><input name="receiptMemo" type="text" value="' + esc(current.memo || '') + '" placeholder="例：広島駅→会場 タクシー代" /></label>' +
-          '<div class="exp-form-note exp-form-field--full exp-form-note--receipt"><span class="exp-form-note__icon">i</span><span>保存すると費用サマリーにも反映されます。交通費・宿泊費・食費・練習費は各カテゴリに、その他は「その他」に加算します。</span></div>' +
+          '<div class="exp-form-note exp-form-field--full exp-form-note--receipt"><span class="exp-form-note__icon">i</span><span>画像本体はFirebase Storageへ保存し、遠征データには画像URLだけ保存します。</span></div>' +
         '</div>' +
-      '</div>', function (fd) {
+      '</div>', async function (fd, overlay) {
+        var removeImage = fd.get('removeReceiptImage') === '1';
         var file = fd.get('receiptImage');
+        var receiptId = current.id || ('receipt-' + Date.now());
+        var imageInfo = {
+          imageName: removeImage ? '' : (current.imageName || ''),
+          imageStoragePath: removeImage ? '' : (current.imageStoragePath || ''),
+          imageDownloadUrl: removeImage ? '' : (current.imageDownloadUrl || current.storageUrl || ''),
+          imageDataUrl: ''
+        };
+
+        if (!removeImage && file && typeof file === 'object' && file.name) {
+          setSyncStatus('local', '画像保存中', null, { tournamentId: d.tournamentId, path: ExpeditionRepository.storagePathForReceipt(d, { id: receiptId }) });
+          imageInfo = await uploadReceiptImageToStorage(file, d, receiptId);
+          console.info('[expedition] receipt image stored:', imageInfo.imageStoragePath);
+        }
+
         var next = {
-          id: current.id || ('receipt-' + Date.now()),
+          id: receiptId,
           date: fd.get('receiptDate') || '',
           category: fd.get('receiptCategory') || 'その他',
           amount: parseAmount(fd.get('receiptAmount')),
           memo: fd.get('receiptMemo') || '',
-          imageName: file && typeof file === 'object' && file.name ? file.name : (current.imageName || '')
+          imageName: imageInfo.imageName || '',
+          imageStoragePath: imageInfo.imageStoragePath || '',
+          imageDownloadUrl: imageInfo.imageDownloadUrl || '',
+          imageDataUrl: ''
         };
         if (!next.amount) {
           alert('金額を入力してください。');
@@ -599,6 +1019,37 @@
           d.hotel.amount = hotel.amount;
           saveData(d); rerender();
         });
+    } else if (action === 'open-checklist') {
+      openSheet(root, '持ち物を編集',
+        '<div class="exp-check-edit">' +
+          '<div class="exp-form-note exp-form-note--checklist">項目名の変更、チェック状態、削除、新規追加ができます。試合ごとに保存されます。</div>' +
+          renderChecklistEditorItems(d) +
+          '<label class="exp-form-field exp-form-field--full exp-check-edit-add"><span>新しい項目を追加</span><input name="newChecklistItem" type="text" value="" placeholder="例：レインウェア / 距離計 / ボール" /></label>' +
+          '<label class="exp-check-edit-template"><input name="resetChecklistTemplate" type="checkbox" value="1" /><span>標準テンプレートに戻す</span></label>' +
+        '</div>', function (fd) {
+          if (fd.get('resetChecklistTemplate') === '1') {
+            d.checklist = defaultChecklistTemplate();
+            saveData(d); rerender();
+            return;
+          }
+          var next = [];
+          (d.checklist || []).forEach(function(item, idx){
+            if (fd.get('checkDelete_' + idx) === '1') return;
+            var label = String(fd.get('checkLabel_' + idx) || '').trim();
+            if (!label) return;
+            next.push({
+              id: fd.get('checkId_' + idx) || item.id || makeChecklistId(label),
+              label: label,
+              checked: fd.get('checkDone_' + idx) === 'on'
+            });
+          });
+          var added = String(fd.get('newChecklistItem') || '').trim();
+          if (added) {
+            next.push({ id: makeChecklistId(added), label: added, checked: false });
+          }
+          d.checklist = next;
+          saveData(d); rerender();
+        });
     } else if (action === 'open-memo') {
       openSheet(root, 'メモを編集', '<label class="exp-form-field exp-form-field--full"><span>メモ本文</span><textarea name="memo" rows="4">' + esc(d.memo) + '</textarea></label>', function (fd) {
         d.memo = fd.get('memo'); saveData(d); rerender();
@@ -622,6 +1073,18 @@
       var receiptId = trigger && trigger.getAttribute('data-receipt-id');
       var receipt = findReceipt(d, receiptId);
       if (receipt) openReceiptSheet(root, d, receipt, rerender);
+    } else if (action === 'copy-save-path') {
+      var path = ExpeditionRepository.firestorePath(d);
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(path);
+          alert('保存先をコピーしました：\n' + path);
+        } else {
+          alert('保存先：\n' + path);
+        }
+      } catch(e) {
+        alert('保存先：\n' + path);
+      }
     } else if (action === 'notify') {
       alert('通知設定は本体統合後に接続します。');
     } else if (action === 'menu') {
@@ -678,18 +1141,20 @@
     return c;
   }
 
+  // STEP342: ホームでは非表示。詳細画面や今後の管理画面で再利用できるよう関数は残す。
   function renderPreparationStatus(d) {
     var prep = calcPreparedness(d);
     var c = el('section', 'exp-card exp-home-status');
     var items = [
-      { icon: 'building', label: 'ホテル', value: prep.hotelOk ? '登録済み' : '未登録', ok: prep.hotelOk },
-      { icon: 'car', label: '移動', value: prep.travelOk ? '登録済み' : '未登録', ok: prep.travelOk },
-      { icon: 'wallet', label: '費用', value: prep.costOk ? '入力済み' : '未入力', ok: prep.costOk },
-      { icon: 'tabBag', label: '持ち物', value: prep.checkedCount + '/' + prep.totalChecks + ' 完了', ok: prep.totalChecks && prep.checkedCount === prep.totalChecks }
+      { icon: 'building', label: 'ホテル', value: prep.hotelOk ? '登録済み' : '未登録', ok: prep.hotelOk, tone: 'green' },
+      { icon: 'car', label: '移動', value: prep.travelOk ? '登録済み' : '未登録', ok: prep.travelOk, tone: 'blue' },
+      { icon: 'wallet', label: '費用', value: prep.costOk ? '入力済み' : '未入力', ok: prep.costOk, tone: 'amber' },
+      { icon: 'tabBag', label: '持ち物', value: prep.checkedCount + '/' + prep.totalChecks + ' 完了', ok: prep.totalChecks && prep.checkedCount === prep.totalChecks, tone: 'amber' }
     ];
     c.innerHTML = '<div class="exp-home-section-title">' + ICONS.clipboard + '<span>準備状況</span></div>' +
       '<div class="exp-home-status__grid">' + items.map(function(item){
-        return '<button class="exp-home-status__item" type="button" data-action="home-open-active">' +
+        var itemClass = 'exp-home-status__item exp-home-status__item--tone-' + (item.tone || 'blue') + ' ' + (item.ok ? 'is-done' : 'is-pending');
+        return '<button class="' + itemClass + '" type="button" data-action="home-open-active">' +
           '<span class="exp-home-status__ic">' + (ICONS[item.icon] || ICONS.checkCircle) + '</span>' +
           '<span class="exp-home-status__text"><strong>' + esc(item.label) + '</strong><em class="' + (item.ok ? 'is-ok' : 'is-warn') + '">' + esc(item.value) + '</em></span>' +
         '</button>';
@@ -727,6 +1192,74 @@
     return loadData(defaultExpeditionData);
   }
 
+  function expPickFirst() {
+    for (var i = 0; i < arguments.length; i += 1) {
+      var value = arguments[i];
+      if (value !== undefined && value !== null && String(value) !== '') return value;
+    }
+    return '';
+  }
+
+  function expResolveMediaUrl(value) {
+    var raw = String(value || '');
+    if (!raw) return '';
+    if (raw.indexOf('pnx-media:') !== 0) return raw;
+    var id = raw.replace('pnx-media:', '');
+    try {
+      var mediaA = JSON.parse(localStorage.getItem('PNX_CMS_MEDIA') || '[]');
+      var mediaB = JSON.parse(localStorage.getItem('PNX_CMS_MEDIA_ASSETS') || '[]');
+      var list = []
+        .concat(Array.isArray(mediaA) ? mediaA : [])
+        .concat(Array.isArray(mediaB) ? mediaB : []);
+      var asset = list.find(function(a) {
+        return String((a && (a.id || a.assetId)) || '') === String(id);
+      });
+      return (asset && (asset.storageUrl || asset.downloadUrl || asset.url || asset.imageUrl || asset.src || asset.dataUrl)) || '';
+    } catch(e) {
+      return '';
+    }
+  }
+
+  function expReadCalendarEvents() {
+    try {
+      var raw = localStorage.getItem('pronexax.calendar.v2.events.step203');
+      var parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch(e) {
+      return [];
+    }
+  }
+
+  function expFindCalendarEvent(tournamentId) {
+    if (!tournamentId) return null;
+    return expReadCalendarEvents().find(function(event) {
+      return event && String(event.tournamentId || event.id || '') === String(tournamentId);
+    }) || null;
+  }
+
+  function expLogoUrlFor(item, activeData) {
+    var id = item && item.tournamentId;
+    var d = loadSavedById(id, activeData);
+    var event = expFindCalendarEvent(id);
+    var raw = event && event.rawTournament ? event.rawTournament : {};
+    var logoRaw = expPickFirst(
+      d.logoUrl, d.tournamentLogoUrl, d.seriesLogoUrl, d.organizerLogoUrl,
+      activeData && activeData.logoUrl, activeData && activeData.tournamentLogoUrl, activeData && activeData.seriesLogoUrl, activeData && activeData.organizerLogoUrl,
+      item && item.logoUrl, item && item.tournamentLogoUrl, item && item.seriesLogoUrl, item && item.organizerLogoUrl,
+      event && event.logoUrl, event && event.tournamentLogoUrl, event && event.organizerLogoUrl,
+      raw.logoUrl, raw.tournamentLogoUrl, raw.seriesLogoUrl, raw.organizerLogoUrl
+    );
+    return expResolveMediaUrl(logoRaw);
+  }
+
+  function expTournamentIconHtml(item, activeData, className) {
+    var logoUrl = expLogoUrlFor(item, activeData);
+    if (logoUrl) {
+      return '<span class="' + className + ' ' + className + '--logo"><img src="' + esc(logoUrl) + '" alt="大会ロゴ" loading="lazy" /></span>';
+    }
+    return '<span class="' + className + '">' + ICONS.calendar + '</span>';
+  }
+
   function savedStatusFor(item, activeData) {
     var d = loadSavedById(item.tournamentId, activeData);
     var prep = calcPreparedness(d);
@@ -736,22 +1269,105 @@
     return { text: '準備中', tone: 'blue' };
   }
 
+  function formatUpdatedAt(value) {
+    if (!value) return '更新日不明';
+    try {
+      var date = new Date(value);
+      if (isNaN(date.getTime())) return '更新日不明';
+      return String(date.getMonth() + 1).padStart(2, '0') + '/' +
+        String(date.getDate()).padStart(2, '0') + ' ' +
+        String(date.getHours()).padStart(2, '0') + ':' +
+        String(date.getMinutes()).padStart(2, '0') + '更新';
+    } catch(e) { return '更新日不明'; }
+  }
+
+  function savedSummaryFor(item, activeData) {
+    var d = loadSavedById(item.tournamentId, activeData);
+    var prep = calcPreparedness(d);
+    return {
+      data: d,
+      status: savedStatusFor(item, activeData),
+      total: expenseTotal(d),
+      receiptCount: (d.receipts || []).length,
+      checkedCount: prep.checkedCount || 0,
+      totalChecks: prep.totalChecks || 0,
+      updatedAt: (item && item.updatedAt) || d.updatedAt || '',
+      venue: d.venue || item.venue || '',
+      dateRange: d.dateRange || item.dateRange || ''
+    };
+  }
+
+  function renderSavedSummaryLine(summary) {
+    var bits = [];
+    if (summary.dateRange) bits.push(shortDateRange({ dateRange: summary.dateRange }) || summary.dateRange);
+    bits.push('合計 ' + yen(summary.total || 0));
+    bits.push('領収書 ' + (summary.receiptCount || 0) + '件');
+    if (summary.totalChecks) bits.push('持ち物 ' + summary.checkedCount + '/' + summary.totalChecks);
+    return bits.join('　');
+  }
+
   function renderSavedList(d) {
     var c = el('section', 'exp-card exp-home-list');
     var saved = collectSavedExpeditions(d);
-    var rows = saved.slice(0, 4).map(function(item){
-      var st = savedStatusFor(item, d);
-      return '<button class="exp-home-row" type="button" data-action="home-open-saved" data-tournament-id="' + esc(item.tournamentId) + '">' +
-        '<span class="exp-home-row__ic">' + ICONS.calendar + '</span>' +
-        '<span class="exp-home-row__body"><strong>' + esc(item.tournamentName || '大会予定') + '</strong><em>' + ICONS.calendar + esc(shortDateRange(item) || item.dateRange || '') + '</em></span>' +
-        statusBadge(st.text, st.tone) + '<span class="exp-home-row__chev">' + ICONS.chevron + '</span>' +
+    var rows = saved.slice(0, 3).map(function(item){
+      var summary = savedSummaryFor(item, d);
+      var st = summary.status;
+      return '<button class="exp-home-row exp-home-row--saved" type="button" data-action="home-open-saved" data-tournament-id="' + esc(item.tournamentId) + '">' +
+        expTournamentIconHtml(item, d, 'exp-home-row__ic') +
+        '<span class="exp-home-row__body">' +
+          '<strong>' + esc(item.tournamentName || '大会予定') + '</strong>' +
+          '<em>' + esc(renderSavedSummaryLine(summary)) + '</em>' +
+          (summary.venue ? '<small>' + esc(summary.venue) + '</small>' : '') +
+        '</span>' +
+        statusBadge(st.text, st.tone) +
+        '<span class="exp-home-row__chev">' + ICONS.chevron + '</span>' +
       '</button>';
     }).join('');
     if (!rows) {
-      rows = '<div class="exp-home-empty">カレンダーで試合を追加すると、遠征がここに表示されます。</div>';
+      rows = '<div class="exp-home-empty">まだ保存済みの遠征はありません。カレンダーで試合を追加すると遠征管理できます。</div>';
     }
-    c.innerHTML = '<div class="exp-home-card-title"><h2>保存済みの遠征</h2><button type="button" data-action="home-show-all">すべて見る ' + ICONS.chevron + '</button></div>' + rows;
+    c.innerHTML = '<div class="exp-home-section-head"><h2>保存済みの遠征</h2><button type="button" data-action="home-show-all">すべて見る ' + ICONS.chevron + '</button></div>' +
+      '<div class="exp-home-list__rows">' + rows + '</div>';
     return c;
+  }
+
+  function renderSavedAllView(d) {
+    var scroll = el('main', 'exp-scroll exp-home-scroll exp-saved-all');
+    var saved = collectSavedExpeditions(d);
+    var totalCost = saved.reduce(function(sum, item){ return sum + Number(savedSummaryFor(item, d).total || 0); }, 0);
+    var totalReceipts = saved.reduce(function(sum, item){ return sum + Number(savedSummaryFor(item, d).receiptCount || 0); }, 0);
+    var rows = saved.map(function(item){
+      var summary = savedSummaryFor(item, d);
+      var st = summary.status;
+      return '<button class="exp-saved-card" type="button" data-action="home-open-saved" data-tournament-id="' + esc(item.tournamentId) + '">' +
+        expTournamentIconHtml(item, d, 'exp-saved-card__icon') +
+        '<span class="exp-saved-card__body">' +
+          '<strong>' + esc(item.tournamentName || '大会予定') + '</strong>' +
+          '<em>' + esc(summary.venue || '会場未設定') + '</em>' +
+          '<span class="exp-saved-card__meta">' +
+            '<b>' + esc(shortDateRange({ dateRange: summary.dateRange }) || summary.dateRange || '日程未設定') + '</b>' +
+            '<b>' + yen(summary.total || 0) + '</b>' +
+            '<b>領収書 ' + esc(summary.receiptCount || 0) + '件</b>' +
+          '</span>' +
+          '<small>' + esc(formatUpdatedAt(summary.updatedAt)) + '</small>' +
+        '</span>' +
+        statusBadge(st.text, st.tone) +
+        '<span class="exp-saved-card__chev">' + ICONS.chevron + '</span>' +
+      '</button>';
+    }).join('');
+    if (!rows) rows = '<div class="exp-home-empty exp-saved-all__empty">保存済みの遠征はまだありません。</div>';
+    scroll.innerHTML = '<section class="exp-card exp-saved-all__hero">' +
+        '<button class="exp-back-home exp-back-home--inline" type="button" data-action="home-back">‹ 遠征トップへ戻る</button>' +
+        '<h1>保存済みの遠征</h1>' +
+        '<p>試合ごとの準備状況、費用、領収書をまとめて確認できます。</p>' +
+        '<div class="exp-saved-stats">' +
+          '<span><strong>' + saved.length + '</strong><em>遠征</em></span>' +
+          '<span><strong>' + yen(totalCost) + '</strong><em>合計費用</em></span>' +
+          '<span><strong>' + totalReceipts + '件</strong><em>領収書</em></span>' +
+        '</div>' +
+      '</section>' +
+      '<section class="exp-card exp-saved-all__list">' + rows + '</section>';
+    return scroll;
   }
 
   function renderRecentList() {
@@ -780,8 +1396,7 @@
   function renderExpeditionHome(d) {
     var scroll = el('main', 'exp-scroll exp-home-scroll');
     scroll.appendChild(renderHomeHero(d));
-    scroll.appendChild(renderPreparationStatus(d));
-    scroll.appendChild(renderSavedList(d));
+        scroll.appendChild(renderSavedList(d));
     scroll.appendChild(renderRecentList());
     scroll.appendChild(renderHomeHelper());
     return scroll;
@@ -800,7 +1415,8 @@
     function applyRootState() {
       rootElement.classList.toggle('expedition--standalone', isStandalone);
       rootElement.classList.toggle('expedition--fit-screen', isFitScreen && currentView === 'detail');
-      rootElement.classList.toggle('expedition--home', currentView === 'home');
+      rootElement.classList.toggle('expedition--home', currentView === 'home' || currentView === 'saved-all');
+      rootElement.classList.toggle('expedition--saved-all', currentView === 'saved-all');
       rootElement.setAttribute('data-standalone', isStandalone ? 'true' : 'false');
       rootElement.setAttribute('data-fit-screen', (isFitScreen && currentView === 'detail') ? 'true' : 'false');
       rootElement.setAttribute('data-current-view', currentView);
@@ -813,6 +1429,7 @@
       applyRootState();
       var scroll = el('main', 'exp-scroll');
       scroll.appendChild(renderMatch(d));
+      scroll.appendChild(renderSaveStatusCard(d));
       scroll.appendChild(renderTravel(d));
       scroll.appendChild(renderHotel(d));
       scroll.appendChild(renderChecklist(d, function () { saveData(d); }));
@@ -822,6 +1439,7 @@
       scroll.appendChild(renderQuick());
 
       rootElement.appendChild(renderHeader());
+      applyCloudStatusToRoot(rootElement);
       scroll.prepend(renderBackToHomeButton());
       rootElement.appendChild(scroll);
       if (isStandalone) rootElement.appendChild(renderTabbar());
@@ -833,7 +1451,19 @@
       currentView = 'home';
       applyRootState();
       rootElement.appendChild(renderHeader());
+      applyCloudStatusToRoot(rootElement);
       rootElement.appendChild(renderExpeditionHome(d));
+      if (isStandalone) rootElement.appendChild(renderTabbar());
+    }
+
+    function renderSavedAll(current) {
+      if (current) d = current;
+      rootElement.innerHTML = '';
+      currentView = 'saved-all';
+      applyRootState();
+      rootElement.appendChild(renderHeader());
+      applyCloudStatusToRoot(rootElement);
+      rootElement.appendChild(renderSavedAllView(d));
       if (isStandalone) rootElement.appendChild(renderTabbar());
     }
 
@@ -848,10 +1478,20 @@
     function rerender(current) {
       if (current) d = current;
       if (currentView === 'home') renderHome(d);
+      else if (currentView === 'saved-all') renderSavedAll(d);
       else renderDetail(d);
     }
 
     renderHome(d);
+    window.addEventListener('pnx:expedition-sync-status', function(){ applyCloudStatusToRoot(rootElement); });
+    ExpeditionRepository.loadFromFirestore(d).then(function(cloudData){
+      if (cloudData) {
+        d = cloudData;
+        rerender(d);
+      } else {
+        applyCloudStatusToRoot(rootElement);
+      }
+    });
     rootElement.addEventListener('click', function (ev) {
       var t = ev.target.closest('[data-action]');
       if (t && rootElement.contains(t)) {
@@ -873,7 +1513,7 @@
           return;
         }
         if (action === 'home-show-all') {
-          alert('保存済み遠征の一覧画面は次のステップで強化できます。');
+          renderSavedAll(d);
           return;
         }
         handleAction(rootElement, d, action, rerender, t);
@@ -895,8 +1535,11 @@
         return d;
       },
       showHome: function () { renderHome(d); },
+      showSavedList: function () { renderSavedAll(d); },
       openDetail: function (nextData) { if (nextData) d = loadData(nextData); renderDetail(d); return d; },
-      save: function () { saveData(d); },
+      save: function () { return saveData(d); },
+      getSaveMeta: function () { return readJson(saveMetaKey(d), null); },
+      debugSavePath: function () { return ExpeditionRepository.firestorePath(d); },
       listSaved: function () { return readIndex(); },
       reset: function () { resetData(d); d = loadData(defaultExpeditionData); renderHome(d); },
       isStandalone: isStandalone,
@@ -909,7 +1552,15 @@
   window.PNXExpeditionStorage = {
     activeKey: STORAGE_ACTIVE_KEY,
     indexKey: STORAGE_INDEX_KEY,
+    schemaVersion: EXPEDITION_SCHEMA_VERSION,
+    repository: ExpeditionRepository,
     storageKey: storageKey,
+    toRecord: toExpeditionRecord,
+    fromRecord: fromExpeditionRecord,
+    syncStatus: function(){ return expeditionSyncStatus; },
+    debugPath: function(data){ return ExpeditionRepository.firestorePath(data || defaultExpeditionData); },
+    debugMeta: function(data){ return readJson(saveMetaKey(data || defaultExpeditionData), null); },
+    debugUserId: getUserScope,
     list: readIndex,
     get: function (tournamentId) { return readJson('pnx-expedition-' + tournamentId, null); },
     clear: function (tournamentId) {

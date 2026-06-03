@@ -1,0 +1,306 @@
+/* =============================================================
+   ProNexaX 天気カード コンポーネント
+   - すべてのクラスは pnx-weather-card- 始まり
+   - グローバル要素（body 等）には極力触れない設計
+   - 後からカレンダー下部パネルに差し込む前提
+   ============================================================= */
+
+/* ルート: ここに差し込まれる。レイアウトの基準幅を持つ */
+.pnx-weather-card-root {
+  /* iOS 風のシステムフォントスタック */
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
+    "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Segoe UI", sans-serif;
+  /* カラートークン（差し替えやすいよう変数化） */
+  --pnx-wc-blue: #0A74FF;
+  --pnx-wc-blue-soft: #E8F1FF;
+  --pnx-wc-text: #0F172B;
+  --pnx-wc-sub: #667085;
+  --pnx-wc-hot: #F5821F;   /* 高温 = オレンジ */
+  --pnx-wc-cold: #2F80ED;  /* 低温 = 青 */
+  --pnx-wc-line: #E3ECF7;  /* 薄い青グレーの枠線 */
+
+  display: block;
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  box-sizing: border-box;
+}
+.pnx-weather-card-root *,
+.pnx-weather-card-root *::before,
+.pnx-weather-card-root *::after {
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   カード本体
+   - 白背景 + 薄い水色グラデ
+   - 角丸 18px、薄い枠線、控えめな影
+   ========================================================= */
+.pnx-weather-card-card {
+  position: relative;
+  border-radius: 18px;
+  border: 1px solid var(--pnx-wc-line);
+  background:
+    linear-gradient(180deg, #F4F9FF 0%, #FFFFFF 42%) ,
+    #FFFFFF;
+  box-shadow: 0 1px 2px rgba(15, 23, 43, 0.04),
+    0 6px 16px rgba(10, 116, 255, 0.05);
+  padding: 16px 16px 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.pnx-weather-card-card:active {
+  transform: scale(0.985);
+  box-shadow: 0 1px 2px rgba(15, 23, 43, 0.04),
+    0 3px 10px rgba(10, 116, 255, 0.06);
+}
+
+/* 右上の淡い陽だまり（うっすらした装飾） */
+.pnx-weather-card-card::after {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -30px;
+  width: 130px;
+  height: 130px;
+  background: radial-gradient(circle, rgba(10, 116, 255, 0.10), rgba(10, 116, 255, 0) 70%);
+  pointer-events: none;
+}
+
+/* =========================================================
+   ヘッダー
+   ========================================================= */
+.pnx-weather-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.pnx-weather-card-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.pnx-weather-card-title-icon {
+  width: 17px;
+  height: 17px;
+  color: var(--pnx-wc-blue);
+  display: block;
+}
+.pnx-weather-card-title-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pnx-wc-text);
+  letter-spacing: 0.01em;
+}
+.pnx-weather-card-venue {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0; /* 省略を効かせるため必須 */
+  font-size: 12px;
+  color: var(--pnx-wc-sub);
+}
+.pnx-weather-card-venue-pin {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+.pnx-weather-card-venue-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* 長い会場名は1行で省略 */
+}
+
+/* =========================================================
+   メイン天気（横並びで縦を節約）
+   ========================================================= */
+.pnx-weather-card-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+}
+.pnx-weather-card-main-icon {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.pnx-weather-card-main-icon svg {
+  width: 54px;
+  height: 54px;
+  display: block;
+}
+.pnx-weather-card-main-info {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+.pnx-weather-card-temp {
+  font-size: 38px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--pnx-wc-text);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.pnx-weather-card-temp-unit {
+  font-size: 20px;
+  font-weight: 600;
+}
+.pnx-weather-card-condition {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pnx-wc-text);
+}
+.pnx-weather-card-hilo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.pnx-weather-card-hi { color: var(--pnx-wc-hot); }
+.pnx-weather-card-lo { color: var(--pnx-wc-cold); }
+.pnx-weather-card-hilo-sep { color: var(--pnx-wc-line); font-weight: 500; }
+
+/* =========================================================
+   ゴルフ向け指標（3分割カード）
+   ========================================================= */
+.pnx-weather-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+.pnx-weather-card-metric {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--pnx-wc-line);
+  border-radius: 12px;
+  padding: 9px 8px 8px;
+  text-align: center;
+}
+.pnx-weather-card-metric-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--pnx-wc-sub);
+  margin-bottom: 4px;
+}
+.pnx-weather-card-metric-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--pnx-wc-blue);
+  flex-shrink: 0;
+}
+.pnx-weather-card-metric-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--pnx-wc-text);
+  font-variant-numeric: tabular-nums;
+}
+.pnx-weather-card-metric-value small {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pnx-wc-sub);
+  margin-left: 1px;
+}
+
+/* =========================================================
+   ゴルファー向けアドバイス
+   ========================================================= */
+.pnx-weather-card-advice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #EEF5FF 0%, #F6FAFF 100%);
+  border: 1px solid var(--pnx-wc-line);
+}
+.pnx-weather-card-advice-flag {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.pnx-weather-card-advice-body {
+  min-width: 0;
+}
+.pnx-weather-card-advice-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pnx-wc-blue);
+  margin-bottom: 2px;
+}
+.pnx-weather-card-advice-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--pnx-wc-text);
+  text-wrap: pretty;
+}
+
+/* =========================================================
+   API 未接続表示
+   ========================================================= */
+.pnx-weather-card-mock {
+  margin-top: 10px;
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--pnx-wc-sub);
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+/* =========================================================
+   トースト
+   ========================================================= */
+.pnx-weather-card-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%) translateY(12px);
+  background: rgba(15, 23, 43, 0.92);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 11px 16px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(15, 23, 43, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  z-index: 9999;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.pnx-weather-card-toast.pnx-weather-card-toast-show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 入場アニメーション（reduce 設定では無効） */
+@media (prefers-reduced-motion: no-preference) {
+  .pnx-weather-card-card {
+    animation: pnx-weather-card-rise 0.4s ease both;
+  }
+  @keyframes pnx-weather-card-rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}

@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="theme-color" content="#F1F3F6" />
   <title>遠征 — ProNexaX</title>
-  <link rel="stylesheet" href="../../styles/expedition/expedition.css?v=step289-expedition-home" />
+  <link rel="stylesheet" href="../../styles/expedition/expedition.css?v=step345-typography-size-fix" />
   <style>
     html, body {
       margin: 0 !important;
@@ -33,7 +33,14 @@
 </head>
 <body>
   <div id="expedition-root" data-screen-label="遠征" data-standalone="false"></div>
-  <script src="../../scripts/expedition/expedition.js?v=step289-expedition-home"></script>
+  <!-- STEP311: 遠征iframe内でもFirebaseを初期化する -->
+  <script src="../../scripts/firebase/firestore-config.js?v=step311-expedition-firebase"></script>
+  <script src="../../scripts/firebase/firebase-sdk-loader.js?v=step311-expedition-firebase"></script>
+  <script src="../../scripts/firebase/firebase-app.js?v=step311-expedition-firebase"></script>
+  <script src="../../scripts/firebase/firebase-storage-media.js?v=step314-receipt-storage"></script>
+  <script src="../../scripts/firebase/auth-bridge.js?v=step311-expedition-firebase"></script>
+  <script src="../../scripts/firebase/firestore-bridge.js?v=step311-expedition-firebase"></script>
+  <script src="../../scripts/expedition/expedition.js?v=step345-typography-size-fix"></script>
   <script>
     (function(){
       var expeditionApi = null;

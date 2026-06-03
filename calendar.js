@@ -922,6 +922,12 @@
       endDate: end ? (end.y + '-' + pad2(end.m) + '-' + pad2(end.d)) : '',
       dateRange: formatDateSlash(start) + (compareDate(start, end) !== 0 ? ' - ' + formatDateSlash(end) : ''),
       linkedCalendar: true,
+      tournamentLogoUrl: firstValue(event && event.tournamentLogoUrl, event && event.logoUrl, raw.tournamentLogoUrl, raw.logoUrl, raw.organizerLogoUrl),
+      logoUrl: firstValue(event && event.logoUrl, event && event.tournamentLogoUrl, raw.logoUrl, raw.tournamentLogoUrl, raw.organizerLogoUrl),
+      seriesLogoUrl: firstValue(raw.seriesLogoUrl),
+      organizerLogoUrl: firstValue(event && event.organizerLogoUrl, raw.organizerLogoUrl),
+      venueImageUrl: firstValue(event && event.venueImageUrl, event && event.imageUrl, raw.venueImageUrl, raw.imageUrl),
+      imageUrl: firstValue(event && event.imageUrl, event && event.venueImageUrl, raw.imageUrl, raw.venueImageUrl),
       links: {
         officialUrl: firstValue(event && event.officialUrl, raw.officialUrl, raw.homepage, raw.website, raw.url),
         pairingsUrl: firstValue(event && event.pairingsUrl, raw.pairingsUrl, raw.pairingUrl, raw.drawUrl),
