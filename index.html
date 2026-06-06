@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <title>ProNexaX</title>
-  <link rel="stylesheet" href="calendar.css?v=step359-longpress-swipe-safe">
+  <link rel="stylesheet" href="calendar.css?v=step445-expedition-hotel-icon-color">
   <style>
     /* 単体プレビュー用。本体統合時はこの style と body/html は使わない */
     html, body {
@@ -123,7 +123,10 @@
       stroke-linecap:round !important;
       stroke-linejoin:round !important;
     }
-    .pnx-cal-bottom-nav .pnx-cal-nav-item span {
+    
+
+
+.pnx-cal-bottom-nav .pnx-cal-nav-item span {
       display:block !important;
       width:100% !important;
       overflow:hidden !important;
@@ -139,6 +142,180 @@
   </style>
   <script src="scripts/disable-zoom.js" defer></script>
   <link rel="stylesheet" href="styles/weather/weather-card.css?v=step328-api-ready-schema">
+
+<style id="pnx-step428-nav-profile-top">
+/* STEP428: マイページ右上化 / 下タブ5個整理 / 予定追加常設ボタン削除 */
+.pnx-cal-add-btn{ display:none !important; }
+.pnx-cal-actions{
+  gap:8px !important;
+}
+.pnx-cal-profile-top-btn{
+  appearance:none !important;
+  -webkit-appearance:none !important;
+  width:42px !important;
+  height:42px !important;
+  border:1.5px solid #D6E6FF !important;
+  border-radius:999px !important;
+  background:linear-gradient(180deg,#ffffff 0%, #F3F8FF 100%) !important;
+  color:#0A74FF !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  box-shadow:0 8px 18px rgba(15,23,42,.06) !important;
+}
+.pnx-cal-profile-top-btn svg{
+  width:20px !important;
+  height:20px !important;
+  stroke:currentColor !important;
+  fill:none !important;
+  stroke-width:2.1 !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+}
+.pnx-cal-profile-top-btn.is-active{
+  background:linear-gradient(180deg,#EAF3FF 0%, #E2EFFF 100%) !important;
+  border-color:#B9D6FF !important;
+  box-shadow:0 0 0 3px rgba(10,116,255,.14) !important;
+}
+.pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="record"] svg,
+.pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="featured"] svg{
+  stroke-width:1.9 !important;
+}
+body.pnx-step201-module-active .pnx-cal-profile-top-btn[data-pnx-nav="mypage"],
+body[data-current-page="mypage"] .pnx-cal-profile-top-btn[data-pnx-nav="mypage"]{
+  background:linear-gradient(180deg,#EAF3FF 0%, #E2EFFF 100%) !important;
+  border-color:#B9D6FF !important;
+  box-shadow:0 0 0 3px rgba(10,116,255,.14) !important;
+}
+
+.pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="featured"] svg{
+  stroke-width:1.7 !important;
+}
+@media (max-width:360px){
+  .pnx-cal-profile-top-btn{ width:38px !important; height:38px !important; }
+  .pnx-cal-profile-top-btn svg{ width:18px !important; height:18px !important; }
+}
+</style>
+
+
+<style id="pnx-step445-expedition-hotel-icon-color">
+/* STEP434: 右上マイページアイコンを青テーマ化 */
+.pnx-cal-profile-top-btn{
+  border-color:#D6E6FF !important;
+  background:linear-gradient(180deg,#ffffff 0%, #F3F8FF 100%) !important;
+  color:#0A74FF !important;
+  box-shadow:0 8px 18px rgba(10,116,255,.08) !important;
+}
+.pnx-cal-profile-top-btn.is-active,
+body.pnx-step201-module-active .pnx-cal-profile-top-btn[data-pnx-nav="mypage"],
+body[data-current-page="mypage"] .pnx-cal-profile-top-btn[data-pnx-nav="mypage"]{
+  background:linear-gradient(180deg,#EAF3FF 0%, #E2EFFF 100%) !important;
+  border-color:#B9D6FF !important;
+  box-shadow:0 0 0 3px rgba(10,116,255,.14) !important;
+  color:#0A74FF !important;
+}
+</style>
+
+
+<style id="pnx-step445-expedition-hotel-icon-color">
+/* STEP436: 右上マイページ + 下タブ記録アイコンの見え方を微調整 */
+.pnx-cal-profile-top-btn{
+  width:40px !important;
+  height:40px !important;
+  border-width:1.25px !important;
+  box-shadow:0 6px 14px rgba(10,116,255,.08) !important;
+}
+.pnx-cal-profile-top-btn svg{
+  width:17px !important;
+  height:17px !important;
+  stroke-width:1.75 !important;
+}
+.pnx-cal-profile-top-btn svg circle,
+.pnx-cal-profile-top-btn svg path{
+  vector-effect:non-scaling-stroke !important;
+}
+.pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="record"] svg{
+  width:20px !important;
+  height:20px !important;
+  min-width:20px !important;
+  min-height:20px !important;
+  max-width:20px !important;
+  max-height:20px !important;
+}
+.pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="record"] svg .pnx-record-d-ring{
+  fill:none !important;
+  stroke:currentColor !important;
+  stroke-width:1.75 !important;
+  vector-effect:non-scaling-stroke !important;
+}
+.pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="record"] svg .pnx-record-d-slice{
+  fill:currentColor !important;
+  stroke:none !important;
+  opacity:.96 !important;
+}
+.pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="record"] svg *{
+  vector-effect:non-scaling-stroke !important;
+}
+@media (max-width:360px){
+  .pnx-cal-profile-top-btn{ width:38px !important; height:38px !important; }
+  .pnx-cal-profile-top-btn svg{ width:16px !important; height:16px !important; }
+  .pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="record"] svg{
+    width:19px !important; height:19px !important;
+    min-width:19px !important; min-height:19px !important;
+    max-width:19px !important; max-height:19px !important;
+  }
+}
+</style>
+
+
+<style id="pnx-step445-expedition-hotel-icon-color">
+/* STEP437: 記録アイコンを下タブ用に最終調整 */
+.pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="record"] svg{
+  width:23px !important;
+  height:23px !important;
+  min-width:23px !important;
+  min-height:23px !important;
+  max-width:23px !important;
+  max-height:23px !important;
+}
+.pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="record"] svg .pnx-record-d-ring{
+  fill:none !important;
+  stroke:currentColor !important;
+  stroke-width:2.05 !important;
+  vector-effect:non-scaling-stroke !important;
+}
+.pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="record"] svg .pnx-record-d-slice{
+  fill:currentColor !important;
+  stroke:none !important;
+}
+.pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="record"] svg *{
+  vector-effect:non-scaling-stroke !important;
+}
+.pnx-cal-profile-top-btn{
+  width:40px !important;
+  height:40px !important;
+}
+.pnx-cal-profile-top-btn svg{
+  width:18px !important;
+  height:18px !important;
+  stroke-width:1.85 !important;
+}
+@media (max-width:360px){
+  .pnx-cal-bottom-nav .pnx-cal-nav-item[data-pnx-nav="record"] svg{
+    width:22px !important;
+    height:22px !important;
+    min-width:22px !important;
+    min-height:22px !important;
+    max-width:22px !important;
+    max-height:22px !important;
+  }
+  .pnx-cal-profile-top-btn svg{
+    width:17px !important;
+    height:17px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <!--
@@ -161,12 +338,6 @@
       </div>
 
       <div class="pnx-cal-actions" aria-label="操作">
-        <button class="pnx-cal-header-btn" type="button" data-pnx-action="search" aria-label="検索">
-          <svg viewBox="0 0 28 28" aria-hidden="true">
-            <circle cx="12.2" cy="12.2" r="7.2" />
-            <path d="M17.5 17.5L23 23" />
-          </svg>
-        </button>
         <button class="pnx-cal-header-btn pnx-cal-bell-btn" type="button" data-pnx-action="notify" aria-label="通知">
           <svg viewBox="0 0 28 28" aria-hidden="true">
             <path d="M8.2 13.1C8.2 9.3 10.8 6.5 14 6.5C17.2 6.5 19.8 9.3 19.8 13.1V16.4C19.8 17.4 20.4 18.3 21.2 18.9L21.8 19.3H6.2L6.8 18.9C7.7 18.3 8.2 17.4 8.2 16.4V13.1Z" />
@@ -175,10 +346,10 @@
           </svg>
           <span class="pnx-cal-bell-dot" aria-hidden="true"></span>
         </button>
-        <button class="pnx-cal-add-btn" type="button" data-pnx-action="add" aria-label="予定を追加">
-          <svg viewBox="0 0 28 28" aria-hidden="true">
-            <path d="M14 7V21" />
-            <path d="M7 14H21" />
+        <button class="pnx-cal-profile-top-btn" type="button" data-pnx-nav="mypage" aria-label="マイページ">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8.6" r="2.8"></circle>
+            <path d="M8.1 17c1.02-2.08 2.57-3.15 3.9-3.15s2.88 1.07 3.9 3.15"></path>
           </svg>
         </button>
       </div>
@@ -524,11 +695,14 @@
       <div class="pnx-module-page" id="pnx-module-search" data-pnx-module-page="search" aria-hidden="true">
         <iframe id="search-module-frame" class="pnx-module-frame" data-src="pages/search/embed.html?v=step350-calendar-title-cleanup" title="試合検索" loading="lazy"></iframe>
       </div>
+      <div class="pnx-module-page" id="pnx-module-record" data-pnx-module-page="record" aria-hidden="true">
+        <iframe id="record-module-frame" class="pnx-module-frame" data-src="pages/record/embed.html?v=step445-expedition-hotel-icon-color" title="記録" loading="lazy"></iframe>
+      </div>
       <div class="pnx-module-page" id="pnx-module-featured" data-pnx-module-page="featured" aria-hidden="true">
-        <iframe id="featured-module-frame" class="pnx-module-frame" data-src="pages/featured/embed.html?v=step210-featured-scroll" title="広告・注目" loading="lazy"></iframe>
+        <iframe id="featured-module-frame" class="pnx-module-frame" data-src="pages/featured/embed.html?v=step210-featured-scroll" title="特集" loading="lazy"></iframe>
       </div>
       <div class="pnx-module-page" id="pnx-module-expedition" data-pnx-module-page="expedition" aria-hidden="true">
-        <iframe id="expedition-module-frame" class="pnx-module-frame" data-src="pages/expedition/embed.html?v=step345-typography-size-fix" title="遠征" loading="lazy"></iframe>
+        <iframe id="expedition-module-frame" class="pnx-module-frame" data-src="pages/expedition/embed.html?v=step445-expedition-hotel-icon-color" title="遠征" loading="lazy"></iframe>
       </div>
       <!-- Legacy finance module is kept in pages/finance/* and styles/scripts/finance/* for rollback. -->
       <div class="pnx-module-page" id="pnx-module-mypage" data-pnx-module-page="mypage" aria-hidden="true">
@@ -557,33 +731,34 @@
         </svg>
         <span>試合検索</span>
       </button>
-      <button class="pnx-cal-nav-item" type="button" data-pnx-nav="featured">
+      <button class="pnx-cal-nav-item" type="button" data-pnx-nav="record">
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 4.2L14.35 8.95L19.6 9.72L15.8 13.42L16.7 18.65L12 16.18L7.3 18.65L8.2 13.42L4.4 9.72L9.65 8.95L12 4.2Z" />
+          <circle class="pnx-record-d-ring" cx="12" cy="12" r="7.2" />
+          <path class="pnx-record-d-slice" d="M12 12V4.8A7.2 7.2 0 0 1 19.2 12H12Z" />
         </svg>
-        <span>広告</span>
+        <span>記録</span>
       </button>
       <button class="pnx-cal-nav-item" type="button" data-pnx-nav="expedition">
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="4" y="8" width="16" height="11.5" rx="2.5" />
-          <path d="M8.5 8V6.7C8.5 5.2 9.7 4 11.2 4H12.8C14.3 4 15.5 5.2 15.5 6.7V8" />
-          <path d="M4 12.5H20" />
-          <path d="M9 14.5H15" />
+          <path d="M3.5 11.2L20.2 4.5C20.7 4.3 21.2 4.8 21 5.3L14.3 22L10.9 14.1L3.5 11.2Z" />
+          <path d="M10.9 14.1L20.7 4.7" />
         </svg>
         <span>遠征</span>
       </button>
-      <button class="pnx-cal-nav-item" type="button" data-pnx-nav="profile">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="8" r="4" />
-          <path d="M4.8 20C5.6 16.8 8.3 15 12 15C15.7 15 18.4 16.8 19.2 20" />
+      <button class="pnx-cal-nav-item" type="button" data-pnx-nav="featured">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8.6 6.6L10.7 4.8H13.3L15.4 6.6L18.1 7.9C18.6 8.2 18.8 8.8 18.5 9.3L17.2 11.7C16.9 12.2 16.2 12.4 15.6 12.1L14.8 11.7V18.6H9.2V11.7L8.4 12.1C7.8 12.4 7.1 12.2 6.8 11.7L5.5 9.3C5.2 8.8 5.4 8.2 5.9 7.9L8.6 6.6Z" />
+          <path d="M10.7 4.8L12 6.9L13.3 4.8" />
+          <path d="M12 7V10.3" />
+          <path d="M10.9 8.3H13.1" />
         </svg>
-        <span>マイページ</span>
+        <span>特集</span>
       </button>
     </nav>
   </div>
 </section>
 
-<script src="calendar.js?v=step359-longpress-swipe-safe" charset="UTF-8"></script>
+<script src="calendar.js?v=step445-expedition-hotel-icon-color" charset="UTF-8"></script>
 <script>
   if (window.initProNexaCalendarV2) window.initProNexaCalendarV2();
 </script>
@@ -663,8 +838,9 @@ body.pnx-module-active .pnx-cal-month-popover{
   var MODULE_ROUTES = {
     calendar: { type:"native", label:"カレンダー" },
     search: { type:"iframe", pageId:"pnx-module-search", frameId:"search-module-frame", src:"pages/search/embed.html?v=step350-calendar-title-cleanup", label:"試合検索" },
-    featured: { type:"iframe", pageId:"pnx-module-featured", frameId:"featured-module-frame", src:"pages/featured/embed.html?v=step210-featured-scroll", label:"広告・注目" },
-    expedition: { type:"iframe", pageId:"pnx-module-expedition", frameId:"expedition-module-frame", src:"pages/expedition/embed.html?v=step345-typography-size-fix", label:"遠征" },
+    record: { type:"iframe", pageId:"pnx-module-record", frameId:"record-module-frame", src:"pages/record/embed.html?v=step445-expedition-hotel-icon-color", label:"記録" },
+    featured: { type:"iframe", pageId:"pnx-module-featured", frameId:"featured-module-frame", src:"pages/featured/embed.html?v=step210-featured-scroll", label:"特集" },
+    expedition: { type:"iframe", pageId:"pnx-module-expedition", frameId:"expedition-module-frame", src:"pages/expedition/embed.html?v=step445-expedition-hotel-icon-color", label:"遠征" },
     mypage: { type:"iframe", pageId:"pnx-module-mypage", frameId:"mypage-frame", src:"pages/mypage/embed.html?v=step202-search-fit", label:"マイページ" },
     profile: { type:"iframe", pageId:"pnx-module-profile", frameId:"profile-frame", src:"pages/profile/embed.html?v=step202-search-fit", label:"プロフィール" }
   };
@@ -676,6 +852,8 @@ body.pnx-module-active .pnx-cal-month-popover{
     if (page === "profile-detail") return "profile";
     if (page === "ads" || page === "ad") return "featured";
     if (page === "finance" || page === "expense" || page === "expenses") return "expedition";
+    if (page === "score" || page === "scores" || page === "analysis" || page === "stats") return "record";
+    if (page === "score" || page === "scores" || page === "analysis" || page === "stats") return "record";
     if (page === "admin" || page === "cms") return "cms";
     return page;
   }
@@ -692,7 +870,7 @@ body.pnx-module-active .pnx-cal-month-popover{
   }
 
   function setNavActive(page){
-    var navPage = (page === "mypage" || page === "profile") ? "profile" : page;
+    var navPage = (page === "profile") ? "mypage" : page;
     document.querySelectorAll("[data-pnx-nav]").forEach(function(item){
       var itemPage = item.getAttribute("data-pnx-nav");
       var on = itemPage === navPage;
@@ -704,9 +882,15 @@ body.pnx-module-active .pnx-cal-month-popover{
 
   function closeCalendarSheets(){
     try {
+      if (typeof window.PNXCalendarResetTransientPanels === "function") {
+        window.PNXCalendarResetTransientPanels();
+      }
       document.querySelectorAll("[data-pnx-add-layer],[data-pnx-detail-layer],[data-pnx-date-range-sheet]").forEach(function(el){
         el.setAttribute("aria-hidden","true");
         el.classList.remove("is-open","active","show");
+      });
+      document.querySelectorAll("[data-pnx-calendar-v2],.pnx-calendar-v2").forEach(function(root){
+        root.classList.remove("is-add-open","is-detail-open","is-date-range-open","is-month-picker-open","is-range-selecting");
       });
       var pop = document.querySelector("[data-pnx-month-popover]");
       if (pop) pop.setAttribute("aria-hidden","true");
@@ -734,6 +918,7 @@ body.pnx-module-active .pnx-cal-month-popover{
       }
       document.body.classList.remove("pnx-module-active");
       document.body.dataset.currentPage = "calendar";
+      try { if (typeof window.PNXCalendarResetTransientPanels === "function") window.PNXCalendarResetTransientPanels(); } catch(e) {}
       document.querySelectorAll(".pnx-module-page").forEach(function(p){
         p.classList.remove("is-active");
         p.setAttribute("aria-hidden","true");
@@ -926,25 +1111,33 @@ body:not(.pnx-step201-module-active) .pnx-module-layer{
       src:"pages/search/embed.html?v=" + CACHE,
       label:"試合検索"
     },
+    record: {
+      type:"iframe",
+      nav:"record",
+      pageId:"pnx-module-record",
+      frameId:"record-module-frame",
+      src:"pages/record/embed.html?v=step445-expedition-hotel-icon-color",
+      label:"記録"
+    },
     featured: {
       type:"iframe",
       nav:"featured",
       pageId:"pnx-module-featured",
       frameId:"featured-module-frame",
       src:"pages/featured/embed.html?v=" + CACHE,
-      label:"広告・注目"
+      label:"特集"
     },
     expedition: {
       type:"iframe",
       nav:"expedition",
       pageId:"pnx-module-expedition",
       frameId:"expedition-module-frame",
-      src:"pages/expedition/embed.html?v=step345-typography-size-fix",
+      src:"pages/expedition/embed.html?v=step445-expedition-hotel-icon-color",
       label:"遠征"
     },
     mypage: {
       type:"iframe",
-      nav:"profile",
+      nav:"mypage",
       pageId:"pnx-module-mypage",
       frameId:"mypage-frame",
       src:"pages/mypage/embed.html?v=" + CACHE,
@@ -1049,6 +1242,7 @@ body:not(.pnx-step201-module-active) .pnx-module-layer{
 
     document.body.classList.remove("pnx-module-active", "pnx-step201-module-active");
     document.body.dataset.currentPage = "calendar";
+    try { if (typeof window.PNXCalendarResetTransientPanels === "function") window.PNXCalendarResetTransientPanels(); } catch(e) {}
 
     document.querySelectorAll(".pnx-module-page").forEach(function(modulePage){
       modulePage.classList.remove("is-active");

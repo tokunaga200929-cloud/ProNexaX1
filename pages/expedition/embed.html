@@ -5,17 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="theme-color" content="#F1F3F6" />
+  <meta name="theme-color" content="#F2F2F7" />
   <title>遠征 — ProNexaX</title>
-  <link rel="stylesheet" href="../../styles/expedition/expedition.css?v=step345-typography-size-fix" />
+  <link rel="stylesheet" href="../../styles/expedition/expedition.css?v=step445-expedition-hotel-icon-color" />
   <style>
     html, body {
       margin: 0 !important;
       width: 100% !important;
-      height: 100% !important;
       min-height: 100dvh !important;
+      background: #F2F2F7 !important;
       overflow: hidden !important;
-      background: #F1F3F6 !important;
     }
     #expedition-root {
       width: 100% !important;
@@ -25,63 +24,83 @@
       margin: 0 !important;
       border-radius: 0 !important;
       box-shadow: none !important;
-    }
-    #expedition-root .expedition-bottom-nav {
-      display: none !important;
+      padding-bottom: 0 !important;
     }
   </style>
 </head>
 <body>
   <div id="expedition-root" data-screen-label="遠征" data-standalone="false"></div>
-  <!-- STEP311: 遠征iframe内でもFirebaseを初期化する -->
-  <script src="../../scripts/firebase/firestore-config.js?v=step311-expedition-firebase"></script>
-  <script src="../../scripts/firebase/firebase-sdk-loader.js?v=step311-expedition-firebase"></script>
-  <script src="../../scripts/firebase/firebase-app.js?v=step311-expedition-firebase"></script>
-  <script src="../../scripts/firebase/firebase-storage-media.js?v=step314-receipt-storage"></script>
-  <script src="../../scripts/firebase/auth-bridge.js?v=step311-expedition-firebase"></script>
-  <script src="../../scripts/firebase/firestore-bridge.js?v=step311-expedition-firebase"></script>
-  <script src="../../scripts/expedition/expedition.js?v=step345-typography-size-fix"></script>
+
+  <script src="../../scripts/expedition/expedition.js?v=step445-expedition-hotel-icon-color"></script>
   <script>
     (function(){
-      var expeditionApi = null;
+      function mapTournamentData(src){
+        src = src || {};
+        return {
+          id: src.id || src.tournamentId || 'exp-active',
+          tag: src.tag || src.category || src.parentCategory || '公式戦',
+          deadline: src.deadline || src.entryDeadline || 'ー',
+          name: src.name || src.title || src.tournamentName || '遠征',
+          venue: src.venue || src.course || src.place || '会場未設定',
+          date: src.date || src.startDate || src.eventDate || '日程未設定',
+          prize: src.prize || src.totalPrize || src.prizeMoney || 'ー',
+          entryFee: src.entryFee || src.fee || 'ー',
+          qualification: src.qualification || src.eligibility || 'ー',
+          capacity: src.capacity || src.recruitment || 'ー',
+          status: src.status || '募集中',
+          hasUrl: !!(src.url || src.officialUrl || src.entryUrl),
+          category: src.category || src.parentCategory || src.series || 'TOUR',
+          gender: src.gender || src.sex || ''
+        };
+      }
+
+      function applyActiveData(data, view){
+        try {
+          if (!window.ProNexaXExpedition || !window.ProNexaXExpedition.data) return false;
+          var mapped = mapTournamentData(data);
+          Object.assign(window.ProNexaXExpedition.data.next, mapped);
+          if (view && typeof window.ProNexaXExpedition.setScreen === 'function') {
+            window.ProNexaXExpedition.setScreen(view);
+          } else if (typeof window.ProNexaXExpedition.mount === 'function') {
+            window.ProNexaXExpedition.mount(document.getElementById('expedition-root'));
+          }
+          return true;
+        } catch(e) {
+          console.warn('[expedition embed] applyActiveData failed', e);
+          return false;
+        }
+      }
+
       function readActiveExpeditionData(){
         try {
           var raw = localStorage.getItem('pnx-expedition-active-tournament');
           if (raw) return JSON.parse(raw);
         } catch(e) {}
-        return window.expeditionData;
+        return null;
       }
+
       function notifyReady(){
         try {
-          parent.postMessage({ type: 'PNX_EXPEDITION_READY', source: 'expedition-embed' }, '*');
+          parent.postMessage({ type: 'PNX_EXPEDITION_READY', source: 'expedition-embed-step384' }, '*');
         } catch(e) {}
       }
-      function boot(){
-        var root = document.getElementById('expedition-root');
-        if (window.initExpeditionPage) {
-          expeditionApi = window.initExpeditionPage(root, readActiveExpeditionData(), {
-            standalone: false,
-            fitScreen: false,
-            initialView: 'home'
-          });
-          window.PNXExpeditionEmbedApi = expeditionApi;
-          setTimeout(notifyReady, 40);
-          setTimeout(notifyReady, 240);
-        }
-      }
+
       window.addEventListener('message', function(event){
         var msg = event && event.data || {};
         if (msg.type !== 'PNX_EXPEDITION_LOAD' || !msg.data) return;
         try { localStorage.setItem('pnx-expedition-active-tournament', JSON.stringify(msg.data)); } catch(e) {}
-        window.__PNX_EXPEDITION_ACTIVE_DATA__ = msg.data;
         var shouldOpenDetail = String(msg.source || '').indexOf('calendar-detail') !== -1;
-        if (expeditionApi && typeof expeditionApi.setData === 'function') {
-          expeditionApi.setData(msg.data, { view: shouldOpenDetail ? 'detail' : 'home' });
-        } else {
-          boot();
-        }
+        applyActiveData(msg.data, shouldOpenDetail ? 'top' : null);
       });
-      document.addEventListener('DOMContentLoaded', boot);
+
+      document.addEventListener('DOMContentLoaded', function(){
+        setTimeout(function(){
+          var active = readActiveExpeditionData();
+          if (active) applyActiveData(active);
+          notifyReady();
+        }, 80);
+        setTimeout(notifyReady, 320);
+      });
     })();
   </script>
 </body>

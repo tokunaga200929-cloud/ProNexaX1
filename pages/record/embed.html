@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>記録</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#f4f6f8;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Noto Sans JP",sans-serif}
+  body{min-height:100dvh}
+  .record-page{max-width:430px;margin:0 auto;padding:18px 16px calc(96px + env(safe-area-inset-bottom,0px))}
+  .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .logo{font-size:13px;font-weight:800;color:#166534;letter-spacing:.03em}
+  .title{font-size:34px;line-height:1.08;font-weight:900;letter-spacing:-.05em;margin:0}
+  .lead{margin:8px 0 0;color:#667085;font-size:14px;font-weight:600}
+  .card{background:#fff;border:1px solid #e5eaf0;border-radius:24px;padding:18px;box-shadow:0 12px 30px rgba(15,23,42,.06);margin-bottom:14px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+  .stat{padding:4px 10px;text-align:center;border-right:1px solid #eef2f6}
+  .stat:last-child{border-right:0}
+  .label{font-size:11px;color:#667085;font-weight:700;line-height:1.35}
+  .value{font-size:26px;font-weight:900;letter-spacing:-.04em;margin-top:8px}
+  .up{font-size:12px;color:#167a3a;font-weight:800;margin-top:2px}
+  .section-title{font-size:18px;font-weight:900;letter-spacing:-.03em;margin:0 0 12px}
+  .btn{width:100%;height:52px;border:0;border-radius:16px;background:#0f7a3b;color:#fff;font-size:16px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px}
+  .tabs{display:flex;gap:8px;margin:16px 0}
+  .tab{height:36px;padding:0 14px;border-radius:999px;background:#fff;border:1px solid #dfe5ec;color:#475467;font-weight:800;font-size:13px}
+  .tab.is-active{background:#eaf6ee;border-color:#c7e6d0;color:#0f7a3b}
+  .empty{height:148px;border-radius:20px;background:linear-gradient(180deg,#fff,#f9fbfc);border:1px dashed #dbe3eb;display:flex;align-items:center;justify-content:center;text-align:center;color:#667085;font-size:13px;font-weight:700;line-height:1.7}
+</style>
+</head>
+<body>
+  <main class="record-page">
+    <div class="head">
+      <div>
+        <div class="logo">ProNexaX</div>
+        <h1 class="title">記録</h1>
+        <p class="lead">スコア入力・履歴・分析をここにまとめます。</p>
+      </div>
+    </div>
+    <section class="card">
+      <h2 class="section-title">あなたの記録</h2>
+      <div class="stats">
+        <div class="stat"><div class="label">平均スコア</div><div class="value">72.4</div><div class="up">Best 68</div></div>
+        <div class="stat"><div class="label">FWキープ率</div><div class="value">64%</div><div class="up">+6%</div></div>
+        <div class="stat"><div class="label">パーオン率</div><div class="value">48%</div><div class="up">+3%</div></div>
+      </div>
+    </section>
+    <div class="tabs">
+      <button class="tab is-active">スコア</button>
+      <button class="tab">履歴</button>
+      <button class="tab">分析</button>
+    </div>
+    <section class="card">
+      <h2 class="section-title">スコア分析</h2>
+      <div class="empty">今後ここに<br>スコア推移・パット数・FWキープ率・パーオン率を表示</div>
+    </section>
+    <button class="btn">＋ スコアを記録</button>
+  </main>
+</body>
+</html>

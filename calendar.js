@@ -159,6 +159,26 @@
       horizontalLock: false
     },
     monthAnimating: false,
+    quickTime: {
+      open: false,
+      pointerId: null,
+      sourceDate: null,
+      anchorMinutes: 600,
+      startMinutes: 600,
+      endMinutes: 660,
+      minMinutes: 420,
+      maxMinutes: 1320,
+      minuteStep: 15,
+      gridTopHour: 7,
+      gridBottomHour: 22,
+      dragStarted: false,
+      dragMode: '',
+      dragPointerId: null,
+      dragStartY: 0,
+      dragStartScrollTop: 0,
+      dragInitialStart: 600,
+      dragInitialEnd: 660
+    },
     addDraft: {
       start: { y: DEMO_TODAY.y, m: DEMO_TODAY.m, d: DEMO_TODAY.d },
       end: { y: DEMO_TODAY.y, m: DEMO_TODAY.m, d: DEMO_TODAY.d },
@@ -166,6 +186,7 @@
       pickerYear: DEMO_TODAY.y,
       pickerMonth: DEMO_TODAY.m,
       color: 'blue',
+      minuteStep: 15,
       colorPaletteExpanded: false
     }
   };
@@ -1367,7 +1388,60 @@
     }, 180);
   }
 
+  function resetDateTimePickerState() {
+    // STEP417:
+    // 日時指定・時間指定ホイールが開いたまま別画面へ移動した場合でも、
+    // 次回の予定作成時に前回のシート状態が残らないように完全に閉じる。
+    if (state.root) {
+      const sheet = state.root.querySelector('[data-pnx-date-range-sheet]');
+      if (sheet) {
+        sheet.classList.remove('is-open', 'active', 'show');
+        sheet.setAttribute('aria-hidden', 'true');
+      }
+      state.root.classList.remove('is-date-range-open');
+
+      state.root.querySelectorAll('[data-pnx-picker-date-list], [data-pnx-picker-hour-list], [data-pnx-picker-minute-list]').forEach(function (list) {
+        if (list._pnxTimer) {
+          window.clearTimeout(list._pnxTimer);
+          list._pnxTimer = null;
+        }
+        delete list.dataset.lock;
+      });
+    }
+    state.dateTimeTemp = null;
+  }
+
+  function resetCalendarTransientPanels(options) {
+    options = options || {};
+    resetDateTimePickerState();
+
+    try { cancelCellRangeSelect(); } catch (e) {}
+    try { cancelEventDrag(); } catch (e) {}
+    try { closeMonthPicker(); } catch (e) {}
+
+    if (state.root) {
+      closeQuickTimePlanner();
+      state.root.classList.remove('is-date-range-open', 'is-month-picker-open', 'is-quicktime-open');
+      const typePanel = state.root.querySelector('[data-pnx-type-panel]');
+      if (typePanel) typePanel.hidden = true;
+    }
+
+    if (options.closeDetail) {
+      try { closeDetailSheet(); } catch (e) {}
+    }
+    if (options.closeAdd && state.root) {
+      const layer = state.root.querySelector('[data-pnx-add-layer]');
+      state.root.classList.remove('is-add-open');
+      if (layer) {
+        layer.classList.remove('is-open', 'active', 'show');
+        layer.setAttribute('aria-hidden', 'true');
+      }
+      state.editingEventId = null;
+    }
+  }
+
   function closeAddSheet() {
+    resetDateTimePickerState();
     if (!state.root) return;
     const layer = state.root.querySelector('[data-pnx-add-layer]');
     state.root.classList.remove('is-add-open');
@@ -1523,6 +1597,7 @@
     return state.root.classList.contains('is-add-open') ||
       state.root.classList.contains('is-detail-open') ||
       state.root.classList.contains('is-date-range-open') ||
+      state.root.classList.contains('is-quicktime-open') ||
       isMonthPickerOpen();
   }
 
@@ -1738,9 +1813,14 @@
       state.rangeSelect.startDate = { y: y, m: m, d: d };
       state.rangeSelect.endDate = { y: y, m: m, d: d };
       state.rangeSelect.startKey = dateKey(y, m, d);
+      // STEP441:
+      // スマホでは長押し中に少し指が動きやすいため、PCより早めに反応させる。
+      // さらに pointer capture と touch-action 制御で、ページスクロールに取られにくくする。
+      try { if (cell.setPointerCapture) cell.setPointerCapture(event.pointerId); } catch (e) {}
+      cell.classList.add('is-touch-arming');
       state.rangeSelect.timer = window.setTimeout(function () {
         beginCellRangeSelect(y, m, d);
-      }, 340);
+      }, 260);
     });
 
     window.addEventListener('pointermove', function (event) {
@@ -1762,13 +1842,34 @@
           return;
         }
 
-        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+        // STEP441:
+        // スマホで「長押し→上にスライド」する時、10px程度の指ブレでキャンセルされると反応しづらい。
+        // 上方向の動きはクイック時間指定の意図として残し、横・下方向だけキャンセルしやすくする。
+        if (dy < -12 && Math.abs(dy) > Math.abs(dx) * 1.05 && state.rangeSelect.startDate) {
+          event.preventDefault();
+          return;
+        }
+
+        if (Math.abs(dx) > 18 || dy > 18) {
           clearRangeSelectTimer();
           state.rangeSelect.pointerId = null;
           state.rangeSelect.startDate = null;
           state.rangeSelect.endDate = null;
           state.rangeSelect.startKey = '';
+          try {
+            var armedCell = state.root && state.root.querySelector('.pnx-cal-cell.is-touch-arming');
+            if (armedCell) armedCell.classList.remove('is-touch-arming');
+          } catch (e) {}
         }
+        return;
+      }
+      var dragDx = event.clientX - state.rangeSelect.startX;
+      var dragDy = event.clientY - state.rangeSelect.startY;
+      if (dragDy < -14 && Math.abs(dragDy) > Math.abs(dragDx) * 0.85 && state.rangeSelect.startDate) {
+        var sourceDate = cloneDate(state.rangeSelect.startDate);
+        cancelCellRangeSelect();
+        openQuickTimePlanner(sourceDate, event.pointerId, event.clientY);
+        event.preventDefault();
         return;
       }
       event.preventDefault();
@@ -1777,6 +1878,10 @@
 
     window.addEventListener('pointerup', function (event) {
       if (state.rangeSelect.pointerId == null || event.pointerId !== state.rangeSelect.pointerId) return;
+      try {
+        var armedCell = state.root && state.root.querySelector('.pnx-cal-cell.is-touch-arming');
+        if (armedCell) armedCell.classList.remove('is-touch-arming');
+      } catch (e) {}
       if (state.rangeSelect.active) {
         event.preventDefault();
         tryCommitCellRangeSelect();
@@ -1791,7 +1896,80 @@
 
     window.addEventListener('pointercancel', function (event) {
       if (state.rangeSelect.pointerId == null || event.pointerId !== state.rangeSelect.pointerId) return;
+      try {
+        var armedCell = state.root && state.root.querySelector('.pnx-cal-cell.is-touch-arming');
+        if (armedCell) armedCell.classList.remove('is-touch-arming');
+      } catch (e) {}
       cancelCellRangeSelect();
+    });
+
+    window.addEventListener('pointermove', function (event) {
+      if (!state.quickTime.open || state.quickTime.pointerId == null || event.pointerId !== state.quickTime.pointerId) return;
+      event.preventDefault();
+      updateQuickTimeSelectionFromPointer(event.clientY, false);
+    }, { passive: false });
+
+    window.addEventListener('pointerup', function (event) {
+      if (!state.quickTime.open || state.quickTime.pointerId == null || event.pointerId !== state.quickTime.pointerId) return;
+      event.preventDefault();
+      // STEP419:
+      // 指を離した瞬間に予定追加画面へ飛ばさず、
+      // 1日の時間指定UIをそのまま表示し続ける。
+      state.quickTime.pointerId = null;
+      renderQuickTimePlanner();
+    }, { passive: false });
+
+    window.addEventListener('pointercancel', function (event) {
+      if (!state.quickTime.open || state.quickTime.pointerId == null || event.pointerId !== state.quickTime.pointerId) return;
+      state.quickTime.pointerId = null;
+      renderQuickTimePlanner();
+    });
+
+    state.root.addEventListener('pointerdown', function (event) {
+      if (!state.quickTime.open) return;
+      var dragEl = event.target.closest('[data-pnx-quicktime-drag]');
+      if (!dragEl || !state.root.contains(dragEl)) return;
+      if (event.button !== undefined && event.button !== 0) return;
+      beginQuickTimeDrag(dragEl.getAttribute('data-pnx-quicktime-drag') || 'move', event.pointerId, event.clientY);
+      event.preventDefault();
+    });
+
+    state.root.addEventListener('click', function (event) {
+      if (!state.quickTime.open) return;
+      var grid = event.target.closest('[data-pnx-quicktime-grid]');
+      if (!grid || event.target.closest('[data-pnx-action]') || event.target.closest('[data-pnx-quicktime-drag]')) return;
+      var rect = grid.getBoundingClientRect();
+      var rel = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
+      var rowHeight = getQuickTimeRowHeight();
+      var mins = state.quickTime.minMinutes + (rel / rowHeight) * 60;
+      mins = clampQuickTimeMinutes(roundMinutesToStep(mins, state.quickTime.minuteStep));
+      var duration = Math.max(state.quickTime.minuteStep, state.quickTime.endMinutes - state.quickTime.startMinutes);
+      state.quickTime.startMinutes = mins;
+      state.quickTime.endMinutes = clampQuickTimeMinutes(mins + duration);
+      if (state.quickTime.endMinutes > state.quickTime.maxMinutes) {
+        state.quickTime.endMinutes = state.quickTime.maxMinutes;
+        state.quickTime.startMinutes = Math.max(state.quickTime.minMinutes, state.quickTime.endMinutes - duration);
+      }
+      renderQuickTimePlanner();
+    });
+
+    window.addEventListener('pointermove', function (event) {
+      if (!state.quickTime.open || state.quickTime.dragPointerId == null || event.pointerId !== state.quickTime.dragPointerId) return;
+      event.preventDefault();
+      updateQuickTimeDrag(event.clientY);
+    }, { passive: false });
+
+    window.addEventListener('pointerup', function (event) {
+      if (!state.quickTime.open || state.quickTime.dragPointerId == null || event.pointerId !== state.quickTime.dragPointerId) return;
+      event.preventDefault();
+      endQuickTimeDrag();
+      renderQuickTimePlanner();
+    }, { passive: false });
+
+    window.addEventListener('pointercancel', function (event) {
+      if (!state.quickTime.open || state.quickTime.dragPointerId == null || event.pointerId !== state.quickTime.dragPointerId) return;
+      endQuickTimeDrag();
+      renderQuickTimePlanner();
     });
 
     state.root.addEventListener('click', function (event) {
@@ -1820,6 +1998,8 @@
           return;
         }
         if (action === 'close-add') { closeAddSheet(); return; }
+        if (action === 'close-quick-time') { closeQuickTimePlanner(); return; }
+        if (action === 'quick-time-create') { commitQuickTimePlanner(); return; }
         if (action === 'toggle-type') {
           const panel = state.root.querySelector('[data-pnx-type-panel]');
           if (panel) panel.hidden = !panel.hidden;
@@ -1910,6 +2090,9 @@
       const navEl = event.target.closest('[data-pnx-nav]');
       if (navEl && state.root.contains(navEl)) {
         const page = navEl.getAttribute('data-pnx-nav');
+        if (page && page !== 'calendar') {
+          resetCalendarTransientPanels({ closeAdd: true, closeDetail: true });
+        }
         state.root.querySelectorAll('[data-pnx-nav]').forEach(function (item) {
           const isActive = item === navEl;
           item.classList.toggle('is-active', isActive);
@@ -1980,6 +2163,364 @@
     return normalizeTimeString(a, '00:00').localeCompare(normalizeTimeString(b, '00:00'));
   }
 
+  function timeStringToMinutes(value, fallback) {
+    var parsed = parseTimeString(normalizeTimeString(value || fallback || '00:00', fallback || '00:00'));
+    return (parsed.h * 60) + parsed.m;
+  }
+
+  function minutesToTimeString(totalMinutes) {
+    var safe = Math.max(0, Math.min(23 * 60 + 59, Number(totalMinutes) || 0));
+    var hour = Math.floor(safe / 60);
+    var minute = safe % 60;
+    return buildTimeString(hour, minute);
+  }
+
+  function roundMinutesToStep(totalMinutes, step) {
+    var safeStep = Math.max(5, Number(step) || 30);
+    return Math.round((Number(totalMinutes) || 0) / safeStep) * safeStep;
+  }
+
+  function formatQuickTimeDate(dateObj) {
+    return formatDateJP(dateObj, true);
+  }
+
+  function clampQuickTimeMinutes(totalMinutes) {
+    var min = Number(state.quickTime.minMinutes || 420);
+    var max = Number(state.quickTime.maxMinutes || 1320);
+    return Math.max(min, Math.min(max, Number(totalMinutes) || min));
+  }
+
+  function ensureQuickTimeDom() {
+    if (!state.root) return null;
+    var existing = state.root.querySelector('[data-pnx-quicktime-layer]');
+    if (existing) return existing;
+    var layer = document.createElement('div');
+    layer.className = 'pnx-cal-quicktime-layer';
+    layer.setAttribute('data-pnx-quicktime-layer', '');
+    layer.setAttribute('aria-hidden', 'true');
+    layer.innerHTML = '' +
+      '<section class="pnx-cal-quicktime-sheet" role="dialog" aria-modal="true" aria-label="時間を指定">' +
+        '<header class="pnx-cal-quicktime-topbar">' +
+          '<button class="pnx-cal-quicktime-icon-btn is-left" type="button" data-pnx-action="close-quick-time" aria-label="閉じる">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>' +
+          '</button>' +
+          '<div class="pnx-cal-quicktime-topbar-title" data-pnx-quicktime-date>2026年6月17日（水）</div>' +
+          '<button class="pnx-cal-quicktime-icon-btn is-right" type="button" data-pnx-action="quick-time-create" aria-label="この内容で予定を追加">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v3M16 3v3M4 9h16M7 14h4M12 18h5M5 5h14a1 1 0 0 1 1 1v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1Z"/></svg>' +
+          '</button>' +
+        '</header>' +
+        '<div class="pnx-cal-quicktime-content">' +
+          '<div class="pnx-cal-quicktime-grid-scroll">' +
+            '<div class="pnx-cal-quicktime-grid-wrap">' +
+              '<div class="pnx-cal-quicktime-grid" data-pnx-quicktime-grid></div>' +
+              '<div class="pnx-cal-quicktime-selection" data-pnx-quicktime-selection data-pnx-quicktime-drag="move" aria-hidden="true">' +
+                '<span class="pnx-cal-quicktime-handle-dot is-top" data-pnx-quicktime-drag="start"></span>' +
+                '<span class="pnx-cal-quicktime-handle-dot is-bottom" data-pnx-quicktime-drag="end"></span>' +
+              '</div>' +
+              '<div class="pnx-cal-quicktime-float-chip is-start" data-pnx-quicktime-start-chip>開始 10:00</div>' +
+              '<div class="pnx-cal-quicktime-float-chip is-end" data-pnx-quicktime-end-chip>終了 12:00</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<section class="pnx-cal-quicktime-form">' +
+          '<div class="pnx-cal-quicktime-form-handle" aria-hidden="true"></div>' +
+          '<div class="pnx-cal-quicktime-form-title">予定を追加</div>' +
+          '<div class="pnx-cal-quicktime-fields">' +
+            '<div class="pnx-cal-quicktime-field-row">' +
+              '<div class="pnx-cal-quicktime-field-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v3M16 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1Z"/></svg><span>日付</span></div>' +
+              '<div class="pnx-cal-quicktime-field-value" data-pnx-quicktime-form-date>2026年6月17日（水）</div>' +
+            '</div>' +
+            '<div class="pnx-cal-quicktime-field-row">' +
+              '<div class="pnx-cal-quicktime-field-label"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v5l3 2"></path></svg><span>時間</span></div>' +
+              '<div class="pnx-cal-quicktime-time-wrap"><span class="pnx-cal-quicktime-field-value" data-pnx-quicktime-form-time>10:00 〜 12:00</span><span class="pnx-cal-quicktime-duration" data-pnx-quicktime-duration>2時間</span></div>' +
+            '</div>' +
+            '<label class="pnx-cal-quicktime-input-row">' +
+              '<div class="pnx-cal-quicktime-field-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17.25V20h2.75L17.8 8.95l-2.75-2.75L4 17.25Z"></path><path d="M13.75 5.5l2.75 2.75"></path></svg><span>タイトル</span></div>' +
+              '<input type="text" class="pnx-cal-quicktime-input" data-pnx-quicktime-title-input placeholder="例）ミーティング">' +
+            '</label>' +
+            '<label class="pnx-cal-quicktime-input-row">' +
+              '<div class="pnx-cal-quicktime-field-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"></path></svg><span>場所・メモ</span></div>' +
+              '<input type="text" class="pnx-cal-quicktime-input" data-pnx-quicktime-place-input placeholder="場所やメモを入力">' +
+            '</label>' +
+          '</div>' +
+          '<button class="pnx-cal-quicktime-submit" type="button" data-pnx-action="quick-time-create">予定を追加</button>' +
+        '</section>' +
+      '</section>';
+    state.root.appendChild(layer);
+    return layer;
+  }
+
+  function getQuickTimeRowHeight() {
+    if (!state.root) return 62;
+    var layer = state.root.querySelector('[data-pnx-quicktime-layer]');
+    var row = layer ? layer.querySelector('.pnx-cal-quicktime-hour-row') : null;
+    if (!row) return 62;
+    var rect = row.getBoundingClientRect();
+    return rect && rect.height ? rect.height : 62;
+  }
+
+
+  function getQuickTimeScrollWrap() {
+    if (!state.root) return null;
+    var layer = state.root.querySelector('[data-pnx-quicktime-layer]');
+    return layer ? layer.querySelector('.pnx-cal-quicktime-grid-scroll') : null;
+  }
+
+  function autoScrollQuickTimeGrid(clientY) {
+    var wrap = getQuickTimeScrollWrap();
+    if (!wrap) return 0;
+    var rect = wrap.getBoundingClientRect();
+    if (!rect.height) return 0;
+    var threshold = Math.min(88, rect.height * 0.2);
+    var delta = 0;
+    if (clientY < rect.top + threshold) {
+      delta = -Math.ceil(((rect.top + threshold) - clientY) / 10);
+    } else if (clientY > rect.bottom - threshold) {
+      delta = Math.ceil((clientY - (rect.bottom - threshold)) / 10);
+    }
+    if (!delta) return 0;
+    var prev = wrap.scrollTop;
+    wrap.scrollTop = Math.max(0, Math.min(wrap.scrollHeight - wrap.clientHeight, wrap.scrollTop + delta * 8));
+    return wrap.scrollTop - prev;
+  }
+
+  function beginQuickTimeDrag(mode, pointerId, clientY) {
+    if (!state.quickTime.open) return;
+    state.quickTime.dragMode = mode || 'move';
+    state.quickTime.dragPointerId = pointerId;
+    state.quickTime.dragStartY = clientY;
+    var wrap = getQuickTimeScrollWrap();
+    state.quickTime.dragStartScrollTop = wrap ? wrap.scrollTop : 0;
+    state.quickTime.dragInitialStart = state.quickTime.startMinutes;
+    state.quickTime.dragInitialEnd = state.quickTime.endMinutes;
+  }
+
+  function endQuickTimeDrag() {
+    state.quickTime.dragMode = '';
+    state.quickTime.dragPointerId = null;
+    state.quickTime.dragStartScrollTop = 0;
+  }
+
+  function updateQuickTimeDrag(clientY) {
+    if (!state.quickTime.open || !state.quickTime.dragMode) return;
+    autoScrollQuickTimeGrid(clientY);
+    var rowHeight = getQuickTimeRowHeight();
+    var wrap = getQuickTimeScrollWrap();
+    var scrollDelta = (wrap ? wrap.scrollTop : 0) - (state.quickTime.dragStartScrollTop || 0);
+    var totalDeltaY = (clientY - state.quickTime.dragStartY) + scrollDelta;
+    var deltaMinutes = Math.round((totalDeltaY / rowHeight) * 60 / state.quickTime.minuteStep) * state.quickTime.minuteStep;
+    var minDuration = state.quickTime.minuteStep;
+    var nextStart = state.quickTime.dragInitialStart;
+    var nextEnd = state.quickTime.dragInitialEnd;
+
+    if (state.quickTime.dragMode === 'move') {
+      var duration = state.quickTime.dragInitialEnd - state.quickTime.dragInitialStart;
+      nextStart = state.quickTime.dragInitialStart + deltaMinutes;
+      nextEnd = nextStart + duration;
+      if (nextStart < state.quickTime.minMinutes) {
+        nextStart = state.quickTime.minMinutes;
+        nextEnd = nextStart + duration;
+      }
+      if (nextEnd > state.quickTime.maxMinutes) {
+        nextEnd = state.quickTime.maxMinutes;
+        nextStart = nextEnd - duration;
+      }
+    } else if (state.quickTime.dragMode === 'start') {
+      nextStart = state.quickTime.dragInitialStart + deltaMinutes;
+      nextStart = Math.max(state.quickTime.minMinutes, Math.min(nextStart, state.quickTime.dragInitialEnd - minDuration));
+    } else if (state.quickTime.dragMode === 'end') {
+      nextEnd = state.quickTime.dragInitialEnd + deltaMinutes;
+      nextEnd = Math.min(state.quickTime.maxMinutes, Math.max(nextEnd, state.quickTime.dragInitialStart + minDuration));
+    }
+
+    state.quickTime.startMinutes = clampQuickTimeMinutes(nextStart);
+    state.quickTime.endMinutes = clampQuickTimeMinutes(nextEnd);
+    if (state.quickTime.endMinutes <= state.quickTime.startMinutes) {
+      state.quickTime.endMinutes = clampQuickTimeMinutes(state.quickTime.startMinutes + minDuration);
+    }
+    renderQuickTimePlanner();
+  }
+
+
+  function renderQuickTimePlanner() {
+    if (!state.root) return;
+    var layer = ensureQuickTimeDom();
+    if (!layer) return;
+    var dateLabel = layer.querySelector('[data-pnx-quicktime-date]');
+    var startChip = layer.querySelector('[data-pnx-quicktime-start-chip]');
+    var endChip = layer.querySelector('[data-pnx-quicktime-end-chip]');
+    var formDate = layer.querySelector('[data-pnx-quicktime-form-date]');
+    var formTime = layer.querySelector('[data-pnx-quicktime-form-time]');
+    var duration = layer.querySelector('[data-pnx-quicktime-duration]');
+    var grid = layer.querySelector('[data-pnx-quicktime-grid]');
+    var selection = layer.querySelector('[data-pnx-quicktime-selection]');
+    var qt = state.quickTime;
+    var dateText = qt.sourceDate ? formatQuickTimeDate(qt.sourceDate) : '日時を指定';
+    var startText = minutesToTimeString(qt.startMinutes);
+    var endText = minutesToTimeString(qt.endMinutes);
+    var durationMinutes = Math.max(30, (qt.endMinutes - qt.startMinutes));
+    var durationText = (durationMinutes % 60 === 0) ? (durationMinutes / 60) + '時間' : (Math.floor(durationMinutes / 60) + '時間' + (durationMinutes % 60) + '分');
+    if (dateLabel) dateLabel.textContent = dateText;
+    if (startChip) startChip.textContent = '開始 ' + startText;
+    if (endChip) endChip.textContent = '終了 ' + endText;
+    if (formDate) formDate.textContent = dateText;
+    if (formTime) formTime.textContent = startText + ' 〜 ' + endText;
+    if (duration) duration.textContent = durationText;
+    if (grid && !grid.dataset.rendered) {
+      var rows = [];
+      for (var hour = qt.gridTopHour; hour <= qt.gridBottomHour; hour += 1) {
+        rows.push('<div class="pnx-cal-quicktime-hour-row"><span class="pnx-cal-quicktime-hour-label">' + hour + ':00</span><div class="pnx-cal-quicktime-hour-line"></div></div>');
+      }
+      grid.innerHTML = rows.join('');
+      grid.dataset.rendered = '1';
+    }
+    var rowHeight = getQuickTimeRowHeight();
+    if (selection) {
+      var startOffset = ((qt.startMinutes - qt.minMinutes) / 60) * rowHeight;
+      var endOffset = ((qt.endMinutes - qt.minMinutes) / 60) * rowHeight;
+      selection.style.top = startOffset + 'px';
+      selection.style.height = Math.max(rowHeight, endOffset - startOffset) + 'px';
+      selection.setAttribute('aria-hidden', 'false');
+    }
+    if (startChip && selection) {
+      startChip.style.top = (((qt.startMinutes - qt.minMinutes) / 60) * rowHeight + 10) + 'px';
+    }
+    if (endChip && selection) {
+      endChip.style.top = (((qt.endMinutes - qt.minMinutes) / 60) * rowHeight - 16) + 'px';
+    }
+    var scrollWrap = getQuickTimeScrollWrap();
+    if (scrollWrap && !state.quickTime.dragMode) {
+      var selectionTop = ((qt.startMinutes - qt.minMinutes) / 60) * rowHeight;
+      var selectionBottom = ((qt.endMinutes - qt.minMinutes) / 60) * rowHeight;
+      var viewTop = scrollWrap.scrollTop;
+      var viewBottom = viewTop + scrollWrap.clientHeight;
+      if (selectionTop < viewTop + 18) {
+        scrollWrap.scrollTop = Math.max(0, selectionTop - 18);
+      } else if (selectionBottom > viewBottom - 18) {
+        scrollWrap.scrollTop = Math.max(0, selectionBottom - scrollWrap.clientHeight + 18);
+      }
+    }
+  }
+
+  function closeQuickTimePlanner() {
+    if (!state.root) return;
+    var layer = state.root.querySelector('[data-pnx-quicktime-layer]');
+    state.quickTime.open = false;
+    state.quickTime.pointerId = null;
+    state.quickTime.dragStarted = false;
+    state.quickTime.sourceDate = null;
+    endQuickTimeDrag();
+    state.root.classList.remove('is-quicktime-open');
+    document.body.classList.remove('pnx-quicktime-screen-open');
+    document.documentElement.classList.remove('pnx-quicktime-screen-open');
+    if (layer) {
+      layer.classList.remove('is-open');
+      layer.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function openQuickTimePlanner(dateObj, pointerId, clientY) {
+    if (!state.root || !dateObj) return;
+    resetMonthSwipe();
+    var layer = ensureQuickTimeDom();
+    if (!layer) return;
+    var qt = state.quickTime;
+    qt.open = true;
+    qt.pointerId = pointerId == null ? null : pointerId;
+    qt.sourceDate = cloneDate(dateObj);
+    qt.dragStarted = false;
+    qt.minuteStep = Number(state.addDraft.minuteStep || 15) || 15;
+    qt.gridTopHour = 0;
+    qt.gridBottomHour = 24;
+    qt.minMinutes = qt.gridTopHour * 60;
+    qt.maxMinutes = qt.gridBottomHour * 60;
+    var now = new Date();
+    var defaultStart = (dateKey(dateObj.y, dateObj.m, dateObj.d) === dateKey(now.getFullYear(), now.getMonth() + 1, now.getDate()))
+      ? roundMinutesToStep((now.getHours() * 60) + now.getMinutes(), qt.minuteStep)
+      : 600;
+    defaultStart = clampQuickTimeMinutes(defaultStart);
+    qt.anchorMinutes = defaultStart;
+    qt.startMinutes = defaultStart;
+    qt.endMinutes = clampQuickTimeMinutes(defaultStart + 120);
+    state.root.classList.add('is-quicktime-open');
+    document.body.classList.add('pnx-quicktime-screen-open');
+    document.documentElement.classList.add('pnx-quicktime-screen-open');
+    layer.classList.add('is-open');
+    layer.setAttribute('aria-hidden', 'false');
+    renderQuickTimePlanner();
+    if (typeof clientY === 'number') {
+      window.requestAnimationFrame(function () {
+        updateQuickTimeSelectionFromPointer(clientY, true);
+      });
+    }
+  }
+
+  function updateQuickTimeSelectionFromPointer(clientY, initializeAnchor) {
+    if (!state.root || !state.quickTime.open) return;
+    var layer = ensureQuickTimeDom();
+    var grid = layer ? layer.querySelector('[data-pnx-quicktime-grid]') : null;
+    if (!grid) return;
+    var rect = grid.getBoundingClientRect();
+    if (!rect.height) return;
+    var relativeY = Math.max(0, Math.min(rect.height, clientY - rect.top));
+    var rawMinutes = state.quickTime.minMinutes + ((relativeY / rect.height) * (state.quickTime.maxMinutes - state.quickTime.minMinutes));
+    var snapped = clampQuickTimeMinutes(roundMinutesToStep(rawMinutes, state.quickTime.minuteStep));
+    if (initializeAnchor) state.quickTime.anchorMinutes = snapped;
+    var anchor = clampQuickTimeMinutes(state.quickTime.anchorMinutes);
+    var start = Math.min(anchor, snapped);
+    var end = Math.max(anchor, snapped);
+    if (end - start < 60) end = clampQuickTimeMinutes(start + 60);
+    if (end <= start) start = clampQuickTimeMinutes(end - 60);
+    state.quickTime.startMinutes = start;
+    state.quickTime.endMinutes = end;
+    state.quickTime.dragStarted = true;
+    renderQuickTimePlanner();
+  }
+
+  function commitQuickTimePlanner() {
+    if (!state.quickTime.open || !state.quickTime.sourceDate) return;
+    saveQuickTimeEvent();
+  }
+
+  function saveQuickTimeEvent() {
+    if (!state.root || !state.quickTime.sourceDate) return;
+    var layer = ensureQuickTimeDom();
+    var titleInput = layer ? layer.querySelector('[data-pnx-quicktime-title-input]') : null;
+    var placeInput = layer ? layer.querySelector('[data-pnx-quicktime-place-input]') : null;
+    var dateObj = cloneDate(state.quickTime.sourceDate);
+    var startTime = minutesToTimeString(state.quickTime.startMinutes);
+    var endTime = minutesToTimeString(state.quickTime.endMinutes);
+    var title = titleInput && titleInput.value.trim() ? titleInput.value.trim() : '新規予定';
+    var placeMemo = placeInput && placeInput.value.trim() ? placeInput.value.trim() : '';
+    var nextEvent = {
+      id: createEventId(),
+      y: dateObj.y,
+      m: dateObj.m,
+      d: dateObj.d,
+      endY: dateObj.y,
+      endM: dateObj.m,
+      endD: dateObj.d,
+      time: startTime,
+      endTime: endTime,
+      title: title,
+      type: 'その他',
+      chipLines: [title],
+      chipLabel: title,
+      color: selectedAddColor ? selectedAddColor() : 'green',
+      desc: placeMemo,
+      loc: '',
+      locIcon: ''
+    };
+    DEMO_EVENTS.push(nextEvent);
+    persistCalendarEvents();
+    state.selected = cloneDate(dateObj);
+    state.viewYear = dateObj.y;
+    state.viewMonth = dateObj.m;
+    closeQuickTimePlanner();
+    renderAll();
+    state.suppressClickUntil = Date.now() + 320;
+  }
+
   function ensureAddDraftDateTime() {
     if (!state.addDraft.startTime) state.addDraft.startTime = '09:00';
     if (!state.addDraft.endTime) state.addDraft.endTime = '10:00';
@@ -2034,6 +2575,8 @@
 
   function openAddSheet(editEvent, presetRange) {
     if (!state.root) return;
+    resetDateTimePickerState();
+    closeMonthPicker();
     ensureAddDraftDateTime();
     var layer = state.root.querySelector('[data-pnx-add-layer]');
     if (!layer) return;
@@ -2542,6 +3085,11 @@
     return { ok: true, duplicate: false, event: nextEvent };
   }
 
+  window.PNXCalendarResetTransientPanels = function () {
+    resetCalendarTransientPanels({ closeAdd: true, closeDetail: true });
+    return true;
+  };
+
   window.PNXCalendarAddTournamentEvent = addTournamentToCalendar;
   window.PNXCalendarBuildTournamentEvent = buildTournamentCalendarEvent;
   window.PNXCalendarGetEvents = function () {
@@ -2588,6 +3136,7 @@
 
     bindEvents();
     bindDateTimeWheelEvents();
+    resetCalendarTransientPanels({ closeAdd: true, closeDetail: true });
     renderAll();
   };
 })();

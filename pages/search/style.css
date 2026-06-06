@@ -3555,3 +3555,62 @@ body{--pnx-step165b-tax-documents-review-layout-fix:1;}
   .bs-url-actions{ grid-template-columns:1fr; }
   .bs-url-action{ height:40px; }
 }
+
+
+/* =========================================================================
+   STEP416: 試合検索カード「カレンダーに追加」ボタンの右端文字欠け修正
+   - レイアウトは維持
+   - スマホ幅でCTAが自然に収まるように可変幅化
+   ========================================================================= */
+.tc-card-footer{
+  gap:5px;
+}
+.tc-card-footer .tc-status-pill,
+.tc-card-footer .tc-url-pill{
+  flex:0 0 auto;
+}
+.tc-card-footer .tc-btn-add{
+  flex:1 1 auto;
+  min-width:0;
+  max-width:none;
+  height:36px;
+  padding:0 10px 0 9px;
+  font-size:11.4px;
+  line-height:1;
+  white-space:nowrap;
+  gap:4px;
+  letter-spacing:-.22px;
+}
+.tc-card-footer .tc-btn-add svg{
+  flex:0 0 auto;
+  width:11px;
+  height:11px;
+}
+.tc-card-footer .tc-url-pill{
+  height:25px;
+  padding:0 8px;
+  font-size:10.5px;
+}
+@media (max-width: 390px){
+  .tc-card-footer{
+    gap:4px;
+    padding:5px 9px 9px;
+  }
+  .tc-card-footer .tc-status-pill{
+    padding:4px 8px;
+    font-size:10px;
+  }
+  .tc-card-footer .tc-url-pill{
+    padding:0 7px;
+    font-size:10px;
+  }
+  .tc-card-footer .tc-btn-add{
+    padding:0 9px 0 8px;
+    font-size:11px;
+    gap:3px;
+  }
+  .tc-card-footer .tc-btn-add svg{
+    width:10px;
+    height:10px;
+  }
+}
